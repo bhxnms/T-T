@@ -1,0 +1,374 @@
+// Mapbox GL counterpart to ReservationOverlay.tsx.
+//
+// react-leaflet is component-driven, mapbox-gl is imperative — so instead of
+// a React component, this exports a small manager class the MapViewGL wires
+// up next to its other sources/layers. The geometry logic (great-circle arcs,
+// antimeridian split, duration math) mirrors the Leaflet overlay so both
+// renderers produce the same visual result on the globe or a flat projection.
+
+import { createElement } from 'react'
+import { renderIconMarkup } from '../../utils/iconMarkup'
+import type mapboxgl from 'mapbox-gl'
+import { Plane, Train, Ship, Car, Bus, Sailboat, Bike, CarTaxiFront, Route, TramFront } from 'lucide-react'
+import { getTransitMapSegments } from './transitGeometry'
+import { geodesicArcs } from './flightGeodesy'
+import { cleanEndpointName } from './reservationName'
+import { escapeHtml } from '@trek/shared'
+import type { Reservation, ReservationEndpoint } from '../../types'
+
+export const RESERVATION_SOURCE_ID = 'trek-reservations'
+export const RESERVATION_LINE_LAYER_ID = 'trek-reservations-lines'
+/** Sits under the coloured transit lines; named here so teardown can find it. */
+export const TRANSIT_CASING_LAYER_ID = `${RESERVATION_LINE_LAYER_ID}-transit-casing`
+
+type TransportType = 'flight' | 'train' | 'cruise' | 'car' | 'bus' | 'taxi' | 'bicycle' | 'ferry' | 'transit' | 'transport_other'
+const TRANSPORT_TYPES: TransportType[] = ['flight', 'train', 'cruise', 'car', 'bus', 'taxi', 'bicycle', 'ferry', 'transit', 'transport_other']
+const TRANSPORT_COLOR = '#3b82f6'
+
+const TYPE_META: Record<TransportType, { icon: typeof Plane; geodesic: boolean }> = {
+  flight: { icon: Plane, geodesic: true },
+  train: { icon: Train, geodesic: false },
+  cruise: { icon: Ship, geodesic: true },
+  car: { icon: Car, geodesic: false },
+  bus: { icon: Bus, geodesic: false },
+  taxi: { icon: CarTaxiFront, geodesic: false },
+  bicycle: { icon: Bike, geodesic: false },
+  ferry: { icon: Sailboat, geodesic: true },
+  transit: { icon: TramFront, geodesic: false },
+  transport_other: { icon: Route, geodesic: false },
+}
+
+// ── geometry helpers (shared with ReservationOverlay via flightGeodesy) ──
+const toRad = (d: number) => d * Math.PI / 180
+
+function haversineKm(a: [number, number], b: [number, number]): number {
+  const R = 6371
+  const dLat = toRad(b[0] - a[0])
+  const dLng = toRad(b[1] - a[1])
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(h))
+}
+
+function parseInTz(isoLocal: string, tz: string): number {
+  const [datePart, timePart] = isoLocal.split('T')
+  const [y, mo, d] = datePart.split('-').map(Number)
+  const [h, mi] = (timePart || '00:00').split(':').map(Number)
+  const guess = Date.UTC(y, mo - 1, d, h, mi)
+  // A malformed date/time (e.g. an imported booking whose time is missing its
+  // minutes) makes Date.UTC NaN; bail before formatToParts, which throws on a
+  // non-finite date and would blank the whole trip. computeDuration's finiteness
+  // check then drops the duration cleanly.
+  if (!Number.isFinite(guess)) return Number.NaN
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  })
+  const parts = Object.fromEntries(fmt.formatToParts(new Date(guess)).filter(p => p.type !== 'literal').map(p => [p.type, p.value]))
+  const asUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour) % 24, Number(parts.minute), Number(parts.second))
+  return guess - (asUtc - guess)
+}
+
+function computeDuration(from: ReservationEndpoint, to: ReservationEndpoint, fallbackStart: string | null, fallbackEnd: string | null): string | null {
+  let start = from.local_date && from.local_time ? `${from.local_date}T${from.local_time}` : fallbackStart
+  let end = to.local_date && to.local_time ? `${to.local_date}T${to.local_time}` : fallbackEnd
+  if (!start || !end) return null
+  if (!start.includes('T') && end.includes('T')) start = `${end.split('T')[0]}T${start}`
+  if (!end.includes('T') && start.includes('T')) end = `${start.split('T')[0]}T${end}`
+  if (!start.includes('T') || !end.includes('T')) return null
+  const fromTz = from.timezone || to.timezone
+  const toTz = to.timezone || fromTz
+  let startMs: number, endMs: number
+  if (fromTz && toTz) {
+    startMs = parseInTz(start, fromTz)
+    endMs = parseInTz(end, toTz)
+  } else {
+    startMs = new Date(start).getTime()
+    endMs = new Date(end).getTime()
+  }
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return null
+  if (endMs <= startMs) endMs += 24 * 60 * 60000
+  const minutes = Math.round((endMs - startMs) / 60000)
+  if (minutes <= 0 || minutes > 48 * 60) return null
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
+// ── item building ─────────────────────────────────────────────────────────
+interface TransportItem {
+  res: Reservation
+  from: ReservationEndpoint
+  to: ReservationEndpoint
+  waypoints: ReservationEndpoint[]
+  type: TransportType
+  arcs: [number, number][][]
+  // Route ("VIE → LHR") and duration/distance line. Computed on every update but
+  // not drawn since the stats badge was dropped; computeDuration still guards the
+  // non-finite date that used to blank the trip (#1620).
+  mainLabel: string | null
+  subLabel: string | null
+}
+
+function buildItems(reservations: Reservation[]): TransportItem[] {
+  const out: TransportItem[] = []
+  for (const r of reservations) {
+    if (!TRANSPORT_TYPES.includes(r.type as TransportType)) continue
+    // Ordered waypoints (from · stops · to); a single-leg booking has exactly two.
+    const waypoints = (r.endpoints || [])
+      .filter(e => e.role === 'from' || e.role === 'to' || e.role === 'stop')
+      .slice()
+      .sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+    if (waypoints.length < 2) continue
+    const from = waypoints[0]
+    const to = waypoints[waypoints.length - 1]
+    const type = r.type as TransportType
+    const isGeo = TYPE_META[type].geodesic
+    // One arc per leg (between consecutive waypoints), concatenated.
+    const arcs: [number, number][][] = []
+    let distanceKm = 0
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const a = waypoints[i]
+      const b = waypoints[i + 1]
+      const segArcs = isGeo
+        // GL maps repeat features across world copies themselves, so one
+        // continuous unwrapped arc is enough (a shifted duplicate would
+        // coincide with the wrapped copy and double the line opacity).
+        ? geodesicArcs([a.lat, a.lng], [b.lat, b.lng], false)
+        : [[[a.lat, a.lng], [b.lat, b.lng]] as [number, number][]]
+      arcs.push(...segArcs)
+      distanceKm += haversineKm([a.lat, a.lng], [b.lat, b.lng])
+    }
+    const duration = computeDuration(from, to, r.reservation_time || null, r.reservation_end_time || null)
+    const distance = `${Math.round(distanceKm)} km`
+    const mainLabel = waypoints.every(w => w.code)
+      ? waypoints.map(w => w.code).join(' → ')
+      : (from.code && to.code ? `${from.code} → ${to.code}` : null)
+    const subParts = [duration, distance].filter(Boolean) as string[]
+    const subLabel = subParts.length > 0 ? subParts.join(' · ') : null
+    out.push({ res: r, from, to, waypoints, type, arcs, mainLabel, subLabel })
+  }
+  return out
+}
+
+// ── DOM helpers for HTML markers ──────────────────────────────────────────
+function endpointMarkerHtml(type: TransportType, label: string | null): string {
+  const { icon: IconCmp } = TYPE_META[type]
+  const svg = renderIconMarkup(createElement(IconCmp, { size: 13, color: 'white', strokeWidth: 2.5 }))
+  const labelHtml = label ? `<span style="display:inline-flex;align-items:center;line-height:1">${escapeHtml(label)}</span>` : ''
+  return `<div style="
+    display:inline-flex;align-items:center;justify-content:center;gap:4px;
+    padding:0 8px;border-radius:999px;
+    background:${TRANSPORT_COLOR};box-shadow:0 2px 6px rgba(0,0,0,0.25);
+    border:1.5px solid #fff;color:#fff;
+    font-family:var(--font-system);font-size:11px;font-weight:600;letter-spacing:0.3px;line-height:1;
+    box-sizing:border-box;height:22px;white-space:nowrap;cursor:pointer;
+  "><span style="display:inline-flex;align-items:center;">${svg}</span>${labelHtml}</div>`
+}
+
+// ── overlay manager ──────────────────────────────────────────────────────
+export interface ReservationOverlayOptions {
+  showConnections: boolean
+  // Accepted for call-site compatibility only: the floating route/duration badge
+  // on the arc is no longer drawn, so nothing is gated on this.
+  showStats: boolean
+  showEndpointLabels: boolean
+  onEndpointClick?: (reservationId: number) => void
+}
+
+type GlMarker = {
+  setLngLat: (lngLat: mapboxgl.LngLatLike) => GlMarker
+  addTo: (map: mapboxgl.Map) => GlMarker
+  remove: () => void
+  getElement: () => HTMLElement
+}
+
+type MarkerConstructor = new (options?: { element?: HTMLElement; anchor?: string }) => GlMarker
+
+export class ReservationMapboxOverlay {
+  private map: mapboxgl.Map
+  private items: TransportItem[] = []
+  private roadRoutes: Map<number, [number, number][]> = new Map()
+  private opts: ReservationOverlayOptions
+  private MarkerCtor: MarkerConstructor
+  private endpointMarkers: GlMarker[] = []
+  private rerender: () => void
+  private destroyed = false
+
+  constructor(map: mapboxgl.Map, opts: ReservationOverlayOptions, MarkerCtor: MarkerConstructor) {
+    this.map = map
+    this.opts = opts
+    this.MarkerCtor = MarkerCtor
+    this.rerender = () => { if (!this.destroyed) this.render() }
+    this.setupLayer()
+    map.on('zoomend', this.rerender)
+    map.on('moveend', this.rerender)
+  }
+
+  update(reservations: Reservation[], opts: ReservationOverlayOptions, roadRoutes?: Map<number, [number, number][]>) {
+    this.opts = opts
+    this.items = buildItems(reservations)
+    this.roadRoutes = roadRoutes ?? new Map()
+    this.render()
+  }
+
+  destroy() {
+    this.destroyed = true
+    this.map.off('zoomend', this.rerender)
+    this.map.off('moveend', this.rerender)
+    this.endpointMarkers.forEach(m => m.remove())
+    this.endpointMarkers = []
+    try {
+      // Every layer before the source: the engine refuses to drop a source while
+      // anything still references it, and it reports that by firing an error event
+      // rather than throwing — so the catch below never saw it and the source was
+      // left behind. The casing layer arrived with the transit paths and was missed
+      // here, which is what made the console complain on every map teardown.
+      for (const id of [TRANSIT_CASING_LAYER_ID, RESERVATION_LINE_LAYER_ID]) {
+        if (this.map.getLayer(id)) this.map.removeLayer(id)
+      }
+      if (this.map.getSource(RESERVATION_SOURCE_ID)) this.map.removeSource(RESERVATION_SOURCE_ID)
+    } catch { /* map already gone */ }
+  }
+
+  private setupLayer() {
+    const map = this.map
+    if (map.getSource(RESERVATION_SOURCE_ID)) return
+    map.addSource(RESERVATION_SOURCE_ID, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+    // White casing under real transit paths so the colored lines read cleanly.
+    map.addLayer({
+      id: TRANSIT_CASING_LAYER_ID,
+      type: 'line',
+      source: RESERVATION_SOURCE_ID,
+      filter: ['all', ['==', ['get', 'transitPath'], true], ['!=', ['get', 'walk'], true]] as any,
+      paint: { 'line-color': '#ffffff', 'line-width': 6, 'line-opacity': 0.85 },
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+    })
+    map.addLayer({
+      id: RESERVATION_LINE_LAYER_ID,
+      type: 'line',
+      source: RESERVATION_SOURCE_ID,
+      paint: {
+        'line-color': ['coalesce', ['get', 'color'], TRANSPORT_COLOR] as any,
+        'line-width': ['case', ['==', ['get', 'transitPath'], true], ['case', ['==', ['get', 'walk'], true], 3, 3.5], 2.5] as any,
+        // Confirmed = solid + 0.75; pending = dashed + 0.55; walks always dotted.
+        'line-opacity': ['case', ['==', ['get', 'transitPath'], true], 0.95, ['case', ['==', ['get', 'status'], 'confirmed'], 0.75, 0.55]] as any,
+        'line-dasharray': ['case', ['==', ['get', 'walk'], true], ['literal', [0.1, 2.5]], ['case', ['==', ['get', 'status'], 'confirmed'], ['literal', [1, 0]], ['literal', [3, 3]]]] as any,
+      },
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+    })
+  }
+
+  private render() {
+    const map = this.map
+    if (!this.map.getSource(RESERVATION_SOURCE_ID)) return
+
+    const show = this.opts.showConnections
+
+    // Visible filter: require the on-screen pixel distance between
+    // endpoints to exceed a type-specific minimum, same as the Leaflet
+    // overlay, so tiny no-op transport lines don't clutter the map.
+    const visibleItems = show ? this.items.filter(item => {
+      try {
+        // A transit journey draws its real alignment, not a straight from->to line, so
+        // don't let the endpoint-proximity declutter hide it when the map is zoomed out
+        // (#1570). Mirrors the Leaflet overlay.
+        if (item.type === 'transit' && getTransitMapSegments(item.res).length > 0) return true
+        const fromPx = map.project([item.from.lng, item.from.lat])
+        const toPx = map.project([item.to.lng, item.to.lat])
+        const dx = fromPx.x - toPx.x, dy = fromPx.y - toPx.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const minPx = item.type === 'flight' ? 50 : item.type === 'cruise' ? 150 : item.type === 'car' ? 80 : 200
+        return dist >= minPx
+      } catch { return true }
+    }) : []
+
+    // Label visibility threshold is higher than line visibility, to keep
+    // endpoint text from overlapping on very short lines.
+    const labelVisibleIds = new Set<number>()
+    if (show) {
+      for (const item of visibleItems) {
+        try {
+          const fromPx = map.project([item.from.lng, item.from.lat])
+          const toPx = map.project([item.to.lng, item.to.lat])
+          const dx = fromPx.x - toPx.x, dy = fromPx.y - toPx.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          const minPx = item.type === 'flight' ? 50 : item.type === 'cruise' ? 300 : item.type === 'car' ? 150 : item.type === 'transit' ? 900 : 400
+          if (dist >= minPx) labelVisibleIds.add(item.res.id)
+        } catch { /* ignore */ }
+      }
+    }
+
+    // ── line features ───────────────────────────────────────────────
+    const features = visibleItems.flatMap(item => {
+      const transitSegs = item.type === 'transit' ? getTransitMapSegments(item.res) : []
+      if (transitSegs.length > 0) {
+        return transitSegs.map(seg => ({
+          type: 'Feature' as const,
+          properties: {
+            resId: item.res.id,
+            type: item.type,
+            status: item.res.status ?? 'pending',
+            transitPath: true,
+            walk: seg.walk,
+            color: seg.walk ? '#64748b' : (seg.color || '#7c3aed'),
+          },
+          geometry: {
+            type: 'LineString' as const,
+            coordinates: seg.coords.map(([lat, lng]) => [lng, lat]),
+          },
+        }))
+      }
+      // Prefer the real road route (car/bus/taxi/bicycle) over the straight arc.
+      const road = this.roadRoutes.get(item.res.id)
+      const lines = road && road.length >= 2 ? [road] : item.arcs
+      return lines.map(seg => ({
+        type: 'Feature' as const,
+        properties: {
+          resId: item.res.id,
+          type: item.type,
+          status: item.res.status ?? 'pending',
+          transitPath: false,
+          walk: false,
+          color: null as string | null,
+        },
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: seg.map(([lat, lng]) => [lng, lat]),
+        },
+      }))
+    })
+    const src = map.getSource(RESERVATION_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined
+    src?.setData({ type: 'FeatureCollection', features })
+
+    // ── endpoint markers ────────────────────────────────────────────
+    this.endpointMarkers.forEach(m => m.remove())
+    this.endpointMarkers = []
+    if (show) {
+      for (const item of visibleItems) {
+        const showLabel = this.opts.showEndpointLabels && labelVisibleIds.has(item.res.id)
+        for (const ep of item.waypoints) {
+          const label = showLabel ? (ep.code || cleanEndpointName(ep.name)) : null
+          const el = document.createElement('div')
+          el.innerHTML = endpointMarkerHtml(item.type, label)
+          const inner = el.firstElementChild as HTMLElement | null
+          const node = inner ?? el
+          node.title = ep.name || ''
+          if (this.opts.onEndpointClick) {
+            node.addEventListener('click', (ev) => {
+              ev.stopPropagation()
+              this.opts.onEndpointClick?.(item.res.id)
+            })
+          }
+          const marker = new this.MarkerCtor({ element: node, anchor: 'center' })
+            .setLngLat([ep.lng, ep.lat])
+            .addTo(map)
+          this.endpointMarkers.push(marker)
+        }
+      }
+    }
+
+    // No stats badge: the floating route/duration label on the arc was removed,
+    // so a rendered overlay is the connection lines plus the airport markers.
+  }
+}

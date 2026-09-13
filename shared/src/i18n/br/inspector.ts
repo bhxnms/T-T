@@ -1,0 +1,32 @@
+import type { TranslationStrings } from '../types';
+
+const inspector: TranslationStrings = {
+  'inspector.opened': 'Aberto',
+  'inspector.closed': 'Fechado',
+  'inspector.openingHours': 'Horário de funcionamento',
+  'inspector.showHours': 'Mostrar horário de funcionamento',
+  'inspector.files': 'Arquivos',
+  'inspector.filesCount': '{count} arquivos',
+  'inspector.removeFromDay': 'Remover do dia',
+  'inspector.remove': 'Remover',
+  'inspector.addToDay': 'Adicionar ao dia',
+  'inspector.confirmedRes': 'Reserva confirmada',
+  'inspector.pendingRes': 'Reserva pendente',
+  'inspector.google': 'Google Maps',
+  'inspector.navigation': 'Navegação',
+  'inspector.openWith': 'Abrir com',
+  'inspector.openStreetMap': 'OpenStreetMap',
+  'inspector.saveToCollection': 'Salvar na Coleção',
+  'inspector.savedToCollection': 'Salvo',
+  'inspector.website': 'Abrir site',
+  'inspector.addRes': 'Reserva',
+  'inspector.editRes': 'Editar reserva',
+  'inspector.participants': 'Participantes',
+  'inspector.trackStats': 'Dados da trilha',
+  'inspector.trackColor': 'Cor da trilha',
+  'inspector.trackColorAuto': 'Cor automática',
+  'inspector.trackColorCustom': 'Escolher cor personalizada',
+  "inspector.checkin": "Check-in",
+  "inspector.checkinDone": "Visita registrada",
+};
+export default inspector;

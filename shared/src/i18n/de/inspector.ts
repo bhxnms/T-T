@@ -1,0 +1,32 @@
+import type { TranslationStrings } from '../types';
+
+const inspector: TranslationStrings = {
+  'inspector.opened': 'Geöffnet',
+  'inspector.closed': 'Geschlossen',
+  'inspector.openingHours': 'Öffnungszeiten',
+  'inspector.showHours': 'Öffnungszeiten anzeigen',
+  'inspector.files': 'Dateien',
+  'inspector.filesCount': '{count} Dateien',
+  'inspector.removeFromDay': 'Vom Tag entfernen',
+  'inspector.remove': 'Entfernen',
+  'inspector.addToDay': 'Zum Tag hinzufügen',
+  'inspector.confirmedRes': 'Bestätigte Reservierung',
+  'inspector.pendingRes': 'Ausstehende Reservierung',
+  'inspector.google': 'Google Maps',
+  'inspector.navigation': 'Navigation',
+  'inspector.openWith': 'Öffnen mit',
+  'inspector.openStreetMap': 'OpenStreetMap',
+  'inspector.website': 'Webseite öffnen',
+  'inspector.saveToCollection': 'In Sammlung speichern',
+  'inspector.savedToCollection': 'Gespeichert',
+  'inspector.addRes': 'Reservierung',
+  'inspector.editRes': 'Reservierung bearbeiten',
+  'inspector.participants': 'Teilnehmer',
+  'inspector.trackStats': 'Streckendaten',
+  'inspector.trackColor': 'Streckenfarbe',
+  'inspector.trackColorAuto': 'Automatische Farbe',
+  'inspector.trackColorCustom': 'Eigene Farbe wählen',
+  "inspector.checkin": "Einchecken",
+  "inspector.checkinDone": "Eingecheckt",
+};
+export default inspector;

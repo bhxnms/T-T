@@ -1,0 +1,11 @@
+import type { TranslationStrings } from '../types';
+
+const pdf: TranslationStrings = {
+  'pdf.travelPlan': '旅行計画',
+  'pdf.planned': '予定',
+  'pdf.costLabel': '費用',
+  'pdf.preview': 'PDFプレビュー',
+  'pdf.saveAsPdf': 'PDFとして保存',
+  'pdf.pageBreakPerDay': '日ごとに改ページ',
+};
+export default pdf;

@@ -1,0 +1,32 @@
+import type { TranslationStrings } from '../types';
+
+const inspector: TranslationStrings = {
+  'inspector.opened': 'مفتوح',
+  'inspector.closed': 'مغلق',
+  'inspector.openingHours': 'ساعات العمل',
+  'inspector.showHours': 'عرض ساعات العمل',
+  'inspector.files': 'الملفات',
+  'inspector.filesCount': '{count} ملفات',
+  'inspector.remove': 'إزالة',
+  'inspector.removeFromDay': 'إزالة من اليوم',
+  'inspector.addToDay': 'إضافة إلى اليوم',
+  'inspector.confirmedRes': 'حجز مؤكد',
+  'inspector.pendingRes': 'حجز قيد الانتظار',
+  'inspector.google': 'Google Maps',
+  'inspector.navigation': 'التنقل',
+  'inspector.openWith': 'الفتح باستخدام',
+  'inspector.openStreetMap': 'OpenStreetMap',
+  'inspector.website': 'فتح الموقع الإلكتروني',
+  'inspector.saveToCollection': 'حفظ في مجموعة',
+  'inspector.savedToCollection': 'محفوظ',
+  'inspector.addRes': 'حجز',
+  'inspector.editRes': 'تعديل الحجز',
+  'inspector.participants': 'المشاركون',
+  'inspector.trackStats': 'بيانات المسار',
+  'inspector.trackColor': 'لون المسار',
+  'inspector.trackColorAuto': 'لون تلقائي',
+  'inspector.trackColorCustom': 'اختيار لون مخصص',
+  "inspector.checkin": "سجّل الزيارة",
+  "inspector.checkinDone": "تم التسجيل",
+};
+export default inspector;

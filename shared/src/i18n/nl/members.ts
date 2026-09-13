@@ -1,0 +1,38 @@
+import type { TranslationStrings } from '../types';
+
+const members: TranslationStrings = {
+  'members.shareTrip': 'Reis delen',
+  'members.inviteUser': 'Gebruiker uitnodigen',
+  'members.selectUser': 'Selecteer gebruiker…',
+  'members.invite': 'Uitnodigen',
+  'members.allHaveAccess': 'Alle gebruikers hebben al toegang.',
+  'members.access': 'Toegang',
+  'members.person': 'persoon',
+  'members.persons': 'personen',
+  'members.you': 'jij',
+  'members.owner': 'Eigenaar',
+  'members.leaveTrip': 'Reis verlaten',
+  'members.removeAccess': 'Toegang verwijderen',
+  'members.confirmLeave': 'Reis verlaten? Je verliest de toegang.',
+  'members.confirmRemove': 'Toegang voor deze gebruiker verwijderen?',
+  'members.loadError': 'Leden laden mislukt',
+  'members.added': 'toegevoegd',
+  'members.addError': 'Toevoegen mislukt',
+  'members.removed': 'Lid verwijderd',
+  'members.removeError': 'Verwijderen mislukt',
+  'members.makeOwner': 'Eigenaar maken',
+  'members.confirmTransfer': 'Eigenaarschap overdragen aan {name}? Je wordt een gewoon lid.',
+  'members.transferError': 'Overdracht van eigenaarschap mislukt',
+  'members.guests': 'Gasten',
+  'members.guest': 'Gast',
+  'members.guestsHint':
+    'Mensen zonder account. Ze kunnen worden toegewezen aan kosten, bagage en taken, maar kunnen niet inloggen.',
+  'members.addGuest': 'Gast toevoegen',
+  'members.guestNamePlaceholder': 'Naam van gast',
+  'members.guestAdded': 'Gast toegevoegd',
+  'members.guestAddError': 'Kan gast niet toevoegen',
+  'members.guestRenameError': 'Kan gast niet hernoemen',
+  'members.guestRemoved': 'Gast verwijderd',
+  'members.confirmRemoveGuest': 'Deze gast verwijderen? Hun toewijzingen en kostenaandelen worden ook verwijderd.',
+};
+export default members;

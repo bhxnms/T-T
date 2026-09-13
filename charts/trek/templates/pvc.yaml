@@ -1,0 +1,43 @@
+{{- if and .Values.persistence.enabled (not .Values.persistence.data.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "trek.fullname" . }}-data
+  labels:
+    app: {{ include "trek.name" . }}
+  {{- with .Values.persistence.data.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.persistence.data.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.data.size }}
+{{- end }}
+---
+{{- if and .Values.persistence.enabled (not .Values.persistence.uploads.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "trek.fullname" . }}-uploads
+  labels:
+    app: {{ include "trek.name" . }}
+  {{- with .Values.persistence.uploads.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.persistence.uploads.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.uploads.size }}
+{{- end }}

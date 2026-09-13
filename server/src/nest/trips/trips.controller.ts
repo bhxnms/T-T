@@ -1,0 +1,347 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  HttpCode,
+  HttpException,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { isDemoWriteBlocked, DEMO_WRITE_ERROR } from '../common/demo-write';
+import { contentDisposition } from '../common/content-disposition';
+import { RuntimeEnvService } from '../app-config/runtime-env.service';
+import type { Request, Response } from 'express';
+import type { Options } from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { randomUUID } from 'crypto';
+import { diskStorage } from 'multer';
+import { GLOBAL_TEMP_DIR } from '../storage/storage-paths';
+import type { ActiveTripResponse } from '@trek/shared';
+import { StorageService } from '../storage/storage.service';
+import type { User } from '../../types';
+import { TripsService } from './trips.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { getClientIp } from '../audit/client-ip';
+import { logInfo } from '../audit/audit-log.logger';
+import { AuditService } from '../audit/audit.service';
+import { NotFoundError, ValidationError } from './trips.service';
+import { TripCreateDto, TripUpdateDto, TripCopyDto, TripAddMemberDto, TripTransferOwnershipDto, TripCreateGuestDto, TripRenameGuestDto, TrekImportDto } from './trips.dto';
+import { UnsplashService } from '../unsplash/unsplash.service';
+import { TrekImportService, MAX_TREK_ZIP_BYTES } from './trek-import.service';
+import { CalendarService } from '../calendar/calendar.service';
+import { TripReadModelService } from '../trip-read-model/trip-read-model.service';
+
+export const MAX_COVER_SIZE = 20 * 1024 * 1024;
+// Still needed by the Unsplash cover download (a raw-fs writer until the
+// caches/downloads slice); the multer destination moved to the storage spool.
+// Consumed by trips.module.ts's MulterModule factory. Quirk preserved on
+// purpose: a plain Error without statusCode maps to 500, not 400 (parity).
+export const TRIP_COVER_FILE_FILTER: Options['fileFilter'] = (_req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+  if (file.mimetype.startsWith('image/') && !file.mimetype.includes('svg') && allowed.includes(ext)) cb(null, true);
+  else cb(new Error('Only jpg, png, gif, webp images allowed'));
+};
+
+const toDateStr = (d: Date) => d.toISOString().slice(0, 10);
+const addDays = (d: Date, n: number) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+
+/**
+ * /api/trips — the trip aggregate root.
+ *
+ * Byte-identical to the legacy Express route (server/src/routes/trips.ts): the
+ * same per-field permission checks (trip_create / trip_edit / trip_archive /
+ * trip_cover_upload / trip_delete / member_manage), the date inference on create,
+ * audit logging, the offline bundle, ICS export and member-invite notification.
+ * Uses EXACT strangler prefixes so it never swallows the nested sub-domain mounts.
+ */
+@Controller('api/trips')
+@UseGuards(JwtAuthGuard)
+export class TripsController {
+  // calendar last: the hand-wired construction sites in the tests stay positional,
+  // so a new dependency does not touch the ones that never reach the ICS route.
+  constructor(private readonly trips: TripsService, private readonly audit: AuditService, private readonly env: RuntimeEnvService, private readonly unsplash: UnsplashService, private readonly calendar: CalendarService, private readonly readModel: TripReadModelService, private readonly storage: StorageService, private readonly trekImport: TrekImportService) {}
+
+  @Get()
+  list(@CurrentUser() user: User, @Query('archived') archived?: string) {
+    return { trips: this.trips.list(user.id, archived === '1' ? 1 : 0) };
+  }
+
+  /**
+   * Where "open TREK straight in my trip" lands. Declared above @Get(':id') —
+   * a literal segment below it would never be reached.
+   */
+  @Get('active')
+  active(@CurrentUser() user: User): ActiveTripResponse {
+    const row = this.trips.activeTrip(user.id);
+    if (!row) return { trip: null };
+    const { id, title, start_date, end_date } = row;
+    return { trip: { id, title, start_date, end_date } };
+  }
+
+  @Get('cover-images/search')
+  async coverImages(@CurrentUser() user: User, @Query('query') query?: string) {
+    try {
+      const result = await this.trips.searchCoverImages(query || '', user.id);
+      if ('error' in result) {
+        throw new HttpException({ error: result.error }, result.status);
+      }
+      return { photos: result.photos };
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      console.error('Unsplash cover image error:', err);
+      throw new HttpException({ error: 'Error searching for cover images' }, 500);
+    }
+  }
+
+  @Post()
+  @HttpCode(201)
+  create(@CurrentUser() user: User, @Body() body: TripCreateDto, @Req() req: Request) {
+    if (!this.trips.can('trip_create', user.role, null, user.id, false)) {
+      throw new HttpException({ error: 'No permission to create trips' }, 403);
+    }
+    // Presence/shape validation happens in the ZodValidationPipe (tripCreateRequestSchema).
+    const { title, description, currency, reminder_days, day_count } = body;
+    let start_date: string | null = body.start_date || null;
+    let end_date: string | null = body.end_date || null;
+    if (start_date && !end_date) end_date = toDateStr(addDays(new Date(start_date), 6));
+    else if (!start_date && end_date) start_date = toDateStr(addDays(new Date(end_date), -6));
+    if (start_date && end_date && new Date(end_date) < new Date(start_date)) {
+      throw new HttpException({ error: 'End date must be after start date' }, 400);
+    }
+    const parsedDayCount = day_count ? Math.min(Math.max(Number(day_count) || 7, 1), 365) : undefined;
+    const { trip, tripId, reminderDays } = this.trips.create(user.id, { title, description, start_date, end_date, currency, reminder_days, day_count: parsedDayCount });
+    this.audit.writeAudit({ userId: user.id, action: 'trip.create', ip: getClientIp(req), details: { tripId, title, reminder_days: reminderDays === 0 ? 'none' : `${reminderDays} days` } });
+    if (reminderDays > 0) logInfo(`${user.email} set ${reminderDays}-day reminder for trip "${title}"`);
+    return { trip };
+  }
+
+  /**
+   * Import trips from a TREK instance's backup zip, step 1: upload the zip,
+   * get back the trip list it contains. The token in the response addresses
+   * the extracted snapshot for the actual import (step 2) and expires.
+   */
+  @Post('import-trek/preview')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (_req, _file, cb) => {
+        try {
+          fs.mkdirSync(GLOBAL_TEMP_DIR, { recursive: true });
+          cb(null, GLOBAL_TEMP_DIR);
+        } catch (err) {
+          cb(err as Error, '');
+        }
+      },
+      filename: (_req, file, cb) => cb(null, `trek-import-${randomUUID()}${path.extname(file.originalname)}`),
+    }),
+    limits: { fileSize: MAX_TREK_ZIP_BYTES },
+    fileFilter: (_req, file, cb) => {
+      const ok = file.originalname.toLowerCase().endsWith('.zip');
+      if (ok) cb(null, true);
+      else cb(new Error('Only .zip backups are supported'), false);
+    },
+  }))
+  async importTrekPreview(@CurrentUser() user: User, @UploadedFile() file: Express.Multer.File | undefined) {
+    if (!this.trips.can('trip_create', user.role, null, user.id, false)) {
+      throw new HttpException({ error: 'No permission to create trips' }, 403);
+    }
+    if (!file?.path) throw new HttpException({ error: 'No backup uploaded' }, 400);
+    try {
+      const { token, trips } = await this.trekImport.previewFromZip(file.path);
+      return { token, trips };
+    } catch (e: unknown) {
+      throw new HttpException({ error: e instanceof Error ? e.message : 'Backup import failed' }, 400);
+    }
+  }
+
+  /** Step 2: copy the selected trips (and everything hanging off them) into TT. */
+  @Post('import-trek')
+  @HttpCode(201)
+  importTrek(@CurrentUser() user: User, @Body() body: TrekImportDto, @Req() req: Request) {
+    if (!this.trips.can('trip_create', user.role, null, user.id, false)) {
+      throw new HttpException({ error: 'No permission to create trips' }, 403);
+    }
+    const token = String(body.token ?? '');
+    const tripIds = Array.isArray(body.trip_ids) ? body.trip_ids.map(Number).filter(Number.isSafeInteger) : [];
+    if (!token || tripIds.length === 0) throw new HttpException({ error: 'token and trip_ids are required' }, 400);
+    if (tripIds.length > 200) throw new HttpException({ error: 'Too many trips in one import' }, 400);
+    try {
+      const result = this.trekImport.importTrips(user.id, token, tripIds);
+      this.audit.writeAudit({ userId: user.id, action: 'trip.trek-import', ip: getClientIp(req), details: { count: result.imported.length } });
+      return result;
+    } catch (e: unknown) {
+      throw new HttpException({ error: e instanceof Error ? e.message : 'Backup import failed' }, 400);
+    }
+  }
+
+  @Get(':id')
+  get(@CurrentUser() user: User, @Param('id') id: string) {
+    const trip = this.trips.get(id, user.id);
+    if (!trip) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    return { trip };
+  }
+
+  @Put(':id')
+  async update(@CurrentUser() user: User, @Param('id') id: string, @Body() body: TripUpdateDto, @Req() req: Request, @Headers('x-socket-id') socketId?: string) {
+    const access = this.trips.canAccessTrip(id, user.id);
+    if (!access) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    const ownerId = access.user_id;
+    const isMember = ownerId !== user.id;
+    if (body.is_archived !== undefined && !this.trips.can('trip_archive', user.role, ownerId, user.id, isMember)) {
+      throw new HttpException({ error: 'No permission to archive/unarchive this trip' }, 403);
+    }
+    if (body.cover_image !== undefined && !this.trips.can('trip_cover_upload', user.role, ownerId, user.id, isMember)) {
+      throw new HttpException({ error: 'No permission to change cover image' }, 403);
+    }
+    const editFields = ['title', 'description', 'start_date', 'end_date', 'currency', 'reminder_days', 'day_count'];
+    if (editFields.some((f) => body[f] !== undefined) && !this.trips.can('trip_edit', user.role, ownerId, user.id, isMember)) {
+      throw new HttpException({ error: 'No permission to edit this trip' }, 403);
+    }
+    // A chosen Unsplash cover arrives as an images.unsplash.com hot-link; download
+    // it into uploads/covers so the cover survives offline + CDN link-rot (#1277).
+    if (this.unsplash.isUnsplashCoverUrl(body.cover_image)) {
+      try {
+        const filename = await this.unsplash.saveUnsplashCover(body.cover_image);
+        body.cover_image = `/uploads/covers/${filename}`;
+      } catch (e) {
+        console.error('Unsplash cover download failed:', e);
+        throw new HttpException({ error: 'Could not save the selected cover image' }, 502);
+      }
+    }
+    const oldCover = body.cover_image !== undefined
+      ? (this.trips.getRaw(id) as { cover_image: string | null } | undefined)?.cover_image
+      : undefined;
+    try {
+      const result = await this.trips.update(id, user.id, body, user.role);
+      if (body.cover_image !== undefined && body.cover_image !== oldCover) {
+        await this.trips.deleteOldCover(oldCover);
+      }
+      if (Object.keys(result.changes).length > 0) {
+        this.audit.writeAudit({ userId: user.id, action: 'trip.update', ip: getClientIp(req), details: { tripId: Number(id), trip: result.newTitle, ...(result.ownerEmail ? { owner: result.ownerEmail } : {}), ...result.changes } });
+        if (result.isAdminEdit && result.ownerEmail) logInfo(`Admin ${user.email} edited trip "${result.newTitle}" owned by ${result.ownerEmail}`);
+      }
+      if (result.newReminder !== result.oldReminder) {
+        if (result.newReminder > 0) logInfo(`${user.email} set ${result.newReminder}-day reminder for trip "${result.newTitle}"`);
+        else logInfo(`${user.email} removed reminder for trip "${result.newTitle}"`);
+      }
+      this.trips.broadcast(id, 'trip:updated', { trip: result.updatedTrip }, socketId);
+      return { trip: result.updatedTrip };
+    } catch (e: unknown) {
+      if (e instanceof NotFoundError) throw new HttpException({ error: e.message }, 404);
+      if (e instanceof ValidationError) throw new HttpException({ error: e.message }, 400);
+      throw e;
+    }
+  }
+
+  @Post(':id/cover')
+  @UseInterceptors(FileInterceptor('cover'))
+  async cover(@CurrentUser() user: User, @Param('id') id: string, @UploadedFile() file: Express.Multer.File | undefined) {
+    if (isDemoWriteBlocked(this.env, user.email)) {
+      throw new HttpException(DEMO_WRITE_ERROR, 403);
+    }
+    const access = this.trips.canAccessTrip(id, user.id);
+    if (!access?.user_id) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    if (!this.trips.can('trip_cover_upload', user.role, access.user_id, user.id, access.user_id !== user.id)) {
+      throw new HttpException({ error: 'No permission to change the cover image' }, 403);
+    }
+    const trip = this.trips.getRaw(id) as { cover_image: string | null } | undefined;
+    if (!trip) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    if (!file) {
+      throw new HttpException({ error: 'No image uploaded' }, 400);
+    }
+    // Commit the spooled upload to its final storage location (atomic
+    // same-volume rename) before anything references the final path.
+    await this.storage.put('covers', file.filename, { tmpPath: file.path });
+    await this.trips.deleteOldCover(trip.cover_image);
+    const coverUrl = `/uploads/covers/${file.filename}`;
+    this.trips.updateCoverImage(id, coverUrl);
+    return { cover_image: coverUrl };
+  }
+
+  @Post(':id/copy')
+  @HttpCode(201)
+  copy(@CurrentUser() user: User, @Param('id') id: string, @Body() body: TripCopyDto, @Req() req: Request) {
+    if (!this.trips.can('trip_create', user.role, null, user.id, false)) {
+      throw new HttpException({ error: 'No permission to create trips' }, 403);
+    }
+    if (!this.trips.canAccessTrip(id, user.id)) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    const { title } = body;
+    try {
+      const newTripId = this.trips.copy(id, user.id, title);
+      this.audit.writeAudit({ userId: user.id, action: 'trip.copy', ip: getClientIp(req), details: { sourceTripId: Number(id), newTripId, title } });
+      return { trip: this.trips.getCopiedTrip(newTripId, user.id) };
+    } catch {
+      throw new HttpException({ error: 'Failed to copy trip' }, 500);
+    }
+  }
+
+  @Delete(':id')
+  remove(@CurrentUser() user: User, @Param('id') id: string, @Req() req: Request, @Headers('x-socket-id') socketId?: string) {
+    const owner = this.trips.getOwner(id);
+    if (!owner) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    // Someone with no access at all gets the same 404 as a trip that does not
+    // exist, otherwise the 403 below turns sequential ids into an existence
+    // oracle. Admins are exempt: they may delete trips they are not a member of,
+    // which is what the isAdminDelete branch further down relies on.
+    if (user.role !== 'admin' && !this.trips.canAccessTrip(id, user.id)) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    if (!this.trips.can('trip_delete', user.role, owner.user_id, user.id, owner.user_id !== user.id)) {
+      throw new HttpException({ error: 'No permission to delete this trip' }, 403);
+    }
+    const info = this.trips.remove(id, user.id, user.role);
+    this.audit.writeAudit({ userId: user.id, action: 'trip.delete', ip: getClientIp(req), details: { tripId: info.tripId, trip: info.title, ...(info.ownerEmail ? { owner: info.ownerEmail } : {}) } });
+    if (info.isAdminDelete && info.ownerEmail) logInfo(`Admin ${user.email} deleted trip "${info.title}" owned by ${info.ownerEmail}`);
+    this.trips.broadcast(String(info.tripId), 'trip:deleted', { id: info.tripId }, socketId);
+    return { success: true };
+  }
+
+  @Get(':id/bundle')
+  bundle(@CurrentUser() user: User, @Param('id') id: string) {
+    const trip = this.trips.get(id, user.id) as { user_id: number } | undefined;
+    if (!trip) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    return this.readModel.bundle(id, trip, user.id);
+  }
+
+  @Get(':id/export.ics')
+  exportIcs(@CurrentUser() user: User, @Param('id') id: string, @Res() res: Response) {
+    if (!this.trips.canAccessTrip(id, user.id)) {
+      throw new HttpException({ error: 'Trip not found' }, 404);
+    }
+    try {
+      const { ics, filename } = this.calendar.exportICS(id);
+      res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+      res.setHeader('Content-Disposition', contentDisposition(filename, 'attachment'));
+      res.send(ics);
+    } catch (e: unknown) {
+      if (e instanceof NotFoundError) throw new HttpException({ error: e.message }, 404);
+      throw e;
+    }
+  }
+}

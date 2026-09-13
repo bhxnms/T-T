@@ -1,0 +1,77 @@
+import type { TranslationStrings } from '../types';
+
+const common: TranslationStrings = {
+  'common.save': 'Uložit',
+  'common.showMore': 'Zobrazit více',
+  'common.showLess': 'Zobrazit méně',
+  'common.cancel': 'Zrušit',
+  'common.clear': 'Vymazat',
+  'common.delete': 'Smazat',
+  'common.preview': 'Náhled',
+  'common.edit': 'Upravit',
+  'common.add': 'Přidat',
+  'common.loading': 'Načítání...',
+  'common.import': 'Importovat',
+  'common.select': 'Vybrat',
+  'common.selectAll': 'Vybrat vše',
+  'common.deselectAll': 'Zrušit výběr všeho',
+  'common.error': 'Chyba',
+  'common.success': 'Úspěch',
+  'common.unknownError': 'Neznámá chyba',
+  'common.tooManyAttempts': 'Příliš mnoho pokusů. Zkuste to prosím znovu.',
+  'common.back': 'Zpět',
+  'common.all': 'Vše',
+  'common.close': 'Zavřít',
+  'common.open': 'Otevřít',
+  'common.upload': 'Nahrát',
+  'common.search': 'Hledat',
+  'common.confirm': 'Potvrdit',
+  'common.ok': 'OK',
+  'common.yes': 'Ano',
+  'common.no': 'Ne',
+  'common.or': 'nebo',
+  'common.none': 'Žádné',
+  'common.date': 'Datum',
+  'common.rename': 'Přejmenovat',
+  'common.discardChanges': 'Zahodit změny',
+  'common.discard': 'Zahodit',
+  'common.name': 'Jméno',
+  'common.email': 'E-mail',
+  'common.password': 'Heslo',
+  'common.saving': 'Ukládání...',
+  'common.expand': 'Rozbalit',
+  'common.collapse': 'Sbalit',
+  'common.saved': 'Uloženo',
+  'common.update': 'Aktualizovat',
+  'common.change': 'Změnit',
+  'common.uploading': 'Nahrávání…',
+  'common.backToPlanning': 'Zpět k plánování',
+  'common.reset': 'Resetovat',
+  'common.copy': 'Kopírovat',
+  'common.copied': 'Zkopírováno',
+  'common.justNow': 'právě teď',
+  'common.hoursAgo': 'před {count} h',
+  'common.daysAgo': 'před {count} d',
+  'common.datepicker.prevMonth': 'Previous month', // en-fallback
+  'common.datepicker.nextMonth': 'Next month', // en-fallback
+  'common.datepicker.prevYear': 'Previous year', // en-fallback
+  'common.datepicker.nextYear': 'Next year', // en-fallback
+  'common.datepicker.prevYears': 'Previous years', // en-fallback
+  'common.datepicker.nextYears': 'Next years', // en-fallback
+  'common.datepicker.selectMonth': 'Select month', // en-fallback
+  'common.datepicker.selectYear': 'Select year', // en-fallback
+  'common.datepicker.enterManually': 'Enter date manually', // en-fallback
+  'common.datepicker.typeDate': 'Type a date', // en-fallback
+  'common.datepicker.dialog': 'Date picker', // en-fallback
+  'common.datepicker.clearDate': 'Clear date', // en-fallback
+  'common.errorTitle': 'Něco se pokazilo',
+  'common.errorBody': 'Tato část aplikace přestala fungovat. Vaše data jsou v bezpečí.',
+  'common.errorPanelTitle': 'Tuto sekci se nepodařilo zobrazit',
+  'common.errorPanelBody': 'Zbytek stránky funguje dál.',
+  'common.errorRetry': 'Zkusit znovu',
+  'common.errorReload': 'Načíst stránku znovu',
+  'common.errorUpdateTitle': 'Je dostupná nová verze',
+  'common.errorUpdateBody': 'TREK byl aktualizován, zatímco byla tato karta otevřená. Načtěte znovu pro novou verzi.',
+  'common.errorPluginTitle': 'Tento plugin se nepodařilo zobrazit',
+};
+export default common;

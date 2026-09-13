@@ -1,0 +1,38 @@
+import type { TranslationStrings } from '../types';
+
+const members: TranslationStrings = {
+  'members.shareTrip': 'Reise teilen',
+  'members.inviteUser': 'Benutzer einladen',
+  'members.selectUser': 'Benutzer auswählen…',
+  'members.invite': 'Einladen',
+  'members.allHaveAccess': 'Alle Benutzer haben bereits Zugriff.',
+  'members.access': 'Zugriff',
+  'members.person': 'Person',
+  'members.persons': 'Personen',
+  'members.you': 'du',
+  'members.owner': 'Eigentümer',
+  'members.leaveTrip': 'Reise verlassen',
+  'members.removeAccess': 'Zugriff entfernen',
+  'members.confirmLeave': 'Reise verlassen? Du verlierst den Zugriff.',
+  'members.confirmRemove': 'Zugriff für diesen Benutzer entfernen?',
+  'members.loadError': 'Fehler beim Laden der Mitglieder',
+  'members.added': 'hinzugefügt',
+  'members.addError': 'Fehler beim Hinzufügen',
+  'members.removed': 'Mitglied entfernt',
+  'members.removeError': 'Fehler beim Entfernen',
+  'members.makeOwner': 'Zum Eigentümer machen',
+  'members.confirmTransfer': 'Eigentümerschaft an {name} übertragen? Du wirst zu einem normalen Mitglied.',
+  'members.transferError': 'Übertragung fehlgeschlagen',
+  'members.guests': 'Gäste',
+  'members.guest': 'Gast',
+  'members.guestsHint':
+    'Personen ohne Account. Sie können Kosten, Gepäck und Aufgaben zugewiesen bekommen, sich aber nicht anmelden.',
+  'members.addGuest': 'Gast hinzufügen',
+  'members.guestNamePlaceholder': 'Name des Gasts',
+  'members.guestAdded': 'Gast hinzugefügt',
+  'members.guestAddError': 'Gast konnte nicht hinzugefügt werden',
+  'members.guestRenameError': 'Gast konnte nicht umbenannt werden',
+  'members.guestRemoved': 'Gast entfernt',
+  'members.confirmRemoveGuest': 'Diesen Gast entfernen? Seine Zuweisungen und Kostenanteile werden ebenfalls entfernt.',
+};
+export default members;

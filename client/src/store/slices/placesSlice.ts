@@ -1,0 +1,197 @@
+import { placeRepo } from '../../repo/placeRepo'
+import { placesApi } from '../../api/client'
+import type { StoreApi } from 'zustand'
+import type { TripStoreState } from '../tripStore'
+import type { Place, Assignment } from '../../types'
+import { getApiErrorMessage } from '../../types'
+
+type SetState = StoreApi<TripStoreState>['setState']
+type GetState = StoreApi<TripStoreState>['getState']
+
+export interface PlacesSlice {
+  refreshPlaces: (tripId: number | string) => Promise<void>
+  addPlace: (tripId: number | string, placeData: Partial<Place> & { name: string }) => Promise<Place>
+  updatePlace: (tripId: number | string, placeId: number, placeData: Partial<Place>) => Promise<Place>
+  uploadPlaceImage: (tripId: number | string, placeId: number, file: File) => Promise<Place>
+  ratePlace: (tripId: number | string, placeId: number, rating: number | null) => Promise<Place>
+  deletePlace: (tripId: number | string, placeId: number) => Promise<void>
+  deletePlacesMany: (tripId: number | string, placeIds: number[]) => Promise<void>
+  updatePlacesMany: (tripId: number | string, placeIds: number[], patch: Partial<Place>) => Promise<void>
+}
+
+/**
+ * Swap the pool place embedded in an assignment, resolving its times the way
+ * the server does.
+ *
+ * The embedded copy is a projection, not the pool row: assignments.service
+ * selects COALESCE(da.assignment_time, p.place_time). So a per-stop override
+ * wins and has to survive a pool edit, and where there is no override the pool
+ * time is what the day card shows - which means a pool edit must reach it.
+ * Pinning the old embedded times instead would keep a renamed place's schedule
+ * frozen until the next reload.
+ *
+ * Exported because the WS applier in remoteEventHandler has to merge
+ * identically; two spellings of this rule is how the two paths drifted apart in
+ * the first place.
+ */
+export function mergeAssignmentPlace(a: Assignment, place: Place): Assignment {
+  return {
+    ...a,
+    place: {
+      ...place,
+      place_time: a.assignment_time ?? place.place_time,
+      end_time: a.assignment_end_time ?? place.end_time,
+    },
+  }
+}
+
+/** Replace a place in the pool and in every day-assignment that embeds it,
+ *  preserving the assignment's own times (mirrors updatePlace's reconciliation). */
+function applyUpdatedPlace(set: SetState, placeId: number, place: Place): void {
+  set(state => {
+    const updatedAssignments = { ...state.assignments }
+    let changed = false
+    for (const [dayId, items] of Object.entries(state.assignments)) {
+      if (items.some((a: Assignment) => a.place?.id === placeId)) {
+        updatedAssignments[dayId] = items.map((a: Assignment) =>
+          a.place?.id === placeId ? mergeAssignmentPlace(a, place) : a
+        )
+        changed = true
+      }
+    }
+    return {
+      places: state.places.map(p => p.id === placeId ? place : p),
+      ...(changed ? { assignments: updatedAssignments } : {}),
+    }
+  })
+}
+
+export const createPlacesSlice = (set: SetState, get: GetState): PlacesSlice => ({
+  refreshPlaces: async (tripId) => {
+    try {
+      const data = await placeRepo.list(tripId)
+      set({ places: data.places })
+    } catch (err: unknown) {
+      console.error('Failed to refresh places:', err)
+    }
+  },
+
+  addPlace: async (tripId, placeData) => {
+    try {
+      const data = await placeRepo.create(tripId, placeData as Record<string, unknown> & { name: string })
+      set(state => ({ places: [data.place, ...state.places] }))
+      return data.place
+    } catch (err: unknown) {
+      throw new Error(getApiErrorMessage(err, 'Error adding place'))
+    }
+  },
+
+  updatePlace: async (tripId, placeId, placeData) => {
+    try {
+      const data = await placeRepo.update(tripId, placeId, placeData as Record<string, unknown>)
+      applyUpdatedPlace(set, placeId, data.place)
+      return data.place
+    } catch (err: unknown) {
+      throw new Error(getApiErrorMessage(err, 'Error updating place'))
+    }
+  },
+
+  uploadPlaceImage: async (tripId, placeId, file) => {
+    // Uploads are online-only (binary multipart), so they bypass the offline repo.
+    // The server broadcast is echo-suppressed for us, so apply the returned place.
+    try {
+      const data = await placesApi.uploadImage(tripId, placeId, file)
+      applyUpdatedPlace(set, placeId, data.place)
+      return data.place
+    } catch (err: unknown) {
+      throw new Error(getApiErrorMessage(err, 'Error uploading image'))
+    }
+  },
+
+  ratePlace: async (tripId, placeId, rating) => {
+    // Casts (or clears, rating null) the current user's own star vote (#1435)
+    // and applies the returned place with the fresh average.
+    try {
+      const data = await placesApi.rate(tripId, placeId, rating)
+      applyUpdatedPlace(set, placeId, data.place)
+      return data.place
+    } catch (err: unknown) {
+      throw new Error(getApiErrorMessage(err, 'Error rating place'))
+    }
+  },
+
+  deletePlace: async (tripId, placeId) => {
+    try {
+      await placeRepo.delete(tripId, placeId)
+      set(state => {
+        const updatedAssignments = { ...state.assignments }
+        let changed = false
+        for (const [dayId, items] of Object.entries(state.assignments)) {
+          if (items.some((a: Assignment) => a.place?.id === placeId)) {
+            updatedAssignments[dayId] = items.filter((a: Assignment) => a.place?.id !== placeId)
+            changed = true
+          }
+        }
+        return {
+          places: state.places.filter(p => p.id !== placeId),
+          ...(changed ? { assignments: updatedAssignments } : {}),
+        }
+      })
+    } catch (err: unknown) {
+      throw new Error(getApiErrorMessage(err, 'Error deleting place'))
+    }
+  },
+
+  deletePlacesMany: async (tripId, placeIds) => {
+    if (placeIds.length === 0) return
+    try {
+      await placeRepo.deleteMany(tripId, placeIds)
+      const idSet = new Set(placeIds)
+      set(state => {
+        const updatedAssignments = { ...state.assignments }
+        let changed = false
+        for (const [dayId, items] of Object.entries(state.assignments)) {
+          if (items.some((a: Assignment) => a.place?.id != null && idSet.has(a.place.id))) {
+            updatedAssignments[dayId] = items.filter((a: Assignment) => a.place?.id == null || !idSet.has(a.place.id))
+            changed = true
+          }
+        }
+        return {
+          places: state.places.filter(p => !idSet.has(p.id)),
+          ...(changed ? { assignments: updatedAssignments } : {}),
+        }
+      })
+    } catch (err: unknown) {
+      throw new Error(getApiErrorMessage(err, 'Error deleting places'))
+    }
+  },
+
+  updatePlacesMany: async (tripId, placeIds, patch) => {
+    if (placeIds.length === 0) return
+    try {
+      await placeRepo.updateMany(tripId, placeIds, patch as Record<string, unknown>)
+      const idSet = new Set(placeIds)
+      set(state => {
+        // Patch both the place pool and the embedded place on each day assignment
+        // (preserving the assignment's own place_time/end_time) so itinerary cards
+        // reflect the change immediately, like single updatePlace does.
+        const updatedAssignments = { ...state.assignments }
+        let changed = false
+        for (const [dayId, items] of Object.entries(state.assignments)) {
+          if (items.some((a: Assignment) => a.place?.id != null && idSet.has(a.place.id))) {
+            updatedAssignments[dayId] = items.map((a: Assignment) =>
+              a.place?.id != null && idSet.has(a.place.id) ? { ...a, place: { ...a.place, ...patch } } : a
+            )
+            changed = true
+          }
+        }
+        return {
+          places: state.places.map(p => idSet.has(p.id) ? { ...p, ...patch } : p),
+          ...(changed ? { assignments: updatedAssignments } : {}),
+        }
+      })
+    } catch (err: unknown) {
+      throw new Error(getApiErrorMessage(err, 'Error updating places'))
+    }
+  },
+})

@@ -1,0 +1,64 @@
+# Manual, license-gated live-provider test for the env-gated S3 driver
+# contract suite, for local/operator use. CI runs this exact suite for
+# same-repo pull requests, via the MINIO_LICENSE_KEY repo secret (see
+# .github/workflows/test.yml's s3-contract job) — this compose file stays
+# the manual procedure for local runs and for fork PRs, which don't get
+# repo secrets and so still need it run by hand.
+#
+# MinIO fully dropped the community line (quay.io/minio/minio gets no
+# further updates). The maintained successor is AIStor
+# (quay.io/minio/aistor/minio), which requires a license key to boot at all.
+#
+# REQUIRED: a `minio-licence.key` file at the repo root (same directory as
+# this compose file). It is git-ignored and must never be committed — obtain
+# your own free license key from MinIO (https://min.io) and place it there.
+# The AIStor container will not start without it.
+#
+# Verified empirically against RELEASE.2026-08-07T18-34-35Z:
+#   - MINIO_ROOT_USER / MINIO_ROOT_PASSWORD still set the root credentials
+#     (unchanged from community MinIO).
+#   - Command shape: the image entrypoint expects `minio` as its first
+#     argument, so `command: minio server /data --license /minio.license`
+#     is passed through as-is.
+#   - `mc ready local` works as a healthcheck (mc ships in the image; curl
+#     does not).
+#
+# 127.0.0.1 is load-bearing on both sides: aws-lite picks path-style only
+# for IP/localhost hosts (stock MinIO/AIStor only speaks path-style, no
+# MINIO_DOMAIN here), and the port publish below binds 127.0.0.1 only — not
+# 0.0.0.0 — so this fixed-credential test instance is never reachable from
+# the LAN.
+#
+# Procedure:
+#   docker compose -f docker-compose.minio-test.yml up -d
+#   docker compose -f docker-compose.minio-test.yml ps   # wait for "healthy"
+#   cd server && TREK_TEST_S3_ENDPOINT=http://127.0.0.1:9000 \
+#     TREK_TEST_S3_BUCKET=trek-test TREK_TEST_S3_ACCESS_KEY_ID=trekci \
+#     TREK_TEST_S3_SECRET_ACCESS_KEY=trekci-secret \
+#     npx vitest run tests/unit/nest/storage/s3.driver.contract.test.ts
+#   (optional) UI check: with the app running against this instance, open
+#   Admin → Storage, add an S3 backend (endpoint http://127.0.0.1:9000,
+#   bucket trek-test, access key trekci, secret trekci-secret), press Test
+#   on its row and confirm "Connection OK".
+#   docker compose -f docker-compose.minio-test.yml down -v
+services:
+  minio:
+    # Docker Hub's minio/minio repo is archived, and quay.io/minio/minio (the
+    # former community line) receives no further updates — MinIO dropped it
+    # entirely. AIStor is the maintained successor; it requires a license
+    # (see header above). Pinned tag.
+    image: quay.io/minio/aistor/minio:RELEASE.2026-08-07T18-34-35Z
+    command: minio server /data --license /minio.license
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - ./minio-licence.key:/minio.license:ro
+    environment:
+      - MINIO_ROOT_USER=trekci
+      - MINIO_ROOT_PASSWORD=trekci-secret
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"] # curl was removed from the image
+      interval: 2s
+      timeout: 5s
+      retries: 15

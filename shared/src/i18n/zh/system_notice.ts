@@ -1,0 +1,90 @@
+import type { TranslationStrings } from '../types';
+
+const system_notice: TranslationStrings = {
+  'system_notice.welcome_v1.title': '欢迎使用 TT',
+  'system_notice.welcome_v1.body': 'TT 是一个由团队维护的旅行规划与活动管理工具，帮助您制定行程、管理活动并与旅行伙伴协作。本项目基于 TREK 开源项目分支开发而来。',
+  'system_notice.welcome_v1.cta_label': '规划行程',
+  'system_notice.welcome_v1.hero_alt': '风景优美的旅游目的地与 TREK 界面',
+  'system_notice.welcome_v1.highlight_plan': '逐日行程规划',
+  'system_notice.welcome_v1.highlight_share': '与旅行伙伴协作',
+  'system_notice.welcome_v1.highlight_offline': '移动端支持离线使用',
+  'system_notice.dev_test_modal.title': '[开发] 测试通知',
+  'system_notice.dev_test_modal.body': '这是一条仅用于开发环境的测试通知。',
+  'system_notice.thank_you_support.title': '感谢你使用 TT',
+  'system_notice.thank_you_support.body': '感谢您使用 TT。TT 由团队持续维护和增强，专注于旅行规划与活动管理。它基于 TREK 开源项目分支开发，并将继续保持开放、透明和便于自托管。',
+  'system_notice.thank_you_support.highlight_opensource': '在 GitHub 上 100% 开源',
+  'system_notice.thank_you_support.highlight_free': '永久免费——绝无付费档位',
+  'system_notice.thank_you_support.highlight_community': '与社区一起共建',
+  'system_notice.thank_you_support.cta_bmc': 'Buy Me a Coffee',
+  'system_notice.thank_you_support.cta_kofi': '在 Ko-fi 上支持',
+  'system_notice.pager.prev': '上一条通知',
+  'system_notice.pager.next': '下一条通知',
+  'system_notice.pager.counter': '{current} / {total}',
+  'system_notice.pager.goto': '转到通知 {n}',
+  'system_notice.pager.position': '通知 {current}/{total}',
+  'system_notice.v3_photos.title': '3.0 版照片已迁移',
+  'system_notice.v3_photos.body':
+    '旅行规划器中的​**照片**标签已被移除。您的照片安全无虑 — TREK 从未修改您的 Immich 或 Synology 相册。\n\n照片现在位于 **旅程** 插件中。旅程是可选的 — 如果尚未启用，请联系管理员在 Admin → 插件 中开启。',
+  'system_notice.v3_journey.title': '认识旅程 — 旅行日记',
+  'system_notice.v3_journey.body': '将您的旅程记录为展示时间线、照片画廊和互动地图的丰富旅行故事。',
+  'system_notice.v3_journey.cta_label': '打开旅程',
+  'system_notice.v3_journey.highlight_timeline': '每日时间线与画廊',
+  'system_notice.v3_journey.highlight_photos': '从 Immich 或 Synology 导入',
+  'system_notice.v3_journey.highlight_share': '公开分享 — 无需登录',
+  'system_notice.v3_journey.highlight_export': '导出为 PDF 相册书',
+  'system_notice.v3_features.title': '3.0 版更多亮点',
+  'system_notice.v3_features.body': '此版本还有一些其他值得了解的新功能。',
+  'system_notice.v3_features.highlight_dashboard': '移动优先仪表板重设计',
+  'system_notice.v3_features.highlight_offline': '作为 PWA 的完整离线模式',
+  'system_notice.v3_features.highlight_search': '地点搜索实时自动补全',
+  'system_notice.v3_features.highlight_import': '从 KMZ/KML 文件导入地点',
+  'system_notice.v3_mcp.title': 'MCP：OAuth 2.1 升级',
+  'system_notice.v3_mcp.body':
+    'MCP 集成已全面重构。OAuth 2.1 现为推荐的身份验证方式。静态令牌（trek_…）已弃用，将在未来版本中移除。',
+  'system_notice.v3_mcp.highlight_oauth': 'OAuth 2.1 推荐（mcp-remote）',
+  'system_notice.v3_mcp.highlight_scopes': '24 个细粒度权限范围',
+  'system_notice.v3_mcp.highlight_deprecated': '静态 trek_ 令牌已弃用',
+  'system_notice.v3_mcp.highlight_tools': '扩展工具集与提示词',
+  'system_notice.v3_thankyou.title': '来自我的一封私人信',
+  'system_notice.v3_thankyou.body':
+    '在你继续之前——我想停下来说几句。\n\nTREK 最初只是我为自己的旅行而做的一个业余项目。我从未想过它会成长为 4,000 人信赖的冒险规划工具。每一颗星标、每一个 issue、每一个功能请求——我都会读，它们在全职工作和大学学业之间的深夜里支撑着我继续前行。\n\n我想让你们知道：TREK 将永远开源，永远可自托管，永远属于你们。没有追踪，没有订阅，没有任何附加条件。只是一个热爱旅行的人为同样热爱旅行的你们打造的工具。\n\n特别感谢 [jubnl](https://github.com/jubnl)——你已经成为一位不可思议的合作者。3.0 版本中许多精彩之处都留下了你的印记。感谢你在这个项目还很粗糙的时候就选择了相信它。\n\n也感谢你们每一位——报告了 bug、翻译了文本、向朋友分享了 TREK，或者只是用它规划了一次旅行——**谢谢你们**。你们是这一切存在的原因。\n\n愿我们一起踏上更多的冒险旅程。\n\n— Maurice\n\n---\n\n[加入 Discord 社区](https://discord.gg/7Q6M6jDwzf)\n\n如果 TREK 让你的旅行更美好，一杯咖啡能让这盏灯一直亮着。',
+  'system_notice.v3014_whitespace_collision.title': '需要操作：用户账户冲突',
+  'system_notice.v3014_whitespace_collision.body':
+    '3.0.14 版本升级检测到一个或多个由存储账户中首尾空白字符引发的用户名或邮箱冲突。受影响的账户已自动重命名。请检查服务器日志中以 **[migration] WHITESPACE COLLISION** 开头的行，以确认哪些账户需要审查。',
+  // 4.0.0 release modal — the release on the left, the note from the maintainer on the right
+  'system_notice.release_400.eyebrow': '更新已安装',
+  'system_notice.release_400.tag': '发布',
+  'system_notice.release_400.headline': 'TT 项目更新',
+  'system_notice.release_400.intro':
+    'TT 新增了移动端规划和活动管理。这一版由十九个人写成——随之解决的还有大约一百五十个报告过的 bug。',
+  'system_notice.release_400.feature_mobile_title': 'TT 移动端',
+  'system_notice.release_400.feature_mobile_body':
+    '768px 以下现在是一套独立的界面——毛玻璃底栏、自己的弹出面板、自己的行程规划器。用手机打开 TT 试试。',
+  'system_notice.release_400.feature_studio_title': 'TT Studio',
+  'system_notice.release_400.feature_studio_badge': 'Beta',
+  'system_notice.release_400.feature_studio_body':
+    'Journey 的 PDF 变成了一个相册书设计器。你让它排版，它就把书排好，然后退到一边。',
+  'system_notice.release_400.feature_vacay_title': 'Vacay 补齐了剩下的',
+  'system_notice.release_400.feature_vacay_body':
+    '半天、调休和弹性假、日历上的学校假期——还有不必从一月开始的假期年度。',
+  'system_notice.release_400.feature_places_title': '地点自己亮相，文件搬出去',
+  'system_notice.release_400.feature_places_body':
+    '在你保存一个地点之前，图片和描述会自己填好。上传的文件也不必再放在 TT 所在的磁盘上。',
+  'system_notice.release_400.footnote':
+    '这只是其中四项。4.0.0 还带来数百项其他改动，从 Collections、Atlas 一直到底层的整个服务端。',
+  'system_notice.release_400.note_eyebrow': '来自维护者的话',
+  'system_notice.release_400.note_title': '感谢你使用 TT。',
+  'system_notice.release_400.note_body':
+    'TREK 最初只是我为自己的旅行、用业余时间做的一个小工具。现在依然如此：晚上、周末，全职工作之外的那些时间。\n\n有一阵子只有我一个人。现在不是了——十九个人一起做出了这一版，还有成千上万的你们带着星标、issue、翻译和 pull request 来到这里。这一切我都心怀感激。',
+  'system_notice.release_400.promise_label': '承诺',
+  'system_notice.release_400.promise_text': 'TREK 的开源部分永远免费。没有付费档位，没有订阅，没有套路。我保证。',
+  'system_notice.release_400.note_body_after':
+    '4.0.0 花掉了好几个星期的深夜——一个手机端、一个相册书设计器、一次服务端迁移，大多写在午夜到两点之间。这不是抱怨：我喜欢做这件事。只是想诚实地说明，这么大的一个版本是怎么从一个业余项目里出来的。',
+  'system_notice.release_400.note_closing': '谢谢你来到这里。',
+  'system_notice.release_400.note_signature': '— Maurice',
+  'system_notice.release_400.support_text':
+    '是这些支持让它继续跑着——服务器、域名，还有那些变成这样一个版本的深夜。如果 TREK 对你有价值，请我喝杯咖啡是最直接的支持方式。',
+  'system_notice.release_400.cta_bmc': 'Buy me a coffee',
+  'system_notice.release_400.cta_kofi': '在 Ko-fi 上支持',
+};
+export default system_notice;

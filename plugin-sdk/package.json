@@ -1,0 +1,90 @@
+{
+  "name": "trek-plugin-sdk",
+  "version": "1.7.0",
+  "description": "SDK for building TREK plugins: types, definePlugin, a mock host, manifest validation, and the create-trek-plugin / trek-plugin CLIs.",
+  "type": "module",
+  "license": "MIT",
+  "author": "mauriceboe",
+  "maintainers": [
+    {
+      "name": "mauriceboe",
+      "url": "https://github.com/mauriceboe"
+    },
+    {
+      "name": "jubnl",
+      "url": "https://github.com/jubnl"
+    }
+  ],
+  "homepage": "https://github.com/liketrek/TREK/wiki/Plugin-Development",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liketrek/TREK.git",
+    "directory": "plugin-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/liketrek/TREK/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./testing": {
+      "import": {
+        "types": "./dist/mock-host.d.ts",
+        "default": "./dist/mock-host.js"
+      },
+      "require": {
+        "types": "./dist/cjs/mock-host.d.ts",
+        "default": "./dist/cjs/mock-host.js"
+      }
+    }
+  },
+  "bin": {
+    "trek-plugin-sdk": "./dist/cli/trek-plugin.js",
+    "trek-plugin": "./dist/cli/trek-plugin.js",
+    "create-trek-plugin": "./dist/cli/create.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@clack/prompts": "^1.7.0",
+    "semver": "^7.7.4",
+    "update-notifier": "^7.3.1"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node scripts/finish-cjs.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "@types/semver": "^7.7.1",
+    "@types/update-notifier": "^6.0.8",
+    "@vitest/coverage-v8": "^4.1.9",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
+  },
+  "keywords": [
+    "trek",
+    "plugin",
+    "sdk"
+  ]
+}

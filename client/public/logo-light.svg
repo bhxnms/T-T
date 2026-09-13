@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205 60" role="img" aria-label="Tourism-Team">
+  <g transform="translate(4 4)">
+    <rect width="52" height="52" rx="14" fill="#f8fafc"/>
+    <path d="M10 14h36v9H32v22h-9V23H10z" fill="#0284c7"/>
+    <path d="M18 14h28v9H37v22h-9V23H18z" fill="#7c3aed"/>
+  </g>
+  <text x="65" y="37" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="-.6">Tourism-Team</text>
+</svg>

@@ -1,0 +1,97 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const { canAccessTrip, placeTrip, pluginsEnabled } = vi.hoisted(() => ({
+  canAccessTrip: vi.fn((tripId: number, userId: number) => (tripId === 1 && userId === 5 ? { id: 1 } : undefined)),
+  placeTrip: vi.fn((placeId: number) => (placeId === 7 ? { trip_id: 1 } : undefined)),
+  pluginsEnabled: vi.fn(() => true),
+}));
+vi.mock('../../../src/db/database', () => ({
+  db: { prepare: () => ({ get: (placeId: number) => placeTrip(placeId) }) },
+  canAccessTrip,
+}));
+import { db as dbConn } from '../../../src/db/database';
+import { DatabaseService } from '../../../src/nest/database/database.service';
+vi.mock('../../../src/nest/plugins/kill-switch', () => ({ pluginsEnabled }));
+
+import { PlaceDetailsController } from '../../../src/nest/plugins/contributions/place-details.controller';
+import type { PluginHooks } from '../../../src/nest/plugins/plugin-hooks.service';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const req = (id?: number) => ({ user: id === undefined ? undefined : { id } }) as any;
+function controller(over: Partial<PluginHooks> = {}) {
+  const runtime = {
+    providersOf: vi.fn(() => ['p1', 'p2']),
+    placeDetails: vi.fn(async (id: string) => (id === 'p2' ? [{ label: 'Rating', value: '4.5' }] : [{ label: 'Reviews', value: '12', url: 'https://x' }])),
+    ...over,
+  } as unknown as PluginHooks;
+  return { c: new PlaceDetailsController(runtime, new DatabaseService(dbConn)), runtime };
+}
+
+describe('PlaceDetailsController', () => {
+  beforeEach(() => { pluginsEnabled.mockReturnValue(true); canAccessTrip.mockReturnValue({ id: 1 } as never); });
+
+  it('returns [] when the runtime is disabled (no plugin calls)', async () => {
+    pluginsEnabled.mockReturnValue(false);
+    const { c, runtime } = controller();
+    expect(await c.get('7', req(5))).toEqual({ providers: [] });
+    expect(runtime.providersOf).not.toHaveBeenCalled();
+  });
+
+  it('returns [] for an unknown place or a place the caller cannot access', async () => {
+    const { c } = controller();
+    expect(await c.get('999', req(5))).toEqual({ providers: [] }); // place not found
+    canAccessTrip.mockReturnValue(undefined as never);
+    expect(await c.get('7', req(5))).toEqual({ providers: [] }); // no access
+  });
+
+  it('returns [] without an authenticated user', async () => {
+    const { c } = controller();
+    expect(await c.get('7', req(undefined))).toEqual({ providers: [] });
+  });
+
+  it('merges every provider that returns items and skips one that throws (graceful)', async () => {
+    const { c, runtime } = controller({
+      placeDetails: vi.fn(async (id: string) => {
+        if (id === 'p2') throw new Error('slow provider');
+        return [{ label: 'Reviews', value: '12' }];
+      }) as unknown as PluginHooks['placeDetails'],
+    });
+    const res = await c.get('7', req(5));
+    expect(res.providers).toEqual([{ pluginId: 'p1', items: [{ label: 'Reviews', value: '12' }] }]);
+    expect(runtime.placeDetails).toHaveBeenCalledWith('p1', 7, 5);
+  });
+
+  it('normalizes rows: drops a javascript: url, caps lengths, drops non-objects + label-less rows', async () => {
+    const { c } = controller({
+      providersOf: vi.fn(() => ['p1']),
+      placeDetails: vi.fn(async () => [
+        { label: 'x'.repeat(200), value: 'y'.repeat(500), url: 'javascript:alert(1)' },
+        { label: 'Site', url: 'https://ok.example' },
+        { value: 'no label' },   // dropped
+        'not an object',         // dropped
+        { label: 'Mail', url: 'mailto:a@b.c' },
+      ]) as unknown as PluginHooks['placeDetails'],
+    });
+    const items = (await c.get('7', req(5))).providers[0].items;
+    expect(items).toEqual([
+      { label: 'x'.repeat(60), value: 'y'.repeat(200), url: undefined }, // js: url stripped
+      { label: 'Site', value: undefined, url: 'https://ok.example' },
+      { label: 'Mail', value: undefined, url: 'mailto:a@b.c' },
+    ]);
+  });
+
+  it('caps the row count per provider at 12 and drops a provider that yields nothing usable', async () => {
+    const { c } = controller({
+      providersOf: vi.fn(() => ['flood', 'empty']),
+      placeDetails: vi.fn(async (id: string) =>
+        id === 'flood'
+          ? Array.from({ length: 50 }, (_v, i) => ({ label: `r${i}` }))
+          : [{ value: 'no label' }, 'junk'],
+      ) as unknown as PluginHooks['placeDetails'],
+    });
+    const res = await c.get('7', req(5));
+    expect(res.providers).toHaveLength(1); // 'empty' contributes nothing -> dropped
+    expect(res.providers[0].pluginId).toBe('flood');
+    expect(res.providers[0].items).toHaveLength(12);
+  });
+});

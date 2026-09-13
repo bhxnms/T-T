@@ -1,0 +1,66 @@
+services:
+  app:
+    image: mauriceboe/trek:latest
+    container_name: trek
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+    tmpfs:
+      - /tmp:noexec,nosuid,size=128m
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-} # Recommended. Generate with: openssl rand -hex 32. If unset, falls back to data/.jwt_secret (existing installs) or auto-generates a key (fresh installs).
+      - TZ=${TZ:-UTC} # Timezone for logs, reminders and scheduled tasks (e.g. Europe/Berlin)
+      - LOG_LEVEL=${LOG_LEVEL:-info} # info = concise user actions; debug = verbose admin-level details
+#      - TREK_WIKI_DIR=/app/wiki # Where the in-app Help pages (/help) read their content from. Leave unset: the image ships the wiki at /app/wiki and finds it automatically. Only set this to serve your own docs, mounted into the container. If the path does not exist, Help falls back to fetching the public GitHub wiki (needs outbound network, and tracks the latest release rather than your version).
+#      - DEFAULT_LANGUAGE=en # Default language on the login page for users with no saved preference. Browser/OS language is auto-detected first; this is the fallback. Supported: de, en, es, fr, hu, nl, br, cs, pl, ru, zh, zh-TW, it, ar
+#      - SESSION_DURATION=30d # How long users stay logged in (trek_session JWT + cookie maxAge). Accepts: 1h | 12h | 7d | 30d | 90d. Default: 24h
+#      - SESSION_DURATION_REMEMBER=30d # Session length when "Remember me" is ticked at login: longer-lived JWT + persistent cookie that survives browser restarts. Same format as SESSION_DURATION. Default: 30d
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-} # Comma-separated origins for CORS and email notification links
+      - TREK_PLUGIN_HOST_VERSION=${TREK_PLUGIN_HOST_VERSION:-4.2.1}
+#      - FORCE_HTTPS=true # Optional. Enables HTTPS redirect, HSTS, CSP upgrade-insecure-requests, and secure cookies behind a TLS proxy
+#      - HSTS_INCLUDE_SUBDOMAINS=false # When true: adds includeSubDomains to the HSTS header. Only effective when HSTS is active. Leave false if sibling subdomains still run over plain HTTP.
+#      - COOKIE_SECURE=false # Escape hatch: force session cookies over plain HTTP even in production. Not recommended.
+#      - TRUST_PROXY=1 # Trusted proxy count for X-Forwarded-For / X-Forwarded-Proto. Required for FORCE_HTTPS to work.
+#      - ALLOW_INTERNAL_NETWORK=false # Set to true if Immich or other services are hosted on your local network (RFC-1918 IPs). Loopback and link-local addresses remain blocked regardless.
+#      - HTTP_PROXY=${HTTP_PROXY:-} # Optional. Proxy URL for outbound HTTP requests (e.g. http://192.168.1.10:7890)
+#      - HTTPS_PROXY=${HTTPS_PROXY:-} # Optional. Proxy URL for outbound HTTPS requests
+#      - NO_PROXY=${NO_PROXY:-localhost,127.0.0.1} # Optional. Comma-separated hosts and domains that bypass the outbound proxy
+#      - APP_URL=https://trek.example.com # Public base URL — required when OIDC is enabled (must match the redirect URI registered with your IdP); also used as base URL for links in email notifications
+#      - OIDC_ISSUER=https://auth.example.com # OpenID Connect provider URL
+#      - OIDC_CLIENT_ID=trek # OpenID Connect client ID
+#      - OIDC_CLIENT_SECRET=supersecret # OpenID Connect client secret
+#      - OIDC_DISPLAY_NAME=SSO # Label shown on the SSO login button
+#      - OIDC_ONLY=false # Set true to force SSO-only mode: disables password login and registration, overrides Admin > Settings toggles, cannot be changed at runtime
+#      - OIDC_ADMIN_CLAIM=groups # OIDC claim used to identify admin users
+#      - OIDC_ADMIN_VALUE=app-trek-admins # Value of the OIDC claim that grants admin role
+#      - OIDC_SCOPE=openid email profile # Fully overrides the default. Add extra scopes as needed (e.g. add groups if using OIDC_ADMIN_CLAIM)
+#      - OIDC_DISCOVERY_URL= # Override the OIDC discovery endpoint for providers with non-standard paths (e.g. Authentik)
+#      - ADMIN_EMAIL=admin@tt.local # Initial admin e-mail — only used on first boot when no users exist
+#      - ADMIN_PASSWORD=changeme      # Initial admin password — only used on first boot when no users exist
+#      - MCP_RATE_LIMIT=300 # Max MCP API requests per user per minute (default: 300)
+#      - MCP_MAX_SESSION_PER_USER=20 # Max concurrent MCP sessions per user (default: 20)
+#      - KITINERARY_EXTRACTOR_PATH= # Optional. Full path to kitinerary-extractor binary. Auto-detected from PATH and /usr/lib/*/libexec/kf6/ when unset.
+#      - LLM_TIMEOUT_MS=900000 # Optional. Ceiling (ms) for one AI-parsing call before it is abandoned, applied to every provider and to the HTTP client underneath. Generous by default so heavier documents fit; lower it on a cloud provider to fail fast. Must be a whole number of milliseconds between 1 and 2147483647 — anything else stops the server at startup with the reason. (default: 900000)
+#      - TREK_PLUGINS_IGNORE_TREK_RANGE=true # Optional. Lets plugins whose declared TREK version range predates this build, and plugins that declare none, be installed and activated anyway. Every gate warns instead of refusing; the plugin-API version gate and the Discover compatibility verdict stay hard. Off unless set. (default: off)
+#      - UNSPLASH_ACCESS_KEY= # Optional. Unsplash Access Key for trip-cover / place-image search. Without one, TREK uses Unsplash's unauthenticated endpoint, which some datacenter/VPS IPs are blocked from (#1449). Free key at unsplash.com/developers. Can also be set per-admin in Admin > Settings; the env var overrides that.
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+#      - ./storage-config.json:/app/data/storage-config.json:ro # optional seed-once storage provisioning (wiki: Admin-Storage)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

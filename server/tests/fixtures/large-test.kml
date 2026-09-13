@@ -1,0 +1,3181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>TREK Large Test KML</name>
+    <description>Generated fixture with 150 points and 20 paths across folders</description>
+
+    <Style id="point-style"><IconStyle><scale>1.0</scale></IconStyle></Style>
+    <Style id="line-style"><LineStyle><color>ff0000ff</color><width>3</width></LineStyle></Style>
+
+    <Folder>
+      <name>Summits</name>
+      <Placemark>
+        <name>Quellfassung 1</name>
+        <description><![CDATA[<b>Quellfassung 1</b><br/>Category: Summits<br/>Elevation: 1008 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.300302,46.415912,1007.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 2</name>
+        <description><![CDATA[<b>Hochlager 2</b><br/>Category: Summits<br/>Elevation: 2879 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.846314,45.332978,2878.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergseehütte 3</name>
+        <description><![CDATA[<b>Bergseehütte 3</b><br/>Category: Summits<br/>Elevation: 3590 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.654517,47.537235,3590.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Parkplatz 4</name>
+        <description><![CDATA[<b>Parkplatz 4</b><br/>Category: Summits<br/>Elevation: 2401 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.388902,45.597872,2400.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rifugio 5</name>
+        <description><![CDATA[<b>Rifugio 5</b><br/>Category: Summits<br/>Elevation: 1123 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.945969,48.089302,1122.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 6</name>
+        <description><![CDATA[<b>Hochlager 6</b><br/>Category: Summits<br/>Elevation: 1552 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.899869,47.442272,1551.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 7</name>
+        <description><![CDATA[<b>Gipfelkreuz 7</b><br/>Category: Summits<br/>Elevation: 1476 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.851209,47.509510,1475.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Panoramapunkt 8</name>
+        <description><![CDATA[<b>Panoramapunkt 8</b><br/>Category: Summits<br/>Elevation: 1093 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.530479,45.877597,1092.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rifugio 9</name>
+        <description><![CDATA[<b>Rifugio 9</b><br/>Category: Summits<br/>Elevation: 1073 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.574620,45.123266,1073.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 10</name>
+        <description><![CDATA[<b>Jochpass 10</b><br/>Category: Summits<br/>Elevation: 1134 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.930100,48.706848,1133.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 11</name>
+        <description><![CDATA[<b>Jochpass 11</b><br/>Category: Summits<br/>Elevation: 3544 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.266858,47.790033,3544.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergstation 12</name>
+        <description><![CDATA[<b>Bergstation 12</b><br/>Category: Summits<br/>Elevation: 526 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.141199,48.575642,526.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Refugio 13</name>
+        <description><![CDATA[<b>Refugio 13</b><br/>Category: Summits<br/>Elevation: 1825 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.235459,45.484749,1824.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 14</name>
+        <description><![CDATA[<b>Kapelle 14</b><br/>Category: Summits<br/>Elevation: 2499 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.071646,47.328059,2499.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 15</name>
+        <description><![CDATA[<b>Gipfelkreuz 15</b><br/>Category: Summits<br/>Elevation: 1083 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.593608,46.118791,1082.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 16</name>
+        <description><![CDATA[<b>Alpenrose 16</b><br/>Category: Summits<br/>Elevation: 2255 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.271891,47.361735,2254.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 17</name>
+        <description><![CDATA[<b>Alpenrose 17</b><br/>Category: Summits<br/>Elevation: 3535 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.279996,46.215234,3535.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 18</name>
+        <description><![CDATA[<b>Alpenrose 18</b><br/>Category: Summits<br/>Elevation: 3048 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.373454,47.754216,3048.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 19</name>
+        <description><![CDATA[<b>Alpenrose 19</b><br/>Category: Summits<br/>Elevation: 728 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.133198,47.232138,728.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Talstation 20</name>
+        <description><![CDATA[<b>Talstation 20</b><br/>Category: Summits<br/>Elevation: 1794 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.464486,45.983895,1793.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 21</name>
+        <description><![CDATA[<b>Quellfassung 21</b><br/>Category: Summits<br/>Elevation: 2097 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.776426,48.321723,2097.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 22</name>
+        <description><![CDATA[<b>Jochpass 22</b><br/>Category: Summits<br/>Elevation: 3196 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.968853,48.184502,3196.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 23</name>
+        <description><![CDATA[<b>Gipfelkreuz 23</b><br/>Category: Summits<br/>Elevation: 438 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.504931,47.513299,437.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 24</name>
+        <description><![CDATA[<b>Kapelle 24</b><br/>Category: Summits<br/>Elevation: 1545 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.007897,46.149740,1545.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 25</name>
+        <description><![CDATA[<b>Jochpass 25</b><br/>Category: Summits<br/>Elevation: 2217 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.754754,46.343760,2216.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 26</name>
+        <description><![CDATA[<b>Kapelle 26</b><br/>Category: Summits<br/>Elevation: 2854 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.192145,48.318273,2853.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 27</name>
+        <description><![CDATA[<b>Quellfassung 27</b><br/>Category: Summits<br/>Elevation: 3302 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.420839,47.883286,3302.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rastplatz 28</name>
+        <description><![CDATA[<b>Rastplatz 28</b><br/>Category: Summits<br/>Elevation: 3372 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.742626,47.413455,3372.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 29</name>
+        <description><![CDATA[<b>Quellfassung 29</b><br/>Category: Summits<br/>Elevation: 2693 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.737096,45.674416,2692.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rifugio 30</name>
+        <description><![CDATA[<b>Rifugio 30</b><br/>Category: Summits<br/>Elevation: 3661 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.252501,46.334218,3660.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Almhütte 31</name>
+        <description><![CDATA[<b>Almhütte 31</b><br/>Category: Summits<br/>Elevation: 637 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.130629,46.484437,636.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Panoramapunkt 32</name>
+        <description><![CDATA[<b>Panoramapunkt 32</b><br/>Category: Summits<br/>Elevation: 3080 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.998372,48.428823,3079.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Almhütte 33</name>
+        <description><![CDATA[<b>Almhütte 33</b><br/>Category: Summits<br/>Elevation: 1865 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.084053,45.309122,1865.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Almhütte 34</name>
+        <description><![CDATA[<b>Almhütte 34</b><br/>Category: Summits<br/>Elevation: 2477 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.132870,46.437330,2477.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 35</name>
+        <description><![CDATA[<b>Gatterl 35</b><br/>Category: Summits<br/>Elevation: 3333 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.213401,46.315835,3333.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Talstation 36</name>
+        <description><![CDATA[<b>Talstation 36</b><br/>Category: Summits<br/>Elevation: 1691 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.260214,47.467127,1691.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Talstation 37</name>
+        <description><![CDATA[<b>Talstation 37</b><br/>Category: Summits<br/>Elevation: 2761 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.168245,46.181530,2760.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 38</name>
+        <description><![CDATA[<b>Wegkreuz 38</b><br/>Category: Summits<br/>Elevation: 3084 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.171267,48.365316,3084.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 39</name>
+        <description><![CDATA[<b>Quellfassung 39</b><br/>Category: Summits<br/>Elevation: 3345 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.472065,47.428666,3345.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergstation 40</name>
+        <description><![CDATA[<b>Bergstation 40</b><br/>Category: Summits<br/>Elevation: 2632 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.947010,46.432983,2632.3</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+
+    <Folder>
+      <name>Huts</name>
+      <Placemark>
+        <name>Almhütte 41</name>
+        <description><![CDATA[<b>Almhütte 41</b><br/>Category: Huts<br/>Elevation: 404 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.626994,45.249329,404.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 42</name>
+        <description><![CDATA[<b>Hochlager 42</b><br/>Category: Huts<br/>Elevation: 3768 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.413200,48.599610,3767.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Refugio 43</name>
+        <description><![CDATA[<b>Refugio 43</b><br/>Category: Huts<br/>Elevation: 1098 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.276467,47.939486,1098.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 44</name>
+        <description><![CDATA[<b>Gatterl 44</b><br/>Category: Huts<br/>Elevation: 2507 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.624124,46.672098,2507.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wanderheim 45</name>
+        <description><![CDATA[<b>Wanderheim 45</b><br/>Category: Huts<br/>Elevation: 470 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.301138,47.875745,470.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 46</name>
+        <description><![CDATA[<b>Gipfelkreuz 46</b><br/>Category: Huts<br/>Elevation: 509 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.802286,48.025507,508.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bachübergang 47</name>
+        <description><![CDATA[<b>Bachübergang 47</b><br/>Category: Huts<br/>Elevation: 2295 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.976906,46.467092,2294.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 48</name>
+        <description><![CDATA[<b>Kapelle 48</b><br/>Category: Huts<br/>Elevation: 740 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.276016,47.099650,740.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 49</name>
+        <description><![CDATA[<b>Alpenrose 49</b><br/>Category: Huts<br/>Elevation: 1967 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.189012,46.393786,1966.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 50</name>
+        <description><![CDATA[<b>Kapelle 50</b><br/>Category: Huts<br/>Elevation: 3351 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.107070,48.311491,3350.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 51</name>
+        <description><![CDATA[<b>Wegkreuz 51</b><br/>Category: Huts<br/>Elevation: 1008 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.317326,46.472652,1008.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 52</name>
+        <description><![CDATA[<b>Kapelle 52</b><br/>Category: Huts<br/>Elevation: 3271 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.352648,45.630446,3270.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bachübergang 53</name>
+        <description><![CDATA[<b>Bachübergang 53</b><br/>Category: Huts<br/>Elevation: 3794 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.150707,45.534658,3793.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 54</name>
+        <description><![CDATA[<b>Jochpass 54</b><br/>Category: Huts<br/>Elevation: 2020 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.057065,48.371718,2019.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 55</name>
+        <description><![CDATA[<b>Hochlager 55</b><br/>Category: Huts<br/>Elevation: 3790 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.626654,48.721742,3790.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rastplatz 56</name>
+        <description><![CDATA[<b>Rastplatz 56</b><br/>Category: Huts<br/>Elevation: 2080 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.818986,44.861652,2080.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 57</name>
+        <description><![CDATA[<b>Wegkreuz 57</b><br/>Category: Huts<br/>Elevation: 2714 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.515762,47.420729,2714.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 58</name>
+        <description><![CDATA[<b>Jochpass 58</b><br/>Category: Huts<br/>Elevation: 1807 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.831777,47.334030,1807.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 59</name>
+        <description><![CDATA[<b>Gipfelkreuz 59</b><br/>Category: Huts<br/>Elevation: 1751 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.179977,45.344610,1750.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 60</name>
+        <description><![CDATA[<b>Jochpass 60</b><br/>Category: Huts<br/>Elevation: 2969 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.419823,46.169559,2968.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 61</name>
+        <description><![CDATA[<b>Quellfassung 61</b><br/>Category: Huts<br/>Elevation: 3035 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.730026,48.151335,3035.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 62</name>
+        <description><![CDATA[<b>Wegkreuz 62</b><br/>Category: Huts<br/>Elevation: 984 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.968669,48.021417,984.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Panoramapunkt 63</name>
+        <description><![CDATA[<b>Panoramapunkt 63</b><br/>Category: Huts<br/>Elevation: 3524 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.782582,47.427352,3523.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Panoramapunkt 64</name>
+        <description><![CDATA[<b>Panoramapunkt 64</b><br/>Category: Huts<br/>Elevation: 3664 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.914730,45.494560,3663.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 65</name>
+        <description><![CDATA[<b>Alpenrose 65</b><br/>Category: Huts<br/>Elevation: 2864 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.211497,45.125852,2864.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 66</name>
+        <description><![CDATA[<b>Kapelle 66</b><br/>Category: Huts<br/>Elevation: 2981 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.846034,45.400790,2981.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 67</name>
+        <description><![CDATA[<b>Gatterl 67</b><br/>Category: Huts<br/>Elevation: 2838 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.983489,45.466255,2837.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 68</name>
+        <description><![CDATA[<b>Gipfelkreuz 68</b><br/>Category: Huts<br/>Elevation: 948 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.374511,47.233060,947.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Almhütte 69</name>
+        <description><![CDATA[<b>Almhütte 69</b><br/>Category: Huts<br/>Elevation: 1883 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.737712,48.372338,1882.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 70</name>
+        <description><![CDATA[<b>Hochlager 70</b><br/>Category: Huts<br/>Elevation: 2088 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.944543,45.518302,2088.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wanderheim 71</name>
+        <description><![CDATA[<b>Wanderheim 71</b><br/>Category: Huts<br/>Elevation: 1681 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.550150,47.722768,1681.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 72</name>
+        <description><![CDATA[<b>Gatterl 72</b><br/>Category: Huts<br/>Elevation: 2327 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.459521,47.931056,2326.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 73</name>
+        <description><![CDATA[<b>Jochpass 73</b><br/>Category: Huts<br/>Elevation: 3179 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.820715,48.296785,3178.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 74</name>
+        <description><![CDATA[<b>Gipfelkreuz 74</b><br/>Category: Huts<br/>Elevation: 1466 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.992464,47.896180,1465.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 75</name>
+        <description><![CDATA[<b>Alpenrose 75</b><br/>Category: Huts<br/>Elevation: 3625 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.581521,47.137376,3625.2</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+
+    <Folder>
+      <name>Viewpoints</name>
+      <Placemark>
+        <name>Almhütte 76</name>
+        <description><![CDATA[<b>Almhütte 76</b><br/>Category: Viewpoints<br/>Elevation: 3153 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.023824,48.574574,3152.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 77</name>
+        <description><![CDATA[<b>Gipfelkreuz 77</b><br/>Category: Viewpoints<br/>Elevation: 3126 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.469773,45.960409,3125.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rastplatz 78</name>
+        <description><![CDATA[<b>Rastplatz 78</b><br/>Category: Viewpoints<br/>Elevation: 1479 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.925919,46.214968,1478.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 79</name>
+        <description><![CDATA[<b>Kapelle 79</b><br/>Category: Viewpoints<br/>Elevation: 3694 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.721954,47.455963,3693.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergstation 80</name>
+        <description><![CDATA[<b>Bergstation 80</b><br/>Category: Viewpoints<br/>Elevation: 2263 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.941091,48.055557,2263.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Refugio 81</name>
+        <description><![CDATA[<b>Refugio 81</b><br/>Category: Viewpoints<br/>Elevation: 2912 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.255305,47.854804,2912.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 82</name>
+        <description><![CDATA[<b>Hochlager 82</b><br/>Category: Viewpoints<br/>Elevation: 1175 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.104967,46.849089,1174.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 83</name>
+        <description><![CDATA[<b>Wegkreuz 83</b><br/>Category: Viewpoints<br/>Elevation: 1222 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.718290,46.425119,1222.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bachübergang 84</name>
+        <description><![CDATA[<b>Bachübergang 84</b><br/>Category: Viewpoints<br/>Elevation: 1878 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.768725,45.455342,1878.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 85</name>
+        <description><![CDATA[<b>Jochpass 85</b><br/>Category: Viewpoints<br/>Elevation: 848 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.850619,48.574419,848.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 86</name>
+        <description><![CDATA[<b>Jochpass 86</b><br/>Category: Viewpoints<br/>Elevation: 3393 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.745087,47.317042,3392.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 87</name>
+        <description><![CDATA[<b>Gipfelkreuz 87</b><br/>Category: Viewpoints<br/>Elevation: 411 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.222515,47.119017,410.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Aussichtspunkt 88</name>
+        <description><![CDATA[<b>Aussichtspunkt 88</b><br/>Category: Viewpoints<br/>Elevation: 3721 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.247777,46.811912,3720.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergseehütte 89</name>
+        <description><![CDATA[<b>Bergseehütte 89</b><br/>Category: Viewpoints<br/>Elevation: 1878 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.433266,45.462545,1877.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 90</name>
+        <description><![CDATA[<b>Quellfassung 90</b><br/>Category: Viewpoints<br/>Elevation: 2107 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.863976,48.467711,2106.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wanderheim 91</name>
+        <description><![CDATA[<b>Wanderheim 91</b><br/>Category: Viewpoints<br/>Elevation: 2833 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.438560,47.734538,2832.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 92</name>
+        <description><![CDATA[<b>Alpenrose 92</b><br/>Category: Viewpoints<br/>Elevation: 3122 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.306704,46.545347,3122.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 93</name>
+        <description><![CDATA[<b>Wegkreuz 93</b><br/>Category: Viewpoints<br/>Elevation: 986 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.089653,46.701670,986.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Panoramapunkt 94</name>
+        <description><![CDATA[<b>Panoramapunkt 94</b><br/>Category: Viewpoints<br/>Elevation: 3123 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.563304,45.471372,3122.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Refugio 95</name>
+        <description><![CDATA[<b>Refugio 95</b><br/>Category: Viewpoints<br/>Elevation: 1171 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.462020,45.108995,1171.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rastplatz 96</name>
+        <description><![CDATA[<b>Rastplatz 96</b><br/>Category: Viewpoints<br/>Elevation: 1222 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.745610,46.381721,1221.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergstation 97</name>
+        <description><![CDATA[<b>Bergstation 97</b><br/>Category: Viewpoints<br/>Elevation: 1043 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.836756,47.868475,1042.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gipfelkreuz 98</name>
+        <description><![CDATA[<b>Gipfelkreuz 98</b><br/>Category: Viewpoints<br/>Elevation: 1472 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.247031,48.573220,1471.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 99</name>
+        <description><![CDATA[<b>Wegkreuz 99</b><br/>Category: Viewpoints<br/>Elevation: 3461 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.240470,47.452163,3460.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Parkplatz 100</name>
+        <description><![CDATA[<b>Parkplatz 100</b><br/>Category: Viewpoints<br/>Elevation: 1067 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.621258,44.840546,1067.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Almhütte 101</name>
+        <description><![CDATA[<b>Almhütte 101</b><br/>Category: Viewpoints<br/>Elevation: 884 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.878276,45.256305,883.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergstation 102</name>
+        <description><![CDATA[<b>Bergstation 102</b><br/>Category: Viewpoints<br/>Elevation: 590 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.292455,46.923425,589.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 103</name>
+        <description><![CDATA[<b>Kapelle 103</b><br/>Category: Viewpoints<br/>Elevation: 666 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.064545,46.219797,666.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 104</name>
+        <description><![CDATA[<b>Quellfassung 104</b><br/>Category: Viewpoints<br/>Elevation: 3425 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.265451,44.872238,3425.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 105</name>
+        <description><![CDATA[<b>Jochpass 105</b><br/>Category: Viewpoints<br/>Elevation: 473 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.619189,46.953259,473.2</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+
+    <Folder>
+      <name>Parking</name>
+      <Placemark>
+        <name>Aussichtspunkt 106</name>
+        <description><![CDATA[<b>Aussichtspunkt 106</b><br/>Category: Parking<br/>Elevation: 1270 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.874241,45.647511,1270.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Aussichtspunkt 107</name>
+        <description><![CDATA[<b>Aussichtspunkt 107</b><br/>Category: Parking<br/>Elevation: 2635 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.236222,47.380041,2635.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Refugio 108</name>
+        <description><![CDATA[<b>Refugio 108</b><br/>Category: Parking<br/>Elevation: 1657 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.390637,47.567501,1657.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 109</name>
+        <description><![CDATA[<b>Wegkreuz 109</b><br/>Category: Parking<br/>Elevation: 2301 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.003384,47.033396,2301.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 110</name>
+        <description><![CDATA[<b>Hochlager 110</b><br/>Category: Parking<br/>Elevation: 797 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.879489,46.108323,796.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rastplatz 111</name>
+        <description><![CDATA[<b>Rastplatz 111</b><br/>Category: Parking<br/>Elevation: 1147 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.221285,45.773900,1147.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 112</name>
+        <description><![CDATA[<b>Gatterl 112</b><br/>Category: Parking<br/>Elevation: 1443 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.583925,47.283676,1443.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bergstation 113</name>
+        <description><![CDATA[<b>Bergstation 113</b><br/>Category: Parking<br/>Elevation: 1912 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.269060,45.772417,1912.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wanderheim 114</name>
+        <description><![CDATA[<b>Wanderheim 114</b><br/>Category: Parking<br/>Elevation: 3041 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.547695,47.207694,3040.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rifugio 115</name>
+        <description><![CDATA[<b>Rifugio 115</b><br/>Category: Parking<br/>Elevation: 3000 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.629194,47.750830,2999.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 116</name>
+        <description><![CDATA[<b>Quellfassung 116</b><br/>Category: Parking<br/>Elevation: 1491 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.217925,46.503276,1491.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wanderheim 117</name>
+        <description><![CDATA[<b>Wanderheim 117</b><br/>Category: Parking<br/>Elevation: 3363 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.638341,47.219891,3363.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bachübergang 118</name>
+        <description><![CDATA[<b>Bachübergang 118</b><br/>Category: Parking<br/>Elevation: 1109 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.093505,48.464544,1108.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 119</name>
+        <description><![CDATA[<b>Gatterl 119</b><br/>Category: Parking<br/>Elevation: 2066 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.315084,48.501129,2066.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 120</name>
+        <description><![CDATA[<b>Alpenrose 120</b><br/>Category: Parking<br/>Elevation: 2315 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.579350,45.140481,2314.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bachübergang 121</name>
+        <description><![CDATA[<b>Bachübergang 121</b><br/>Category: Parking<br/>Elevation: 3403 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.269490,48.249804,3402.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Talstation 122</name>
+        <description><![CDATA[<b>Talstation 122</b><br/>Category: Parking<br/>Elevation: 3118 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.578365,47.114937,3117.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Refugio 123</name>
+        <description><![CDATA[<b>Refugio 123</b><br/>Category: Parking<br/>Elevation: 764 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.060660,45.614711,763.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 124</name>
+        <description><![CDATA[<b>Alpenrose 124</b><br/>Category: Parking<br/>Elevation: 1023 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.015059,48.121423,1022.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Refugio 125</name>
+        <description><![CDATA[<b>Refugio 125</b><br/>Category: Parking<br/>Elevation: 3794 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.262872,48.075812,3794.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kapelle 126</name>
+        <description><![CDATA[<b>Kapelle 126</b><br/>Category: Parking<br/>Elevation: 2956 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.867613,45.218733,2956.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Almhütte 127</name>
+        <description><![CDATA[<b>Almhütte 127</b><br/>Category: Parking<br/>Elevation: 3625 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.810751,47.327241,3625.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 128</name>
+        <description><![CDATA[<b>Wegkreuz 128</b><br/>Category: Parking<br/>Elevation: 938 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>11.446770,45.800764,938.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Aussichtspunkt 129</name>
+        <description><![CDATA[<b>Aussichtspunkt 129</b><br/>Category: Parking<br/>Elevation: 2457 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.640505,47.710440,2456.7</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 130</name>
+        <description><![CDATA[<b>Gatterl 130</b><br/>Category: Parking<br/>Elevation: 3421 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.064628,45.803250,3420.6</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+
+    <Folder>
+      <name>Water</name>
+      <Placemark>
+        <name>Hochlager 131</name>
+        <description><![CDATA[<b>Hochlager 131</b><br/>Category: Water<br/>Elevation: 3330 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.884162,46.737393,3330.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jochpass 132</name>
+        <description><![CDATA[<b>Jochpass 132</b><br/>Category: Water<br/>Elevation: 2100 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.291507,46.026528,2100.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 133</name>
+        <description><![CDATA[<b>Alpenrose 133</b><br/>Category: Water<br/>Elevation: 1519 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.096067,46.637788,1519.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hochlager 134</name>
+        <description><![CDATA[<b>Hochlager 134</b><br/>Category: Water<br/>Elevation: 1607 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.419814,48.007898,1607.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bachübergang 135</name>
+        <description><![CDATA[<b>Bachübergang 135</b><br/>Category: Water<br/>Elevation: 3057 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.723142,45.082288,3056.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bachübergang 136</name>
+        <description><![CDATA[<b>Bachübergang 136</b><br/>Category: Water<br/>Elevation: 2894 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.399673,44.801342,2894.3</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rifugio 137</name>
+        <description><![CDATA[<b>Rifugio 137</b><br/>Category: Water<br/>Elevation: 701 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.542175,47.973726,700.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Aussichtspunkt 138</name>
+        <description><![CDATA[<b>Aussichtspunkt 138</b><br/>Category: Water<br/>Elevation: 3356 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.519174,45.226631,3355.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 139</name>
+        <description><![CDATA[<b>Wegkreuz 139</b><br/>Category: Water<br/>Elevation: 789 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.694876,47.906736,789.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Talstation 140</name>
+        <description><![CDATA[<b>Talstation 140</b><br/>Category: Water<br/>Elevation: 2287 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.192932,47.632296,2286.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Talstation 141</name>
+        <description><![CDATA[<b>Talstation 141</b><br/>Category: Water<br/>Elevation: 485 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.946238,45.155990,485.5</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wegkreuz 142</name>
+        <description><![CDATA[<b>Wegkreuz 142</b><br/>Category: Water<br/>Elevation: 546 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.839112,45.991085,545.6</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 143</name>
+        <description><![CDATA[<b>Alpenrose 143</b><br/>Category: Water<br/>Elevation: 1142 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.966177,46.718084,1142.0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quellfassung 144</name>
+        <description><![CDATA[<b>Quellfassung 144</b><br/>Category: Water<br/>Elevation: 3503 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.800350,44.972067,3503.1</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gatterl 145</name>
+        <description><![CDATA[<b>Gatterl 145</b><br/>Category: Water<br/>Elevation: 2535 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.743864,48.203283,2535.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Parkplatz 146</name>
+        <description><![CDATA[<b>Parkplatz 146</b><br/>Category: Water<br/>Elevation: 956 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>9.404820,46.498623,956.2</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Panoramapunkt 147</name>
+        <description><![CDATA[<b>Panoramapunkt 147</b><br/>Category: Water<br/>Elevation: 3273 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>10.413954,47.029532,3272.8</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alpenrose 148</name>
+        <description><![CDATA[<b>Alpenrose 148</b><br/>Category: Water<br/>Elevation: 2418 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.565661,46.027050,2417.9</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Panoramapunkt 149</name>
+        <description><![CDATA[<b>Panoramapunkt 149</b><br/>Category: Water<br/>Elevation: 2215 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>7.683169,45.313250,2215.4</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Wanderheim 150</name>
+        <description><![CDATA[<b>Wanderheim 150</b><br/>Category: Water<br/>Elevation: 2282 m]]></description>
+        <styleUrl>#point-style</styleUrl>
+        <Point>
+          <coordinates>8.951694,45.971570,2282.1</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+
+    <Folder>
+      <name>Paths</name>
+      <Placemark>
+        <name>Alpine Traverse</name>
+        <description>Hiking path with 110 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>10.004663,46.187127,1057.0
+          10.005033,46.186829,1733.9
+          10.007212,46.189300,1680.6
+          10.010901,46.190866,1351.0
+          10.014828,46.193540,1620.0
+          10.017552,46.192792,3265.3
+          10.018806,46.193263,1287.0
+          10.021462,46.192760,1439.0
+          10.023094,46.195493,973.9
+          10.027020,46.197161,976.0
+          10.029666,46.200041,2826.4
+          10.031858,46.202823,2151.6
+          10.033503,46.202393,2202.0
+          10.035240,46.202453,1713.3
+          10.036623,46.204804,3199.1
+          10.039228,46.204718,2049.4
+          10.042346,46.204924,3467.6
+          10.045591,46.204431,802.7
+          10.049418,46.204851,3398.9
+          10.050840,46.207559,2747.0
+          10.051098,46.210468,3001.8
+          10.054827,46.212365,1908.0
+          10.057875,46.213938,2040.2
+          10.058741,46.215811,729.5
+          10.062682,46.215692,1851.1
+          10.066564,46.218244,3258.6
+          10.067718,46.219441,2365.5
+          10.070607,46.221522,694.6
+          10.070737,46.220748,1322.6
+          10.072223,46.221322,2803.2
+          10.073360,46.223379,1611.0
+          10.076125,46.225943,692.5
+          10.079419,46.226262,2155.2
+          10.081079,46.226065,2562.3
+          10.082095,46.225775,3038.4
+          10.083745,46.226332,3469.9
+          10.084958,46.229164,600.3
+          10.088860,46.228852,2636.8
+          10.092477,46.228779,3143.5
+          10.092548,46.230628,2132.8
+          10.093572,46.230517,1740.9
+          10.097108,46.231122,1686.2
+          10.097732,46.230785,1944.6
+          10.101089,46.230896,2426.5
+          10.101798,46.232822,2243.7
+          10.101991,46.234585,1756.9
+          10.102605,46.236257,3375.6
+          10.103076,46.236105,2594.2
+          10.106168,46.239047,2142.7
+          10.107030,46.239361,786.7
+          10.109545,46.239256,1317.4
+          10.110172,46.242210,1309.0
+          10.113987,46.242840,1589.3
+          10.116886,46.242578,849.9
+          10.117747,46.243461,3430.2
+          10.119770,46.244212,3372.7
+          10.123740,46.245822,1843.1
+          10.125478,46.248311,1403.3
+          10.127970,46.251154,1015.8
+          10.130735,46.252429,993.9
+          10.132510,46.253363,1131.5
+          10.134459,46.255109,2327.8
+          10.136918,46.256252,2859.1
+          10.140778,46.257188,3216.7
+          10.141263,46.258006,2020.5
+          10.144818,46.258530,1511.7
+          10.145599,46.257769,3145.8
+          10.149238,46.257256,1846.0
+          10.152256,46.258420,3115.7
+          10.154611,46.257872,1147.5
+          10.157697,46.260691,1336.2
+          10.161600,46.261074,3378.7
+          10.161756,46.263142,1237.2
+          10.162583,46.264556,2099.5
+          10.164428,46.263581,1981.2
+          10.165815,46.265896,3210.4
+          10.165884,46.265872,1910.4
+          10.169705,46.265541,2983.9
+          10.170559,46.268285,3137.0
+          10.171688,46.270942,2963.3
+          10.172433,46.271417,2561.8
+          10.173639,46.271754,2469.3
+          10.173697,46.273347,683.2
+          10.174058,46.274491,913.5
+          10.177866,46.277229,2664.0
+          10.180626,46.279924,3286.4
+          10.182117,46.278938,1659.6
+          10.183195,46.279294,1527.7
+          10.186993,46.281269,3274.0
+          10.189405,46.281830,1269.3
+          10.193051,46.282064,2161.7
+          10.194978,46.281416,2888.1
+          10.195424,46.283139,1727.4
+          10.196307,46.283422,1312.2
+          10.198521,46.285773,2928.7
+          10.201889,46.286360,621.0
+          10.202652,46.286725,1378.9
+          10.203367,46.288665,3146.0
+          10.206869,46.289982,666.4
+          10.207001,46.289229,3462.5
+          10.207240,46.290107,1434.1
+          10.208276,46.290522,1513.6
+          10.209269,46.290479,1851.6
+          10.211662,46.289931,2940.9
+          10.214210,46.289635,2588.9
+          10.215748,46.289902,1005.2
+          10.219661,46.291366,2852.3
+          10.221374,46.291225,2077.8
+          10.225227,46.291348,3146.6
+          10.226134,46.292133,2782.7</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Ridge Walk</name>
+        <description>Hiking path with 106 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>8.657816,45.412623,2736.5
+          8.660630,45.412025,710.5
+          8.661421,45.411150,3099.1
+          8.661704,45.411900,1092.7
+          8.662197,45.411895,799.7
+          8.665639,45.410971,1380.5
+          8.667124,45.413467,1686.5
+          8.669523,45.414248,1842.2
+          8.671573,45.415124,1529.9
+          8.672269,45.414429,1501.9
+          8.674664,45.416712,2449.6
+          8.674842,45.418398,2199.2
+          8.675784,45.420394,1954.8
+          8.677998,45.420473,2760.7
+          8.678652,45.419968,2929.7
+          8.679383,45.422137,978.1
+          8.682756,45.423642,2305.1
+          8.683815,45.426443,2871.6
+          8.685885,45.426278,3294.4
+          8.688353,45.425350,2567.2
+          8.689437,45.426165,2274.3
+          8.691202,45.426180,2222.9
+          8.693061,45.428175,1598.4
+          8.694974,45.431089,1310.8
+          8.698446,45.432136,3148.6
+          8.702056,45.431409,801.8
+          8.705591,45.432819,2131.6
+          8.707268,45.433912,2512.6
+          8.708396,45.436108,1138.8
+          8.712017,45.436553,751.5
+          8.715031,45.437955,2765.4
+          8.718828,45.438400,2427.5
+          8.721104,45.439329,1943.2
+          8.722594,45.439002,1303.3
+          8.723706,45.440675,2372.4
+          8.726632,45.442047,1999.1
+          8.728535,45.443336,2479.3
+          8.731989,45.444173,1101.8
+          8.733206,45.446874,684.8
+          8.733276,45.447711,1657.2
+          8.734792,45.449794,969.6
+          8.737038,45.450941,1003.2
+          8.740421,45.452986,2356.5
+          8.741200,45.454134,3000.1
+          8.741612,45.456310,903.4
+          8.742832,45.458829,2066.5
+          8.745939,45.461506,3144.2
+          8.749917,45.463474,2375.9
+          8.753361,45.464294,2330.0
+          8.754657,45.464271,2600.3
+          8.758463,45.463370,2891.6
+          8.761288,45.465357,3200.0
+          8.762204,45.465192,1983.6
+          8.763077,45.464369,2974.9
+          8.764099,45.465218,3069.7
+          8.764924,45.464446,851.4
+          8.767056,45.464973,2598.9
+          8.769332,45.464559,3186.6
+          8.769666,45.466798,798.7
+          8.771618,45.467123,1272.9
+          8.771931,45.468142,1758.3
+          8.773824,45.469192,3104.1
+          8.775145,45.471366,1852.1
+          8.776449,45.472723,1095.4
+          8.777372,45.472266,1783.3
+          8.780901,45.473194,2613.7
+          8.783384,45.473596,733.6
+          8.786096,45.474559,662.3
+          8.787803,45.476271,765.7
+          8.788176,45.476146,2311.8
+          8.790096,45.477653,1143.9
+          8.792227,45.476956,1726.4
+          8.793125,45.476518,1710.5
+          8.796113,45.478875,1635.7
+          8.799184,45.478129,2436.2
+          8.799976,45.477257,2211.6
+          8.803487,45.479881,989.0
+          8.805634,45.482465,1165.3
+          8.806621,45.482922,1457.7
+          8.809772,45.483400,3281.2
+          8.810401,45.485103,3499.0
+          8.814356,45.484399,2289.1
+          8.817985,45.483575,2755.8
+          8.819145,45.484579,704.8
+          8.819326,45.486810,1139.8
+          8.823009,45.489254,1692.2
+          8.825695,45.488400,2258.0
+          8.828057,45.489677,1749.5
+          8.831539,45.489483,2046.0
+          8.832194,45.489098,2860.9
+          8.834086,45.489419,918.9
+          8.836487,45.492415,2735.7
+          8.837069,45.493910,2778.8
+          8.837985,45.493527,1255.1
+          8.840872,45.496114,2456.2
+          8.841989,45.495199,1960.6
+          8.843759,45.494994,3093.4
+          8.845824,45.495236,3217.8
+          8.849065,45.497954,2554.1
+          8.852312,45.497862,1523.8
+          8.855069,45.496862,1852.1
+          8.857154,45.495895,2869.4
+          8.858671,45.498463,3182.9
+          8.859588,45.498948,2690.5
+          8.862430,45.499328,2389.0
+          8.862863,45.498893,711.4</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Valley Loop</name>
+        <description>Hiking path with 85 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>8.984522,46.505581,1029.8
+          8.987147,46.504893,1430.7
+          8.989606,46.506021,1867.4
+          8.991625,46.505443,3220.0
+          8.992245,46.506293,994.3
+          8.994992,46.509153,1544.8
+          8.998527,46.510190,1846.7
+          9.001859,46.510043,2308.5
+          9.002607,46.511006,2462.9
+          9.003685,46.512175,3498.3
+          9.006202,46.513115,2343.5
+          9.006361,46.512761,3140.6
+          9.008152,46.513139,1229.2
+          9.011133,46.514498,1712.6
+          9.011924,46.515281,2351.8
+          9.015077,46.515515,3115.0
+          9.017433,46.514518,1583.9
+          9.018393,46.514533,1482.5
+          9.018909,46.513895,749.6
+          9.022611,46.514202,1583.9
+          9.023338,46.516582,2666.9
+          9.024176,46.519396,2294.4
+          9.024189,46.521300,687.4
+          9.025224,46.522024,1676.1
+          9.028337,46.523170,1318.9
+          9.029432,46.525533,2535.2
+          9.029860,46.528090,3353.2
+          9.030188,46.527098,2366.0
+          9.033857,46.528521,2522.1
+          9.036019,46.528250,3405.2
+          9.038877,46.530537,1324.5
+          9.041201,46.531303,963.1
+          9.042994,46.531913,1710.6
+          9.044038,46.534004,2023.1
+          9.046445,46.536787,2108.2
+          9.049239,46.538711,2198.4
+          9.051555,46.539203,3282.7
+          9.054210,46.539876,1366.7
+          9.055412,46.540963,1484.2
+          9.056109,46.540776,880.2
+          9.059933,46.539976,2552.1
+          9.061727,46.539750,3041.4
+          9.062432,46.539240,879.8
+          9.064275,46.540087,755.3
+          9.066609,46.541335,2585.4
+          9.066747,46.542763,769.9
+          9.067674,46.543731,1491.3
+          9.070484,46.545474,1562.3
+          9.070964,46.547771,950.1
+          9.074522,46.547461,2207.5
+          9.074545,46.549090,2207.6
+          9.076576,46.551534,2666.4
+          9.077760,46.551914,2998.8
+          9.077863,46.553973,1582.7
+          9.078640,46.553433,1655.9
+          9.082291,46.553608,3179.1
+          9.083588,46.555109,1713.1
+          9.083934,46.557649,1769.7
+          9.086402,46.557027,2047.5
+          9.086821,46.558260,1628.6
+          9.090572,46.557999,1951.3
+          9.091313,46.557262,1970.7
+          9.093751,46.557545,3293.5
+          9.096099,46.558291,1355.9
+          9.098434,46.560726,3468.2
+          9.102103,46.561698,1090.9
+          9.104254,46.564292,940.1
+          9.105491,46.565679,600.4
+          9.105517,46.564948,1833.5
+          9.107901,46.567255,2508.7
+          9.110431,46.566749,1875.1
+          9.112240,46.566248,3025.2
+          9.115392,46.567929,602.3
+          9.119387,46.567970,741.0
+          9.120982,46.567670,790.4
+          9.124580,46.567544,2460.1
+          9.127571,46.569192,3129.4
+          9.128593,46.568675,649.0
+          9.131272,46.569019,1639.3
+          9.135263,46.570440,1895.8
+          9.137449,46.571790,1923.7
+          9.139019,46.571236,2934.6
+          9.142528,46.573218,3201.7
+          9.144095,46.575619,3455.1
+          9.145399,46.576017,1089.4</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Glacier Path</name>
+        <description>Hiking path with 71 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.170238,47.009927,2358.7
+          9.173026,47.012209,3045.8
+          9.175569,47.013697,2315.7
+          9.176182,47.016404,1475.4
+          9.177679,47.016098,893.0
+          9.179180,47.017864,1393.7
+          9.181378,47.017662,3269.4
+          9.184270,47.018600,3332.7
+          9.184888,47.018116,1478.5
+          9.186463,47.018413,2563.6
+          9.187970,47.018102,1728.0
+          9.189142,47.017561,2129.5
+          9.191889,47.018633,1306.8
+          9.191913,47.019240,1441.3
+          9.194618,47.021221,2342.2
+          9.196535,47.022640,2072.1
+          9.196611,47.025445,2915.2
+          9.197444,47.027616,3019.4
+          9.198174,47.027072,2071.6
+          9.201804,47.026103,2714.7
+          9.202563,47.026104,1227.2
+          9.205530,47.028196,1844.2
+          9.208372,47.030985,1144.4
+          9.210942,47.031370,1658.7
+          9.214245,47.032038,2598.5
+          9.217595,47.034675,988.4
+          9.218732,47.033766,2556.2
+          9.222282,47.035695,1341.8
+          9.224945,47.037033,3295.4
+          9.227146,47.039089,2707.1
+          9.228738,47.041274,2748.8
+          9.232131,47.040604,2139.8
+          9.233046,47.040181,2770.1
+          9.236809,47.042448,803.9
+          9.239069,47.042950,1633.3
+          9.242503,47.042398,1553.0
+          9.244291,47.041489,1592.2
+          9.245955,47.043407,1324.9
+          9.246400,47.044084,3042.0
+          9.246694,47.043361,2729.2
+          9.247988,47.044756,1523.9
+          9.250564,47.047621,3102.7
+          9.251939,47.050244,1046.2
+          9.251986,47.050214,1378.7
+          9.254637,47.051613,1077.0
+          9.256519,47.053228,2255.8
+          9.259099,47.053435,2471.6
+          9.259313,47.055495,887.8
+          9.262519,47.057562,3121.1
+          9.265775,47.060260,2301.1
+          9.267039,47.062842,2459.5
+          9.270350,47.064721,673.0
+          9.274148,47.067023,2648.8
+          9.275986,47.069067,1368.5
+          9.276730,47.069392,1499.4
+          9.280340,47.069884,1735.1
+          9.281995,47.072296,1996.8
+          9.284744,47.072554,3252.3
+          9.285427,47.073304,3332.3
+          9.286171,47.073765,704.7
+          9.288820,47.072899,2244.5
+          9.292108,47.075240,1770.7
+          9.292398,47.077435,1366.1
+          9.293448,47.076588,1020.3
+          9.297355,47.078958,1356.1
+          9.299680,47.078428,3040.3
+          9.301261,47.078626,629.0
+          9.304225,47.078150,2520.1
+          9.306187,47.080569,919.5
+          9.306222,47.079784,1131.7
+          9.307346,47.081532,2819.4</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Forest Trail</name>
+        <description>Hiking path with 51 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>10.645626,45.458383,1088.7
+          10.646495,45.460225,2597.2
+          10.648860,45.462359,1361.2
+          10.652630,45.464677,690.2
+          10.655757,45.466898,2925.4
+          10.656345,45.468003,1646.3
+          10.659023,45.469755,869.6
+          10.659485,45.468871,2872.9
+          10.659821,45.467973,876.7
+          10.660235,45.467169,2931.4
+          10.663494,45.470099,1240.5
+          10.664107,45.470488,3177.9
+          10.665009,45.470671,1111.4
+          10.667551,45.472483,3404.5
+          10.669436,45.474905,2520.1
+          10.672696,45.474010,949.6
+          10.674926,45.476286,3184.9
+          10.676307,45.478313,1852.8
+          10.677061,45.480167,610.8
+          10.677423,45.482989,2993.6
+          10.679517,45.482703,2517.1
+          10.680716,45.483171,2280.2
+          10.680739,45.484833,1242.5
+          10.683109,45.486439,2559.3
+          10.686840,45.486378,2346.2
+          10.687620,45.485781,3104.4
+          10.689640,45.486685,1566.9
+          10.690676,45.487664,3469.4
+          10.693383,45.488851,1340.3
+          10.696884,45.488705,1336.3
+          10.698609,45.490145,2021.3
+          10.702477,45.490753,625.0
+          10.703400,45.490259,2206.3
+          10.705440,45.491988,1338.3
+          10.708970,45.494549,3372.6
+          10.712430,45.497254,2665.8
+          10.713208,45.500050,1021.4
+          10.717000,45.502362,2154.7
+          10.719490,45.503553,2601.4
+          10.719958,45.504356,1101.9
+          10.720387,45.505131,776.9
+          10.724169,45.506532,1777.8
+          10.726378,45.508707,1868.8
+          10.730369,45.510004,944.7
+          10.731454,45.511265,2319.2
+          10.732760,45.513288,1336.2
+          10.732851,45.513680,2490.0
+          10.733431,45.513525,1314.0
+          10.736972,45.514837,3146.1
+          10.738251,45.515225,3376.2
+          10.738999,45.517775,961.2</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Summit Route</name>
+        <description>Hiking path with 92 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>10.615780,47.650951,1832.5
+          10.616865,47.650852,1175.3
+          10.618972,47.651031,2318.7
+          10.619446,47.650736,2928.3
+          10.619901,47.651960,1767.5
+          10.622634,47.651304,853.6
+          10.624501,47.650612,2811.2
+          10.627950,47.651719,2647.8
+          10.631105,47.652790,2299.0
+          10.632562,47.653461,1833.8
+          10.634407,47.652868,2137.2
+          10.635284,47.655092,2352.9
+          10.638715,47.655505,1973.6
+          10.641547,47.657126,1448.9
+          10.644631,47.659677,2000.0
+          10.644773,47.662317,1377.0
+          10.647793,47.661769,3252.6
+          10.650655,47.663281,1721.8
+          10.651480,47.662694,1779.6
+          10.655161,47.665178,1349.3
+          10.657402,47.666716,1965.9
+          10.658030,47.668883,2114.0
+          10.659088,47.668727,2446.2
+          10.660395,47.670605,2002.6
+          10.662214,47.670674,1048.9
+          10.665763,47.671664,2258.3
+          10.666843,47.674126,1857.5
+          10.670397,47.676764,2015.2
+          10.670827,47.677903,1035.6
+          10.673749,47.678870,2183.9
+          10.677652,47.679044,2396.4
+          10.679629,47.679696,1174.0
+          10.681871,47.681640,736.8
+          10.681961,47.680671,900.7
+          10.683606,47.683050,2363.6
+          10.683878,47.684659,853.9
+          10.686267,47.683913,2383.5
+          10.689815,47.684036,2845.7
+          10.691149,47.686391,2189.8
+          10.692817,47.688090,1505.6
+          10.693027,47.687250,2226.3
+          10.695319,47.688994,3306.3
+          10.697823,47.690817,3037.0
+          10.698636,47.692219,627.8
+          10.701096,47.694078,3440.0
+          10.702770,47.693971,875.2
+          10.706485,47.695260,1604.4
+          10.709120,47.694726,2798.4
+          10.709481,47.694307,1661.4
+          10.711813,47.696524,2438.1
+          10.714826,47.698330,3090.5
+          10.716943,47.698760,2345.1
+          10.720062,47.699562,3228.8
+          10.724016,47.699751,2594.5
+          10.726759,47.699314,3095.5
+          10.726981,47.698394,2184.9
+          10.728976,47.698560,2887.1
+          10.731591,47.700221,3138.0
+          10.731865,47.699604,2137.5
+          10.735677,47.701022,1143.8
+          10.736149,47.703347,3359.9
+          10.739592,47.705047,2975.6
+          10.742436,47.707322,2891.0
+          10.744694,47.708041,2794.5
+          10.746918,47.709893,2896.4
+          10.747119,47.712627,2669.9
+          10.747935,47.715082,1803.7
+          10.751143,47.714472,1502.8
+          10.754731,47.716784,1235.6
+          10.755826,47.718395,867.4
+          10.756208,47.718079,1133.7
+          10.756277,47.719396,3285.2
+          10.760177,47.718685,2913.4
+          10.764112,47.719980,2505.0
+          10.765725,47.721429,1358.2
+          10.768849,47.720512,3212.8
+          10.771294,47.722044,796.3
+          10.773173,47.722885,3402.8
+          10.776415,47.722830,3005.5
+          10.779141,47.725475,1914.5
+          10.782855,47.724728,2935.8
+          10.785588,47.726473,2795.3
+          10.788069,47.728772,1610.2
+          10.788339,47.728659,2122.1
+          10.789046,47.730103,1653.2
+          10.790211,47.732580,2501.3
+          10.792064,47.731777,2220.3
+          10.795211,47.734035,621.0
+          10.798964,47.733135,2821.4
+          10.801623,47.732774,2892.3
+          10.805442,47.734083,789.7
+          10.806017,47.735581,1107.4</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Lakeside Walk</name>
+        <description>Hiking path with 106 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.332979,47.075471,1180.9
+          9.333148,47.075415,1365.8
+          9.335787,47.077675,3103.6
+          9.338500,47.077730,3049.9
+          9.341522,47.079875,1543.7
+          9.343050,47.079512,800.4
+          9.345340,47.079042,843.8
+          9.348586,47.079352,1975.9
+          9.351903,47.078521,2800.1
+          9.354432,47.078421,2156.9
+          9.355427,47.078131,1968.7
+          9.359263,47.077909,2379.3
+          9.362401,47.077680,929.9
+          9.362654,47.080225,2449.6
+          9.364305,47.080744,640.0
+          9.364736,47.082520,2069.2
+          9.366861,47.082854,2092.5
+          9.368531,47.085853,2318.2
+          9.370542,47.087545,3073.5
+          9.373077,47.086638,3399.2
+          9.374336,47.088216,2678.1
+          9.377388,47.091008,1421.6
+          9.377463,47.093405,3324.4
+          9.381009,47.093275,2727.2
+          9.384080,47.094734,1684.4
+          9.387518,47.093902,2698.2
+          9.390657,47.092932,2178.3
+          9.391296,47.095756,626.0
+          9.394218,47.096241,3349.6
+          9.397960,47.097229,1817.2
+          9.401619,47.096277,1500.8
+          9.404699,47.096138,2912.9
+          9.405986,47.096435,944.5
+          9.409806,47.098639,2673.6
+          9.412588,47.100228,2179.5
+          9.413344,47.100034,1365.9
+          9.415252,47.100733,2105.4
+          9.416061,47.100457,2267.9
+          9.419813,47.101915,2360.9
+          9.422973,47.102831,3140.8
+          9.424889,47.101843,1172.8
+          9.425066,47.102433,2607.2
+          9.427918,47.101673,2674.9
+          9.430887,47.101608,1472.0
+          9.434137,47.102676,3114.7
+          9.437352,47.102588,1059.3
+          9.438216,47.102219,1585.0
+          9.439389,47.102730,3062.6
+          9.441312,47.103175,3468.3
+          9.444873,47.104265,660.7
+          9.446858,47.107158,1757.0
+          9.449455,47.108932,3108.0
+          9.452401,47.108195,1408.3
+          9.455377,47.108598,2329.7
+          9.457105,47.108864,1446.7
+          9.458916,47.109076,1266.5
+          9.458992,47.109552,3106.9
+          9.459223,47.109442,1752.7
+          9.461174,47.112072,1692.8
+          9.461681,47.112186,3224.9
+          9.462299,47.113096,3408.7
+          9.464752,47.116036,2854.4
+          9.468032,47.118587,965.4
+          9.468480,47.119989,2362.5
+          9.470630,47.121565,2145.0
+          9.471863,47.121768,1826.6
+          9.471912,47.120976,617.8
+          9.474837,47.121254,2337.5
+          9.477616,47.123587,3129.4
+          9.480016,47.124276,1562.1
+          9.483502,47.124648,2137.0
+          9.483940,47.126942,3467.6
+          9.487898,47.129408,1052.3
+          9.490800,47.131411,3353.9
+          9.494296,47.134188,913.2
+          9.497414,47.133597,2891.6
+          9.500192,47.132950,1070.0
+          9.502949,47.135650,1761.5
+          9.504934,47.137919,1046.1
+          9.508027,47.138554,937.6
+          9.510101,47.139620,2353.4
+          9.514066,47.140597,2280.9
+          9.515912,47.142781,3070.2
+          9.516745,47.141985,2763.8
+          9.518984,47.141168,1884.7
+          9.521196,47.142685,2860.8
+          9.524799,47.143666,2078.6
+          9.525277,47.143485,903.1
+          9.525285,47.143426,2352.0
+          9.526541,47.144734,2729.0
+          9.528589,47.144021,2165.2
+          9.529925,47.144197,1020.9
+          9.532622,47.145276,2274.5
+          9.534154,47.146237,2964.2
+          9.536192,47.145273,3008.1
+          9.538992,47.144899,2976.7
+          9.539027,47.143974,1956.4
+          9.539454,47.146815,2679.3
+          9.541233,47.147001,661.4
+          9.542771,47.149360,1094.1
+          9.545538,47.148512,2512.1
+          9.545674,47.151045,1174.1
+          9.548584,47.152902,1149.2
+          9.549860,47.153126,1393.1
+          9.552722,47.152423,3346.9
+          9.555983,47.153433,3072.6</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Gorge Trail</name>
+        <description>Hiking path with 116 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.452128,48.040532,1207.4
+          9.455980,48.040947,1093.0
+          9.457517,48.042813,1442.8
+          9.459704,48.043137,2479.1
+          9.462415,48.043008,2897.4
+          9.463831,48.044321,854.0
+          9.466721,48.043554,1054.9
+          9.467410,48.042722,1395.3
+          9.469052,48.044510,2103.4
+          9.469096,48.046872,2080.9
+          9.472320,48.047202,3320.2
+          9.475230,48.049139,3434.6
+          9.479158,48.049896,1514.1
+          9.481744,48.052441,1888.6
+          9.481947,48.051815,2920.0
+          9.482514,48.052569,2658.9
+          9.485262,48.053844,804.4
+          9.486165,48.055661,2251.8
+          9.489499,48.056668,3257.1
+          9.490938,48.057127,2730.7
+          9.493236,48.057371,2770.2
+          9.496567,48.057751,3371.6
+          9.499079,48.058880,1258.7
+          9.502464,48.059861,1065.5
+          9.506361,48.060731,754.0
+          9.509503,48.063228,1463.0
+          9.512899,48.064150,2152.0
+          9.513774,48.066023,702.5
+          9.516318,48.065511,1854.9
+          9.519118,48.066584,1920.3
+          9.522116,48.066934,2827.4
+          9.522202,48.066962,3282.0
+          9.523988,48.069356,3146.2
+          9.526746,48.070300,2123.9
+          9.526948,48.070624,2834.0
+          9.527936,48.071898,1224.5
+          9.528792,48.072477,3333.6
+          9.529386,48.072509,3050.6
+          9.533377,48.074470,936.5
+          9.536291,48.075287,2319.0
+          9.538896,48.074776,1826.3
+          9.541401,48.077611,944.3
+          9.542386,48.076866,2543.6
+          9.544421,48.077115,1293.8
+          9.546326,48.077343,1921.9
+          9.546757,48.079278,768.4
+          9.547615,48.081573,1566.1
+          9.550190,48.080891,3383.7
+          9.553795,48.082287,1550.1
+          9.555248,48.082926,2992.1
+          9.556869,48.083808,1432.6
+          9.557912,48.085183,1049.8
+          9.558998,48.086821,1771.1
+          9.562121,48.087220,907.6
+          9.566053,48.089409,2638.5
+          9.566719,48.090202,2776.1
+          9.570016,48.092074,960.7
+          9.572697,48.093127,1364.7
+          9.575315,48.094976,2785.8
+          9.577799,48.095912,2090.4
+          9.578483,48.096875,2715.3
+          9.579233,48.099584,2736.0
+          9.581665,48.102037,1021.8
+          9.584617,48.101258,2885.4
+          9.587291,48.102247,2692.0
+          9.588153,48.103328,3274.8
+          9.590618,48.105553,2995.0
+          9.594087,48.106881,1598.1
+          9.597220,48.106468,1260.6
+          9.600115,48.109352,996.4
+          9.604095,48.112222,1426.4
+          9.605923,48.111927,2107.0
+          9.609348,48.114391,2692.3
+          9.611101,48.114239,1367.7
+          9.611216,48.115635,862.2
+          9.612484,48.116185,1545.5
+          9.613980,48.118055,1495.5
+          9.614404,48.118836,899.7
+          9.615093,48.118219,1366.6
+          9.618657,48.119532,1967.1
+          9.621748,48.121612,2106.6
+          9.623014,48.123431,2286.7
+          9.625870,48.123909,2413.6
+          9.627001,48.125247,3005.7
+          9.628040,48.125307,1242.0
+          9.631552,48.124445,2233.3
+          9.632554,48.124316,1122.6
+          9.633337,48.123453,3092.8
+          9.633373,48.126340,1850.2
+          9.635462,48.129175,3340.5
+          9.635737,48.128728,1360.3
+          9.636282,48.129261,1985.0
+          9.638378,48.131183,630.0
+          9.638833,48.133843,720.6
+          9.640916,48.134239,3441.4
+          9.642556,48.136392,1872.4
+          9.643417,48.138335,3307.4
+          9.645238,48.139101,1820.1
+          9.645687,48.138154,2505.0
+          9.648050,48.140128,2395.2
+          9.648106,48.139877,3298.4
+          9.648956,48.139924,1334.9
+          9.651925,48.139857,3233.5
+          9.652838,48.141900,2185.6
+          9.652853,48.143288,1472.3
+          9.656067,48.144873,3205.9
+          9.656943,48.146951,2066.4
+          9.660651,48.148804,2802.2
+          9.664107,48.150835,1091.4
+          9.665480,48.150952,3097.7
+          9.668119,48.152909,1098.1
+          9.671976,48.153975,1816.9
+          9.675971,48.155777,2947.0
+          9.679551,48.154983,2296.7
+          9.681670,48.155546,2765.2
+          9.682505,48.154906,2830.7</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>High Route</name>
+        <description>Hiking path with 118 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.820172,47.990937,2539.5
+          9.821070,47.993370,1397.5
+          9.823127,47.995513,1657.3
+          9.826170,47.995532,2653.2
+          9.827448,47.997792,1306.3
+          9.827688,48.000110,1417.6
+          9.827928,48.002346,3382.3
+          9.829958,48.004596,1310.1
+          9.832870,48.007578,1651.9
+          9.833755,48.010042,2325.1
+          9.837390,48.009446,3217.6
+          9.838044,48.010997,3453.6
+          9.840026,48.011849,2908.1
+          9.842729,48.014529,2519.6
+          9.845638,48.015664,2191.4
+          9.846299,48.017473,2313.8
+          9.848645,48.019829,2142.9
+          9.849385,48.019891,796.0
+          9.851829,48.021203,1899.0
+          9.852524,48.022782,1615.8
+          9.855974,48.022392,2004.3
+          9.858604,48.022007,3436.4
+          9.859704,48.021693,1360.4
+          9.859749,48.021575,2870.6
+          9.861692,48.023086,2224.2
+          9.864523,48.023482,2109.3
+          9.867990,48.026198,3219.6
+          9.871062,48.026716,675.7
+          9.873738,48.026097,2884.0
+          9.877249,48.026382,2413.6
+          9.880141,48.026258,1098.7
+          9.883280,48.027827,2332.7
+          9.883693,48.027503,1780.4
+          9.885257,48.027530,2703.1
+          9.886692,48.027299,2178.1
+          9.889642,48.026355,898.5
+          9.889868,48.026554,1244.6
+          9.890191,48.025768,949.5
+          9.890426,48.025162,2706.0
+          9.893688,48.024940,1656.3
+          9.895094,48.026616,802.1
+          9.896344,48.026459,3219.2
+          9.900320,48.026436,2848.3
+          9.900367,48.028777,3094.5
+          9.901116,48.028585,833.1
+          9.903221,48.029904,1761.2
+          9.906011,48.029805,1411.4
+          9.906188,48.030682,1743.3
+          9.907405,48.033013,3071.1
+          9.909289,48.035800,3371.4
+          9.911816,48.037950,1139.4
+          9.915160,48.037977,2499.9
+          9.919114,48.037402,623.5
+          9.923099,48.038534,1338.4
+          9.923382,48.039490,2311.9
+          9.926801,48.041858,2511.0
+          9.930275,48.042103,3363.4
+          9.933411,48.042669,840.0
+          9.933933,48.043470,3480.2
+          9.936726,48.045487,765.5
+          9.940462,48.047767,997.0
+          9.943139,48.047752,2768.9
+          9.946177,48.048511,797.3
+          9.948772,48.048959,665.1
+          9.952048,48.048437,1442.9
+          9.955856,48.050337,1581.2
+          9.957006,48.051654,1053.2
+          9.958590,48.052644,1115.9
+          9.962516,48.053919,1542.3
+          9.964081,48.056654,3431.7
+          9.965661,48.059200,1399.1
+          9.965723,48.058740,967.3
+          9.968629,48.059566,1252.2
+          9.969293,48.060076,3199.0
+          9.972648,48.059111,2574.6
+          9.976433,48.058711,2445.1
+          9.979717,48.058264,2607.2
+          9.981518,48.060704,896.2
+          9.984965,48.061710,2512.0
+          9.986407,48.063858,3310.1
+          9.987542,48.066804,1110.4
+          9.988536,48.066096,2526.9
+          9.992028,48.066100,1731.8
+          9.993367,48.065740,3257.7
+          9.996933,48.067312,3307.5
+          9.999802,48.067044,2662.4
+          9.999930,48.066969,3230.0
+          10.003405,48.066783,1808.1
+          10.004308,48.065947,919.8
+          10.004769,48.068355,2389.6
+          10.005274,48.069928,2491.7
+          10.005841,48.070696,3470.2
+          10.008893,48.072975,1458.0
+          10.010633,48.075966,2362.8
+          10.013577,48.077187,3105.5
+          10.017150,48.078318,1337.6
+          10.018452,48.080317,1797.6
+          10.022435,48.079860,2113.9
+          10.023140,48.082546,1598.8
+          10.023633,48.085248,1448.5
+          10.025500,48.085909,723.1
+          10.026246,48.085742,2557.4
+          10.029646,48.084780,3425.6
+          10.033478,48.087577,1054.1
+          10.034447,48.089573,769.7
+          10.035304,48.089991,1527.0
+          10.036702,48.089262,2853.2
+          10.040188,48.092220,1524.8
+          10.041658,48.095201,3133.4
+          10.043347,48.094505,2523.3
+          10.046237,48.095585,3062.6
+          10.048600,48.095882,1690.4
+          10.049368,48.095476,3245.7
+          10.051416,48.098092,1477.9
+          10.052486,48.099253,1583.7
+          10.055123,48.099706,1525.5
+          10.055650,48.099679,1702.0
+          10.058960,48.099505,1710.7</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Border Path</name>
+        <description>Hiking path with 56 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>10.829134,46.028759,1409.5
+          10.830628,46.027782,892.3
+          10.831442,46.027875,2309.7
+          10.835438,46.028681,2081.1
+          10.838443,46.028598,3361.8
+          10.838734,46.028513,1702.7
+          10.840161,46.030434,2350.0
+          10.843182,46.031564,3269.7
+          10.844732,46.031330,1670.5
+          10.845910,46.031018,1350.3
+          10.849786,46.031765,2268.4
+          10.851533,46.032742,1092.8
+          10.855382,46.034447,2526.2
+          10.858730,46.035205,1234.1
+          10.859823,46.035620,3147.8
+          10.860760,46.035632,2305.2
+          10.863856,46.037785,1736.1
+          10.867713,46.037457,2312.8
+          10.868787,46.036523,1605.1
+          10.871738,46.036522,2498.0
+          10.872522,46.039364,1519.6
+          10.875470,46.038878,2813.9
+          10.876880,46.039592,2961.4
+          10.876925,46.039493,1177.2
+          10.877611,46.040147,2569.1
+          10.878405,46.041599,1421.5
+          10.881820,46.041724,2191.4
+          10.884457,46.042182,3332.1
+          10.885267,46.044027,1528.7
+          10.886995,46.044669,2734.9
+          10.888511,46.043959,3181.4
+          10.892002,46.046771,2963.4
+          10.894580,46.048532,1080.3
+          10.896860,46.050865,2550.6
+          10.897214,46.051223,1664.5
+          10.898058,46.051257,3393.1
+          10.901653,46.051738,3075.0
+          10.905370,46.051294,1018.6
+          10.906279,46.054127,3362.1
+          10.907410,46.056374,2413.8
+          10.909856,46.056183,1210.1
+          10.910882,46.055797,2936.1
+          10.913128,46.057370,1395.7
+          10.917032,46.059228,1907.2
+          10.919404,46.060041,2695.0
+          10.922285,46.061806,3115.7
+          10.926111,46.061193,983.8
+          10.929415,46.060595,2042.1
+          10.929967,46.061078,2923.5
+          10.930596,46.062177,1010.6
+          10.931356,46.061471,2885.4
+          10.932373,46.060940,1137.5
+          10.933310,46.061302,929.0
+          10.937210,46.061514,653.7
+          10.939747,46.061019,1826.9
+          10.941208,46.061083,1614.9</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Pilgrim Way</name>
+        <description>Hiking path with 48 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.092436,46.381906,2415.8
+          9.092896,46.381943,1169.3
+          9.092958,46.381995,995.9
+          9.096691,46.383018,3460.7
+          9.097469,46.383365,2422.0
+          9.098127,46.382626,3256.5
+          9.101573,46.385084,2086.8
+          9.103804,46.386046,1229.2
+          9.105101,46.385684,1479.9
+          9.108457,46.385989,3050.4
+          9.111604,46.386651,1546.5
+          9.115332,46.388681,2153.5
+          9.118117,46.390496,1424.9
+          9.119273,46.392390,1438.1
+          9.120604,46.395327,1170.0
+          9.124079,46.395768,1256.7
+          9.126929,46.396114,1083.8
+          9.129612,46.395487,674.7
+          9.130326,46.397392,2566.5
+          9.132964,46.397990,2408.4
+          9.135708,46.398822,2311.5
+          9.136384,46.401582,2359.3
+          9.138660,46.401776,2985.8
+          9.141343,46.401595,2131.0
+          9.144630,46.402632,2853.8
+          9.148084,46.404735,1504.0
+          9.151840,46.405490,1891.4
+          9.155102,46.406830,2875.3
+          9.157546,46.408998,3349.1
+          9.161388,46.410969,3438.5
+          9.162223,46.411830,1818.5
+          9.163512,46.414512,3399.5
+          9.166191,46.415658,1813.7
+          9.166874,46.415249,1115.6
+          9.170169,46.415403,1395.8
+          9.170871,46.416054,972.3
+          9.172911,46.415526,672.6
+          9.175464,46.414983,3211.6
+          9.179309,46.415782,1624.5
+          9.182609,46.417876,2713.7
+          9.183213,46.417391,1852.8
+          9.186612,46.417855,1369.5
+          9.188280,46.419695,3023.2
+          9.191332,46.421928,616.5
+          9.194556,46.422332,2624.5
+          9.195926,46.423513,3115.6
+          9.197342,46.423522,2851.1
+          9.200953,46.422966,1609.5</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Hunter's Trail</name>
+        <description>Hiking path with 81 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.160059,46.402381,2738.0
+          9.163791,46.401502,1439.3
+          9.166411,46.404404,1174.2
+          9.167635,46.403405,2790.3
+          9.171006,46.405623,1860.5
+          9.172168,46.407830,2166.1
+          9.172237,46.409754,1391.0
+          9.175602,46.410362,1004.6
+          9.176754,46.410156,1699.5
+          9.180696,46.413008,1195.2
+          9.182477,46.413756,2173.6
+          9.182753,46.415685,1444.6
+          9.184839,46.415815,3148.9
+          9.188461,46.417008,3308.9
+          9.189917,46.419298,691.2
+          9.192603,46.421640,1557.4
+          9.192794,46.421272,930.8
+          9.196580,46.423458,2914.1
+          9.199770,46.426193,3378.5
+          9.203147,46.426011,2697.8
+          9.206156,46.428954,2018.0
+          9.206339,46.431524,2122.7
+          9.206678,46.433304,1342.4
+          9.210674,46.433903,3407.7
+          9.211033,46.433803,1080.7
+          9.212784,46.434060,1409.7
+          9.213356,46.434341,1887.1
+          9.216880,46.437110,2190.9
+          9.220824,46.436931,1906.2
+          9.224608,46.438979,2741.6
+          9.227208,46.441205,1505.4
+          9.229326,46.442476,1220.6
+          9.231066,46.444135,637.1
+          9.232025,46.444628,2396.9
+          9.234313,46.446628,3144.7
+          9.235189,46.446876,2548.2
+          9.236905,46.446597,1397.0
+          9.238845,46.445714,3498.3
+          9.239744,46.447561,3250.7
+          9.242600,46.449152,2111.1
+          9.245731,46.448575,1580.4
+          9.247585,46.451310,901.1
+          9.249171,46.452041,666.5
+          9.253102,46.452093,701.5
+          9.253674,46.452401,3225.2
+          9.256141,46.452524,1654.0
+          9.256540,46.454438,646.0
+          9.258004,46.453788,1535.1
+          9.258214,46.454158,2744.6
+          9.260156,46.453892,2420.2
+          9.262645,46.455783,1909.5
+          9.264803,46.457782,2932.5
+          9.266054,46.457586,1201.2
+          9.266925,46.458151,659.1
+          9.270095,46.457900,606.2
+          9.272345,46.457915,3458.9
+          9.273588,46.460634,2951.8
+          9.274818,46.461824,2068.8
+          9.275251,46.462888,2404.9
+          9.277513,46.464882,1601.4
+          9.279088,46.464890,3184.5
+          9.281549,46.466246,2121.1
+          9.284370,46.468517,2339.3
+          9.286293,46.468972,2167.6
+          9.289460,46.469776,2430.8
+          9.291008,46.471753,2777.5
+          9.293792,46.471042,1359.7
+          9.297557,46.470814,1212.1
+          9.300190,46.473191,2110.3
+          9.302820,46.473012,647.6
+          9.303936,46.475382,1642.6
+          9.306953,46.475300,3053.1
+          9.309015,46.474730,2187.8
+          9.312640,46.475107,3225.0
+          9.313702,46.476371,1887.9
+          9.315820,46.477635,1392.8
+          9.316537,46.478002,2596.3
+          9.317781,46.480082,3217.3
+          9.321113,46.479643,1961.6
+          9.321941,46.479370,1293.2
+          9.325659,46.481039,2898.2</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Shepherd's Route</name>
+        <description>Hiking path with 95 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>8.513514,46.349933,1240.1
+          8.513871,46.349864,706.1
+          8.514764,46.349607,1034.5
+          8.517543,46.350072,2331.3
+          8.519762,46.350280,2117.6
+          8.522459,46.350539,2165.0
+          8.523564,46.351283,3463.9
+          8.524961,46.351185,2258.7
+          8.527375,46.352705,2129.9
+          8.529710,46.355663,1587.1
+          8.531131,46.356337,1320.9
+          8.533975,46.358564,603.9
+          8.535795,46.361535,2462.7
+          8.536313,46.362312,3211.8
+          8.539675,46.363437,1660.5
+          8.541035,46.366248,1553.1
+          8.543238,46.368133,1168.6
+          8.545994,46.367254,1193.2
+          8.549138,46.367886,1815.7
+          8.550544,46.368174,998.3
+          8.554426,46.371087,3200.2
+          8.558324,46.371578,2123.0
+          8.558971,46.373858,1655.9
+          8.562019,46.376858,2869.3
+          8.566006,46.379507,1526.2
+          8.568191,46.382436,2392.8
+          8.571370,46.385086,1504.6
+          8.575126,46.386183,894.0
+          8.577929,46.386993,2375.2
+          8.580971,46.389771,2125.9
+          8.582142,46.392486,1760.2
+          8.585992,46.391811,1632.6
+          8.586711,46.392309,1994.6
+          8.588051,46.395298,2338.4
+          8.588067,46.396811,1112.8
+          8.591633,46.397244,3246.1
+          8.594844,46.396563,2627.2
+          8.596776,46.398575,2047.9
+          8.600426,46.398152,1158.4
+          8.601372,46.398965,3181.9
+          8.602729,46.401637,1016.2
+          8.605888,46.401658,2927.6
+          8.607920,46.402086,3124.6
+          8.610541,46.404416,952.7
+          8.612853,46.404796,1586.9
+          8.615392,46.407355,2516.1
+          8.617967,46.408426,811.1
+          8.621213,46.407806,1099.2
+          8.624570,46.409010,1645.9
+          8.625850,46.409847,1348.5
+          8.627734,46.412634,2184.9
+          8.630967,46.414278,2221.0
+          8.631301,46.416332,2800.8
+          8.632798,46.418462,714.7
+          8.635169,46.421074,3299.7
+          8.635796,46.423105,3447.6
+          8.636781,46.422388,3085.4
+          8.638751,46.424090,1600.7
+          8.642025,46.424253,3055.1
+          8.643035,46.426681,2866.3
+          8.645686,46.427027,1328.8
+          8.649153,46.426981,2187.9
+          8.652245,46.428872,1276.8
+          8.653493,46.431284,2584.1
+          8.655834,46.432950,2952.2
+          8.656074,46.433120,3314.6
+          8.657369,46.434865,1696.9
+          8.660716,46.436926,1447.5
+          8.661485,46.439383,2700.9
+          8.663009,46.441604,1960.0
+          8.665356,46.444516,1803.5
+          8.665966,46.447496,3142.1
+          8.669336,46.447084,2333.8
+          8.670685,46.448094,1471.8
+          8.673729,46.449137,710.7
+          8.677422,46.449880,3017.4
+          8.680584,46.451713,2911.6
+          8.682569,46.450824,3139.3
+          8.684692,46.453086,1542.1
+          8.686002,46.453828,3176.0
+          8.686054,46.456713,2464.9
+          8.687243,46.458402,1895.1
+          8.688708,46.461349,2115.3
+          8.688927,46.464124,3092.1
+          8.690969,46.466179,789.9
+          8.694675,46.467815,2480.4
+          8.695235,46.470239,2110.9
+          8.697813,46.470095,949.9
+          8.699593,46.472870,1969.3
+          8.701274,46.475432,1714.6
+          8.704962,46.477209,2945.4
+          8.706292,46.477050,1662.4
+          8.706674,46.480021,826.5
+          8.707453,46.482423,2250.0
+          8.709077,46.482446,1269.7</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Royal Road</name>
+        <description>Hiking path with 53 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>8.446910,46.271182,1342.3
+          8.450651,46.270406,2064.0
+          8.451533,46.272876,732.7
+          8.451933,46.272858,3469.4
+          8.454315,46.272082,1405.9
+          8.457186,46.272961,1907.2
+          8.459320,46.273163,1948.1
+          8.460506,46.275215,1877.1
+          8.461685,46.276790,2636.2
+          8.462107,46.276871,2088.8
+          8.464680,46.277193,3055.8
+          8.464792,46.277478,1131.7
+          8.465902,46.276919,969.1
+          8.467814,46.276898,2424.3
+          8.468449,46.278782,3006.5
+          8.468531,46.279317,3419.5
+          8.470047,46.282314,3153.0
+          8.471310,46.281522,3476.8
+          8.473060,46.283002,2991.9
+          8.473421,46.285565,2518.3
+          8.473454,46.288428,1748.0
+          8.475138,46.288613,1845.8
+          8.479092,46.289543,3180.7
+          8.482328,46.290602,3350.0
+          8.485314,46.289636,650.1
+          8.486779,46.290760,1364.3
+          8.489548,46.292232,2630.4
+          8.492623,46.293090,3331.3
+          8.496150,46.295290,2850.9
+          8.496433,46.297364,857.8
+          8.499841,46.297904,1059.4
+          8.500767,46.299770,2515.6
+          8.502253,46.299023,1525.6
+          8.502593,46.300559,2453.6
+          8.503941,46.300287,1885.4
+          8.504676,46.301623,2892.0
+          8.505362,46.302233,3260.2
+          8.507483,46.303040,3240.3
+          8.510724,46.304068,1244.1
+          8.514320,46.306092,1880.6
+          8.516417,46.306770,3212.3
+          8.519917,46.305924,2514.7
+          8.520364,46.306541,3111.9
+          8.522653,46.308292,3108.9
+          8.523453,46.309741,3364.6
+          8.523955,46.311642,3045.1
+          8.526056,46.313495,3084.0
+          8.526957,46.314128,1347.9
+          8.526999,46.316033,1438.6
+          8.530950,46.315132,2562.7
+          8.532087,46.317083,1884.8
+          8.532182,46.316590,2111.8
+          8.532613,46.318985,2534.6</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Via Romana</name>
+        <description>Hiking path with 108 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.764037,47.217598,2988.1
+          9.765593,47.219345,2838.4
+          9.767922,47.219932,2248.7
+          9.769033,47.220442,980.9
+          9.772113,47.219904,662.8
+          9.774246,47.220173,2566.8
+          9.776152,47.220630,3263.2
+          9.778615,47.223214,2721.4
+          9.781790,47.225292,2162.1
+          9.785370,47.226816,1557.1
+          9.788659,47.229384,3201.5
+          9.791297,47.231357,1153.7
+          9.793192,47.234176,2313.9
+          9.793452,47.233268,3015.4
+          9.796571,47.233422,1443.4
+          9.800314,47.234891,1538.5
+          9.800755,47.235165,2814.9
+          9.803472,47.236578,2371.0
+          9.806877,47.237518,1282.5
+          9.807953,47.239931,2924.8
+          9.811677,47.242412,3285.9
+          9.814351,47.244077,2328.3
+          9.817755,47.243639,644.7
+          9.818374,47.243007,2937.3
+          9.818550,47.245532,2372.1
+          9.819217,47.247835,3042.8
+          9.822435,47.248645,1752.9
+          9.824455,47.248745,1677.9
+          9.826190,47.248626,1202.6
+          9.829913,47.248927,3462.2
+          9.830234,47.250929,1663.0
+          9.830605,47.253571,1680.2
+          9.833776,47.254119,2551.7
+          9.835534,47.256831,1114.3
+          9.837487,47.256314,2037.7
+          9.838710,47.258141,3367.2
+          9.839925,47.257153,2515.5
+          9.841166,47.258462,1007.2
+          9.843749,47.257986,881.1
+          9.847014,47.258658,1260.7
+          9.849383,47.259145,1498.4
+          9.850525,47.259135,1659.0
+          9.851485,47.259573,3167.9
+          9.852138,47.258815,1363.5
+          9.853543,47.260011,3111.5
+          9.855669,47.259635,1750.5
+          9.856994,47.261082,2373.2
+          9.860948,47.263043,1615.4
+          9.863500,47.265483,1802.9
+          9.864959,47.265811,1549.4
+          9.867728,47.267324,2425.7
+          9.870950,47.269817,1752.0
+          9.873740,47.271872,3092.5
+          9.876782,47.271859,676.9
+          9.878896,47.271964,2246.5
+          9.882249,47.274613,2661.3
+          9.883521,47.274707,1295.1
+          9.884049,47.275083,1864.1
+          9.887357,47.274694,2340.7
+          9.888332,47.277572,3066.2
+          9.891467,47.278236,659.9
+          9.892494,47.281175,993.5
+          9.895936,47.281716,896.9
+          9.899537,47.280833,2195.7
+          9.902248,47.282295,1774.8
+          9.904245,47.281940,1531.9
+          9.904291,47.281188,865.9
+          9.906118,47.283597,1851.5
+          9.906997,47.284560,1610.8
+          9.909104,47.287059,2553.8
+          9.910966,47.287496,3411.0
+          9.911801,47.287071,3298.9
+          9.915725,47.286122,2605.9
+          9.919101,47.286275,1640.5
+          9.922439,47.285363,1600.4
+          9.922521,47.284975,1051.1
+          9.923282,47.287267,1863.4
+          9.924377,47.287852,1988.6
+          9.926322,47.289325,1914.9
+          9.927383,47.290177,2984.4
+          9.928940,47.291783,2519.4
+          9.930201,47.293296,1204.6
+          9.931086,47.295004,1528.1
+          9.933569,47.294497,982.0
+          9.933789,47.293869,1398.0
+          9.935853,47.296519,2340.9
+          9.936238,47.296595,2534.9
+          9.938059,47.298637,1411.8
+          9.940386,47.300003,3439.2
+          9.943319,47.300446,2571.6
+          9.944508,47.302599,2885.3
+          9.947390,47.304514,608.9
+          9.947720,47.304602,1346.5
+          9.949710,47.304953,2246.9
+          9.950599,47.307861,2499.0
+          9.952527,47.309877,2846.9
+          9.953610,47.309156,2140.0
+          9.954460,47.311194,3115.5
+          9.957215,47.310494,2465.2
+          9.961143,47.313408,1919.2
+          9.963548,47.314229,1795.1
+          9.965752,47.316524,1972.2
+          9.968414,47.319384,1390.4
+          9.969494,47.320970,3332.8
+          9.970604,47.322852,787.3
+          9.974418,47.322769,1864.2
+          9.976979,47.324500,1756.1
+          9.979169,47.324044,2545.9</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>East Face Descent</name>
+        <description>Hiking path with 110 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.408229,45.755638,3181.2
+          9.411063,45.757376,3302.0
+          9.411617,45.756732,793.4
+          9.413852,45.756845,3266.8
+          9.416151,45.756098,1200.5
+          9.417173,45.757017,2042.7
+          9.420171,45.758056,3030.7
+          9.422884,45.758551,624.3
+          9.424642,45.760472,1849.9
+          9.426543,45.761548,3171.7
+          9.427315,45.760938,3364.9
+          9.429882,45.760833,2454.0
+          9.430564,45.760679,2586.3
+          9.431498,45.763027,2927.1
+          9.434424,45.765397,2390.9
+          9.434810,45.767311,2384.5
+          9.437355,45.769240,859.3
+          9.439413,45.771694,3331.5
+          9.439862,45.773554,1424.6
+          9.442508,45.773331,645.7
+          9.445093,45.773179,2126.1
+          9.448176,45.775401,3207.8
+          9.451762,45.775000,3401.0
+          9.454903,45.777098,2116.4
+          9.458380,45.777398,2085.2
+          9.460206,45.777149,3197.0
+          9.463649,45.777523,925.8
+          9.466239,45.780249,2223.3
+          9.467250,45.779445,1034.6
+          9.467260,45.780685,2162.2
+          9.469218,45.781084,3430.1
+          9.471870,45.782477,3008.8
+          9.474665,45.782221,2679.4
+          9.477354,45.782218,3298.9
+          9.480009,45.784769,1260.7
+          9.480325,45.784601,1022.5
+          9.482175,45.786880,1260.2
+          9.484253,45.787226,1228.1
+          9.487040,45.790006,2321.2
+          9.488812,45.791610,2152.2
+          9.492784,45.793031,2624.7
+          9.494545,45.793436,1838.5
+          9.496143,45.794871,3062.6
+          9.499528,45.797483,2201.7
+          9.502862,45.798167,1383.4
+          9.504422,45.799341,2544.4
+          9.506744,45.799198,863.5
+          9.508471,45.798202,2497.7
+          9.508501,45.799490,1003.2
+          9.508946,45.798853,1967.7
+          9.512685,45.799834,2846.1
+          9.513973,45.801330,1431.4
+          9.517967,45.802054,3291.8
+          9.518708,45.802484,821.4
+          9.518903,45.802041,1526.2
+          9.521789,45.801846,1937.6
+          9.525674,45.804389,808.0
+          9.527586,45.806858,1688.2
+          9.528355,45.807431,3400.8
+          9.528530,45.810256,2622.2
+          9.531697,45.811494,837.3
+          9.533800,45.813865,2519.9
+          9.534087,45.814874,1089.6
+          9.534153,45.815542,1687.8
+          9.535109,45.814948,2711.8
+          9.536372,45.816392,784.8
+          9.540152,45.818071,2246.3
+          9.541293,45.819655,1766.4
+          9.545134,45.820795,2880.3
+          9.548454,45.822037,2371.6
+          9.548652,45.822701,2792.4
+          9.549253,45.823440,891.1
+          9.552883,45.826030,2341.9
+          9.555196,45.828346,1874.0
+          9.556367,45.829092,2779.2
+          9.556805,45.829306,1981.5
+          9.560719,45.829934,1020.9
+          9.563519,45.831652,3067.3
+          9.564818,45.832136,1569.2
+          9.565018,45.832318,1517.4
+          9.568794,45.832572,1818.9
+          9.571530,45.832898,1318.0
+          9.573158,45.834739,945.8
+          9.574456,45.835584,835.5
+          9.574515,45.837286,1074.8
+          9.574592,45.837267,2643.3
+          9.576236,45.838488,1346.3
+          9.578709,45.838775,1345.3
+          9.579359,45.839567,2786.9
+          9.581418,45.840645,1915.3
+          9.582083,45.840350,2522.5
+          9.583639,45.842276,3005.7
+          9.584568,45.844713,2981.0
+          9.586841,45.845832,3127.4
+          9.589013,45.845258,1703.7
+          9.592070,45.844774,3044.1
+          9.592616,45.845585,3481.8
+          9.596191,45.848303,2109.8
+          9.598010,45.849532,1350.9
+          9.598390,45.852383,3120.2
+          9.600873,45.854437,3242.5
+          9.604034,45.856191,2351.2
+          9.606184,45.856469,1435.4
+          9.606205,45.856426,1204.0
+          9.607365,45.855896,2698.4
+          9.610631,45.856961,2313.5
+          9.610908,45.859778,1663.5
+          9.612829,45.861911,1578.0
+          9.614799,45.861668,2305.4
+          9.614867,45.862479,2110.5</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>North Ridge</name>
+        <description>Hiking path with 49 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>10.153777,46.952741,3106.8
+          10.154306,46.952176,1744.8
+          10.156650,46.953060,1554.0
+          10.159582,46.955270,1143.1
+          10.159725,46.956388,1498.6
+          10.160136,46.957401,1900.0
+          10.162872,46.957366,2868.4
+          10.166457,46.959264,2806.3
+          10.167134,46.958564,1767.2
+          10.168212,46.960481,2196.8
+          10.170303,46.963256,3434.3
+          10.173559,46.962330,1053.2
+          10.174323,46.963486,1095.2
+          10.176939,46.962721,2322.1
+          10.176999,46.962171,2085.7
+          10.177909,46.963807,2939.8
+          10.179383,46.966432,2653.8
+          10.183222,46.968899,2931.0
+          10.185515,46.969596,1250.8
+          10.189415,46.970534,1859.0
+          10.190632,46.973499,1040.3
+          10.193504,46.973665,3436.0
+          10.195183,46.976069,3250.4
+          10.195558,46.978576,2615.7
+          10.197337,46.977817,2639.0
+          10.200831,46.979124,3297.0
+          10.202773,46.979656,2050.8
+          10.205998,46.982435,2420.7
+          10.208447,46.984500,3407.0
+          10.209377,46.986311,2702.2
+          10.211317,46.987898,1705.5
+          10.214065,46.989662,2173.8
+          10.214872,46.991911,1102.3
+          10.217302,46.992087,722.4
+          10.219205,46.991791,1823.0
+          10.220272,46.993833,2156.3
+          10.223060,46.995145,715.9
+          10.223155,46.994290,2480.8
+          10.224232,46.995135,2563.8
+          10.227901,46.997191,3136.4
+          10.228311,46.999445,1479.2
+          10.230461,46.998449,748.9
+          10.230768,46.998278,2839.9
+          10.232248,46.999741,1926.5
+          10.233564,47.000750,3380.7
+          10.236309,47.001879,3267.3
+          10.236593,47.001887,2708.8
+          10.240184,47.002384,2792.7
+          10.242284,47.004689,1006.0</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>South Couloir</name>
+        <description>Hiking path with 108 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.438302,45.568636,1010.7
+          9.441644,45.567838,1850.7
+          9.444699,45.567343,2027.5
+          9.447537,45.567913,3196.3
+          9.448416,45.567896,1457.1
+          9.450585,45.569988,2665.9
+          9.454151,45.570123,1490.4
+          9.457158,45.572690,2538.6
+          9.460498,45.575038,1603.3
+          9.463883,45.575109,2238.9
+          9.465290,45.577936,1854.2
+          9.467498,45.580143,2748.3
+          9.467644,45.582708,3158.9
+          9.468537,45.582595,934.5
+          9.470699,45.585463,2749.6
+          9.471903,45.585288,2707.3
+          9.474119,45.587815,2827.0
+          9.477523,45.587481,3343.4
+          9.478357,45.588086,1589.9
+          9.481747,45.588675,1586.1
+          9.483821,45.589760,2325.6
+          9.486473,45.590419,3049.1
+          9.488358,45.591301,1957.1
+          9.489679,45.591623,2898.4
+          9.492568,45.591443,3067.7
+          9.494740,45.594049,3304.4
+          9.494943,45.595629,2427.3
+          9.498932,45.596144,2172.6
+          9.499513,45.598126,1175.3
+          9.500253,45.600191,1660.5
+          9.501539,45.600649,1178.9
+          9.504229,45.602346,1680.0
+          9.507869,45.601774,826.1
+          9.508972,45.603025,2083.1
+          9.509099,45.602501,793.7
+          9.509616,45.603906,2083.3
+          9.512216,45.606054,3444.6
+          9.513583,45.606822,2281.3
+          9.516282,45.608584,1980.1
+          9.516766,45.609289,1747.5
+          9.519481,45.611471,1221.7
+          9.522844,45.613736,1702.8
+          9.525521,45.614387,3256.6
+          9.527875,45.615891,2175.1
+          9.528726,45.617221,2744.8
+          9.529039,45.618501,728.5
+          9.532516,45.621336,2471.0
+          9.535458,45.624112,1773.6
+          9.536824,45.624657,1704.9
+          9.538714,45.626095,1925.3
+          9.541925,45.625384,1568.3
+          9.543717,45.627835,1387.2
+          9.545718,45.627202,3378.7
+          9.548125,45.628356,1488.5
+          9.550628,45.630686,1699.7
+          9.551393,45.630717,2582.2
+          9.553985,45.630005,2145.2
+          9.554070,45.632894,2125.2
+          9.554785,45.633594,3453.1
+          9.558122,45.635294,1480.4
+          9.558851,45.634975,3182.5
+          9.561429,45.637719,1843.2
+          9.561977,45.639792,1117.8
+          9.564585,45.641979,1951.1
+          9.565510,45.643923,2672.2
+          9.565871,45.646189,2338.5
+          9.569095,45.646060,3234.9
+          9.569764,45.645566,2968.1
+          9.571944,45.647991,3398.2
+          9.575183,45.650182,2281.5
+          9.575812,45.651233,3473.1
+          9.576646,45.653619,2800.3
+          9.576981,45.655038,1262.0
+          9.577013,45.656534,704.2
+          9.580492,45.656008,1318.9
+          9.580549,45.656647,2238.3
+          9.581510,45.659488,3296.3
+          9.583542,45.662205,3355.4
+          9.586814,45.662763,1013.2
+          9.586945,45.663032,1018.9
+          9.590547,45.662907,2236.0
+          9.593391,45.664608,3082.6
+          9.595106,45.664050,1020.5
+          9.595955,45.663211,3086.7
+          9.596809,45.664153,1822.9
+          9.600433,45.664931,1362.3
+          9.602430,45.665864,2175.8
+          9.606390,45.666406,3230.3
+          9.608401,45.667771,871.5
+          9.611725,45.667300,2382.1
+          9.614078,45.668560,1168.4
+          9.614123,45.669242,3398.8
+          9.616496,45.670596,3310.6
+          9.619629,45.671569,1479.1
+          9.622262,45.671405,1946.2
+          9.625177,45.673891,1368.9
+          9.628551,45.672922,3159.7
+          9.632492,45.672382,2170.2
+          9.635071,45.674409,3328.5
+          9.636626,45.675673,1261.7
+          9.640381,45.678491,1427.6
+          9.640733,45.678852,2747.9
+          9.642697,45.681242,712.0
+          9.642854,45.681846,2225.4
+          9.644904,45.681957,2892.9
+          9.648070,45.682532,2535.1
+          9.650439,45.681632,704.0
+          9.651437,45.681616,2834.7</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>West Flank</name>
+        <description>Hiking path with 64 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>8.566710,46.553398,2014.8
+          8.567690,46.556249,2946.5
+          8.569448,46.558862,1142.2
+          8.570719,46.560939,1502.6
+          8.573659,46.563484,927.0
+          8.576222,46.564769,1630.7
+          8.579626,46.564511,2118.8
+          8.582827,46.563942,3193.8
+          8.583033,46.565721,1438.2
+          8.583869,46.566866,1387.8
+          8.584490,46.567241,2730.2
+          8.586051,46.566423,1547.7
+          8.589263,46.566627,3364.6
+          8.589974,46.567102,2053.3
+          8.590261,46.568836,1952.4
+          8.592335,46.568779,3215.4
+          8.592752,46.569430,2749.2
+          8.593613,46.570360,1257.7
+          8.595496,46.572484,629.0
+          8.597898,46.575127,934.6
+          8.598319,46.577370,1104.4
+          8.599306,46.577847,1094.4
+          8.600416,46.579911,2307.5
+          8.600436,46.580782,3207.0
+          8.600668,46.580285,773.2
+          8.601129,46.579711,1818.1
+          8.601753,46.580087,936.4
+          8.602141,46.580417,2572.9
+          8.603445,46.582000,998.0
+          8.606135,46.581681,1680.1
+          8.606729,46.582500,3097.9
+          8.607620,46.582445,2134.0
+          8.609196,46.583514,2803.0
+          8.610718,46.584607,876.3
+          8.611117,46.586194,1453.7
+          8.613350,46.585285,2293.1
+          8.616573,46.587543,1167.9
+          8.620114,46.590497,3346.5
+          8.622477,46.590748,967.8
+          8.625086,46.590733,2022.4
+          8.625912,46.589798,1324.4
+          8.628090,46.589474,979.6
+          8.630471,46.590340,3093.1
+          8.632298,46.593021,791.0
+          8.635122,46.592406,2325.3
+          8.637564,46.594193,776.7
+          8.638563,46.595390,1606.0
+          8.638988,46.597509,3351.5
+          8.639189,46.599171,1899.4
+          8.639571,46.601798,1456.1
+          8.642170,46.602877,1451.0
+          8.642294,46.603686,834.8
+          8.644379,46.605268,3264.0
+          8.648005,46.605981,3309.0
+          8.649028,46.608390,2571.5
+          8.650842,46.611326,2873.7
+          8.652075,46.611819,846.4
+          8.653770,46.612892,2285.8
+          8.655188,46.613288,2489.7
+          8.655708,46.614919,1412.1
+          8.657037,46.616832,2796.1
+          8.660309,46.616204,1076.8
+          8.660695,46.617101,2633.5
+          8.660993,46.616328,3272.1</coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name>Cirque Route</name>
+        <description>Hiking path with 76 coordinate points</description>
+        <styleUrl>#line-style</styleUrl>
+        <LineString>
+          <tessellate>1</tessellate>
+          <coordinates>9.061195,47.831400,2519.8
+          9.062822,47.832430,1508.5
+          9.066062,47.832040,3169.1
+          9.066417,47.834093,786.8
+          9.067397,47.833769,3378.5
+          9.070763,47.832810,2407.2
+          9.074647,47.831950,1616.4
+          9.075345,47.831351,2660.1
+          9.077096,47.832709,2342.8
+          9.080768,47.831730,2159.0
+          9.082306,47.833497,1089.8
+          9.084655,47.832861,2518.4
+          9.085568,47.834570,1206.1
+          9.088243,47.836203,3029.9
+          9.089624,47.838879,2228.4
+          9.093251,47.841142,3493.8
+          9.093536,47.843539,1314.6
+          9.095693,47.846057,2283.8
+          9.098521,47.846879,1488.0
+          9.098985,47.848137,825.3
+          9.099927,47.849660,3132.1
+          9.100558,47.849362,1650.0
+          9.104340,47.850702,2429.8
+          9.104922,47.852661,2219.0
+          9.105452,47.853023,1111.1
+          9.106007,47.852824,2322.4
+          9.109630,47.853068,2877.0
+          9.111315,47.855715,1466.4
+          9.112737,47.855002,774.2
+          9.114698,47.856024,720.9
+          9.116929,47.857082,1706.8
+          9.117523,47.856606,1547.1
+          9.118046,47.857317,2572.7
+          9.120061,47.856986,694.8
+          9.122503,47.859263,1654.8
+          9.124274,47.858881,1826.9
+          9.128115,47.857902,1654.6
+          9.131587,47.860821,3245.2
+          9.131902,47.863363,2095.6
+          9.134348,47.865476,2578.2
+          9.137601,47.866668,1843.4
+          9.139270,47.866436,3175.3
+          9.140263,47.868936,1016.0
+          9.142419,47.871262,760.3
+          9.144239,47.871059,776.7
+          9.144485,47.870586,3173.1
+          9.146131,47.871063,862.9
+          9.146476,47.871643,1563.9
+          9.148724,47.872996,2202.2
+          9.149203,47.874802,2719.6
+          9.152453,47.876038,820.5
+          9.153644,47.878833,2922.2
+          9.156842,47.878303,3205.7
+          9.159142,47.879459,1224.5
+          9.160394,47.879143,2745.4
+          9.162616,47.880763,2236.4
+          9.163493,47.881435,1165.4
+          9.165036,47.883117,2644.6
+          9.166732,47.885927,2849.5
+          9.168690,47.885488,774.5
+          9.169892,47.886326,2095.4
+          9.170412,47.886823,1559.1
+          9.171384,47.889151,1241.0
+          9.173762,47.888682,1562.0
+          9.174710,47.888713,708.0
+          9.177716,47.889861,3351.7
+          9.179157,47.891497,2585.4
+          9.181460,47.891579,926.5
+          9.183044,47.891200,1448.0
+          9.185537,47.890535,782.6
+          9.186880,47.893420,3369.1
+          9.187171,47.893698,1681.5
+          9.189896,47.894733,3381.3
+          9.191983,47.897049,1243.4
+          9.194451,47.897603,2448.2
+          9.196668,47.899409,2331.9</coordinates>
+        </LineString>
+      </Placemark>
+    </Folder>
+
+    <Folder>
+      <name>Special</name>
+      <Folder>
+        <name>Viewpoints</name>
+        <Placemark>
+          <name>Nested Viewpoint 1</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.250304,46.672707,2535.9</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 2</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.193707,46.772537,2451.3</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 3</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.597240,46.639362,2777.4</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 4</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.467073,46.690801,1419.3</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 5</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.266845,46.804848,1316.9</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 6</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.130465,46.956038,1694.9</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 7</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.041431,46.810917,2404.9</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 8</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.950283,46.563146,2509.2</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 9</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.793267,46.738520,2265.9</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Nested Viewpoint 10</name>
+          <description>Nested folder placemark</description>
+          <Point>
+            <coordinates>9.180004,46.648983,2014.3</coordinates>
+          </Point>
+        </Placemark>
+      </Folder>
+      <Placemark>
+        <name>Test Polygon (unsupported)</name>
+        <Polygon><outerBoundaryIs><LinearRing>
+          <coordinates>9.0,46.0,0 9.1,46.0,0 9.1,46.1,0 9.0,46.1,0 9.0,46.0,0</coordinates>
+        </LinearRing></outerBoundaryIs></Polygon>
+      </Placemark>
+    </Folder>
+
+  </Document>
+</kml>

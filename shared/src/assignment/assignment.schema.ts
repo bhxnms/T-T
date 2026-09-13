@@ -1,0 +1,108 @@
+import { assignmentPlaceSchema } from '../place/place.schema';
+
+import { z } from 'zod';
+
+/**
+ * Assignment API contract — single source of truth for the place↔day itinerary
+ * endpoints under /api/trips/:tripId/days/:dayId/assignments and
+ * /api/trips/:tripId/assignments/:id/*.
+ *
+ * Trip-scoped; mutations use the 'day_edit' permission. The server side is the
+ * DI-native AssignmentsService (server/src/nest/assignments/), validated via
+ * the createZodDto wrappers in assignments.dto.ts. Assignment rows carry
+ * joined place data and are kept open in responses; the request schemas + the
+ * bespoke 404 controller messages pin the rest.
+ */
+
+/**
+ * Assignment participant embedded on an assignment
+ * (server/src/services/queryHelpers.ts -> loadParticipantsByAssignmentIds).
+ */
+export const assignmentParticipantSchema = z.object({
+  user_id: z.number(),
+  username: z.string(),
+  avatar: z.string().nullable().optional(),
+});
+export type AssignmentParticipant = z.infer<typeof assignmentParticipantSchema>;
+
+/**
+ * Assignment entity as returned by the day/assignment endpoints
+ * (server/src/services/queryHelpers.ts -> formatAssignmentWithPlace, and
+ * assignmentService.getAssignmentWithPlace). The embedded `place` is the trimmed
+ * assignment-place projection, NOT the full place pool entity. `assignment_time`
+ * /`assignment_end_time` carry the per-assignment override times.
+ */
+export const assignmentSchema = z.object({
+  id: z.number(),
+  day_id: z.number(),
+  place_id: z.number(),
+  order_index: z.number(),
+  notes: z.string().nullable().optional(),
+  assignment_time: z.string().nullable().optional(),
+  assignment_end_time: z.string().nullable().optional(),
+  // Per-segment travel mode (#1281): the transport mode of the leg LEAVING this
+  // stop for the next one. null = inherit the day's default_transport_mode.
+  leg_transport_mode: z.string().nullable().optional(),
+  // Per-segment travel mode of the leg ENTERING this stop when its origin is
+  // not a place (booking arrival / morning hotel). null = inherit the day default.
+  // Inert when the previous timeline element is a place.
+  incoming_leg_transport_mode: z.string().nullable().optional(),
+  participants: z.array(assignmentParticipantSchema).optional(),
+  created_at: z.string().optional(),
+  place: assignmentPlaceSchema,
+});
+export type Assignment = z.infer<typeof assignmentSchema>;
+
+export const assignmentCreateRequestSchema = z.object({
+  place_id: z.union([z.number(), z.string()]),
+  notes: z.string().nullable().optional(),
+});
+export type AssignmentCreateRequest = z.infer<typeof assignmentCreateRequestSchema>;
+
+export const assignmentReorderRequestSchema = z.object({
+  orderedIds: z.array(z.number()),
+});
+export type AssignmentReorderRequest = z.infer<typeof assignmentReorderRequestSchema>;
+
+export const assignmentMoveRequestSchema = z.object({
+  new_day_id: z.union([z.number(), z.string()]),
+  // The client api types this `number | null` (assignmentsApi.move) and the
+  // legacy route accepted null (`orderIndex || 0`) — keep null on the wire.
+  order_index: z.number().nullable().optional(),
+});
+export type AssignmentMoveRequest = z.infer<typeof assignmentMoveRequestSchema>;
+
+export const assignmentTimeRequestSchema = z.object({
+  place_time: z.string().nullable().optional(),
+  end_time: z.string().nullable().optional(),
+});
+export type AssignmentTimeRequest = z.infer<typeof assignmentTimeRequestSchema>;
+
+/**
+ * PUT /:id/notes (#2163) — edit the per-assignment note after creation.
+ * Deliberately uncapped like the create contract above: the REST create body
+ * and the plugin RPC accept notes of any length, so a length cap here would
+ * strand an existing longer note as uneditable (the unchanged textarea would
+ * be rejected on save). Falsy values ('' or null) clear the column, the same
+ * `notes || null` normalisation createAssignment applies on the way in.
+ */
+export const assignmentNotesRequestSchema = z.object({
+  notes: z.string().nullable(),
+});
+export type AssignmentNotesRequest = z.infer<typeof assignmentNotesRequestSchema>;
+
+/** Set the leg's travel mode (a RouteProfileKey, or null to inherit the day default). */
+export const assignmentTransportRequestSchema = z.object({
+  // The legacy route read `body.transport_mode ?? null`, so an absent key
+  // behaves like an explicit null — keep it optional on the wire.
+  transport_mode: z.string().nullable().optional(),
+  // Which leg this write targets: the one leaving this stop (default, and the
+  // legacy behaviour) or the one arriving at it (#1281 boundary legs).
+  direction: z.enum(['outgoing', 'incoming']).default('outgoing'),
+});
+export type AssignmentTransportRequest = z.infer<typeof assignmentTransportRequestSchema>;
+
+export const assignmentParticipantsRequestSchema = z.object({
+  user_ids: z.array(z.number()),
+});
+export type AssignmentParticipantsRequest = z.infer<typeof assignmentParticipantsRequestSchema>;

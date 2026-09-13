@@ -1,0 +1,29 @@
+1. ENCRYPTION_KEY handling:
+   - ENCRYPTION_KEY encrypts stored secrets (API keys, MFA, SMTP, OIDC) at rest.
+   - By default, the chart creates a Kubernetes Secret from `secretEnv.ENCRYPTION_KEY` in values.yaml.
+   - To generate a random key at install (preserved across upgrades), set `generateEncryptionKey: true`.
+   - To use an existing Kubernetes secret, set `existingSecret` to the secret name. The secret must
+     contain a key matching `existingSecretKey` (defaults to `ENCRYPTION_KEY`).
+   - If left empty, the server resolves the key automatically: existing installs fall back to
+     data/.jwt_secret (encrypted data stays readable with no manual action); fresh installs
+     auto-generate a key persisted to the data PVC.
+
+2. JWT_SECRET is managed entirely by the server:
+   - Auto-generated on first start and persisted to the data PVC (data/.jwt_secret).
+   - Rotate it via the admin panel (Settings → Danger Zone → Rotate JWT Secret).
+   - No Helm configuration needed or supported.
+
+3. Example usage:
+   - Set an explicit encryption key: `--set secretEnv.ENCRYPTION_KEY=your_enc_key`
+   - Generate a random key at install: `--set generateEncryptionKey=true`
+   - Use an existing secret: `--set existingSecret=my-k8s-secret`
+   - Use a custom key name in the existing secret: `--set existingSecret=my-k8s-secret --set existingSecretKey=MY_ENC_KEY`
+
+4. Only one method should be used at a time. If both `generateEncryptionKey` and `existingSecret` are
+   set, `existingSecret` takes precedence. Ensure the referenced secret and key exist in the namespace.
+
+5. Persistence:
+   - To bind your own PVCs, set `persistence.data.existingClaim` and/or `persistence.uploads.existingClaim`.
+     The other values for that volume (size, storageClassName, annotations) are then ignored.
+   - With `persistence.enabled=false` the volumes use an emptyDir — storage is ephemeral and is lost
+     when the pod restarts. Use only for testing.

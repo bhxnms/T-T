@@ -1,0 +1,156 @@
+
+image:
+  repository: mauriceboe/trek
+  # tag: latest
+  pullPolicy: IfNotPresent
+
+# Deployment update strategy. Recreate is the safe default for the single-writer SQLite
+# DB on a ReadWriteOnce volume (the old pod is torn down before the new one starts).
+# Set to RollingUpdate only if you back the data volume with ReadWriteMany storage.
+updateStrategy: Recreate
+
+# Optional image pull secrets for private registries
+imagePullSecrets: []
+  # - name: my-registry-secret
+
+service:
+  type: ClusterIP
+  port: 3000
+
+env:
+  NODE_ENV: production
+  PORT: 3000
+  # TZ: "UTC"
+  # Timezone for logs, reminders, and cron jobs (e.g. Europe/Berlin).
+  # LOG_LEVEL: "info"
+  # "info" = concise user actions, "debug" = verbose details.
+  # TREK_WIKI_DIR: "/app/wiki"
+  # Where the in-app Help pages (/help) read their content from. Leave unset: the
+  # image ships the wiki at /app/wiki and finds it automatically, so Help matches
+  # the version you are running. Only set this to serve your own docs from a mounted
+  # volume. If the path does not exist, Help falls back to fetching the public GitHub
+  # wiki, which needs egress and tracks the latest release rather than your version.
+  # DEFAULT_LANGUAGE: "en"
+  # Default language on the login page for users with no saved preference.
+  # Browser/OS language is auto-detected first; this is the fallback when no match is found.
+  # Supported: de, en, es, fr, hu, nl, br, cs, pl, ru, zh, zh-TW, it, ar
+  # ALLOWED_ORIGINS: ""
+  # NOTE: If using ingress, ensure env.ALLOWED_ORIGINS matches the domains in ingress.hosts for proper CORS configuration.
+  # APP_URL: "https://trek.example.com"
+  # Public base URL of this instance. Required when OIDC is enabled — must match the redirect URI registered with your IdP.
+  # Also used as the base URL for links in email notifications and other external links.
+  # FORCE_HTTPS: "false"
+  # Optional. When "true": HTTPS redirect, HSTS, CSP upgrade-insecure-requests, secure cookies. Only behind a TLS proxy. Requires TRUST_PROXY.
+  # HSTS_INCLUDE_SUBDOMAINS: "false"
+  # When "true": adds includeSubDomains to the HSTS header. Only effective when HSTS is active. Leave "false" if sibling subdomains still run over plain HTTP.
+  # COOKIE_SECURE: "true"
+  # Auto-derived (true in production or when FORCE_HTTPS=true). Set "false" to force cookies over plain HTTP. Not recommended for production.
+  # SESSION_DURATION: "24h"
+  # How long a login session stays valid when "Remember me" is unchecked (the default): trek_session JWT exp + a browser-session cookie. Accepts 1h, 12h, 7d, 30d, 90d. Defaults to 24h.
+  # SESSION_DURATION_REMEMBER: "30d"
+  # Session length when "Remember me" is ticked: a longer-lived JWT + persistent cookie that survives browser restarts. Same format as SESSION_DURATION. Defaults to 30d.
+  # TRUST_PROXY: "1"
+  # Trusted proxy hops for X-Forwarded-For/X-Forwarded-Proto. Defaults to 1 in production. Must be set for FORCE_HTTPS to work.
+  # ALLOW_INTERNAL_NETWORK: "false"
+  # Set to "true" if Immich or other integrated services are hosted on a private/RFC-1918 network address.
+  # Loopback (127.x) and link-local/metadata addresses (169.254.x) are always blocked.
+  # OIDC_ISSUER: ""
+  # OpenID Connect provider URL.
+  # OIDC_CLIENT_ID: ""
+  # OIDC client ID.
+  # OIDC_DISPLAY_NAME: "SSO"
+  # Label shown on the SSO login button.
+  # OIDC_ONLY: "false"
+  # Set to "true" to force SSO-only mode: disables password login and password registration.
+  # Overrides the granular toggles in Admin > Settings and cannot be changed at runtime.
+  # First SSO login becomes admin on a fresh instance.
+  # OIDC_ADMIN_CLAIM: ""
+  # OIDC claim used to identify admin users.
+  # OIDC_ADMIN_VALUE: ""
+  # Value of the OIDC claim that grants admin role.
+  # OIDC_SCOPE: "openid email profile groups"
+  # Space-separated OIDC scopes to request. Must include scopes for any claim used by OIDC_ADMIN_CLAIM.
+  # OIDC_DISCOVERY_URL: ""
+  # Override the OIDC discovery endpoint for providers with non-standard paths (e.g. Authentik).
+  # DEMO_MODE: "false"
+  # Enable demo mode (hourly data resets).
+  # MCP_RATE_LIMIT: "300"
+  # Max MCP API requests per user per minute. Defaults to 300.
+  # MCP_MAX_SESSION_PER_USER: "20"
+  # Max concurrent MCP sessions per user. Defaults to 20.
+  # OVERPASS_URL: ""
+  # Custom Overpass endpoint(s) for the map POI "explore" search, comma-separated. When set, REPLACES the bundled
+  # public mirrors — point it at an internal/self-hosted Overpass instance when the public mirrors are unreachable
+  # from the cluster (e.g. locked-down egress). Non-http(s) entries are ignored.
+  # OVERPASS_TIMEOUT_MS: "12000"
+  # Per-endpoint timeout (ms) for Overpass POI requests. Raise it for a slow self-hosted Overpass instance. Defaults to 12000.
+
+
+# Secret environment variables stored in a Kubernetes Secret.
+# JWT_SECRET is managed entirely by the server (auto-generated into the data PVC,
+# rotatable via the admin panel) — it is not configured here.
+secretEnv:
+  # At-rest encryption key for stored secrets (API keys, MFA, SMTP, OIDC, etc.).
+  # Recommended: set to a random 32-byte hex value (openssl rand -hex 32).
+  # If left empty the server resolves the key automatically:
+  #   1. data/.jwt_secret (existing installs — encrypted data stays readable after upgrade)
+  #   2. data/.encryption_key auto-generated on first start (fresh installs)
+  ENCRYPTION_KEY: ""
+  # Initial admin account — only used on first boot when no users exist yet.
+  # If both values are non-empty the admin account is created with these credentials.
+  # If either is empty a random password is generated and printed to the server log.
+  ADMIN_EMAIL: ""
+  ADMIN_PASSWORD: ""
+  # OIDC client secret — set together with env.OIDC_ISSUER and env.OIDC_CLIENT_ID.
+  OIDC_CLIENT_SECRET: ""
+  # Optional Unsplash Access Key for trip-cover and place-image search.
+  # Without one, TREK uses Unsplash's unauthenticated endpoint, which some
+  # datacenter/VPS IPs (including many Kubernetes clusters) are blocked from.
+  # Get a free key at https://unsplash.com/developers. Can also be set per-admin
+  # in Admin > Settings; this value overrides that. Leave empty to disable.
+  UNSPLASH_ACCESS_KEY: ""
+
+# If true, a random ENCRYPTION_KEY is generated at install and preserved across upgrades
+generateEncryptionKey: false
+
+# If set, use an existing Kubernetes secret that contains ENCRYPTION_KEY
+existingSecret: ""
+existingSecretKey: ENCRYPTION_KEY
+
+persistence:
+  # When disabled, volumes fall back to an ephemeral emptyDir (data lost on pod restart).
+  enabled: true
+  data:
+    size: 1Gi
+    # Leave empty to use the cluster's default StorageClass; set to bind a specific class.
+    storageClassName: ""
+    # Bind an existing PVC. The other values (size, storageClassName, annotations) are then ignored.
+    existingClaim: ""
+    annotations: {}
+  uploads:
+    size: 1Gi
+    storageClassName: ""
+    # Specify an existing PVC to bind. The other values are then ignored.
+    existingClaim: ""
+    annotations: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - /
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local

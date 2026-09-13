@@ -1,0 +1,38 @@
+import type { TranslationStrings } from '../types';
+
+const members: TranslationStrings = {
+  'members.shareTrip': 'Seyahati Paylaş',
+  'members.inviteUser': 'Kullanıcı davet et',
+  'members.selectUser': 'Kullanıcı seç…',
+  'members.invite': 'Davet et',
+  'members.allHaveAccess': 'Tüm kullanıcıların zaten erişimi var.',
+  'members.access': 'Erişim',
+  'members.person': 'kişi',
+  'members.persons': 'kişi',
+  'members.you': 'siz',
+  'members.owner': 'Sahip',
+  'members.leaveTrip': 'Seyahatten ayrıl',
+  'members.removeAccess': 'Erişimi kaldır',
+  'members.confirmLeave': 'Seyahatten ayrılmak İstiyor musunuz? Erişiminizi kaybedersiniz.',
+  'members.confirmRemove': 'Bu kullanıcının erişimi kaldırılsın mı?',
+  'members.loadError': 'Üyeler yüklenemedi',
+  'members.added': 'eklendi',
+  'members.addError': 'Eklenemedi',
+  'members.removed': 'Üye kaldırıldı',
+  'members.removeError': 'Kaldırılamadı',
+  'members.makeOwner': 'Sahip yap',
+  'members.confirmTransfer': 'Sahipliği {name} kullanıcısına devret? Normal bir üye olacaksınız.',
+  'members.transferError': 'Sahiplik devredilemedi',
+  'members.guests': 'Misafirler',
+  'members.guest': 'Misafir',
+  'members.guestsHint':
+    'Hesabı olmayan kişiler. Masraflara, valize ve görevlere atanabilirler, ancak giriş yapamazlar.',
+  'members.addGuest': 'Misafir ekle',
+  'members.guestNamePlaceholder': 'Misafir adı',
+  'members.guestAdded': 'Misafir eklendi',
+  'members.guestAddError': 'Misafir eklenemedi',
+  'members.guestRenameError': 'Misafir yeniden adlandırılamadı',
+  'members.guestRemoved': 'Misafir kaldırıldı',
+  'members.confirmRemoveGuest': 'Bu misafir kaldırılsın mı? Atamaları ve masraf payları da kaldırılacak.',
+};
+export default members;

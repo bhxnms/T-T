@@ -1,0 +1,32 @@
+import type { TranslationStrings } from '../types';
+
+const inspector: TranslationStrings = {
+  'inspector.opened': 'Otevřeno',
+  'inspector.closed': 'Zavřeno',
+  'inspector.openingHours': 'Otevírací doba',
+  'inspector.showHours': 'Zobrazit otevírací dobu',
+  'inspector.files': 'Soubory',
+  'inspector.filesCount': '{count} souborů',
+  'inspector.removeFromDay': 'Odebrat ze dne',
+  'inspector.remove': 'Odstranit',
+  'inspector.addToDay': 'Přidat ke dni',
+  'inspector.confirmedRes': 'Potvrzená rezervace',
+  'inspector.pendingRes': 'Čekající rezervace',
+  'inspector.google': 'Google Maps',
+  'inspector.navigation': 'Navigace',
+  'inspector.openWith': 'Otevřít v',
+  'inspector.openStreetMap': 'OpenStreetMap',
+  'inspector.website': 'Otevřít webové stránky',
+  'inspector.saveToCollection': 'Uložit do sbírky',
+  'inspector.savedToCollection': 'Uloženo',
+  'inspector.addRes': 'Rezervace',
+  'inspector.editRes': 'Upravit rezervaci',
+  'inspector.participants': 'Účastníci',
+  'inspector.trackStats': 'Data trasy',
+  'inspector.trackColor': 'Barva trasy',
+  'inspector.trackColorAuto': 'Automatická barva',
+  'inspector.trackColorCustom': 'Vybrat vlastní barvu',
+  "inspector.checkin": "Zapsat se",
+  "inspector.checkinDone": "Zapsáno",
+};
+export default inspector;

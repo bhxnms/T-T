@@ -1,0 +1,141 @@
+import type { TranslationStrings } from '../types';
+
+const storage: TranslationStrings = {
+  'storage.field.root': 'Direktori root',
+  'storage.help.root': 'Jalur absolut di server tempat backend ini menyimpan objeknya.',
+  'storage.field.endpoint': 'URL endpoint',
+  'storage.help.endpoint':
+    'URL dasar layanan yang kompatibel dengan S3, mis. https://s3.example.com atau http://127.0.0.1:9000.',
+  'storage.field.bucket': 'Bucket',
+  'storage.field.accessKeyId': 'ID kunci akses',
+  'storage.field.secretAccessKey': 'Kunci akses rahasia',
+  'storage.field.region': 'Wilayah',
+  'storage.help.region': 'Biarkan default kecuali penyedia Anda memerlukan wilayah tertentu.',
+  'storage.field.keyPrefix': 'Awalan kunci',
+  'storage.help.keyPrefix': 'Awalan opsional yang ditambahkan ke setiap kunci objek, mis. trek/prod.',
+  'storage.field.retries': 'Percobaan ulang',
+  'storage.field.timeoutMs': 'Batas waktu (md)',
+  'storage.field.primary': 'Backend utama',
+  'storage.field.replicas': 'Replika',
+  'storage.title': 'Penyimpanan',
+  'storage.description':
+    'Tempat TREK menyimpan file, foto, dan cadangan yang diunggah. Tidak ada yang berubah sampai Anda menyimpan.',
+  'storage.loading': 'Memuat…',
+  'storage.saved': 'Konfigurasi penyimpanan disimpan',
+  'storage.save': 'Simpan perubahan',
+  'storage.unsaved': 'Perubahan belum disimpan',
+  'storage.saveConflict':
+    'Konfigurasi penyimpanan berubah sejak dimuat, jadi perubahan Anda tidak tersimpan. Buang perubahan itu dan muat ulang pengaturan tersimpan untuk mulai lagi.',
+  'storage.discardAndReload': 'Buang perubahan saya dan muat ulang',
+  'storage.configError.banner': 'Gagal memuat pengaturan penyimpanan tersimpan — menyimpan akan menggantinya: {error}',
+  'storage.backends.title': 'Backend',
+  'storage.backends.add': 'Tambah backend',
+  'storage.backends.usedBy': 'Digunakan oleh: {categories}',
+  'storage.backends.unused': 'Tidak ditetapkan ke kategori mana pun',
+  'storage.backends.envReadOnly': 'Ditentukan oleh variabel lingkungan — hanya baca',
+  'storage.source.built-in': 'Bawaan',
+  'storage.source.env': 'Lingkungan',
+  'storage.source.settings': 'Pengaturan',
+  'storage.type.local': 'Lokal',
+  'storage.type.s3': 'S3',
+  'storage.type.mirror': 'Cermin',
+  'storage.actions.test': 'Uji',
+  'storage.actions.edit': 'Sunting',
+  'storage.actions.remove': 'Hapus',
+  'storage.test.running': 'Menguji…',
+  'storage.test.ok': 'Koneksi OK',
+  'storage.test.failed': 'Uji gagal',
+  'storage.remove.title': 'Hapus backend',
+  'storage.remove.body':
+    'Hapus {name} dari konfigurasi? Server menolak penyimpanan jika masih ada yang bergantung padanya.',
+  'storage.remove.stillAssigned': 'Masih ditetapkan ke: {categories}',
+  'storage.form.addTitle': 'Tambah backend',
+  'storage.form.editTitle': 'Sunting backend',
+  'storage.form.name': 'Nama',
+  'storage.form.type': 'Tipe',
+  'storage.form.apply': 'Terapkan',
+  'storage.form.cancel': 'Batal',
+  'storage.form.duplicateName': 'Backend bernama {name} sudah ada',
+  'storage.categories.title': 'Kategori',
+  'storage.categories.default': 'default',
+  'storage.categories.reassignWarning':
+    'Objek yang ada tidak dipindahkan: objek baru masuk ke backend yang baru ditetapkan, yang lama tetap di tempatnya.',
+  'storage.category.files': 'Dokumen perjalanan',
+  'storage.category.journey': 'Foto Journey',
+  'storage.category.covers': 'Gambar sampul',
+  'storage.category.avatars': 'Foto profil',
+  'storage.category.places': 'Gambar tempat',
+  'storage.category.photos-google': 'Cache foto Google',
+  'storage.category.photos-trek': 'Cache foto TREK',
+  'storage.category.backups': 'Cadangan',
+
+  // What each category stores — rendered under the label in the category map.
+  'storage.categoryDesc.files':
+    'Lampiran berkas yang diunggah ke perjalanan — tiket, PDF, konfirmasi pemesanan, dan berkas yang dibagikan di obrolan perjalanan.',
+  'storage.categoryDesc.journey': 'Foto dan thumbnail yang dilampirkan ke entri Journey.',
+  'storage.categoryDesc.covers': 'Gambar sampul perjalanan dan koleksi, termasuk sampul yang diambil dari Unsplash.',
+  'storage.categoryDesc.avatars': 'Foto profil akun pengguna.',
+  'storage.categoryDesc.places': 'Gambar yang dilampirkan ke tempat dan tempat koleksi — diunggah atau diimpor.',
+  'storage.categoryDesc.photos-google':
+    'Salinan foto Google Places yang di-cache — dapat diambil ulang, aman jika hilang.',
+  'storage.categoryDesc.photos-trek':
+    'Foto ter-cache dari layanan foto TREK yang digunakan oleh Foto (Memories) — dapat diambil ulang, aman jika hilang.',
+  'storage.categoryDesc.backups': 'Arsip cadangan server yang dibuat oleh panel Cadangan atau jadwal.',
+  'storage.health.title': 'Kesehatan',
+  'storage.health.allClear': 'Tidak ada kegagalan replika yang tercatat.',
+  'storage.health.seedFile':
+    'File seed storage-config.json ada tetapi diabaikan — baris konfigurasi sudah ada. Kelola penyimpanan di sini.',
+  'storage.health.failureLine': '{op} pada {key} di {backend} gagal: {error}',
+
+  // Replicas-on-primary mirror UX (2026-08-20 spec)
+  'storage.mirror.targets': 'Target cermin',
+  'storage.mirror.targetsHelp': 'Setiap penulisan ke backend ini juga disalin ke setiap target yang dipilih.',
+  'storage.mirror.latencyNote':
+    'Replika ditulis satu per satu selama setiap unggahan — target yang lambat atau tidak terjangkau memperlambat setiap unggahan setiap kategori pada backend ini.',
+  'storage.mirror.mirroredTo': 'Dicerminkan ke: {targets}',
+  'storage.mirror.replicaOf': 'Replika dari: {primaries}',
+  'storage.mirror.cacheWarning':
+    'Tidak disarankan: kategori ini menyimpan konten yang dapat diambil ulang — mereplikasinya biasanya sia-sia.',
+  'storage.mirror.degenerate.duplicate-mirror':
+    'Cermin kedua membungkus {primary} — panel hanya mengelola yang pertama; hapus yang ini untuk mengelola pencerminan dari {primary}.',
+  'storage.mirror.degenerate.env-primary':
+    'Membungkus backend yang ditentukan oleh variabel lingkungan — tidak dapat diedit di sini.',
+  'storage.mirror.degenerate.missing-primary': 'Merujuk ke backend yang sudah tidak ada.',
+  'storage.remove.usedAsReplicaBy': 'Digunakan sebagai replika oleh: {primaries}',
+
+  // Backfill + usage (backfill/stats/notifications spec)
+  'storage.sync.now': 'Sinkronkan sekarang',
+  'storage.sync.running': 'Menyinkronkan… {done}/{total}',
+  'storage.sync.counts': '{copied} disalin · {skipped} dilewati · {failed} gagal',
+  'storage.sync.cancel': 'Batalkan sinkronisasi',
+  'storage.sync.done': 'Sinkronisasi selesai: {copied} disalin, {deleted} dihapus, {failed} gagal',
+  'storage.sync.cancelled': 'Sinkronisasi dibatalkan',
+  'storage.sync.error': 'Sinkronisasi gagal: {error}',
+  'storage.sync.prompt': 'Objek yang ada belum direplikasi — sinkronkan sekarang?',
+  'storage.sync.dismiss': 'Abaikan',
+  'storage.usage.line': '{objects} objek · {size}',
+  'storage.usage.computed': 'Penggunaan dihitung {age}',
+  'storage.usage.never': 'Penggunaan belum dihitung',
+  'storage.usage.refresh': 'Segarkan',
+  'storage.usage.compute': 'Hitung sekarang',
+  'storage.usage.legacyNote': 'termasuk pustaka foto lama',
+
+  // Category migration (copy → flip → delta sweep)
+  'storage.migrate.promptTitle': 'Pindahkan objek yang ada ke backend baru?',
+  'storage.migrate.promptLine': '{category}: {objects} objek ({size}) dari {from} ke {to}',
+  'storage.migrate.promptLineUnknown':
+    '{category}: ukuran tidak diketahui (penggunaan belum dipindai) dari {from} ke {to}',
+  'storage.migrate.move': 'Pindahkan objek yang ada',
+  'storage.migrate.routeOnly': 'Hanya arahkan penulisan baru',
+  'storage.migrate.running': 'Memindahkan {category}… {done}/{total}',
+  'storage.migrate.done': 'Pemindahan selesai: {copied} disalin, {skipped} dilewati',
+  'storage.migrate.doneFailures': '{failed} gagal — objek tersebut tidak disalin ke backend baru',
+  'storage.migrate.failed': 'Pemindahan gagal: {error} — kategori tidak diubah',
+  'storage.migrate.cancelled': 'Pemindahan dibatalkan — tidak ada yang diubah',
+  'storage.migrate.reclaimable': '{objects} objek ({size}) masih tersisa di {from} — ambil kembali secara manual',
+  'storage.migrate.cancel': 'Batalkan pemindahan',
+  'storage.migrate.promptCancel': 'Batal',
+  'storage.migrate.queued': 'Dalam antrean: {categories}',
+  'storage.migrate.queueDropped': 'Tidak dapat memulai pemindahan berikutnya — antrean yang tersisa telah dihapus: {categories}',
+};
+export default storage;

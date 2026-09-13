@@ -1,0 +1,410 @@
+import { describe, it, expect } from 'vitest'
+import type { Day, Accommodation } from '../types'
+import { getDayOrder, isDayInAccommodationRange, getAccommodationAnchors, getDayBookendHotels, shouldDrawMorningLeg, shouldDrawEveningLeg } from './dayOrder'
+
+const days = [
+  { id: 10, day_number: 1 },
+  { id: 20, day_number: 2 },
+  { id: 30, day_number: 3 },
+] as unknown as Day[]
+
+const hotel = (over: Partial<Accommodation>): Accommodation =>
+  ({ place_lat: 48.1, place_lng: 11.5, start_day_id: 10, end_day_id: 30, ...over }) as Accommodation
+
+describe('getDayOrder', () => {
+  it('prefers day_number when present', () => {
+    expect(getDayOrder(days[1], days)).toBe(2)
+  })
+  it('falls back to array index when day_number is missing', () => {
+    const noNumber = [{ id: 5 }, { id: 6 }] as unknown as Day[]
+    expect(getDayOrder(noNumber[1], noNumber)).toBe(1)
+  })
+})
+
+describe('isDayInAccommodationRange', () => {
+  it('is inclusive of both the check-in and check-out day', () => {
+    expect(isDayInAccommodationRange(days[0], 10, 30, days)).toBe(true) // check-in morning
+    expect(isDayInAccommodationRange(days[1], 10, 30, days)).toBe(true) // mid-stay
+    expect(isDayInAccommodationRange(days[2], 10, 30, days)).toBe(true) // check-out day
+  })
+  it('excludes days outside the stay', () => {
+    expect(isDayInAccommodationRange(days[0], 20, 30, days)).toBe(false)
+  })
+})
+
+describe('getAccommodationAnchors', () => {
+  it('returns no anchors when the day has no accommodation', () => {
+    expect(getAccommodationAnchors(days[1], days, [])).toEqual({})
+  })
+
+  it('anchors both ends to the same hotel on a mid-stay day (round trip)', () => {
+    const accs = [hotel({ start_day_id: 10, end_day_id: 30, place_lat: 48.1, place_lng: 11.5 })]
+    expect(getAccommodationAnchors(days[1], days, accs)).toEqual({
+      start: { lat: 48.1, lng: 11.5 },
+      end: { lat: 48.1, lng: 11.5 },
+    })
+  })
+
+  it('loops a single hotel on its check-out day (home base for the day)', () => {
+    const accs = [hotel({ start_day_id: 10, end_day_id: 20, place_lat: 1, place_lng: 2 })]
+    expect(getAccommodationAnchors(days[1], days, accs)).toEqual({ start: { lat: 1, lng: 2 }, end: { lat: 1, lng: 2 } })
+  })
+
+  it('loops a single hotel on its check-in day (home base for the day)', () => {
+    const accs = [hotel({ start_day_id: 20, end_day_id: 30, place_lat: 3, place_lng: 4 })]
+    expect(getAccommodationAnchors(days[1], days, accs)).toEqual({ start: { lat: 3, lng: 4 }, end: { lat: 3, lng: 4 } })
+  })
+
+  it('uses the checked-out hotel as start and the checked-in hotel as end on a transfer day', () => {
+    const accs = [
+      hotel({ start_day_id: 10, end_day_id: 20, place_lat: 1, place_lng: 1 }), // checkout today
+      hotel({ start_day_id: 20, end_day_id: 30, place_lat: 9, place_lng: 9 }), // check-in today
+    ]
+    expect(getAccommodationAnchors(days[1], days, accs)).toEqual({
+      start: { lat: 1, lng: 1 },
+      end: { lat: 9, lng: 9 },
+    })
+  })
+
+  it('ignores accommodations that have no coordinates', () => {
+    const accs = [hotel({ start_day_id: 10, end_day_id: 30, place_lat: null, place_lng: null })]
+    expect(getAccommodationAnchors(days[1], days, accs)).toEqual({})
+  })
+
+  it('keeps morning/evening correct on a transfer day when the morning stay runs long (#887)', () => {
+    const accs = [
+      hotel({ start_day_id: 10, end_day_id: 30, place_lat: 1, place_lng: 1 }), // slept here, checks out later
+      hotel({ start_day_id: 20, end_day_id: 30, place_lat: 9, place_lng: 9 }), // check-in today
+    ]
+    expect(getAccommodationAnchors(days[1], days, accs)).toEqual({
+      start: { lat: 1, lng: 1 },
+      end: { lat: 9, lng: 9 },
+    })
+  })
+
+  // A Reykjavík stay checking in on day 1 and out on day 3, with neither time recorded,
+  // and untimed stops the optimizer is free to reorder.
+  const reykjavik = { lat: 64.14, lng: -21.94 }
+  const stay = () => hotel({ start_day_id: 10, end_day_id: 30, place_lat: reykjavik.lat, place_lng: reykjavik.lng })
+  const home = { lat: 50.11, lng: 8.68 }
+  const blueLagoon = { lat: 63.88, lng: -22.45 }
+  const hallgrimskirkja = { lat: 64.145, lng: -21.93 }
+
+  it('drops the check-in anchor when the day reaches past a day trip from the hotel (#2157)', () => {
+    // The optimizer half of the same bug. Pinning both ends to a hotel you have not
+    // reached yet made one click on "Optimize route" sort Home between the two Icelandic
+    // stops, because that is the shortest loop, and the user had to drag it back by hand.
+    expect(getAccommodationAnchors(days[0], days, [stay()], [home, blueLagoon, hallgrimskirkja]))
+      .toEqual({ end: reykjavik })
+  })
+
+  it('drops the check-out anchor when a carrier takes you out of the day (#2157)', () => {
+    // Mirror on the departure day: you woke up here, so the hotel still starts the
+    // route, but the flight home means nothing comes back to it.
+    expect(getAccommodationAnchors(days[2], days, [stay()], [hallgrimskirkja], true))
+      .toEqual({ start: reykjavik })
+  })
+
+  it('keeps the loop when every stop is a day out of the hotel (#2009 preserved)', () => {
+    expect(getAccommodationAnchors(days[0], days, [stay()], [blueLagoon, hallgrimskirkja]))
+      .toEqual({ start: reykjavik, end: reykjavik })
+  })
+
+  it('has nothing to weigh the anchors against when the stop list is empty', () => {
+    expect(getAccommodationAnchors(days[0], days, [stay()], []))
+      .toEqual({ start: reykjavik, end: reykjavik })
+  })
+})
+
+describe('getDayBookendHotels', () => {
+  it('returns nothing when the day has no accommodation', () => {
+    expect(getDayBookendHotels(days[1], days, [])).toEqual({})
+  })
+
+  it('bookends both ends with the single hotel on a normal stay day', () => {
+    const h = hotel({ start_day_id: 10, end_day_id: 30 })
+    const { morning, evening } = getDayBookendHotels(days[1], days, [h])
+    expect(morning).toBe(h)
+    expect(evening).toBe(h)
+  })
+
+  it('uses the checked-out hotel in the morning and the checked-in hotel in the evening on a transfer day', () => {
+    const out = hotel({ start_day_id: 10, end_day_id: 20, place_lat: 1, place_lng: 1 })
+    const into = hotel({ start_day_id: 20, end_day_id: 30, place_lat: 9, place_lng: 9 })
+    const { morning, evening } = getDayBookendHotels(days[1], days, [out, into])
+    expect(morning).toBe(out)
+    expect(evening).toBe(into)
+  })
+
+  it('still picks the slept-in hotel for the morning when its stay does not end on the transfer day (#887)', () => {
+    // The morning hotel runs long (checks out day 3) so it is not flagged as "checks out today";
+    // the old "ends today" rule collapsed both bookends onto the arriving hotel.
+    const stayed = hotel({ start_day_id: 10, end_day_id: 30, place_lat: 1, place_lng: 1 })
+    const into = hotel({ start_day_id: 20, end_day_id: 30, place_lat: 9, place_lng: 9 })
+    const { morning, evening } = getDayBookendHotels(days[1], days, [stayed, into])
+    expect(morning).toBe(stayed)
+    expect(evening).toBe(into)
+  })
+
+  it('ignores accommodations without coordinates', () => {
+    const h = hotel({ place_lat: null, place_lng: null })
+    expect(getDayBookendHotels(days[1], days, [h])).toEqual({})
+  })
+
+  it('flags an arrival/check-in day as not slept-here in the morning (#1321)', () => {
+    // Day 1: you arrive from home and check in tonight, so the morning hotel is only a
+    // check-in fallback — no hotel → departure leg should be drawn.
+    const into = hotel({ start_day_id: 10, end_day_id: 30, place_lat: 3, place_lng: 4 })
+    const r = getDayBookendHotels(days[0], days, [into])
+    expect(r.morning).toBe(into)
+    expect(r.morningIsSleptHere).toBe(false)
+    expect(r.eveningIsOvernight).toBe(true)
+    // The optimizer anchor must stay a loop on the check-in day (values unchanged).
+    expect(getAccommodationAnchors(days[0], days, [into])).toEqual({ start: { lat: 3, lng: 4 }, end: { lat: 3, lng: 4 } })
+  })
+
+  it('flags a mid-stay day as slept-here and overnight', () => {
+    const h = hotel({ start_day_id: 10, end_day_id: 30 })
+    const r = getDayBookendHotels(days[1], days, [h])
+    expect(r.morningIsSleptHere).toBe(true)
+    expect(r.eveningIsOvernight).toBe(true)
+  })
+
+  it('an evening departure with no replacement check-in is not overnight (S7 mirror)', () => {
+    // You woke up here but check out today and board an evening transport — you do not
+    // sleep here tonight, so the last-stop → hotel leg must be droppable.
+    const h = hotel({ start_day_id: 10, end_day_id: 20, place_lat: 1, place_lng: 1 })
+    const r = getDayBookendHotels(days[1], days, [h])
+    expect(r.morningIsSleptHere).toBe(true)
+    expect(r.eveningIsOvernight).toBe(false)
+  })
+
+  it('flags a transfer day as slept-here in the morning and overnight in the evening', () => {
+    const out = hotel({ start_day_id: 10, end_day_id: 20, place_lat: 1, place_lng: 1 })
+    const into = hotel({ start_day_id: 20, end_day_id: 30, place_lat: 9, place_lng: 9 })
+    const r = getDayBookendHotels(days[1], days, [out, into])
+    expect(r.morningIsSleptHere).toBe(true)
+    expect(r.eveningIsOvernight).toBe(true)
+  })
+})
+
+describe('shouldDrawMorningLeg', () => {
+  const checkInDay = days[0] // id 10
+  const into = (over: Partial<Accommodation> = {}) =>
+    hotel({ start_day_id: 10, end_day_id: 30, check_in: '15:00', ...over })
+
+  it('draws when you slept in the morning hotel, regardless of stop time', () => {
+    const bookends = { morning: into(), morningIsSleptHere: true }
+    // Mid-stay: even a stop at 06:00 is preceded by the hotel you woke in.
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '06:00' })).toBe(true)
+  })
+
+  it('does NOT draw when the day opens on an airport you landed at (#2133)', () => {
+    // You flew in. Even on a night you provably slept in this hotel, nobody drove out
+    // of it to the airport that set you down.
+    const bookends = { morning: into(), morningIsSleptHere: true }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: false, carrierEdge: 'arrival' })).toBe(false)
+  })
+
+  it('still draws when the day opens on an airport you departed from (#2133)', () => {
+    // The legitimate mirror: you woke in the hotel and drove to your outbound airport.
+    const bookends = { morning: into(), morningIsSleptHere: true }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: false, carrierEdge: 'departure' })).toBe(true)
+  })
+
+  it('still draws for a hire-car drop-off point, which carries no carrierEdge (#2133)', () => {
+    // A car you keep driving is not a carrier: the hotel → drop-off depot drive is real.
+    const bookends = { morning: into(), morningIsSleptHere: true }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: false, carrierEdge: null })).toBe(true)
+  })
+
+  it('does NOT draw on a check-in day when the first place is before check-in (#1465)', () => {
+    const bookends = { morning: into({ check_in: '15:00' }), morningIsSleptHere: false }
+    // Airport place at 10:00, check-in 15:00 — you have not reached the hotel yet.
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '10:00' })).toBe(false)
+  })
+
+  it('draws on a check-in day when the first place is at/after check-in (loop preserved)', () => {
+    const bookends = { morning: into({ check_in: '15:00' }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '19:00' })).toBe(true)
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '15:00' })).toBe(true)
+  })
+
+  it('does NOT draw on a check-in day when the stop is untimed but check-in is not (#1597)', () => {
+    // An un-timed first place on an arrival day ("Home" before driving out) cannot prove
+    // you were at the hotel yet, so no hotel → first-stop leg — mirroring the evening rule.
+    const bookends = { morning: into({ check_in: '15:00' }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: null })).toBe(false)
+  })
+
+  it('DOES draw on a check-in day when the stay records no check-in time (#2009)', () => {
+    // Nothing to clear, so nothing to fail: the hotel picker leaves the time blank
+    // by default, and treating that as proof against left the loop open every time.
+    const noCheckIn = { morning: into({ check_in: null }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: '19:00' })).toBe(true)
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null })).toBe(true)
+    // A transport arrival is still not a hotel departure (#1321).
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: false, time: '19:00' })).toBe(false)
+  })
+
+  it('does NOT draw on a check-in day for a transport arrival (not a place, #1321)', () => {
+    const bookends = { morning: into({ check_in: '15:00' }), morningIsSleptHere: false }
+    // A late arrival (16:00) is still no morning leg — you flew in, weren't at the hotel.
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: false, time: '16:00' })).toBe(false)
+  })
+
+  it('does NOT draw when the morning hotel is not checking in today', () => {
+    // start_day_id 20 ≠ day 10, and not slept-here → no leg.
+    const bookends = { morning: into({ start_day_id: 20, check_in: '15:00' }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '19:00' })).toBe(false)
+  })
+
+  it('does NOT draw on a no-check-in-time day when a carrier arrives or leaves that day (#2157)', () => {
+    // You fly in, so the hotel is where the day ends — the no-time loop default
+    // must not start the day from a hotel you only reach tonight.
+    const noCheckIn = { morning: into({ check_in: null }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null }, true)).toBe(false)
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: '19:00' }, true)).toBe(false)
+  })
+
+  it('still closes the no-time loop when the day has no carrier (#2009 preserved)', () => {
+    const noCheckIn = { morning: into({ check_in: null }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null }, false)).toBe(true)
+    // Callers that don't know about the flag keep the old behaviour.
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null })).toBe(true)
+  })
+
+  it('a recorded check-in time keeps the timed rule even on a carrier day (#2157)', () => {
+    const bookends = { morning: into({ check_in: '15:00' }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '19:00' }, true)).toBe(true)
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '10:00' }, true)).toBe(false)
+  })
+
+  it('a carrier does not touch the slept-here morning leg (#2157)', () => {
+    // Mid-stay day with a day-trip by train: you still woke up in this hotel.
+    const bookends = { morning: into(), morningIsSleptHere: true }
+    expect(shouldDrawMorningLeg(bookends, checkInDay, { isPlace: true, time: '06:00' }, true)).toBe(true)
+  })
+
+  it('the no-time default does not reach an edge place out of day-trip range (#2157)', () => {
+    // "Home", an ocean away from the hotel, with no carrier recorded at all: the
+    // closed loop is a guess, and a guess does not get a 2400 km leg.
+    const noCheckIn = { morning: into({ check_in: null }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null, lat: 21.28, lng: -157.83 })).toBe(false)
+    // A nearby untimed place keeps the #2009 loop.
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null, lat: 48.2, lng: 11.6 })).toBe(true)
+  })
+
+  it('a drivable edge place is still out of range when no day out of the hotel reaches it (#2157)', () => {
+    // The issue's literal repro, driven rather than flown: hotel in Warnemünde, "Home"
+    // in Frankfurt, 508 km apart. The router answers that pair happily, so a
+    // reachability limit (2000 km, all of Europe) never fired and the arrival day kept
+    // starting at a hotel nobody had reached yet. What rules it out is that no day out
+    // of that hotel goes to Frankfurt and back.
+    const noCheckIn = { morning: into({ check_in: null, place_lat: 54.18, place_lng: 12.08 }), morningIsSleptHere: false }
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null, lat: 50.11, lng: 8.68 })).toBe(false)
+    // The day trip that hotel does send you on (Rostock zoo, 11 km) keeps its leg.
+    expect(shouldDrawMorningLeg(noCheckIn, checkInDay, { isPlace: true, time: null, lat: 54.08, lng: 12.10 })).toBe(true)
+  })
+})
+
+describe('shouldDrawEveningLeg', () => {
+  const checkOutDay = days[2] // id 30
+  const out = (over: Partial<Accommodation> = {}) =>
+    hotel({ start_day_id: 10, end_day_id: 30, check_out: '11:00', ...over })
+
+  it('draws when you sleep in the evening hotel tonight, regardless of stop time', () => {
+    const bookends = { evening: out(), eveningIsOvernight: true }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: '23:00' })).toBe(true)
+  })
+
+  it('does NOT draw when the day ends at an airport you took off from (#2133)', () => {
+    // The reported bug: an overnight flight leaves only its departure airport on the
+    // day it leaves, and that airport was being joined to tonight's hotel.
+    const bookends = { evening: out(), eveningIsOvernight: true }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: false, carrierEdge: 'departure' })).toBe(false)
+  })
+
+  it('still draws when the day ends at an airport you landed at (#2133)', () => {
+    // The legitimate case the fix must not eat: you land, then drive to the hotel.
+    const bookends = { evening: out(), eveningIsOvernight: true }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: false, carrierEdge: 'arrival' })).toBe(true)
+  })
+
+  it('still draws for a hire-car pickup point, which carries no carrierEdge (#2133)', () => {
+    // You collect the car at 18:00 and drive it to tonight's hotel — a real leg.
+    const bookends = { evening: out(), eveningIsOvernight: true }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: false, carrierEdge: null })).toBe(true)
+  })
+
+  it('does NOT draw on a check-out day when the last place is after check-out (#1465)', () => {
+    const bookends = { evening: out({ check_out: '11:00' }), eveningIsOvernight: false }
+    // "home" place at 18:00, check-out 11:00 — you have already left the hotel.
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: '18:00' })).toBe(false)
+  })
+
+  it('draws on a check-out day when the last place is at/before check-out', () => {
+    const bookends = { evening: out({ check_out: '11:00' }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: '09:00' })).toBe(true)
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: '11:00' })).toBe(true)
+  })
+
+  it('does NOT draw on a check-out day when the stop is untimed but check-out is not', () => {
+    const bookends = { evening: out({ check_out: '11:00' }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: null })).toBe(false)
+  })
+
+  it('DOES draw on a check-out day when the stay records no check-out time (#2009)', () => {
+    const noCheckOut = { evening: out({ check_out: null }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: '09:00' })).toBe(true)
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null })).toBe(true)
+    // An evening transport departure is still not a drive back to the hotel (S7).
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: false, time: '09:00' })).toBe(false)
+  })
+
+  it('does NOT draw on a check-out day for a transport departure (not a place, S7)', () => {
+    const bookends = { evening: out({ check_out: '11:00' }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: false, time: '09:00' })).toBe(false)
+  })
+
+  it('does NOT draw on a no-check-out-time day when a carrier arrives or leaves that day (#2157)', () => {
+    // The reported last day: fly home, then a "Home" entry — nothing drives from
+    // Home back to the hotel you left that morning.
+    const noCheckOut = { evening: out({ check_out: null }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null }, true)).toBe(false)
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: '09:00' }, true)).toBe(false)
+  })
+
+  it('still closes the no-time loop when the day has no carrier (#2009 preserved)', () => {
+    const noCheckOut = { evening: out({ check_out: null }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null }, false)).toBe(true)
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null })).toBe(true)
+  })
+
+  it('a recorded check-out time keeps the timed rule even on a carrier day (#2157)', () => {
+    const bookends = { evening: out({ check_out: '11:00' }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: '09:00' }, true)).toBe(true)
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: '18:00' }, true)).toBe(false)
+  })
+
+  it('a carrier does not touch the overnight evening leg (#2157)', () => {
+    // You sleep here tonight — the day-trip train changes nothing about that.
+    const bookends = { evening: out(), eveningIsOvernight: true }
+    expect(shouldDrawEveningLeg(bookends, checkOutDay, { isPlace: true, time: '23:00' }, true)).toBe(true)
+  })
+
+  it('the no-time default does not reach an edge place out of day-trip range (#2157)', () => {
+    const noCheckOut = { evening: out({ check_out: null }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null, lat: 21.28, lng: -157.83 })).toBe(false)
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null, lat: 48.2, lng: 11.6 })).toBe(true)
+  })
+
+  it('a drivable edge place is still out of range when no day out of the hotel reaches it (#2157)', () => {
+    // Mirror of the morning case: the reporter drives home from Warnemünde to Frankfurt
+    // on the last day, and nothing routes those 508 km back to the hotel he checked
+    // out of that morning.
+    const noCheckOut = { evening: out({ check_out: null, place_lat: 54.18, place_lng: 12.08 }), eveningIsOvernight: false }
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null, lat: 50.11, lng: 8.68 })).toBe(false)
+    expect(shouldDrawEveningLeg(noCheckOut, checkOutDay, { isPlace: true, time: null, lat: 54.08, lng: 12.10 })).toBe(true)
+  })
+})

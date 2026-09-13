@@ -1,0 +1,172 @@
+import Database from 'better-sqlite3';
+import path from 'path';
+import fs from 'fs';
+import { readEnv } from '../app-config';
+import { applyDurabilityPragmas } from './durability';
+import { createTables } from './schema';
+import { runMigrations } from './migrations';
+import { runSeeds } from './seeds';
+import { Place, Tag } from '../types';
+
+// In test mode each vitest worker gets an isolated in-memory DB so that
+// parallel forks can't race on the same file or share migration state.
+const isTest = readEnv().app.isTest;
+
+let dbPath: string;
+if (isTest) {
+  dbPath = ':memory:';
+} else if (readEnv().db.trekDbFile) {
+  // Explicit DB file (used by the Playwright E2E harness to run against an
+  // isolated, throwaway database instead of the real data/travel.db). Purely
+  // additive — when unset the default path below is used exactly as before.
+  dbPath = readEnv().db.trekDbFile!;
+  const dir = path.dirname(dbPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+} else {
+  const dataDir = path.join(__dirname, '../../data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  dbPath = path.join(dataDir, 'travel.db');
+}
+
+let _db: Database.Database | null = null;
+
+function initDb(): void {
+  if (_db) {
+    try { _db.exec('PRAGMA wal_checkpoint(TRUNCATE)'); } catch (e) {}
+    try { _db.close(); } catch (e) {}
+    _db = null;
+  }
+
+  _db = new Database(dbPath);
+  // Ahead of the journal switch now: changing journal_mode needs an exclusive
+  // lock, which a sibling process (reset-admin, the rotation script) may hold.
+  _db.exec('PRAGMA busy_timeout = 5000');
+  const durability = applyDurabilityPragmas(_db);
+  _db.exec('PRAGMA foreign_keys = ON');
+  // Reported so an operator can see whether their setting took — the test DB is
+  // :memory: and has no journal file, so there is nothing to report there.
+  if (dbPath !== ':memory:') {
+    console.log(`[DB] journal_mode=${durability.journalMode}, synchronous=${durability.synchronous}`);
+  }
+
+  createTables(_db);
+  runMigrations(_db);
+
+  runSeeds(_db);
+}
+
+initDb();
+
+const db = new Proxy({} as Database.Database, {
+  get(_, prop: string | symbol) {
+    if (!_db) throw new Error('Database connection is not available (restore in progress?)');
+    const val = (_db as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof val === 'function' ? val.bind(_db) : val;
+  },
+  set(_, prop: string | symbol, val: unknown) {
+    (_db as unknown as Record<string | symbol, unknown>)[prop] = val;
+    return true;
+  },
+});
+
+if (readEnv().demo.enabled) {
+  try {
+    const { seedDemoData } = require('../demo/demo-seed');
+    seedDemoData(_db);
+  } catch (err: unknown) {
+    console.error('[Demo] Seed error:', err instanceof Error ? err.message : err);
+  }
+}
+
+function closeDb(): void {
+  if (_db) {
+    try { _db.exec('PRAGMA wal_checkpoint(TRUNCATE)'); } catch (e) {}
+    try { _db.close(); } catch (e) {}
+    _db = null;
+    console.log('[DB] Database connection closed');
+  }
+}
+
+function reinitialize(): void {
+  console.log('[DB] Reinitializing database connection after restore...');
+  if (_db) closeDb();
+  initDb();
+  console.log('[DB] Database reinitialized successfully');
+}
+
+interface PlaceWithCategory extends Place {
+  category_name: string | null;
+  category_color: string | null;
+  category_icon: string | null;
+}
+
+interface PlaceWithTags extends Place {
+  category: { id: number; name: string; color: string; icon: string } | null;
+  tags: Tag[];
+  ratings: { user_id: number; username: string; avatar: string | null; rating: number }[];
+  rating_avg: number | null;
+  rating_count: number;
+}
+
+function getPlaceWithTags(placeId: number | string): PlaceWithTags | null {
+  const place = db.prepare(`
+    SELECT p.*, c.name as category_name, c.color as category_color, c.icon as category_icon
+    FROM places p
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE p.id = ?
+  `).get(placeId) as PlaceWithCategory | undefined;
+
+  if (!place) return null;
+
+  const tags = db.prepare(`
+    SELECT t.* FROM tags t
+    JOIN place_tags pt ON t.id = pt.tag_id
+    WHERE pt.place_id = ?
+  `).all(placeId) as Tag[];
+
+  // Collaborative ratings (#1435): every voter with username/avatar for the
+  // who-voted tooltip; the displayed value is the average.
+  const ratings = db.prepare(`
+    SELECT pr.user_id, u.username, u.avatar, pr.rating FROM place_ratings pr
+    JOIN users u ON pr.user_id = u.id
+    WHERE pr.place_id = ? ORDER BY pr.created_at
+  `).all(placeId) as { user_id: number; username: string; avatar: string | null; rating: number }[];
+
+  return {
+    ...place,
+    category: place.category_id ? {
+      id: place.category_id,
+      name: place.category_name!,
+      color: place.category_color!,
+      icon: place.category_icon!,
+    } : null,
+    tags,
+    ratings,
+    rating_avg: ratings.length > 0 ? ratings.reduce((s, r) => s + r.rating, 0) / ratings.length : null,
+    rating_count: ratings.length,
+  };
+}
+
+interface TripAccess {
+  id: number;
+  user_id: number;
+  currency: string | null;
+}
+
+function canAccessTrip(tripId: number | string, userId: number): TripAccess | undefined {
+  return db.prepare(`
+    SELECT t.id, t.user_id, t.currency FROM trips t
+    LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ?
+    WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)
+  `).get(userId, tripId, userId) as TripAccess | undefined;
+}
+
+function isOwner(tripId: number | string, userId: number): boolean {
+  return !!db.prepare('SELECT id FROM trips WHERE id = ? AND user_id = ?').get(tripId, userId);
+}
+
+
+export { db, closeDb, reinitialize, getPlaceWithTags, canAccessTrip, isOwner };
+export type { TripAccess, PlaceWithTags };

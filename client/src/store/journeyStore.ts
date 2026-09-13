@@ -1,0 +1,390 @@
+import { create } from 'zustand'
+import { journeyApi } from '../api/client'
+import { uploadFilesResilient, type ResilientResult, type UploadProgress } from '../utils/uploadQueue'
+import { captureVideoPoster, isVideoFile } from '../utils/videoPoster'
+
+export interface Journey {
+  id: number
+  user_id: number
+  title: string
+  subtitle?: string | null
+  cover_gradient?: string | null
+  cover_image?: string | null
+  status: 'draft' | 'active' | 'completed' | 'archived'
+  /**
+   * Draw the GPX tracks of the journey's linked trips on its map (#2194).
+   * Off unless the owner asks for it — see the migration for why the default
+   * flipped. Optional so a cached pre-#2194 journey still parses.
+   *
+   * Typed as the wire shape, not as the concept: the column is INTEGER and the
+   * journey rows are read with SELECT *, so what arrives is 0 or 1. Declaring it
+   * boolean would make `=== true` compile and never hold.
+   */
+  show_trip_tracks?: number
+  created_at: number
+  updated_at: number
+}
+
+export interface JourneyEntry {
+  id: number
+  journey_id: number
+  source_trip_id?: number | null
+  source_place_id?: number | null
+  source_trip_name?: string | null
+  author_id: number
+  type: 'entry' | 'checkin' | 'skeleton'
+  title?: string | null
+  story?: string | null
+  entry_date: string
+  entry_time?: string | null
+  location_name?: string | null
+  location_lat?: number | null
+  location_lng?: number | null
+  mood?: string | null
+  weather?: string | null
+  tags?: string[]
+  pros_cons?: { pros: string[]; cons: string[] } | null
+  visibility: string
+  sort_order: number
+  // Switched off by hand: the stop stays in the journal but is left out of the
+  // route, the distance and the countries that Studio prints.
+  stats_excluded?: boolean
+  photos: JourneyPhoto[]
+  created_at: number
+  updated_at: number
+}
+
+export interface JourneyPhoto {
+  id: number
+  entry_id: number
+  photo_id: number
+  caption?: string | null
+  sort_order: number
+  shared: number
+  created_at: number
+  // Joined from trek_photos for display
+  provider?: string
+  asset_id?: string | null
+  owner_id?: number | null
+  file_path?: string | null
+  thumbnail_path?: string | null
+  width?: number | null
+  height?: number | null
+  // 'image' (default) or 'video' (#823)
+  media_type?: string | null
+  duration_ms?: number | null
+}
+
+export interface GalleryPhoto {
+  id: number
+  journey_id: number
+  photo_id: number
+  caption?: string | null
+  shared: number
+  sort_order: number
+  created_at: number
+  // Joined from trek_photos for display
+  provider?: string
+  asset_id?: string | null
+  owner_id?: number | null
+  file_path?: string | null
+  thumbnail_path?: string | null
+  width?: number | null
+  height?: number | null
+  // 'image' (default) or 'video' (#823)
+  media_type?: string | null
+  duration_ms?: number | null
+}
+
+export interface JourneyTrip {
+  trip_id: number
+  added_at: number
+  title: string
+  start_date?: string | null
+  end_date?: string | null
+  cover_image?: string | null
+  currency?: string
+  place_count: number
+}
+
+export interface JourneyContributor {
+  journey_id: number
+  user_id: number
+  role: 'owner' | 'editor' | 'viewer'
+  added_at: number
+  username: string
+  avatar?: string | null
+}
+
+export interface JourneyDetail extends Journey {
+  entries: JourneyEntry[]
+  gallery: GalleryPhoto[]
+  trips: JourneyTrip[]
+  contributors: JourneyContributor[]
+  stats: { entries: number; photos: number; places: number }
+  hide_skeletons?: boolean
+  my_role?: 'owner' | 'editor' | 'viewer'
+}
+
+interface JourneyState {
+  journeys: Journey[]
+  current: JourneyDetail | null
+  loading: boolean
+  notFound: boolean
+
+  loadJourneys: () => Promise<void>
+  loadJourney: (id: number) => Promise<void>
+  createJourney: (data: { title: string; subtitle?: string; trip_ids?: number[] }) => Promise<Journey>
+  updateJourney: (id: number, data: Record<string, unknown>) => Promise<void>
+  deleteJourney: (id: number) => Promise<void>
+
+  createEntry: (journeyId: number, data: Record<string, unknown>) => Promise<JourneyEntry>
+  updateEntry: (entryId: number, data: Record<string, unknown>) => Promise<void>
+  deleteEntry: (entryId: number) => Promise<void>
+  reorderEntries: (journeyId: number, orderedIds: number[]) => Promise<void>
+
+  uploadPhotos: (entryId: number, files: File[], cbs?: { onProgress?: (p: UploadProgress) => void }) => Promise<ResilientResult<JourneyPhoto>>
+  uploadGalleryPhotos: (journeyId: number, files: File[], cbs?: { onProgress?: (p: UploadProgress) => void }) => Promise<ResilientResult<GalleryPhoto>>
+  unlinkPhoto: (entryId: number, journeyPhotoId: number) => Promise<void>
+  deleteGalleryPhoto: (journeyId: number, journeyPhotoId: number) => Promise<void>
+  deletePhoto: (photoId: number) => Promise<void>
+
+  clear: () => void
+}
+
+/**
+ * The gallery rows behind pictures that were uploaded onto an entry.
+ *
+ * A picture put on an entry is in the gallery too, because that is where the
+ * row lives: the entry only holds a link to it. The upload route answers with
+ * the entry's view of that row and, on the paths that have it, the gallery's
+ * as well; this derives the missing ones, so a picture added from anywhere
+ * shows up wherever the gallery is read rather than after the journey has been
+ * fetched again. Rows already in the gallery are skipped, since a retry can
+ * hand back a picture that is in it.
+ */
+function galleryRowsFor(
+  journey: JourneyDetail,
+  uploaded: JourneyPhoto[],
+  answered: GalleryPhoto[] | undefined,
+): GalleryPhoto[] {
+  const known = new Set([...(journey.gallery || []), ...(answered || [])].map(p => p.id))
+  const derived = uploaded
+    .filter(p => !known.has(p.id))
+    .map(({ entry_id: _entry, ...rest }) => ({ ...rest, journey_id: journey.id }))
+  return [...(answered || []), ...derived]
+}
+
+export const useJourneyStore = create<JourneyState>((set, get) => ({
+  journeys: [],
+  current: null,
+  loading: false,
+  notFound: false,
+
+  loadJourneys: async () => {
+    set({ loading: true })
+    try {
+      const data = await journeyApi.list()
+      set({ journeys: data.journeys || [] })
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  loadJourney: async (id) => {
+    const cold = get().current?.id !== id
+    if (cold) set({ loading: true, notFound: false })
+    try {
+      const data = await journeyApi.get(id)
+      set({ current: data })
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        set({ current: null, notFound: true })
+      }
+      throw err
+    } finally {
+      if (cold) set({ loading: false })
+    }
+  },
+
+  createJourney: async (data) => {
+    const journey = await journeyApi.create(data)
+    set(s => ({ journeys: [journey, ...s.journeys] }))
+    return journey
+  },
+
+  updateJourney: async (id, data) => {
+    const updated = await journeyApi.update(id, data)
+    set(s => ({
+      journeys: s.journeys.map(j => j.id === id ? { ...j, ...updated } : j),
+      current: s.current?.id === id ? { ...s.current, ...updated } : s.current,
+    }))
+  },
+
+  deleteJourney: async (id) => {
+    await journeyApi.delete(id)
+    set(s => ({
+      journeys: s.journeys.filter(j => j.id !== id),
+      current: s.current?.id === id ? null : s.current,
+    }))
+  },
+
+  createEntry: async (journeyId, data) => {
+    const entry = await journeyApi.createEntry(journeyId, data)
+    entry.photos = entry.photos || []
+    set(s => {
+      if (s.current?.id !== journeyId) return s
+      return { current: { ...s.current, entries: [...s.current.entries, entry] } }
+    })
+    return entry
+  },
+
+  updateEntry: async (entryId, data) => {
+    const updated = await journeyApi.updateEntry(entryId, data)
+    set(s => {
+      if (!s.current) return s
+      return { current: { ...s.current, entries: s.current.entries.map(e => e.id === entryId ? { ...e, ...updated } : e) } }
+    })
+  },
+
+  deleteEntry: async (entryId) => {
+    await journeyApi.deleteEntry(entryId)
+    set(s => {
+      if (!s.current) return s
+      return { current: { ...s.current, entries: s.current.entries.filter(e => e.id !== entryId) } }
+    })
+  },
+
+  reorderEntries: async (journeyId, orderedIds) => {
+    // Optimistic: push the new sort_order and re-sort locally so the UI
+    // updates immediately. Server mirrors the same ordering. On failure we
+    // reload the journey to recover the authoritative state.
+    const prev = get().current
+    set(s => {
+      if (!s.current || s.current.id !== journeyId) return s
+      const sortMap = new Map(orderedIds.map((id, idx) => [id, idx]))
+      const entries = s.current.entries.map(e =>
+        sortMap.has(e.id) ? { ...e, sort_order: sortMap.get(e.id)! } : e
+      )
+      entries.sort((a, b) => {
+        if (a.entry_date !== b.entry_date) return a.entry_date.localeCompare(b.entry_date)
+        if (a.sort_order !== b.sort_order) return (a.sort_order || 0) - (b.sort_order || 0)
+        return a.id - b.id
+      })
+      return { current: { ...s.current, entries } }
+    })
+    try {
+      await journeyApi.reorderEntries(journeyId, orderedIds)
+    } catch (err) {
+      // Roll back to last-known-good state.
+      if (prev && prev.id === journeyId) set({ current: prev })
+      throw err
+    }
+  },
+
+  uploadPhotos: async (entryId, files, cbs) => {
+    return uploadFilesResilient<JourneyPhoto>(
+      files,
+      async (file, opts) => {
+        const fd = new FormData()
+        fd.append('photos', file)
+        const data = await journeyApi.uploadPhotos(entryId, fd, opts)
+        const photos: JourneyPhoto[] = data.photos || []
+        set(s => {
+          if (!s.current) return s
+          const gallery = galleryRowsFor(s.current, photos, data.gallery)
+          return {
+            current: {
+              ...s.current,
+              entries: s.current.entries.map(e =>
+                e.id === entryId ? { ...e, photos: [...(e.photos || []), ...photos] } : e
+              ),
+              gallery: [...(s.current.gallery || []), ...gallery],
+            },
+          }
+        })
+        return photos
+      },
+      { onProgress: cbs?.onProgress },
+    )
+  },
+
+  uploadGalleryPhotos: async (journeyId, files, cbs) => {
+    return uploadFilesResilient<GalleryPhoto>(
+      files,
+      async (file, opts) => {
+        const fd = new FormData()
+        let data: { photos?: GalleryPhoto[] }
+        if (isVideoFile(file)) {
+          // Video: grab a poster frame + duration in the browser, then upload the
+          // raw video + poster (#823). No server-side transcoding.
+          const { poster, durationMs } = await captureVideoPoster(file)
+          fd.append('video', file)
+          if (poster) fd.append('poster', poster, 'poster.jpg')
+          if (durationMs != null) fd.append('duration_ms', String(durationMs))
+          data = await journeyApi.uploadGalleryVideo(journeyId, fd, opts)
+        } else {
+          fd.append('photos', file)
+          data = await journeyApi.uploadGalleryPhotos(journeyId, fd, opts)
+        }
+        const photos: GalleryPhoto[] = data.photos || []
+        set(s => {
+          if (!s.current || s.current.id !== journeyId) return s
+          return { current: { ...s.current, gallery: [...(s.current.gallery || []), ...photos] } }
+        })
+        return photos
+      },
+      { onProgress: cbs?.onProgress },
+    )
+  },
+
+  unlinkPhoto: async (entryId, journeyPhotoId) => {
+    await journeyApi.unlinkPhoto(entryId, journeyPhotoId)
+    set(s => {
+      if (!s.current) return s
+      return {
+        current: {
+          ...s.current,
+          entries: s.current.entries.map(e =>
+            e.id === entryId ? { ...e, photos: (e.photos || []).filter(p => p.id !== journeyPhotoId) } : e
+          ),
+        },
+      }
+    })
+  },
+
+  deleteGalleryPhoto: async (journeyId, journeyPhotoId) => {
+    await journeyApi.deleteGalleryPhoto(journeyId, journeyPhotoId)
+    set(s => {
+      if (!s.current) return s
+      return {
+        current: {
+          ...s.current,
+          gallery: (s.current.gallery || []).filter(p => p.id !== journeyPhotoId),
+          entries: s.current.entries.map(e => ({
+            ...e,
+            photos: (e.photos || []).filter(p => p.id !== journeyPhotoId),
+          })),
+        },
+      }
+    })
+  },
+
+  deletePhoto: async (photoId) => {
+    await journeyApi.deletePhoto(photoId)
+    set(s => {
+      if (!s.current) return s
+      return {
+        current: {
+          ...s.current,
+          entries: s.current.entries.map(e => ({
+            ...e,
+            photos: (e.photos || []).filter(p => p.id !== photoId),
+          })),
+        },
+      }
+    })
+  },
+
+  clear: () => set({ journeys: [], current: null, loading: false, notFound: false }),
+}))

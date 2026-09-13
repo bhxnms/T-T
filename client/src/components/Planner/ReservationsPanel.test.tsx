@@ -1,0 +1,920 @@
+// FE-COMP-RES-001 to FE-COMP-RES-040, FE-PLANNER-RESP-016 to FE-PLANNER-RESP-080
+import { render, screen, fireEvent, waitFor, act } from '../../../tests/helpers/render';
+import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../../tests/helpers/msw/server';
+import { useAuthStore } from '../../store/authStore';
+import { useTripStore } from '../../store/tripStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { usePermissionsStore } from '../../store/permissionsStore';
+import { usePluginStore } from '../../store/pluginStore';
+import { resetAllStores, seedStore } from '../../../tests/helpers/store';
+import { buildUser, buildTrip, buildReservation, buildDay, buildPlace } from '../../../tests/helpers/factories';
+import { openFile } from '../../utils/fileDownload';
+import ReservationsPanel from './ReservationsPanel';
+
+vi.mock('../../api/authUrl', () => ({ getAuthUrl: vi.fn().mockResolvedValue('http://test/file') }));
+vi.mock('../../utils/fileDownload', () => ({ openFile: vi.fn(async () => {}) }));
+
+const defaultProps = {
+  tripId: 1,
+  reservations: [],
+  days: [],
+  assignments: {},
+  files: [],
+  onAdd: vi.fn(),
+  onEdit: vi.fn(),
+  onDelete: vi.fn(),
+  onNavigateToFiles: vi.fn(),
+};
+
+beforeEach(() => {
+  resetAllStores();
+  seedStore(useAuthStore, { user: buildUser(), isAuthenticated: true });
+  seedStore(useTripStore, { trip: buildTrip({ id: 1 }) });
+  seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: false, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+  server.use(
+    http.get('/api/view-contributions/:view/:tripId', () => HttpResponse.json({ contributions: [] })),
+  );
+});
+
+describe('ReservationsPanel', () => {
+  it('FE-COMP-RES-001: renders without crashing', () => {
+    render(<ReservationsPanel {...defaultProps} />);
+    expect(document.body).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-002: shows Bookings title', () => {
+    render(<ReservationsPanel {...defaultProps} />);
+    // reservations.title = "Bookings"
+    expect(screen.getByText('Bookings')).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-003: shows empty state when no reservations', () => {
+    render(<ReservationsPanel {...defaultProps} reservations={[]} />);
+    // "No reservations yet" appears in both header subtitle and empty state body
+    const els = screen.getAllByText('No reservations yet');
+    expect(els.length).toBeGreaterThan(0);
+  });
+
+  it('FE-COMP-RES-004: shows empty-state mascot illustration', () => {
+    render(<ReservationsPanel {...defaultProps} reservations={[]} />);
+    // The mobile rewrite dropped the hint subtitle in favour of the shared
+    // EmptyState mascot; the bookings scene renders the TREK mark svg.
+    expect(document.querySelector('.tt-mascot--bookings')).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-005: shows Manual Booking add button', () => {
+    render(<ReservationsPanel {...defaultProps} />);
+    // Button text is reservations.addManual = "Manual Booking" — in the toolbar
+    // and, on an empty list, in the empty state's call to action too (#2007).
+    expect(screen.getAllByText('Manual Booking').length).toBeGreaterThan(0);
+  });
+
+  it('FE-COMP-RES-006: clicking Manual Booking button calls onAdd', async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    render(<ReservationsPanel {...defaultProps} onAdd={onAdd} />);
+    await user.click(screen.getAllByText('Manual Booking')[0]);
+    expect(onAdd).toHaveBeenCalled();
+  });
+
+  it('FE-COMP-RES-007: renders reservation title', () => {
+    // Component renders r.title, not r.name
+    const res = buildReservation({ title: 'Hotel Paris', type: 'hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Hotel Paris')).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-008: renders confirmed reservation badge', () => {
+    const res = buildReservation({ title: 'Flight NY', type: 'flight', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    // "Confirmed" appears in both section header and card badge
+    const els = screen.getAllByText('Confirmed');
+    expect(els.length).toBeGreaterThan(0);
+  });
+
+  it('FE-COMP-RES-009: renders pending reservation badge', () => {
+    const res = buildReservation({ title: 'Hotel Rome', type: 'hotel', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    // "Pending" appears in both section header and card badge
+    const els = screen.getAllByText('Pending');
+    expect(els.length).toBeGreaterThan(0);
+  });
+
+  it('FE-COMP-RES-010: shows reservations title and cards', () => {
+    const r1 = buildReservation({ title: 'My Flight Booking', type: 'flight', status: 'confirmed' });
+    const r2 = buildReservation({ title: 'Grand Hotel', type: 'hotel', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[r1, r2]} />);
+    expect(screen.getByText('My Flight Booking')).toBeInTheDocument();
+    expect(screen.getByText('Grand Hotel')).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-011: hotel reservation renders', () => {
+    const res = buildReservation({ title: 'Grand Hotel', type: 'hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Grand Hotel')).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-012: flight reservation renders', () => {
+    const res = buildReservation({ title: 'Air France 123', type: 'flight', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Air France 123')).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-013: multiple reservations all render', () => {
+    const r1 = buildReservation({ title: 'Hotel A', type: 'hotel', status: 'confirmed' });
+    const r2 = buildReservation({ title: 'Flight B', type: 'flight', status: 'confirmed' });
+    const r3 = buildReservation({ title: 'Restaurant C', type: 'restaurant', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[r1, r2, r3]} />);
+    expect(screen.getByText('Hotel A')).toBeInTheDocument();
+    expect(screen.getByText('Flight B')).toBeInTheDocument();
+    expect(screen.getByText('Restaurant C')).toBeInTheDocument();
+  });
+
+  it('FE-COMP-RES-014: edit button calls onEdit with reservation', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    const res = buildReservation({ id: 77, title: 'Editable Res', type: 'hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} onEdit={onEdit} />);
+    const editBtn = screen.getByTitle('Edit');
+    await user.click(editBtn);
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 77 }));
+  });
+
+  it('FE-COMP-RES-015: delete button opens confirm dialog, then calls onDelete', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn().mockResolvedValue(undefined);
+    const res = buildReservation({ id: 88, title: 'Delete Me', type: 'hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} onDelete={onDelete} />);
+    await user.click(screen.getByTitle('Delete'));
+    // Confirm dialog appears — click the Confirm button
+    const confirmBtn = await screen.findByText('Confirm');
+    await user.click(confirmBtn);
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(88));
+  });
+
+  // ── Section collapsing ──────────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-016: clicking Pending section header collapses it', async () => {
+    const user = userEvent.setup();
+    const res = buildReservation({ title: 'Pending Hotel', type: 'hotel', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    // Initially the card is visible
+    expect(screen.getByText('Pending Hotel')).toBeInTheDocument();
+    // Click the "Pending" section header button (the one with count badge)
+    const pendingButtons = screen.getAllByText('Pending');
+    // The section header button contains "Pending" text
+    const sectionHeaderBtn = pendingButtons.find(el => el.closest('button'));
+    await user.click(sectionHeaderBtn!.closest('button')!);
+    // Card should no longer be visible
+    expect(screen.queryByText('Pending Hotel')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-017: clicking Pending section header again expands it', async () => {
+    const user = userEvent.setup();
+    const res = buildReservation({ title: 'Pending Train', type: 'train', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const pendingButtons = screen.getAllByText('Pending');
+    const sectionHeaderBtn = pendingButtons.find(el => el.closest('button'));
+    // Collapse
+    await user.click(sectionHeaderBtn!.closest('button')!);
+    expect(screen.queryByText('Pending Train')).not.toBeInTheDocument();
+    // Re-query after collapse
+    const pendingButtons2 = screen.getAllByText('Pending');
+    const sectionHeaderBtn2 = pendingButtons2.find(el => el.closest('button'));
+    // Expand
+    await user.click(sectionHeaderBtn2!.closest('button')!);
+    expect(screen.getByText('Pending Train')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-018: confirmed and pending sections render separately', () => {
+    const confirmed = buildReservation({ title: 'Confirmed Flight', type: 'flight', status: 'confirmed' });
+    const pending = buildReservation({ title: 'Pending Restaurant', type: 'restaurant', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[confirmed, pending]} />);
+    // Both section labels should appear (as buttons or spans in card headers, plus section titles)
+    const confirmedEls = screen.getAllByText('Confirmed');
+    const pendingEls = screen.getAllByText('Pending');
+    expect(confirmedEls.length).toBeGreaterThan(0);
+    expect(pendingEls.length).toBeGreaterThan(0);
+  });
+
+  // ── ReservationCard details ─────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-019: reservation with date shows formatted date', () => {
+    const res = buildReservation({ reservation_time: '2025-06-15', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    // Should show some form of Jun 15 formatted date
+    expect(screen.getByText(/Jun/i)).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-020: reservation with ISO datetime shows time', () => {
+    const res = buildReservation({ reservation_time: '2025-06-15T14:30:00Z', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    // Time column should appear (exact format depends on locale/env but contains hour:minute)
+    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-021: confirmation number is visible by default (no blur)', () => {
+    const res = buildReservation({ confirmation_number: 'ABC123', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('ABC123')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-022: confirmation number is blurred when blur_booking_codes=true', () => {
+    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    const res = buildReservation({ confirmation_number: 'ABC123', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const codeEl = screen.getByText('ABC123');
+    expect(codeEl.style.filter).toContain('blur');
+  });
+
+  it('FE-PLANNER-RESP-023: confirmation code revealed on hover when blurred', async () => {
+    const user = userEvent.setup();
+    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    const res = buildReservation({ confirmation_number: 'ABC123', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const codeEl = screen.getByText('ABC123');
+    expect(codeEl.style.filter).toContain('blur');
+    await user.hover(codeEl);
+    expect(codeEl.style.filter).toBe('none');
+  });
+
+  const layoverFlight = () => buildReservation({
+    id: 7, type: 'flight', status: 'confirmed', confirmation_number: 'BOOK1',
+    metadata: JSON.stringify({
+      departure_airport: 'FRA', arrival_airport: 'HND',
+      legs: [
+        { from: 'FRA', to: 'BER', confirmation_number: 'ABC123' },
+        { from: 'BER', to: 'HND' },
+      ],
+    }),
+  });
+
+  it('FE-PLANNER-RESP-077: a segment with its own booking code shows it under its route (#1943)', () => {
+    render(<ReservationsPanel {...defaultProps} reservations={[layoverFlight()]} />);
+    // The booking's own reference keeps its own cell.
+    expect(screen.getByText('BOOK1')).toBeInTheDocument();
+    expect(screen.getByText('FRA → BER')).toBeInTheDocument();
+    expect(screen.getByText('ABC123')).toBeInTheDocument();
+    // A segment without its own code adds no cell.
+    expect(screen.queryByText('BER → HND')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-078: a segment code obeys blur_booking_codes and reveals with the card', async () => {
+    const user = userEvent.setup();
+    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    render(<ReservationsPanel {...defaultProps} reservations={[layoverFlight()]} />);
+    const legCode = screen.getByText('ABC123');
+    expect(legCode.style.filter).toContain('blur');
+    // One reveal per card, not per segment: the booking's own cell uncovers too.
+    await user.hover(legCode);
+    expect(legCode.style.filter).toBe('none');
+    expect(screen.getByText('BOOK1').style.filter).toBe('none');
+  });
+
+  it('FE-PLANNER-RESP-024: reservation notes are shown', () => {
+    const res = buildReservation({ notes: 'Window seat requested', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Window seat requested')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-025: reservation location is shown', () => {
+    const res = buildReservation({ location: 'Charles de Gaulle Airport', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Charles de Gaulle Airport')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-026: flight metadata (airline, flight number) renders', () => {
+    const res = buildReservation({
+      type: 'flight',
+      status: 'confirmed',
+      metadata: JSON.stringify({ airline: 'Air France', flight_number: 'AF001', departure_airport: 'CDG', arrival_airport: 'JFK' }),
+    });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Air France')).toBeInTheDocument();
+    expect(screen.getByText('AF001')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-027: train metadata (train number, platform, seat) renders', () => {
+    const res = buildReservation({
+      type: 'train',
+      status: 'confirmed',
+      metadata: JSON.stringify({ train_number: 'TGV9876', platform: '3', seat: '42A' }),
+    });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('TGV9876')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('42A')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-028: hotel check-in/check-out metadata renders', () => {
+    const res = buildReservation({
+      type: 'hotel',
+      status: 'confirmed',
+      metadata: JSON.stringify({ check_in_time: '14:00', check_out_time: '11:00' }),
+    });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('14:00')).toBeInTheDocument();
+    expect(screen.getByText('11:00')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-029: linked assignment shows day title and place name', () => {
+    const place = buildPlace({ name: 'Eiffel Tower', place_time: '10:00' });
+    const assignmentId = 55;
+    const day = { ...buildDay({ id: 1, title: 'Day 1', date: '2025-06-01' }), day_number: 1 } as any;
+    const assignments = { '1': [{ id: assignmentId, order_index: 0, day_id: 1, place_id: place.id, notes: null, place }] };
+    const res = buildReservation({ assignment_id: assignmentId, status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} days={[day]} assignments={assignments} />);
+    expect(screen.getByText(/Day 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Eiffel Tower/)).toBeInTheDocument();
+  });
+
+  // ── Status toggle (canEdit=true) ────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-030: status label is always a span (not clickable)', () => {
+    const res = buildReservation({ title: 'My Booking', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const pendingEls = screen.getAllByText('Pending');
+    const statusSpan = pendingEls.find(el => el.tagName === 'SPAN');
+    expect(statusSpan).toBeDefined();
+    const statusBtn = pendingEls.find(el => el.tagName === 'BUTTON');
+    expect(statusBtn).toBeUndefined();
+  });
+
+  // ── Status (canEdit=false) ──────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-032: status label is a span (not button) when canEdit=false', () => {
+    seedStore(usePermissionsStore, { permissions: { reservation_edit: 'admin' } });
+    const res = buildReservation({ title: 'Read Only', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const pendingEls = screen.getAllByText('Pending');
+    const statusSpan = pendingEls.find(el => el.tagName === 'SPAN');
+    expect(statusSpan).toBeDefined();
+    const statusBtn = pendingEls.find(el => el.tagName === 'BUTTON');
+    expect(statusBtn).toBeUndefined();
+  });
+
+  it('FE-PLANNER-RESP-033: edit and delete buttons hidden when canEdit=false', () => {
+    seedStore(usePermissionsStore, { permissions: { reservation_edit: 'admin' } });
+    const res = buildReservation({ title: 'Read Only', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.queryByTitle('Edit')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Delete')).not.toBeInTheDocument();
+  });
+
+  // ── Delete confirmation ─────────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-034: delete confirm dialog shows reservation title', async () => {
+    const user = userEvent.setup();
+    const res = buildReservation({ id: 99, title: 'Paris Hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    await user.click(screen.getByTitle('Delete'));
+    // The dialog body contains the title in the delete message
+    const dialogBody = await screen.findByText(/will be permanently deleted/i);
+    expect(dialogBody.textContent).toContain('Paris Hotel');
+  });
+
+  it('FE-PLANNER-RESP-035: clicking Cancel in delete dialog closes it without calling onDelete', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    const res = buildReservation({ id: 100, title: 'Cancel Test', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} onDelete={onDelete} />);
+    await user.click(screen.getByTitle('Delete'));
+    const cancelBtn = await screen.findByText('Cancel');
+    await user.click(cancelBtn);
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-036: clicking backdrop closes delete confirm dialog', async () => {
+    const user = userEvent.setup();
+    const res = buildReservation({ id: 101, title: 'Backdrop Test', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    await user.click(screen.getByTitle('Delete'));
+    // Dialog is visible
+    await screen.findByText('Cancel');
+    // Click the fixed backdrop (the outermost div of the portal)
+    const backdrop = document.querySelector('[style*="position: fixed"]') as HTMLElement;
+    await user.click(backdrop!);
+    await waitFor(() => expect(screen.queryByText('Cancel')).not.toBeInTheDocument());
+  });
+
+  // ── Files ───────────────────────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-037: attached files section appears for reservation with files', () => {
+    const res = buildReservation({ id: 77, status: 'confirmed' });
+    const files = [{ id: 1, trip_id: 1, reservation_id: 77, original_name: 'boarding_pass.pdf', url: '/uploads/bp.pdf', filename: 'bp.pdf', mime_type: 'application/pdf', created_at: '2025-01-01T00:00:00.000Z' }];
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} files={files} />);
+    expect(screen.getByText('boarding_pass.pdf')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-038: linked file (via linked_reservation_ids) also appears', () => {
+    const res = buildReservation({ id: 77, status: 'confirmed' });
+    const files = [{ id: 2, trip_id: 1, reservation_id: null, linked_reservation_ids: [77], original_name: 'voucher.pdf', url: '/uploads/v.pdf', filename: 'v.pdf', mime_type: 'application/pdf', created_at: '2025-01-01T00:00:00.000Z' }];
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} files={files as any} />);
+    expect(screen.getByText('voucher.pdf')).toBeInTheDocument();
+  });
+
+  // ── Add button ──────────────────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-039: "Add" button hidden when canEdit=false', () => {
+    seedStore(usePermissionsStore, { permissions: { reservation_edit: 'admin' } });
+    render(<ReservationsPanel {...defaultProps} />);
+    expect(screen.queryByText('Manual Booking')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-040: multiple reservations in pending section all render', () => {
+    const r1 = buildReservation({ title: 'Pending 1', status: 'pending' });
+    const r2 = buildReservation({ title: 'Pending 2', status: 'pending' });
+    const r3 = buildReservation({ title: 'Pending 3', status: 'pending' });
+    render(<ReservationsPanel {...defaultProps} reservations={[r1, r2, r3]} />);
+    expect(screen.getByText('Pending 1')).toBeInTheDocument();
+    expect(screen.getByText('Pending 2')).toBeInTheDocument();
+    expect(screen.getByText('Pending 3')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-041: dateless transport with legacy T-prefix shows time without "Invalid Date"', () => {
+    const day = buildDay({ date: null, day_number: 25 } as any);
+    const r = buildReservation({
+      title: 'Cruise test',
+      type: 'cruise',
+      status: 'pending',
+      reservation_time: 'T10:00',
+      reservation_end_time: 'T18:00',
+      day_id: day.id,
+      end_day_id: day.id,
+    } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[r]} days={[day]} />);
+    expect(screen.queryByText(/Invalid Date/)).not.toBeInTheDocument();
+    expect(screen.getByText(/10:00/)).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-042: dateless transport with bare time format shows time without "Invalid Date"', () => {
+    const day = buildDay({ date: null, day_number: 3 } as any);
+    const r = buildReservation({
+      title: 'Car rental',
+      type: 'car',
+      status: 'pending',
+      reservation_time: '09:00',
+      reservation_end_time: '17:00',
+      day_id: day.id,
+      end_day_id: day.id,
+    } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[r]} days={[day]} />);
+    expect(screen.queryByText(/Invalid Date/)).not.toBeInTheDocument();
+    expect(screen.getByText(/09:00/)).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-043: dated transport still shows date and time correctly', () => {
+    const day = buildDay({ date: '2026-07-15', day_number: 1 });
+    const r = buildReservation({
+      title: 'Flight out',
+      type: 'flight',
+      status: 'confirmed',
+      reservation_time: '2026-07-15T08:30',
+      reservation_end_time: '2026-07-15T10:45',
+      day_id: day.id,
+    } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[r]} days={[day]} />);
+    expect(screen.queryByText(/Invalid Date/)).not.toBeInTheDocument();
+    expect(screen.getByText(/08:30/)).toBeInTheDocument();
+  });
+
+  // ── Chronological sorting (#1507) ───────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-044: cards are ordered chronologically, day-linked entries by their day date', () => {
+    const day1 = buildDay({ id: 201, date: '2025-06-02', day_number: 2 } as any);
+    const day2 = buildDay({ id: 202, date: '2025-06-04', day_number: 4 } as any);
+    const dated = buildReservation({ title: 'Dated flight', type: 'flight', status: 'pending', reservation_time: '2025-06-03T09:00', created_at: '2025-05-01T00:00:00.000Z' });
+    const dayOnly = buildReservation({ title: 'Day-only train', type: 'train', status: 'pending', reservation_time: 'T10:00', day_id: 201, created_at: '2025-05-02T00:00:00.000Z' } as any);
+    const late = buildReservation({ title: 'Late bus', type: 'bus', status: 'pending', reservation_time: null, day_id: 202, created_at: '2025-05-03T00:00:00.000Z' } as any);
+    const undated = buildReservation({ title: 'Undated taxi', type: 'taxi', status: 'pending', created_at: '2025-04-01T00:00:00.000Z' });
+    render(<ReservationsPanel {...defaultProps} reservations={[undated, late, dayOnly, dated]} days={[day1, day2]} />);
+    const text = document.body.textContent || '';
+    const order = ['Day-only train', 'Dated flight', 'Late bus', 'Undated taxi'].map(t => text.indexOf(t));
+    expect(order.every(i => i >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it('FE-PLANNER-RESP-045: hotel sorts by its accommodation start day, not a stale day_id', () => {
+    const day1 = buildDay({ id: 301, date: '2025-06-01', day_number: 1 } as any);
+    const day2 = buildDay({ id: 302, date: '2025-06-05', day_number: 5 } as any);
+    const hotel = buildReservation({ title: 'Hotel stay', type: 'hotel', status: 'pending', day_id: 301, accommodation_start_day_id: 302 } as any);
+    const flight = buildReservation({ title: 'Mid flight', type: 'flight', status: 'pending', reservation_time: '2025-06-03T12:00' });
+    render(<ReservationsPanel {...defaultProps} reservations={[hotel, flight]} days={[day1, day2]} />);
+    const text = document.body.textContent || '';
+    expect(text.indexOf('Mid flight')).toBeLessThan(text.indexOf('Hotel stay'));
+  });
+
+  // AirTrail sync badge — three states (#1646)
+  it('FE-PLANNER-RESP-046: a synced AirTrail flight shows the AirTrail badge', () => {
+    const res = buildReservation({ title: 'Synced flight', type: 'flight', external_source: 'airtrail', sync_enabled: 1 } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByTitle('Synced from AirTrail — edits stay in sync both ways.')).toBeInTheDocument();
+    expect(screen.queryByText('Not synced')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-047: a multi-leg import shows the layover hint, not the "removed" message', () => {
+    const res = buildReservation({
+      title: 'Layover flight', type: 'flight', external_source: 'airtrail', sync_enabled: 0,
+      metadata: JSON.stringify({ legs: [{ from: 'AMS' }, { from: 'IST' }] }),
+    } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    // Not falsely labelled "Not synced" / "removed in AirTrail"…
+    expect(screen.queryByText('Not synced')).not.toBeInTheDocument();
+    // …and carries the truthful layover explanation.
+    expect(
+      screen.getByTitle('Imported from AirTrail. A multi-leg flight with a layover has no single AirTrail flight to sync back to, so it stays as a one-time import.'),
+    ).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-048: a single-leg flight removed upstream still shows "Not synced"', () => {
+    const res = buildReservation({ title: 'Removed flight', type: 'flight', external_source: 'airtrail', sync_enabled: 0 } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Not synced')).toBeInTheDocument();
+    expect(screen.getByTitle('This flight was removed in AirTrail and no longer syncs.')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-049: a flight grown into multiple legs locally (endpoints > 2, no legs array) shows the layover hint, not "Not synced"', () => {
+    // Matches the server's second hasLocalMultiLegShape criterion (endpoint count > 2).
+    const res = buildReservation({
+      title: 'Grown multi-leg', type: 'flight', external_source: 'airtrail', sync_enabled: 0,
+      endpoints: [{ sequence: 0 }, { sequence: 1 }, { sequence: 2 }],
+    } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.queryByText('Not synced')).not.toBeInTheDocument();
+    expect(
+      screen.getByTitle('Imported from AirTrail. A multi-leg flight with a layover has no single AirTrail flight to sync back to, so it stays as a one-time import.'),
+    ).toBeInTheDocument();
+  });
+
+  // ── Type + traveler filters ─────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-050: a type chip narrows the list and "All" restores it', async () => {
+    const user = userEvent.setup();
+    const flight = buildReservation({ id: 1, title: 'Flight out', type: 'flight', status: 'confirmed' });
+    const hotel = buildReservation({ id: 2, title: 'Hotel stay', type: 'hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[flight, hotel]} />);
+    await user.click(screen.getByRole('button', { name: /^Flight\s*1$/ }));
+    expect(screen.getByText('Flight out')).toBeInTheDocument();
+    expect(screen.queryByText('Hotel stay')).not.toBeInTheDocument();
+    // The choice is remembered for this trip.
+    expect(JSON.parse(sessionStorage.getItem('trek-reservation-filters-1') || '[]')).toEqual(['flight']);
+
+    await user.click(screen.getByRole('button', { name: /^All\s*2$/ }));
+    expect(screen.getByText('Hotel stay')).toBeInTheDocument();
+    expect(sessionStorage.getItem('trek-reservation-filters-1')).toBeNull();
+  });
+
+  it('FE-PLANNER-RESP-051: clicking an active type chip clears it again', async () => {
+    const user = userEvent.setup();
+    const flight = buildReservation({ id: 1, title: 'Flight out', type: 'flight', status: 'confirmed' });
+    const hotel = buildReservation({ id: 2, title: 'Hotel stay', type: 'hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[flight, hotel]} />);
+    const chip = screen.getByRole('button', { name: /^Flight\s*1$/ });
+    await user.click(chip);
+    await user.click(screen.getByRole('button', { name: /^Flight\s*1$/ }));
+    expect(screen.getByText('Hotel stay')).toBeInTheDocument();
+    expect(chip).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-052: a filter that matches nothing shows the "none found" hint, not the empty state', () => {
+    // A stored filter for a type this trip no longer has.
+    sessionStorage.setItem('trek-reservation-filters-1', JSON.stringify(['bus']));
+    const flight = buildReservation({ id: 1, title: 'Flight out', type: 'flight', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[flight]} />);
+    expect(screen.getByText('No places found')).toBeInTheDocument();
+    expect(screen.queryByText('Flight out')).not.toBeInTheDocument();
+    expect(document.querySelector('.tt-mascot--bookings')).toBeNull();
+  });
+
+  it('FE-PLANNER-RESP-053: corrupt stored filters are ignored instead of crashing the panel', () => {
+    sessionStorage.setItem('trek-reservation-filters-1', '{not json');
+    sessionStorage.setItem('trek-reservation-filters-1-travelers', '{not json');
+    const res = buildReservation({ id: 1, title: 'Still here', type: 'flight', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Still here')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-054: a persisted type filter is restored on mount', () => {
+    sessionStorage.setItem('trek-reservation-filters-1', JSON.stringify(['hotel']));
+    const flight = buildReservation({ id: 1, title: 'Flight out', type: 'flight', status: 'confirmed' });
+    const hotel = buildReservation({ id: 2, title: 'Hotel stay', type: 'hotel', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[flight, hotel]} />);
+    expect(screen.getByText('Hotel stay')).toBeInTheDocument();
+    expect(screen.queryByText('Flight out')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-055: the traveler filter keeps only that traveler\'s bookings and persists', async () => {
+    const user = userEvent.setup();
+    const members = [{ id: 1, username: 'ada' }, { id: 2, username: 'bob' }];
+    const adas = buildReservation({ id: 1, title: 'Ada flight', type: 'flight', status: 'confirmed', travelers: [{ user_id: 1, username: 'ada', avatar_url: null }] } as any);
+    const bobs = buildReservation({ id: 2, title: 'Bob hotel', type: 'hotel', status: 'confirmed', travelers: [{ user_id: 2, username: 'bob', avatar_url: null }] } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[adas, bobs]} tripMembers={members} />);
+    await user.click(screen.getByTitle('ada'));
+    expect(screen.getByText('Ada flight')).toBeInTheDocument();
+    expect(screen.queryByText('Bob hotel')).not.toBeInTheDocument();
+    expect(JSON.parse(sessionStorage.getItem('trek-reservation-filters-1-travelers') || '[]')).toEqual([1]);
+
+    await user.click(screen.getByTitle('ada'));
+    expect(screen.getByText('Bob hotel')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-056: assigned travelers are shown on the card', () => {
+    const res = buildReservation({ id: 1, title: 'Shared flight', type: 'flight', status: 'confirmed', travelers: [{ user_id: 1, username: 'ada', avatar_url: null }] } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Travelers')).toBeInTheDocument();
+  });
+
+  // ── Toolbar actions ─────────────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-057: the import and AirTrail buttons appear only when enabled and call their handlers', async () => {
+    const user = userEvent.setup();
+    const onImport = vi.fn();
+    const onAirTrailImport = vi.fn();
+    const { rerender } = render(<ReservationsPanel {...defaultProps} onImport={onImport} onAirTrailImport={onAirTrailImport} />);
+    // Both handlers given but the server features are off — nothing rendered.
+    expect(screen.queryByTitle('Import booking confirmations')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Import from AirTrail')).not.toBeInTheDocument();
+
+    rerender(<ReservationsPanel {...defaultProps} onImport={onImport} bookingImportAvailable onAirTrailImport={onAirTrailImport} airTrailAvailable />);
+    const importBtn = screen.getByTitle('Import booking confirmations');
+    const airtrailBtn = screen.getByTitle('Import from AirTrail');
+    for (const btn of [importBtn, airtrailBtn]) {
+      act(() => { btn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+      expect(btn.style.opacity).toBe('0.75');
+      act(() => { btn.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+      expect(btn.style.opacity).toBe('1');
+    }
+    await user.click(importBtn);
+    await user.click(airtrailBtn);
+    expect(onImport).toHaveBeenCalled();
+    expect(onAirTrailImport).toHaveBeenCalled();
+  });
+
+  it('FE-PLANNER-RESP-058: the add button dims on hover and restores on leave', () => {
+    render(<ReservationsPanel {...defaultProps} />);
+    const add = screen.getAllByText('Manual Booking')[0].closest('button') as HTMLButtonElement;
+    act(() => { add.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    expect(add.style.opacity).toBe('0.88');
+    act(() => { add.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    expect(add.style.opacity).toBe('1');
+  });
+
+  // ── Card details ────────────────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-059: a hotel with an accommodation range labels both days and hides the raw date row', () => {
+    const day1 = buildDay({ id: 401, date: '2025-07-01', day_number: 1, title: null } as any);
+    const day3 = buildDay({ id: 403, date: '2025-07-03', day_number: 3, title: null } as any);
+    const hotel = buildReservation({
+      id: 1, title: 'Hotel Adlon', type: 'hotel', status: 'confirmed',
+      accommodation_start_day_id: 401, accommodation_end_day_id: 403,
+      reservation_time: '2025-07-01T15:00',
+    } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[hotel]} days={[day1, day3]} />);
+    expect(screen.getByText('Day 1')).toBeInTheDocument();
+    expect(screen.getByText('Day 3')).toBeInTheDocument();
+    // The stamped time row is suppressed for an accommodation-backed hotel.
+    expect(screen.queryByText('15:00')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-060: clicking a blurred booking code toggles it open and closed', () => {
+    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    const res = buildReservation({ id: 1, confirmation_number: 'TOGGLE1', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const code = screen.getByText('TOGGLE1');
+    expect(code.style.filter).toContain('blur');
+    // A bare click (no hover) flips it open, a second one hides it again.
+    fireEvent.click(code);
+    expect(code.style.filter).toBe('none');
+    fireEvent.click(code);
+    expect(code.style.filter).toContain('blur');
+  });
+
+  it('FE-PLANNER-RESP-061: the edit button restores its idle styling after hover', () => {
+    const res = buildReservation({ id: 1, title: 'Hover me', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const edit = screen.getByTitle('Edit');
+    act(() => { edit.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    expect(edit.style.color).toBe('var(--text-primary)');
+    act(() => { edit.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    expect(edit.style.color).toBe('var(--text-faint)');
+  });
+
+  it('FE-PLANNER-RESP-062: a failing delete surfaces an error instead of throwing', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn().mockRejectedValue(new Error('nope'));
+    const res = buildReservation({ id: 5, title: 'Undeletable', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} onDelete={onDelete} />);
+    await user.click(screen.getByTitle('Delete'));
+    await user.click(await screen.findByText('Confirm'));
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(5));
+    // The dialog closed and the card is still there.
+    expect(screen.queryByText('Confirm')).not.toBeInTheDocument();
+    expect(screen.getByText('Undeletable')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-063: an endpoint route replaces the airport metadata cells', () => {
+    const res = buildReservation({
+      id: 1, title: 'Routed flight', type: 'flight', status: 'confirmed',
+      metadata: JSON.stringify({ airline: 'KLM', departure_airport: 'AMS', arrival_airport: 'JFK', price: 320, priceCurrency: 'EUR' }),
+      endpoints: [
+        { role: 'from', sequence: 0, name: 'Amsterdam Schiphol' },
+        { role: 'stop', sequence: 1, name: 'Reykjavik' },
+        { role: 'to', sequence: 2, name: 'New York JFK' },
+      ],
+    } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Amsterdam Schiphol')).toBeInTheDocument();
+    expect(screen.getByText('Reykjavik')).toBeInTheDocument();
+    // The raw airport codes are dropped in favour of the route line…
+    expect(screen.queryByText('AMS')).not.toBeInTheDocument();
+    // …but the price still gets its own cell.
+    expect(screen.getByText('320 EUR')).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-064: an attached file opens through the download helper', async () => {
+    const user = userEvent.setup();
+    const res = buildReservation({ id: 7, status: 'confirmed' });
+    const files = [{ id: 1, trip_id: 1, reservation_id: 7, original_name: 'ticket.pdf', url: '/uploads/ticket.pdf', filename: 'ticket.pdf', mime_type: 'application/pdf', created_at: '2025-01-01T00:00:00.000Z' }];
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} files={files} />);
+    await user.click(screen.getByText('ticket.pdf'));
+    expect(vi.mocked(openFile)).toHaveBeenCalledWith('/uploads/ticket.pdf');
+  });
+
+  it('FE-PLANNER-RESP-065: an assignment without a place is skipped by the day/place lookup', () => {
+    const day = { ...buildDay({ id: 1, title: 'Day 1', date: '2025-06-01' }), day_number: 1 } as any;
+    const assignments = {
+      '1': [
+        { id: 10, order_index: 1, day_id: 1, place_id: 2, notes: null, place: buildPlace({ name: 'Louvre' }) },
+        { id: 11, order_index: 0, day_id: 1, place_id: null, notes: null, place: null },
+      ],
+    };
+    const withPlace = buildReservation({ id: 1, title: 'Linked', assignment_id: 10, status: 'confirmed' });
+    const withoutPlace = buildReservation({ id: 2, title: 'Orphan', assignment_id: 11, status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[withPlace, withoutPlace]} days={[day]} assignments={assignments as any} />);
+    expect(screen.getByText(/Louvre/)).toBeInTheDocument();
+    expect(screen.getByText('Orphan')).toBeInTheDocument();
+  });
+
+  // ── Section state ───────────────────────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-066: a section collapsed in a previous session stays collapsed', () => {
+    localStorage.setItem('trek:bookings-confirmed-open:1', '0');
+    const res = buildReservation({ id: 1, title: 'Hidden card', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.queryByText('Hidden card')).not.toBeInTheDocument();
+  });
+
+  // ── Transit journeys (#1065) ────────────────────────────────────────────────
+
+  const transitJourney = (over: Record<string, unknown> = {}) => buildReservation({
+    id: 900,
+    title: 'Berlin Hbf → Hamburg Hbf',
+    type: 'transit',
+    status: 'confirmed',
+    day_id: 501,
+    reservation_time: '2025-06-01T08:00',
+    reservation_end_time: '2025-06-01T09:45',
+    metadata: JSON.stringify({
+      transit: {
+        provider: 'transitous', duration: 6300, transfers: 1, walk_seconds: 300,
+        legs: [
+          { mode: 'WALK', duration: 300, line: null },
+          { mode: 'SUBWAY', duration: 900, line: 'U2', line_color: '#FF3300' },
+          { mode: 'HIGHSPEED_RAIL', duration: 5100, line: 'ICE 599', line_color: null },
+        ],
+      },
+    }),
+    ...over,
+  } as any);
+
+  it('FE-PLANNER-RESP-067: a transit journey renders its own section with legs, day and duration', () => {
+    const day = buildDay({ id: 501, date: '2025-06-01', day_number: 2, title: 'Travel day' } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[transitJourney()]} days={[day]} />);
+    expect(screen.getByText('Automated public transit')).toBeInTheDocument();
+    expect(screen.getByText('U2')).toBeInTheDocument();
+    expect(screen.getByText('ICE 599')).toBeInTheDocument();
+    expect(screen.getByText('Travel day')).toBeInTheDocument();
+    expect(screen.getByText(/08:00/)).toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-068: clicking a transit journey opens it through onEdit', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    render(<ReservationsPanel {...defaultProps} reservations={[transitJourney()]} onEdit={onEdit} />);
+    await user.click(screen.getByText(/Hamburg Hbf/));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 900 }));
+  });
+
+  it('FE-PLANNER-RESP-069: deleting a transit journey asks first and does not open the journey', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    const onEdit = vi.fn();
+    render(<ReservationsPanel {...defaultProps} reservations={[transitJourney()]} onDelete={onDelete} onEdit={onEdit} />);
+    await user.click(screen.getByTitle('Delete'));
+    expect(onEdit).not.toHaveBeenCalled();
+
+    // Cancel first — nothing is deleted.
+    await user.click(await screen.findByText('Cancel'));
+    expect(onDelete).not.toHaveBeenCalled();
+
+    await user.click(screen.getByTitle('Delete'));
+    const dialogButtons = (await screen.findByText('Cancel')).parentElement!.querySelectorAll('button');
+    await user.click(dialogButtons[1]);
+    expect(onDelete).toHaveBeenCalledWith(900);
+  });
+
+  it('FE-PLANNER-RESP-070: a transit journey with unreadable metadata still renders its header', () => {
+    render(<ReservationsPanel {...defaultProps} reservations={[transitJourney({ metadata: '{broken' })]} />);
+    expect(screen.getByText(/Hamburg Hbf/)).toBeInTheDocument();
+    expect(screen.queryByText('U2')).not.toBeInTheDocument();
+  });
+
+  it('FE-PLANNER-RESP-071: a transit journey shows its first note line and traveler avatars', () => {
+    const res = transitJourney({
+      notes: '**Reserve** a seat\nsecond line',
+      travelers: [{ user_id: 1, username: 'ada', avatar_url: null }],
+    });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    expect(screen.getByText('Reserve')).toBeInTheDocument();
+    expect(screen.queryByText(/second line/)).not.toBeInTheDocument();
+  });
+
+  // ── Reservation-detail plugin slot ──────────────────────────────────────────
+
+  it('FE-PLANNER-RESP-072: a reservation-detail plugin mounts a frame on both card kinds', async () => {
+    seedStore(usePluginStore, {
+      plugins: [
+        { id: 'seat-map', name: 'Seat Map', type: 'widget', icon: null, slot: 'reservation-detail' },
+        { id: 'dash-widget', name: 'Dash', type: 'widget', icon: null, slot: 'hero' },
+      ],
+    });
+    const booking = buildReservation({ id: 1, title: 'Flight out', type: 'flight', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[booking, transitJourney()]} />);
+    await waitFor(() => expect(document.querySelectorAll('iframe[src*="seat-map"]')).toHaveLength(2));
+    expect(document.querySelector('iframe[src*="dash-widget"]')).toBeNull();
+  });
+
+  it('FE-PLANNER-RESP-073: interacting with a transit card\'s travelers or plugin frame does not open the journey', async () => {
+    seedStore(usePluginStore, {
+      plugins: [{ id: 'seat-map', name: 'Seat Map', type: 'widget', icon: null, slot: 'reservation-detail' }],
+    });
+    const onEdit = vi.fn();
+    const res = transitJourney({ travelers: [{ user_id: 1, username: 'ada', avatar_url: null }] });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} onEdit={onEdit} />);
+    const frame = await waitFor(() => document.querySelector('iframe[src*="seat-map"]') as HTMLIFrameElement);
+    fireEvent.click(frame.parentElement!.parentElement!);
+    fireEvent.click(screen.getByText('ada').parentElement!);
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it('FE-PLANNER-RESP-074: the transit delete dialog closes on a backdrop click without deleting', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    render(<ReservationsPanel {...defaultProps} reservations={[transitJourney()]} onDelete={onDelete} />);
+    await user.click(screen.getByTitle('Delete'));
+    const backdrop = await waitFor(() => document.querySelector('[style*="z-index: 3000"]') as HTMLElement);
+    fireEvent.click(backdrop);
+    await waitFor(() => expect(document.querySelector('[style*="z-index: 3000"]')).toBeNull());
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it('FE-PLANNER-RESP-075: hovering a blurred code reveals it and leaving hides it again', () => {
+    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    const res = buildReservation({ id: 1, confirmation_number: 'HOVER1', status: 'confirmed' });
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const code = screen.getByText('HOVER1');
+    fireEvent.mouseEnter(code);
+    expect(code.style.filter).toBe('none');
+    fireEvent.mouseLeave(code);
+    expect(code.style.filter).toContain('blur');
+  });
+
+  it('FE-PLANNER-RESP-076: entries with no resolvable date sink below the dated ones', () => {
+    const day = buildDay({ id: 601, date: '2025-08-02', day_number: 2 } as any);
+    const undated = buildReservation({ id: 1, title: 'Undated taxi', type: 'taxi', status: 'pending', created_at: '2025-01-01T00:00:00.000Z' });
+    const dated = buildReservation({ id: 2, title: 'Dated train', type: 'train', status: 'pending', day_id: 601, created_at: '2025-02-01T00:00:00.000Z' } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[undated, dated]} days={[day]} />);
+    const text = document.body.textContent || '';
+    expect(text.indexOf('Dated train')).toBeLessThan(text.indexOf('Undated taxi'));
+  });
+
+  it('FE-PLANNER-RESP-079: an http booking link is rendered as an anchor', () => {
+    const res = buildReservation({ id: 1, title: 'Hotel', status: 'confirmed', url: 'https://hotel.example/booking' } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    const link = screen.getByText('https://hotel.example/booking');
+    expect(link.tagName).toBe('A');
+    expect(link).toHaveAttribute('href', 'https://hotel.example/booking');
+  });
+
+  it('FE-PLANNER-RESP-080: a javascript: booking link stays plain text, never an href', () => {
+    const res = buildReservation({ id: 1, title: 'Hotel', status: 'confirmed', url: 'javascript:alert(1)' } as any);
+    render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
+    // The stored value stays readable, but nothing is clickable.
+    const shown = screen.getByText('javascript:alert(1)');
+    expect(shown.tagName).toBe('SPAN');
+    expect(document.querySelector('a[href^="javascript:"]')).toBeNull();
+  });
+});

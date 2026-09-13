@@ -1,0 +1,526 @@
+# Troubleshooting
+
+## "Access token required" when changing password on first login
+
+**Cause:** The session cookie has the `Secure` flag set, which means the browser will only send it over HTTPS. When accessing TREK over plain HTTP (e.g. `http://192.168.1.x:3000`), the browser silently drops the cookie and the server sees no session — returning "Access token required".
+
+**Fix:** Choose one of the following options:
+
+**Option 1 — Use HTTPS.** Access TREK via HTTPS with a valid SSL certificate.
+
+**Option 2 — Disable the Secure flag.** Set `COOKIE_SECURE=false` in your Docker environment to allow the session cookie to be sent over plain HTTP:
+
+```yaml
+environment:
+  - COOKIE_SECURE=false
+```
+
+> **Note:** Option 2 is only recommended for internal/home-lab deployments that do not use HTTPS. Do not use it on a publicly accessible instance. See [Environment Variables](Environment-Variables).
+
+---
+
+## Can't log in after setup / ADMIN_EMAIL and ADMIN_PASSWORD seem ignored
+
+**Cause:** The initial admin account is seeded **only on the first boot, when the database has no users yet.** Three things follow from that, and each trips people up:
+
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` apply **only on that first run**. If you first start *without* them, an admin is created with a **random** password (it is **not** `changeme`) — and adding the variables afterwards has no effect, because a user already exists. The server now logs a reminder when it ignores them.
+- The random first-run password is printed to the log **once**, in a box titled `TREK — First Run: Admin Account Created`. It is easy to miss if you read the logs later.
+- Pulling a "fresh image" does **not** reset anything — your `./data` volume still holds the old database, so first-run setup does not run again.
+
+**Fix — pick whichever applies:**
+
+**Read the first-run credentials** (only present on the very first start of an empty database):
+
+```bash
+docker compose logs | grep -A6 "First Run"
+```
+
+Log in with what it shows; you will be asked to set a new password.
+
+**Reset the admin without losing data** (locked-out, existing install):
+
+```bash
+docker exec -it trek node server/reset-admin.js
+```
+
+This resets (or creates) `admin@tt.local` and prints a generated password. Override with `-e RESET_ADMIN_EMAIL=you@example.com -e RESET_ADMIN_PASSWORD=yourpass`. You will be asked to change it on first login.
+
+**Start over with chosen credentials** (fresh install, no data to keep):
+
+```bash
+docker compose down
+rm -rf ./data        # deletes ALL TREK data — only on a throwaway/fresh install
+docker compose up -d
+```
+
+With `ADMIN_EMAIL` and `ADMIN_PASSWORD` set, the admin is created with exactly those credentials.
+
+> **Note (Docker Desktop on Windows/macOS):** SQLite's WAL mode is unreliable on bind mounts backed by the Windows/macOS filesystem and can cause silent write failures. Prefer a Docker **named volume** for `/app/data` over a host bind mount. See [Install: Docker Compose](Install-Docker-Compose#named-volumes).
+
+---
+
+## WebSocket not connecting / real-time sync broken
+
+**Cause:** Your reverse proxy is not forwarding WebSocket upgrade headers on the `/ws` path.
+
+**Fix:** Add the following to your proxy config for the `/ws` location:
+
+```nginx
+proxy_http_version 1.1;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+```
+
+Without these headers, the WebSocket handshake fails and real-time sync will not work. See [Reverse Proxy](Reverse-Proxy) for a complete nginx and Caddy configuration. Caddy handles WebSocket upgrades automatically.
+
+---
+
+## HTTPS redirect loop
+
+**Cause:** `FORCE_HTTPS=true` is set but your reverse proxy is not forwarding the `X-Forwarded-Proto: https` header, so every request looks like plain HTTP and gets redirected indefinitely.
+
+**Fix:** Ensure your proxy passes the `X-Forwarded-Proto` header to TREK. Also set `TRUST_PROXY=1` so that Express uses the forwarded IP for rate limiting and audit logs:
+
+```yaml
+environment:
+  - FORCE_HTTPS=true
+  - TRUST_PROXY=1
+```
+
+> **Note:** The `/api/health` endpoint is always exempt from the HTTPS redirect so that Docker health checks continue to work over plain HTTP.
+
+If you are accessing TREK directly on `http://<host>:3000` with no proxy, remove `FORCE_HTTPS` entirely. See [Environment Variables](Environment-Variables).
+
+---
+
+## Encrypted settings lost / API keys not working after migration
+
+**Cause:** The `ENCRYPTION_KEY` was changed or lost. All API keys, SMTP passwords, OIDC client secrets, and MFA TOTP secrets are encrypted at rest using this key. Without the original key, decryption fails.
+
+**Fix:** See [Encryption Key Rotation](Encryption-Key-Rotation) for the migration script that re-encrypts data under a new key. If the original key is gone entirely, the encrypted values are unrecoverable and must be re-entered in the admin panel.
+
+> **Note:** If you upgraded from an older version without setting `ENCRYPTION_KEY`, the server uses the following resolution order on startup: (1) `ENCRYPTION_KEY` env var, (2) `data/.encryption_key` file, (3) one-time fallback to `data/.jwt_secret` for legacy upgrades — the value is immediately written to `data/.encryption_key` so JWT rotation cannot break decryption later, (4) auto-generated fresh key for brand-new installs. Check `data/.encryption_key` for the key currently in use.
+
+---
+
+## Locked out of MFA / lost authenticator
+
+**Fix:** If you still have access to your account, use one of the 10 backup codes generated during MFA setup to complete login. After signing in, go to **Settings > Account** to disable or reconfigure MFA.
+
+If you no longer have access to backup codes and cannot log in, an admin can clear your MFA for you: `DELETE /api/admin/users/<id>/mfa` (admin session required). It clears `mfa_enabled`, `mfa_secret` and `mfa_backup_codes` — the same three columns a self-service disable clears — and is written to the audit log as `admin.user_mfa_reset`.
+
+The endpoint refuses to reset the caller's own account (*"Use Settings to change your own two-factor setup"*), so an admin cannot unlock themselves with it. If the locked-out account is the only admin, run `reset-admin.js` with a **new** `RESET_ADMIN_EMAIL` to create a second admin account — for an email that already exists the script only resets the password and role and leaves MFA untouched, so you would still hit the TOTP prompt — then sign in as that account and clear the first one's MFA. Hand-editing the database is the last resort, not the only route.
+
+There is no button for it: the Admin Panel UI has no per-user MFA reset (the user modal offers only **Reset passkeys**) — it only controls the global "require MFA for all users" policy. See [Admin: Users and Invites](Admin-Users-and-Invites).
+
+---
+
+## Demo user cannot edit or create
+
+**Cause:** The instance is running with `DEMO_MODE=true`. All write operations are blocked for the demo account by design.
+
+**Fix:** This is intentional behavior for public demo deployments. If you are self-hosting and want full access, remove the `DEMO_MODE` variable (or set it to `false`). See [Demo Mode](Demo-Mode).
+
+---
+
+## Backup restore fails with "file too large"
+
+**Cause:** Your reverse proxy has a default body size limit (commonly 1 MB or 10 MB) that is smaller than the backup ZIP. Backup archives include the full uploads directory and can be large.
+
+**Fix:** Raise the body size limit in your proxy config. TREK's own cap on the uploaded (compressed) archive is 500 MB by default. For nginx:
+
+```nginx
+client_max_body_size 500m;
+```
+
+Add this to the `location /` block (or the specific backup route). See [Reverse Proxy](Reverse-Proxy) and [Backups](Backups).
+
+If the archive is genuinely larger than that, raise TREK's own caps too. There are two, and they are independent: one on the compressed upload, one on the total **decompressed** size of the archive (the zip-bomb guard). An archive that gets past the upload limit can still be refused part-way through extraction with `Backup exceeds the maximum decompressed size.`
+
+```yaml
+environment:
+  - BACKUP_UPLOAD_LIMIT_MB=2000       # compressed upload cap (default: 500)
+  - BACKUP_MAX_DECOMPRESSED_MB=20480  # decompressed cap (default: 5120, i.e. 5 GB)
+```
+
+Keep the proxy's `client_max_body_size` at or above `BACKUP_UPLOAD_LIMIT_MB`. Non-positive or invalid values for either variable abort startup.
+
+---
+
+## "Cannot find module" on startup
+
+**Likely cause:** A volume is mounted at `/app`, which hides the application code (`node_modules` and `dist`) shipped inside the image. Mount only the data and uploads directories — `-v ./data:/app/data -v ./uploads:/app/uploads` — never `/app` itself. Current images detect this before Node starts and print `FATAL: TREK application files are missing from the image.` instead of the bare module error.
+
+**Fix:** List your mounts and remove any that target `/app`:
+
+```bash
+docker inspect <container> --format '{{json .Mounts}}'
+```
+
+Keep only `./data:/app/data` and `./uploads:/app/uploads`, then recreate the container. Your data in those two directories is preserved when you switch.
+
+> **Note:** Unwritable `data`/`uploads` directories are a *different* failure — they abort with a permission error (`EACCES`), not with `Cannot find module`. TREK creates the subdirectories it needs on startup (`data/logs`, `data/backups`, `data/tmp`, `uploads/files`, `uploads/covers`, `uploads/avatars`, `uploads/photos`, `uploads/journey`, `uploads/places`). The container's `chown` step (which runs as root before dropping to `node`) normally corrects ownership, but if your host filesystem is read-only or permissions are locked down, grant write access manually:
+>
+> ```bash
+> sudo chown -R 1000:1000 ./data ./uploads
+> ```
+
+---
+
+## Container won't start: "exec /usr/bin/dumb-init: operation not permitted"
+
+**Symptoms:** The container restarts in a loop and the logs show nothing but:
+
+```
+trek  | exec /usr/bin/dumb-init: operation not permitted
+trek exited with code 255 (restarting)
+```
+
+**Cause:** You are running **Docker installed from the snap** (its config lives under `/var/snap/docker/...`) *and* your compose file sets `security_opt: [no-new-privileges:true]`. The snap-packaged `dockerd` runs under its own AppArmor profile, and AppArmor refuses the `no_new_privs` privilege transition for snapped daemons. The container's very first `execve` is denied with `EPERM`, so it never starts. Confirm it in the kernel log right after a crash:
+
+```bash
+sudo dmesg -T | grep -iE 'apparmor|denied'
+# apparmor="DENIED" operation="exec" ... info="no new privs"
+```
+
+This affects **any** image, not just TREK, and is a known snap limitation ([snapd bug #1908448](https://bugs.launchpad.net/snapd/+bug/1908448)). Setting `apparmor=unconfined` on the container does **not** help — that only swaps the *container's* profile, while the denial comes from the *daemon's* (snap's) confinement, which a container-level option cannot reach.
+
+**Fix:** Install Docker from the official apt repository instead of the snap. Your data is safe as long as it lives in host bind-mounts (`./data`, `./uploads`):
+
+```bash
+sudo snap remove docker
+curl -fsSL https://get.docker.com | sudo sh   # or follow docs.docker.com/engine/install/ubuntu
+docker compose up -d
+```
+
+> **Note:** If you must stay on the snap, the only workaround is removing `no-new-privileges` from `security_opt`. The rest of the hardening (`read_only`, `cap_drop: ALL` with a minimal `cap_add`, the `noexec,nosuid` tmpfs) keeps working and carries most of the weight. See [Security Hardening](Security-Hardening).
+
+---
+
+## Encryption key regenerated on restart — stored secrets stop working
+
+**Cause:** On every startup, TREK resolves its encryption key in this order: (1) `ENCRYPTION_KEY` env var, (2) `data/.encryption_key` file, (3) legacy `data/.jwt_secret` fallback, (4) auto-generate a fresh key. If neither the env var nor the `data/` volume is persisted — for example after recreating a container without a volume mount — a new random key is generated and all stored secrets (SMTP password, OIDC client secret, API keys, MFA TOTP seeds) become unrecoverable.
+
+**Fix:** Ensure `./data:/app/data` is mounted as a persistent volume so `data/.encryption_key` survives restarts. Alternatively, pin the key explicitly:
+
+```yaml
+environment:
+  - ENCRYPTION_KEY=<your-key>
+```
+
+See [Encryption Key Rotation](Encryption-Key-Rotation) for how to retrieve or rotate the key.
+
+---
+
+## OIDC login returns "APP_URL is not configured"
+
+**Cause:** When OIDC is enabled, TREK needs to know its own public URL to build the redirect URI. It resolves this from (1) `APP_URL` env var, (2) the first entry in `ALLOWED_ORIGINS`, (3) `http://localhost:<PORT>` as a last resort. Step (3) always produces a value, so the message in the heading is a guard that never actually fires. What you get instead, with `APP_URL` and `ALLOWED_ORIGINS` both unset, is a redirect URI of `http://localhost:<PORT>/api/auth/oidc/callback` — and the provider rejects it as an unregistered `redirect_uri`.
+
+**Fix:** Set `APP_URL` to the public URL of your instance:
+
+```yaml
+environment:
+  - APP_URL=https://trek.example.com
+```
+
+---
+
+## OIDC login fails with issuer mismatch
+
+**Cause:** TREK validates that the `issuer` field in the provider's discovery document matches the configured `OIDC_ISSUER`. Trailing slashes are stripped from both sides before the comparison, so `https://auth.example.com` and `https://auth.example.com/` are the same value here — the difference is somewhere else: a realm path the provider adds, an internal hostname configured where the provider advertises the public one, or `http://` against `https://`.
+
+**Fix:** Check the exact issuer value your provider advertises and match it:
+
+```bash
+curl -s https://<your-oidc-issuer>/.well-known/openid-configuration | jq .issuer
+```
+
+Set `OIDC_ISSUER` to that exact string.
+
+> **Note:** The mismatch is only fatal while no custom discovery URL is set. With `OIDC_DISCOVERY_URL` configured — which is how Authentik realm paths are usually wired up — TREK treats the discovery document's issuer as the canonical one, logs `[OIDC] Discovery doc issuer … differs from configured OIDC_ISSUER …` and continues.
+
+---
+
+## OIDC login fails when provider is on a private/internal network
+
+**Cause:** Not the SSRF guard, despite what it looks like. All four OIDC calls — discovery, token, userinfo, JWKS — go through the admin-configured fetch path, which deliberately **allows** loopback and private/LAN targets: a Keycloak or Authentik on `192.168.x` or `10.x` is a supported setup and needs no extra variable. `ALLOW_INTERNAL_NETWORK` belongs to the guard on *user*-supplied URLs and changes nothing about OIDC. The only addresses that path refuses are link-local and cloud-metadata ones (`169.254.0.0/16`, `fe80::/10`), which fail with `Requests to link-local / cloud-metadata addresses are not allowed`.
+
+**Fix:** Look for the reasons an internal provider actually fails. A failed discovery fetch answers `500 { "error": "OIDC login failed" }` and logs the real message as `[OIDC] Login error: …`, so start there:
+
+```bash
+docker logs <container> 2>&1 | grep "OIDC"
+```
+
+- **The container cannot reach the issuer.** Test from inside it, not from your desktop — the container has its own DNS and its own network: `docker exec <container> wget -qO- https://<issuer>/.well-known/openid-configuration`. A `Could not resolve hostname` in the log is this.
+- **The issuer is not HTTPS.** In production TREK refuses a plain-HTTP issuer up front with `400 { "error": "OIDC issuer must use HTTPS in production" }`, before any request goes out.
+- **The provider's certificate is not trusted by the container.** A self-signed certificate on an internal Keycloak fails the TLS handshake; issue it from a CA the container trusts.
+
+---
+
+## "Send test email" fails and says nothing else
+
+**Cause:** older builds swallowed the SMTP error. Nothing was written to the container log, and the toast fell back to a bare *Test email failed*. A blocked port made it worse: nodemailer waited up to two minutes for the connection while the browser gave up after eight seconds, so the eventual error had nobody left to report to. Both are fixed. Every SMTP phase is now bounded, and the button names the cause.
+
+**Fix:** press **Send test email** again and read the toast. The same diagnosis, plus the SMTP error code, is in the log:
+
+```bash
+docker logs <container> 2>&1 | grep -E "SMTP test email (sent|failed)|SMTP test not attempted"
+```
+
+| What the message says | What to change |
+|-----------------------|----------------|
+| `rejected the credentials` (`code=EAUTH`) | Wrong SMTP user or password. Mailboxes with 2FA normally need an app-specific password, not the account one. |
+| `refused the connection` | Nothing is listening on that port, or a firewall closed it. |
+| `did not answer in time` | The port is filtered, or 465 and 587 are swapped: TREK dials 465 with implicit TLS and every other port in plain mode with STARTTLS. |
+| `could not be resolved` | The container's DNS cannot resolve the host. Test with `docker exec <container> nc -zv <SMTP_HOST> <SMTP_PORT>`. |
+| `TLS certificate ... was not accepted` | Turn on **Skip TLS certificate check** (or `SMTP_SKIP_TLS_VERIFY=true`) for an internal relay carrying its own certificate. |
+| `rejected the envelope` | The from address usually has to belong to the authenticated mailbox. |
+| `SMTP not configured: ...` | The named field is empty, or the port is not a number. Host, port and from address are all required. |
+
+> **Note:** a saved SMTP password is shown as a placeholder, never as a value. Leave the field alone to keep it, or type into it to replace it.
+
+---
+
+## Password reset emails are not delivered / SMTP is silent
+
+**Cause:** SMTP failures are logged but do not surface as errors to the end user — the "reset email sent" message appears regardless. Common causes: wrong `SMTP_HOST` or `SMTP_PORT`, bad credentials, firewall blocking outbound on the SMTP port, or a self-signed certificate on the SMTP server.
+
+**Fix:**
+
+1. Check server logs for a failed send. The password-reset path and the generic notification path log different lines, so match both:
+   ```bash
+   docker logs <container> 2>&1 | grep -E "Password reset email failed|Email send failed"
+   ```
+   If neither matches, check whether the mail ever left at all — TREK needs a host, a port **and** a from-address (`SMTP_HOST` / `SMTP_PORT` / `SMTP_FROM`, or the same three fields under **Admin > Notifications**). With any one of them missing it skips SMTP entirely and logs `Password reset link issued (no SMTP)` plus the `===== PASSWORD RESET LINK =====` block instead of any error:
+   ```bash
+   docker logs <container> 2>&1 | grep "no SMTP"
+   ```
+2. If the error mentions TLS or certificate, set `SMTP_SKIP_TLS_VERIFY=true`.
+3. Verify the port: `587` for STARTTLS, `465` for implicit TLS, `25` for plain SMTP.
+4. Test connectivity from the container:
+   ```bash
+   docker exec <container> nc -zv <SMTP_HOST> <SMTP_PORT>
+   ```
+
+> **Note:** If no SMTP is configured at all, TREK prints the reset link directly to the server logs (`===== PASSWORD RESET LINK =====`). This is useful for initial setup or self-hosted installs without email.
+
+---
+
+## CORS error — API requests blocked in the browser
+
+**Cause:** If `ALLOWED_ORIGINS` is set, only those origins are permitted. Any request from a different origin is rejected with a CORS error visible in the browser console.
+
+**Fix:** Add your origin to the comma-separated list:
+
+```yaml
+environment:
+  - ALLOWED_ORIGINS=https://trek.example.com,https://other.example.com
+```
+
+If `ALLOWED_ORIGINS` is not set, the default is **same-origin only** — cross-origin browser requests are rejected — because every shipped deployment path (Dockerfile, `docker-compose.yml`, the Helm chart) runs with `NODE_ENV=production`. Allowing any origin is the development default, and only applies outside production. See [Environment Variables](Environment-Variables).
+
+---
+
+## WebSocket closes immediately after connecting (codes 4001 / 4403)
+
+**Cause:** The `/ws` endpoint requires an ephemeral token generated by the client immediately before connecting. If the token is missing, expired, or the user's session state changed, the server closes the connection with a specific code:
+
+| Code | Reason |
+|------|--------|
+| `4001` | No token, expired/invalid token, or user not found — re-login required |
+| `4403` | MFA is required globally but the user has not enabled it |
+
+**Fix:**
+
+- Code `4001`: Log out and log back in. If it persists, check that your reverse proxy is not stripping the `token` query parameter from the WebSocket upgrade request.
+- Code `4403`: The user must enable MFA in **Settings > Account**, or an admin can disable the global MFA requirement in **Admin > Settings**.
+
+---
+
+## Clipboard features not working (copy link, share, etc.)
+
+**Cause:** The browser Clipboard API (`navigator.clipboard`) is only available in a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts), so on plain HTTP at a non-localhost address it is undefined.
+
+TREK works around this where it matters most. The share-link and invite-link buttons in the trip **Members** dialog, the journey share link, and the calendar-subscribe URLs fall back to a hidden textarea plus the deprecated `document.execCommand('copy')`, which is not secure-context gated — **those keep working over plain HTTP**, on desktop and mobile alike.
+
+The remaining copy buttons call `navigator.clipboard` directly and have no fallback:
+
+- **Settings > Integrations (MCP)** — the MCP endpoint URL, the JSON client config, a newly created MCP token, and OAuth client IDs, client secrets and rotated secrets. These fail with no message at all, because the click handler throws before any toast is shown.
+- **Settings > Account** — the 2FA backup codes. This one shows a generic error toast. Use the **Download** button next to it as a workaround; it does not need a secure context.
+- **Admin Panel > Users & Invites** — the registration invite link, both on create ("create and copy") and via the copy button on an existing invite.
+
+**Fix:** For those buttons, one of:
+
+- Access TREK over HTTPS with a valid SSL certificate.
+- Access TREK directly from `http://localhost:<port>` — browsers treat `localhost` as a secure context for the Clipboard API.
+
+Failing that, select the value shown in the field and copy it manually; every one of these buttons sits next to the text it copies.
+
+---
+
+## Place photos not loading / place thumbnail shows default map pin (Google Maps API key configured)
+
+**Cause:** When a Google Maps API key is set, TREK fetches photo references and image bytes from the Google Places API on the server side. If the server-side call is rejected or returns no photos, the `/place-photo/:id` endpoint answers `200 { "photoUrl": null }` and the place falls back to the default map-pin thumbnail. The image proxy behind it, `/place-photo/:id/bytes`, answers `204 No Content` when it has nothing cached — neither endpoint returns 404, so a trip full of photo-less places cannot trip a 404 rate limit in a reverse proxy or IPS. The most common causes are:
+
+1. **HTTP referrer restriction on the API key.** Google Cloud Console lets you restrict a key to specific HTTP referrers. Because TREK calls Google from the server (not the browser), it sends a `Referer` header only when `APP_URL` is set — the header is the value of `APP_URL`. If `APP_URL` is not set, TREK sends no `Referer` header at all, and a referrer-restricted key rejects a request with no referrer just as it rejects a wrong one.
+
+2. **Wrong key restriction type.** API keys restricted by **HTTP referrers** are designed for browser-side JavaScript. For a self-hosted server application, use **IP address** restrictions instead — add the public IP of your TREK server and no `APP_URL` configuration is needed.
+
+3. **Places API (New) not enabled.** The key must have **Places API (New)** enabled in Google Cloud Console under APIs & Services → Enabled APIs. Enabling only the legacy Places API is not sufficient.
+
+4. **Billing not set up.** Google requires a billing account to be linked to the project even within the free tier. Without it, photo and details requests return `REQUEST_DENIED`.
+
+**Fix for HTTP referrer restriction:**
+
+Set `APP_URL` to the public URL of your instance and add that URL (or its domain with a wildcard, e.g. `https://trek.example.com/*`) to the allowed referrers in GCP:
+
+```yaml
+environment:
+  - APP_URL=https://trek.example.com
+```
+
+**Fix for wrong restriction type:**
+
+Switch the key's "Application restrictions" from **HTTP referrers** to **IP addresses** in Google Cloud Console, and add your server's public IP. No `APP_URL` change needed.
+
+**Verifying the issue:**
+
+Run the following curl command using your key to check whether Google returns photo references:
+
+```bash
+curl "https://places.googleapis.com/v1/places/<PLACE_ID>" \
+  -H "X-Goog-Api-Key: YOUR_API_KEY" \
+  -H "X-Goog-FieldMask: photos"
+```
+
+If the response is `{}` or `{"error": {...}}`, the key or its restrictions are blocking the request. If it returns a `photos` array, the key is valid and the issue is elsewhere.
+
+---
+
+## MCP OAuth flow does not initiate / "Connect" redirects but authentication never starts
+
+**Cause:** TREK advertises its OAuth 2.1 issuer and authorization endpoint from its resolved public base URL (`APP_URL`, else the first entry of `ALLOWED_ORIGINS`, else `http://localhost:<PORT>`; the resolved value is kept only if it is `https://` or `localhost`/`127.0.0.1`). If that resolution lands on `http://localhost:<PORT>`, external clients (Claude.ai, Claude Desktop) cannot reach the authorization endpoint and the OAuth handshake never completes.
+
+**Fix:** Set `APP_URL` to the public URL of your instance:
+
+```yaml
+environment:
+  - APP_URL=https://trek.example.com
+```
+
+Restart the container after adding the variable. Once set, clicking **Connect** in the MCP client should redirect to your TREK instance and complete the OAuth flow normally.
+
+> **Note:** Set `APP_URL` for any MCP OAuth integration. TREK resolves its public base URL **once**, in this order: (1) `APP_URL`, (2) the first entry of `ALLOWED_ORIGINS`, (3) `http://localhost:<PORT>` as a last resort — a step is skipped only when the value is unset or not a valid URL. The winner is then checked for MCP: only an `https://` URL or a `localhost` / `127.0.0.1` host is kept; anything else is replaced by `http://localhost:<PORT>`, which external MCP clients cannot reach. Because only the resolved winner is checked, a valid but plain-HTTP `APP_URL` (e.g. `http://trek.internal.lan`) is **not** rescued by an `https://` entry in `ALLOWED_ORIGINS` — it still ends up on localhost.
+
+---
+
+## MCP integration: "Too many requests"
+
+**Cause:** Each user is limited to 300 MCP requests per minute by default. Exceeding the limit returns a `429` response.
+
+**Fix:** Increase the limits via environment variables:
+
+```yaml
+environment:
+  - MCP_RATE_LIMIT=600          # requests per minute per user (default: 300)
+  - MCP_MAX_SESSION_PER_USER=50 # concurrent sessions per user (default: 20)
+```
+
+The session limit no longer rejects requests: at the cap, the server closes the user's least-recently-active session to make room for the new one. If you are hitting the cap at all, see the next entry — the usual cause is sessions being created faster than they are reused, not genuinely parallel clients.
+
+---
+
+## MCP: a new session is created on every tool call / sessions pile up
+
+**Symptoms:** the server log shows a `Session <uuid> created` line for *every* tool call, with `Active sessions` climbing steadily. The idle sweep reports `cleaned 0` no matter how many sessions are open. On older versions the connection dies once the count reaches `MCP_MAX_SESSION_PER_USER` and only a restart brings it back.
+
+**Cause:** the client never receives — or cannot read — the `Mcp-Session-Id` response header, so it cannot send it back on the next call. Every request then looks like a brand-new connection and the server opens a fresh session for it. The `cleaned 0` sweep is a red herring: the sweep expires sessions after an hour of *inactivity* (`MCP_SESSION_TTL`), so sessions created seconds apart are nowhere near expiry.
+
+There are two reasons the header goes missing:
+
+1. **TREK 3.3.0 and earlier** did not send `Access-Control-Expose-Headers: Mcp-Session-Id`. Without it, browser-based clients — Claude.ai, Claude Desktop connectors, MCP Inspector — are forbidden by the browser from reading the session id, no matter how the proxy is configured. **Fix: upgrade** — no proxy change will help.
+2. **A reverse proxy stripping the header.** Nginx and Caddy forward it by default, so this only happens if you have a `proxy_hide_header` directive or a response-header allowlist in front of `/mcp`. See [Reverse-Proxy](Reverse-Proxy).
+
+**How to tell which:** from the machine running the proxy, ask for a session and look at the response headers.
+
+```bash
+curl -i -X POST https://trek.example.com/mcp \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}'
+```
+
+A healthy response contains **both**:
+
+```
+mcp-session-id: 412d245d-1daa-4dfc-b453-eaf266673696
+access-control-expose-headers: Mcp-Session-Id,MCP-Protocol-Version,WWW-Authenticate
+```
+
+If `mcp-session-id` is missing, the proxy is stripping it. If `access-control-expose-headers` is missing, you are on an affected version — upgrade.
+
+On current versions the server also warns on every session-less request, which is the same signal:
+
+```
+[MCP] POST without mcp-session-id for user 1 — starting a new session. If this
+repeats on every tool call, the Mcp-Session-Id response header is not reaching
+the client (check that your reverse proxy forwards it).
+```
+
+---
+
+## MCP requests blocked by Cloudflare WAF (Bot Fight Mode)
+
+**Cause:** When TREK is proxied through Cloudflare, **Bot Fight Mode** and **Super Bot Fight Mode** classify server-to-server requests as bots and block them at the WAF level — before the request ever reaches TREK. Their exit-node IPs have low reputation scores in Cloudflare's threat intelligence and the User-Agent matches Cloudflare's automated-traffic heuristics. TREK itself never receives the request, so there is nothing in TREK's logs; the block is silent from TREK's perspective.
+
+This affects **ChatGPT** and **Google account linking (Gemini, Assistant)**. Claude.ai is not affected.
+
+Note that Bot Fight Mode does **not** honour IP allowlists, so adding the provider's published ranges to a Cloudflare IP Access rule does not help; you need one of the two fixes below.
+
+Symptoms:
+- ChatGPT shows a connection error or times out immediately after OAuth completes.
+- With Google account linking the symptom looks different, and more confusing: the browser part succeeds (you approve the consent screen and are redirected back), then linking fails. Google exchanges the authorization code from its own servers, and that call is what gets blocked. In TREK's logs you see `POST /api/oauth/authorize` answered `200` and then **no** `POST /oauth/token` at all.
+- Cloudflare's Security → Events log shows blocked requests to `/mcp` or `/oauth/token` with action `block` and source `bfm` (Bot Fight Mode) or `managed_rule`.
+
+**Fix — Option 1: Disable Bot Fight Mode (free plan and paid plan)**
+
+In the Cloudflare dashboard for your zone: **Security → Bots → Bot Fight Mode → Off** (or Super Bot Fight Mode → Off).
+
+This is the only option available on the **free plan**. It disables bot blocking for the entire zone — all probe bots, scrapers, and crawlers that Cloudflare would otherwise block will reach your server. Only use this if you have no alternative.
+
+**Fix — Option 2: WAF skip rule for MCP paths (paid plan only)**
+
+> WAF custom rules require a **paid Cloudflare plan** (Pro or above). This option is not available on the free plan.
+
+Create a WAF skip rule that bypasses bot management only for the MCP and OAuth paths, leaving protection in place for the rest of the site:
+
+1. Go to **Security → WAF → Custom rules** and click **Create rule**.
+2. Enter the following expression (replace `trek.example.com` with your domain):
+
+   ```
+   (http.host eq "trek.example.com") and (
+     http.request.uri.path eq "/mcp" or
+     http.request.uri.path starts_with "/oauth/" or
+     http.request.uri.path starts_with "/.well-known/"
+   )
+   ```
+
+   This covers all paths that ChatGPT's servers hit during discovery, OAuth, and MCP calls:
+
+   | Path | Purpose |
+   |---|---|
+   | `/mcp` | MCP endpoint (GET, POST, DELETE) |
+   | `/oauth/authorize` | OAuth authorization handler |
+   | `/oauth/register` | Dynamic client registration |
+   | `/oauth/token` | Token issuance |
+   | `/oauth/userinfo` | User info (for domain claiming) |
+   | `/oauth/revoke` | Token revocation |
+   | `/.well-known/oauth-authorization-server` | RFC 8414 AS metadata |
+   | `/.well-known/oauth-protected-resource` | RFC 9728 flat resource metadata |
+   | `/.well-known/openid-configuration` | OIDC discovery |
+
+3. Set the action to **Skip** and check **Bot Fight Mode** (and/or **Super Bot Fight Mode**) under the skip options.
+4. Save and deploy.
+
+This allows MCP and OAuth traffic through while keeping Cloudflare bot protection active for all other paths.

@@ -1,0 +1,583 @@
+// FE-PAGE-PUBLICJOURNEY-001 to FE-PAGE-PUBLICJOURNEY-010
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import React from 'react';
+import { render, screen, waitFor, fireEvent } from '../../tests/helpers/render';
+import { Routes, Route } from 'react-router';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../tests/helpers/msw/server';
+import { resetAllStores, seedStore } from '../../tests/helpers/store';
+import { useSettingsStore } from '../store/settingsStore';
+import userEvent from '@testing-library/user-event';
+
+// ── Mocks ────────────────────────────────────────────────────────────────────
+
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual('react-router');
+  return { ...actual, useParams: () => ({ token: 'test-share-token' }) };
+});
+
+vi.mock('react-leaflet', () => ({
+  MapContainer: ({ children }: any) => <div data-testid="map-container">{children}</div>,
+  TileLayer: () => null,
+  Marker: ({ children }: any) => <div>{children}</div>,
+  Popup: ({ children }: any) => <div>{children}</div>,
+  Polyline: () => null,
+  useMap: () => ({ fitBounds: vi.fn(), setView: vi.fn() }),
+}));
+
+vi.mock('leaflet', () => {
+  const L = {
+    divIcon: vi.fn(() => ({})),
+    latLngBounds: vi.fn(() => ({ extend: vi.fn(), isValid: vi.fn(() => true) })),
+    icon: vi.fn(() => ({})),
+  };
+  return { default: L, ...L };
+});
+
+// Mock JourneyMap since it uses vanilla Leaflet (L.map) which requires a real DOM
+vi.mock('../components/Journey/JourneyMap', () => ({
+  default: ({ entries }: any) => <div data-testid="journey-map">Map with {entries?.length || 0} entries</div>,
+}));
+
+vi.mock('../components/Journey/JournalBody', () => ({
+  default: ({ text }: { text: string }) => <div data-testid="journal-body">{text}</div>,
+}));
+
+vi.mock('../components/Journey/PhotoLightbox', () => ({
+  default: ({ photos, onClose }: any) => (
+    <div data-testid="photo-lightbox">
+      <span>{photos.length} photos</span>
+      <button onClick={onClose}>Close</button>
+    </div>
+  ),
+}));
+
+vi.mock('../components/Journey/MobileMapTimeline', () => ({
+  default: ({ onEntryClick }: any) => (
+    <div data-testid="mobile-map-timeline">
+      <button onClick={() => onEntryClick({ id: 10, title: 'Shibuya Crossing', story: 'The most famous crossing in the world.', entry_date: '2026-03-15', entry_time: '14:00', location_name: 'Shibuya, Tokyo', photos: [] })}>
+        Open Entry
+      </button>
+    </div>
+  ),
+}));
+
+const mockIsMobile = { value: false };
+vi.mock('../hooks/useIsMobile', () => ({
+  useIsMobile: () => mockIsMobile.value,
+}));
+
+import JourneyPublicPage from './JourneyPublicPage';
+
+// ── Fixtures ─────────────────────────────────────────────────────────────────
+
+const mockJourneyData = {
+  journey: {
+    id: 1,
+    user_id: 1,
+    title: 'Tokyo 2026',
+    subtitle: 'Spring trip to Japan',
+    status: 'active',
+    cover_image: null,
+  },
+  entries: [
+    {
+      id: 10,
+      title: 'Shibuya Crossing',
+      story: 'The most famous crossing in the world.',
+      entry_date: '2026-03-15',
+      entry_time: '14:00',
+      location_name: 'Shibuya, Tokyo',
+      location_lat: 35.6595,
+      location_lng: 139.7004,
+      mood: 'excited',
+      weather: 'sunny',
+      pros_cons: null,
+      photos: [],
+    },
+    {
+      id: 11,
+      title: 'Senso-ji Temple',
+      story: 'Beautiful ancient temple.',
+      entry_date: '2026-03-16',
+      entry_time: '10:00',
+      location_name: 'Asakusa, Tokyo',
+      location_lat: 35.7148,
+      location_lng: 139.7967,
+      mood: 'peaceful',
+      weather: 'cloudy',
+      pros_cons: null,
+      photos: [
+        { id: 100, entry_id: 11, photo_id: 100, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/temple.jpg', caption: 'Temple entrance' },
+      ],
+    },
+  ],
+  permissions: {
+    share_timeline: true,
+    share_gallery: true,
+    share_map: true,
+  },
+  gallery: [
+    { id: 100, journey_id: 1, photo_id: 100, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/temple.jpg', caption: 'Temple entrance', shared: 1, sort_order: 0, created_at: 0 },
+  ],
+  stats: {
+    entries: 2,
+    photos: 1,
+    places: 2,
+  },
+};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function setupSuccess() {
+  server.use(
+    http.get('/api/public/journey/test-share-token', () =>
+      HttpResponse.json(mockJourneyData),
+    ),
+  );
+}
+
+function setup404() {
+  server.use(
+    http.get('/api/public/journey/test-share-token', () =>
+      new HttpResponse(null, { status: 404 }),
+    ),
+  );
+}
+
+// ── Setup / teardown ─────────────────────────────────────────────────────────
+
+beforeEach(() => {
+  resetAllStores();
+  vi.clearAllMocks();
+  mockIsMobile.value = false;
+});
+
+// ── Tests ────────────────────────────────────────────────────────────────────
+
+describe('JourneyPublicPage', () => {
+  it('FE-PAGE-PUBLICJOURNEY-001: renders without crashing', () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    expect(document.body).toBeInTheDocument();
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-002: shows journey title after loading', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-003: shows 404 for invalid/missing token', async () => {
+    setup404();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      // The component shows the notFound heading when fetch errors
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-004: timeline tab is the default view', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+    // Entry titles from the timeline should be visible
+    expect(screen.getByText('Shibuya Crossing')).toBeInTheDocument();
+    expect(screen.getByText('Senso-ji Temple')).toBeInTheDocument();
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-005: shows entry cards with titles', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Shibuya Crossing')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Senso-ji Temple')).toBeInTheDocument();
+    // Entry story text should render
+    expect(screen.getByText('The most famous crossing in the world.')).toBeInTheDocument();
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-006: shows read-only badge text', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+    // The page renders a t('journey.public.readOnly') div with inline style textTransform: 'uppercase'
+    // The translation key resolves to the English text in the real TranslationProvider
+    const readOnlyEl = document.querySelector('[style*="uppercase"]');
+    expect(readOnlyEl).toBeInTheDocument();
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-007: shows footer with shared-via branding', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+    // Footer shows the current product brand and "Made with" text
+    expect(screen.getByText('Tourism-Team')).toBeInTheDocument();
+    expect(screen.getByText(/Made with/)).toBeInTheDocument();
+    expect(screen.getByText('GitHub')).toBeInTheDocument();
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-008: gallery tab switches view', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Find the gallery tab button — the view tabs contain icons and labels
+    const buttons = screen.getAllByRole('button');
+    const galleryBtn = buttons.find(
+      btn => btn.textContent && /gallery/i.test(btn.textContent),
+    );
+    expect(galleryBtn).toBeDefined();
+    if (galleryBtn) {
+      fireEvent.click(galleryBtn);
+      // After switching to gallery, timeline entry titles should no longer be visible
+      // Gallery shows a grid of photos instead
+      await waitFor(() => {
+        const grid = document.querySelector('.grid');
+        expect(grid).toBeInTheDocument();
+      });
+    }
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-009: map is always visible in desktop two-column layout', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Desktop two-column: map sidebar is always rendered alongside the timeline;
+    // there is no standalone "Map" tab button on desktop.
+    await waitFor(() => {
+      expect(screen.getByTestId('journey-map')).toBeInTheDocument();
+    });
+    // Timeline entries remain visible (two-column shows both simultaneously)
+    expect(screen.getByText('Shibuya Crossing')).toBeInTheDocument();
+  });
+
+  it('FE-PAGE-PUBLICJOURNEY-010: shows journey stats', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+    // Stats pill: "2 Entries", "1 Photos", "2 Places"
+    // The numbers appear alongside translation keys inside a pill with blur(4px) backdrop
+    // Use querySelectorAll to find the right one (not the language picker which also has backdrop-filter)
+    const allBackdrop = document.querySelectorAll('[style*="backdrop-filter"]');
+    // The stats pill contains the entry/photo/city counts
+    const statsContainer = Array.from(allBackdrop).find(
+      el => el.textContent && el.textContent.includes('1') && el.children.length > 3,
+    );
+    expect(statsContainer).toBeDefined();
+    expect(statsContainer!.textContent).toContain('2');
+    expect(statsContainer!.textContent).toContain('1');
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-011
+  it('FE-PAGE-PUBLICJOURNEY-011: tab switching from timeline to gallery hides entry titles', async () => {
+    const user = userEvent.setup();
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Timeline entries visible
+    expect(screen.getByText('Shibuya Crossing')).toBeInTheDocument();
+
+    // Switch to gallery
+    const galleryBtn = screen.getAllByRole('button').find(
+      btn => btn.textContent && /gallery/i.test(btn.textContent),
+    );
+    expect(galleryBtn).toBeDefined();
+    await user.click(galleryBtn!);
+
+    // Timeline entries should be gone
+    await waitFor(() => {
+      expect(screen.queryByText('Shibuya Crossing')).not.toBeInTheDocument();
+    });
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-012
+  it('FE-PAGE-PUBLICJOURNEY-012: map component renders with located entries in desktop two-column layout', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Desktop two-column: map sidebar is always rendered; no tab click required.
+    await waitFor(() => {
+      expect(screen.getByTestId('journey-map')).toBeInTheDocument();
+    });
+    // Both fixture entries have coordinates → map receives 2 located entries
+    expect(screen.getByTestId('journey-map').textContent).toContain('2');
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-013
+  it('FE-PAGE-PUBLICJOURNEY-013: entry card renders location name', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Shibuya, Tokyo')).toBeInTheDocument();
+    expect(screen.getByText('Asakusa, Tokyo')).toBeInTheDocument();
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-014
+  it('FE-PAGE-PUBLICJOURNEY-014: photo grid renders in gallery view', async () => {
+    const user = userEvent.setup();
+
+    const richData = {
+      ...mockJourneyData,
+      entries: [
+        {
+          id: 20, title: 'Photo Entry', story: null, entry_date: '2026-03-15',
+          entry_time: null, location_name: null, location_lat: null, location_lng: null,
+          mood: null, weather: null, pros_cons: null,
+          photos: [
+            { id: 200, entry_id: 20, photo_id: 200, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/a.jpg', caption: 'Photo A' },
+            { id: 201, entry_id: 20, photo_id: 201, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/b.jpg', caption: 'Photo B' },
+            { id: 202, entry_id: 20, photo_id: 202, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/c.jpg', caption: 'Photo C' },
+          ],
+        },
+      ],
+      gallery: [
+        { id: 200, journey_id: 1, photo_id: 200, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/a.jpg', caption: 'Photo A', shared: 1, sort_order: 0, created_at: 0 },
+        { id: 201, journey_id: 1, photo_id: 201, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/b.jpg', caption: 'Photo B', shared: 1, sort_order: 1, created_at: 0 },
+        { id: 202, journey_id: 1, photo_id: 202, provider: 'local', asset_id: null, owner_id: null, file_path: 'journey/c.jpg', caption: 'Photo C', shared: 1, sort_order: 2, created_at: 0 },
+      ],
+      stats: { entries: 1, photos: 3, places: 0 },
+    };
+
+    server.use(
+      http.get('/api/public/journey/test-share-token', () => HttpResponse.json(richData)),
+    );
+
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Switch to gallery
+    const galleryBtn = screen.getAllByRole('button').find(
+      btn => btn.textContent && /gallery/i.test(btn.textContent),
+    );
+    await user.click(galleryBtn!);
+
+    await waitFor(() => {
+      // Gallery grid: 3 images rendered
+      const images = document.querySelectorAll('.grid img');
+      expect(images.length).toBe(3);
+    });
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-015
+  it('FE-PAGE-PUBLICJOURNEY-015: stats display shows entries, photos, and cities counts', async () => {
+    const customData = {
+      ...mockJourneyData,
+      stats: { entries: 14, photos: 83, places: 7 },
+    };
+    server.use(
+      http.get('/api/public/journey/test-share-token', () => HttpResponse.json(customData)),
+    );
+
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Stats pill shows "14 Entries", "83 Photos", "7 Places"
+    const allBackdrop = document.querySelectorAll('[style*="backdrop-filter"]');
+    const statsContainer = Array.from(allBackdrop).find(
+      el => el.textContent && el.textContent.includes('14') && el.textContent.includes('83'),
+    );
+    expect(statsContainer).toBeDefined();
+    expect(statsContainer!.textContent).toContain('14');
+    expect(statsContainer!.textContent).toContain('83');
+    expect(statsContainer!.textContent).toContain('7');
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-019 — bug #828
+  it('FE-PAGE-PUBLICJOURNEY-019: mobile public share does not show standalone Map tab', async () => {
+    mockIsMobile.value = true;
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    const buttons = screen.getAllByRole('button');
+    const mapBtn = buttons.find(btn => btn.textContent && /^map$/i.test(btn.textContent.trim()));
+    expect(mapBtn).toBeUndefined();
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-020 — bug #826
+  it('FE-PAGE-PUBLICJOURNEY-020: mobile public share opens entry details on card click', async () => {
+    const user = userEvent.setup();
+    mockIsMobile.value = true;
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // The MobileMapTimeline mock fires onEntryClick when "Open Entry" is clicked
+    const openBtn = screen.getByText('Open Entry');
+    await user.click(openBtn);
+
+    // MobileEntryView should slide in with the entry title
+    await waitFor(() => {
+      expect(screen.getByText('Shibuya Crossing')).toBeInTheDocument();
+    });
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-016
+  it('FE-PAGE-PUBLICJOURNEY-016: language picker opens and switches language', async () => {
+    const user = userEvent.setup();
+    setupSuccess();
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // The language picker button shows "English" by default
+    const langButton = screen.getByText('English');
+    expect(langButton).toBeInTheDocument();
+
+    // Open the language picker
+    await user.click(langButton);
+
+    // Language options should appear
+    await waitFor(() => {
+      expect(screen.getByText('Deutsch')).toBeInTheDocument();
+      expect(screen.getByText('Español')).toBeInTheDocument();
+      expect(screen.getByText('Français')).toBeInTheDocument();
+    });
+
+    // Click Deutsch to switch language
+    await user.click(screen.getByText('Deutsch'));
+
+    // The picker should close and settings store should be updated
+    const settings = useSettingsStore.getState().settings;
+    expect(settings.language).toBe('de');
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-017
+  it('FE-PAGE-PUBLICJOURNEY-017: restricted tabs — only allowed views appear', async () => {
+    const restrictedData = {
+      ...mockJourneyData,
+      permissions: {
+        share_timeline: false,
+        share_gallery: true,
+        share_map: true,
+      },
+    };
+    server.use(
+      http.get('/api/public/journey/test-share-token', () => HttpResponse.json(restrictedData)),
+    );
+
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Timeline tab should not exist
+    const buttons = screen.getAllByRole('button');
+    const timelineBtn = buttons.find(btn => btn.textContent && /timeline/i.test(btn.textContent));
+    expect(timelineBtn).toBeUndefined();
+
+    // Gallery and Map tabs should exist
+    const galleryBtn = buttons.find(btn => btn.textContent && /gallery/i.test(btn.textContent));
+    const mapBtn = buttons.find(btn => btn.textContent && /map/i.test(btn.textContent));
+    expect(galleryBtn).toBeDefined();
+    expect(mapBtn).toBeDefined();
+  });
+
+  // FE-PAGE-PUBLICJOURNEY-018
+  it('FE-PAGE-PUBLICJOURNEY-018: default view set to gallery when timeline not shared', async () => {
+    const restrictedData = {
+      ...mockJourneyData,
+      permissions: {
+        share_timeline: false,
+        share_gallery: true,
+        share_map: true,
+      },
+    };
+    server.use(
+      http.get('/api/public/journey/test-share-token', () => HttpResponse.json(restrictedData)),
+    );
+
+    render(<JourneyPublicPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Tokyo 2026')).toBeInTheDocument();
+    });
+
+    // Timeline entries should NOT be visible since timeline is disabled
+    // The default view should have switched to gallery
+    expect(screen.queryByText('Shibuya Crossing')).not.toBeInTheDocument();
+
+    // Gallery grid should be visible (photos from entries)
+    await waitFor(() => {
+      const images = document.querySelectorAll('.grid img');
+      expect(images.length).toBeGreaterThan(0);
+    });
+  });
+
+  // #1962 — the marker number used to be the stop's position within its day while
+  // the day heading showed the day number, so the same digit appeared repeatedly in
+  // different colours with no key. Both now count stops across the whole journey.
+  it('FE-PAGE-PUBLICJOURNEY-021: numbers each stop once, and the timeline carries the same number', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+
+    await waitFor(() => expect(screen.getByText('Shibuya Crossing')).toBeInTheDocument());
+
+    // Two geocoded entries on two different days: stops 1 and 2, not 1 and 1.
+    const shibuya = document.querySelector('[data-entry-id="10"]') as HTMLElement;
+    const sensoji = document.querySelector('[data-entry-id="11"]') as HTMLElement;
+    expect(shibuya).toBeTruthy();
+    expect(sensoji).toBeTruthy();
+
+    const badge = (el: HTMLElement) =>
+      Array.from(el.querySelectorAll('span')).find(s => /^\d+$/.test(s.textContent || ''))?.textContent;
+
+    expect(badge(shibuya)).toBe('1');
+    expect(badge(sensoji)).toBe('2');
+  });
+
+  // #1614 — a journey shared mid-trip reads like a blog. Only the reading order
+  // flips; the stop numbers stay chronological so the map still matches.
+  it('FE-PAGE-PUBLICJOURNEY-022: the reader can flip the order without renumbering the trip', async () => {
+    setupSuccess();
+    render(<JourneyPublicPage />);
+
+    await waitFor(() => expect(screen.getByText('Shibuya Crossing')).toBeInTheDocument());
+
+    const order = () =>
+      Array.from(document.querySelectorAll('[data-entry-id]')).map(el => el.getAttribute('data-entry-id'));
+    expect(order()).toEqual(['10', '11']);
+
+    fireEvent.click(screen.getByRole('button', { name: /first/i }));
+
+    await waitFor(() => expect(order()).toEqual(['11', '10']));
+
+    // Numbering is unchanged: entry 10 is still stop 1 even though it is shown last.
+    const shibuya = document.querySelector('[data-entry-id="10"]') as HTMLElement;
+    const badge = Array.from(shibuya.querySelectorAll('span')).find(s => /^\d+$/.test(s.textContent || ''));
+    expect(badge?.textContent).toBe('1');
+  });
+});

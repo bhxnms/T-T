@@ -1,0 +1,331 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../helpers/msw/server';
+import { useSettingsStore } from '../../../src/store/settingsStore';
+import { resetAllStores } from '../../helpers/store';
+import { buildSettings } from '../../helpers/factories';
+
+beforeEach(() => {
+  resetAllStores();
+});
+
+describe('settingsStore', () => {
+  describe('FE-SETTINGS-001: loadSettings()', () => {
+    it('fetches settings and updates store', async () => {
+      const settings = buildSettings({ default_currency: 'EUR', language: 'de' });
+      server.use(
+        http.get('/api/settings', () => HttpResponse.json({ settings }))
+      );
+
+      await useSettingsStore.getState().loadSettings();
+      const state = useSettingsStore.getState();
+
+      expect(state.settings.default_currency).toBe('EUR');
+      expect(state.settings.language).toBe('de');
+      expect(state.isLoaded).toBe(true);
+    });
+  });
+
+  describe('FE-SETTINGS-002: updateSetting() optimistic update', () => {
+    it('immediately updates local state before API resolves', async () => {
+      // The store's set() is called synchronously before the first await (settingsApi.set)
+      // so state is visible without needing to await the full action.
+      const promise = useSettingsStore.getState().updateSetting('default_currency', 'GBP');
+
+      // Check optimistic state — no await needed here
+      expect(useSettingsStore.getState().settings.default_currency).toBe('GBP');
+
+      // Let the API call finish to avoid dangling promises
+      await promise;
+    });
+  });
+
+  describe('FE-SETTINGS-003: updateSetting() reverts on API failure', () => {
+    it('throws when API fails', async () => {
+      server.use(
+        http.put('/api/settings', () =>
+          HttpResponse.json({ error: 'Server error' }, { status: 500 })
+        )
+      );
+
+      // The store optimistically sets, then throws — the revert is a throw
+      await expect(
+        useSettingsStore.getState().updateSetting('default_currency', 'GBP')
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('FE-SETTINGS-004: Language change', () => {
+    it('updates language field and localStorage', async () => {
+      await useSettingsStore.getState().updateSetting('language', 'fr');
+
+      const state = useSettingsStore.getState();
+      expect(state.settings.language).toBe('fr');
+      expect(localStorage.getItem('app_language')).toBe('fr');
+    });
+  });
+
+  describe('FE-SETTINGS-005: loadSettings failure', () => {
+    it('leaves isLoaded false on API failure so the load is retried (#1618)', async () => {
+      server.use(
+        http.get('/api/settings', () =>
+          HttpResponse.json({ error: 'Server error' }, { status: 500 })
+        )
+      );
+
+      await useSettingsStore.getState().loadSettings();
+
+      // A transient failure must NOT be treated as "loaded" — otherwise the store
+      // stays on built-in DEFAULT_SETTINGS (wrong currency/units) for the whole
+      // session with no retry. isLoaded stays false so the reconnect triggers retry.
+      expect(useSettingsStore.getState().isLoaded).toBe(false);
+    });
+
+    it('recovers on a later retry after an initial failure (#1618)', async () => {
+      server.use(
+        http.get('/api/settings', () =>
+          HttpResponse.json({ error: 'Server error' }, { status: 500 })
+        )
+      );
+      await useSettingsStore.getState().loadSettings();
+      expect(useSettingsStore.getState().isLoaded).toBe(false);
+
+      const settings = buildSettings({ default_currency: 'EUR' });
+      server.use(
+        http.get('/api/settings', () => HttpResponse.json({ settings }))
+      );
+      await useSettingsStore.getState().loadSettings();
+
+      const state = useSettingsStore.getState();
+      expect(state.isLoaded).toBe(true);
+      expect(state.settings.default_currency).toBe('EUR');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-006: setLanguageLocal updates state and localStorage', () => {
+    it('sets language in state and localStorage without an API call', () => {
+      useSettingsStore.getState().setLanguageLocal('ja');
+
+      const state = useSettingsStore.getState();
+      expect(state.settings.language).toBe('ja');
+      expect(localStorage.getItem('app_language')).toBe('ja');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-007: setLanguageLocal without prior localStorage value', () => {
+    it('writes to localStorage even when no prior value exists', () => {
+      localStorage.clear();
+
+      useSettingsStore.getState().setLanguageLocal('ko');
+
+      const state = useSettingsStore.getState();
+      expect(state.settings.language).toBe('ko');
+      expect(localStorage.getItem('app_language')).toBe('ko');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-008: updateSettings bulk update', () => {
+    it('updates multiple settings keys and calls bulk API', async () => {
+      await useSettingsStore.getState().updateSettings({ dark_mode: true, default_currency: 'JPY' });
+
+      const state = useSettingsStore.getState();
+      expect(state.settings.dark_mode).toBe(true);
+      expect(state.settings.default_currency).toBe('JPY');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-009: updateSettings optimistic update', () => {
+    it('updates state synchronously before API resolves', async () => {
+      const promise = useSettingsStore.getState().updateSettings({ dark_mode: true });
+
+      expect(useSettingsStore.getState().settings.dark_mode).toBe(true);
+
+      await promise;
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-010: updateSettings API failure throws', () => {
+    it('throws when bulk API returns 500', async () => {
+      server.use(
+        http.post('/api/settings/bulk', () =>
+          HttpResponse.json({ error: 'Server error' }, { status: 500 })
+        )
+      );
+
+      await expect(
+        useSettingsStore.getState().updateSettings({ dark_mode: true })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-011: updateSetting non-language key does not write to localStorage', () => {
+    it('does not modify app_language in localStorage', async () => {
+      const before = localStorage.getItem('app_language');
+
+      await useSettingsStore.getState().updateSetting('dark_mode', true);
+
+      expect(localStorage.getItem('app_language')).toBe(before);
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-012: loadSettings merges server values with defaults', () => {
+    it('preserves default keys not returned by server', async () => {
+      server.use(
+        http.get('/api/settings', () =>
+          HttpResponse.json({ settings: { dark_mode: true } })
+        )
+      );
+
+      await useSettingsStore.getState().loadSettings();
+
+      const state = useSettingsStore.getState();
+      expect(state.settings.dark_mode).toBe(true);
+      expect(state.settings.language).toBe('en');
+      // No display currency of their own: Costs then follows each trip's own currency
+      // rather than forcing every trip through one code.
+      expect(state.settings.default_currency).toBe('');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-013: updateSetting for time_format', () => {
+    it('updates time_format in state', async () => {
+      await useSettingsStore.getState().updateSetting('time_format', '24h');
+
+      expect(useSettingsStore.getState().settings.time_format).toBe('24h');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-015: setLanguageTransient updates state without touching localStorage', () => {
+    it('sets language in state but does not write to localStorage', () => {
+      localStorage.clear();
+
+      useSettingsStore.getState().setLanguageTransient('fr');
+
+      expect(useSettingsStore.getState().settings.language).toBe('fr');
+      expect(localStorage.getItem('app_language')).toBeNull();
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-016: setLanguageTransient rejects unsupported language code', () => {
+    it('leaves state unchanged for an unknown code', () => {
+      const before = useSettingsStore.getState().settings.language;
+
+      useSettingsStore.getState().setLanguageTransient('xx');
+
+      expect(useSettingsStore.getState().settings.language).toBe(before);
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-017: setLanguageTransient does not overwrite an explicit localStorage choice', () => {
+    it('localStorage remains unchanged after a transient set', () => {
+      localStorage.setItem('app_language', 'de');
+
+      useSettingsStore.getState().setLanguageTransient('es');
+
+      expect(localStorage.getItem('app_language')).toBe('de');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-014: updateSetting API failure leaves optimistic state', () => {
+    it('throws on API failure but keeps the optimistic state', async () => {
+      server.use(
+        http.put('/api/settings', () =>
+          HttpResponse.json({ error: 'Server error' }, { status: 500 })
+        )
+      );
+
+      await expect(
+        useSettingsStore.getState().updateSetting('default_currency', 'EUR')
+      ).rejects.toThrow();
+
+      expect(useSettingsStore.getState().settings.default_currency).toBe('EUR');
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-018: loadSettings normalizes a legacy OSM tile template (#1733)', () => {
+    it('rewrites the retired {s}.tile.openstreetmap.org host on read', async () => {
+      const settings = buildSettings({
+        map_tile_url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      });
+      server.use(http.get('/api/settings', () => HttpResponse.json({ settings })));
+
+      await useSettingsStore.getState().loadSettings();
+
+      // d.tile.openstreetmap.org no longer resolves, so a template stored before
+      // OSM dropped sharding must not reach the map or the tile prefetcher.
+      expect(useSettingsStore.getState().settings.map_tile_url).toBe(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+      );
+    });
+
+    it('leaves a custom template from another provider untouched', async () => {
+      const url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      server.use(
+        http.get('/api/settings', () =>
+          HttpResponse.json({ settings: buildSettings({ map_tile_url: url }) })
+        )
+      );
+
+      await useSettingsStore.getState().loadSettings();
+
+      expect(useSettingsStore.getState().settings.map_tile_url).toBe(url);
+    });
+  });
+
+  describe('FE-STORE-SETTINGS-019: saving normalizes the tile template too (#1733)', () => {
+    it('rewrites a hand-typed legacy host in updateSetting and persists the rewrite', async () => {
+      const bodies: unknown[] = [];
+      server.use(
+        http.put('/api/settings', async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json({ success: true });
+        })
+      );
+
+      await useSettingsStore
+        .getState()
+        .updateSetting('map_tile_url', 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+
+      // Normalizing only on read would leave the dead host in the database and
+      // hand it straight back on the next load.
+      expect(useSettingsStore.getState().settings.map_tile_url).toBe(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+      );
+      expect(bodies).toEqual([
+        { key: 'map_tile_url', value: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
+      ]);
+    });
+
+    it('rewrites the template inside a bulk save and persists the rewrite', async () => {
+      const bodies: Array<{ settings: Record<string, unknown> }> = [];
+      server.use(
+        http.post('/api/settings/bulk', async ({ request }) => {
+          bodies.push((await request.json()) as { settings: Record<string, unknown> });
+          return HttpResponse.json({ success: true });
+        })
+      );
+
+      await useSettingsStore.getState().updateSettings({
+        map_tile_url: 'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        map_provider: 'leaflet',
+      });
+
+      expect(useSettingsStore.getState().settings.map_tile_url).toBe(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+      );
+      expect(bodies[0].settings).toEqual({
+        map_tile_url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        map_provider: 'leaflet',
+      });
+    });
+
+    it('leaves other settings and other providers alone', async () => {
+      await useSettingsStore.getState().updateSetting('default_currency', 'CHF');
+      expect(useSettingsStore.getState().settings.default_currency).toBe('CHF');
+
+      const carto = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      await useSettingsStore.getState().updateSettings({ map_tile_url: carto });
+      expect(useSettingsStore.getState().settings.map_tile_url).toBe(carto);
+    });
+  });
+});

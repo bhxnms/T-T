@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>TREK</Name>
+  <Repository>mauriceboe/trek</Repository>
+  <Registry>https://hub.docker.com/r/mauriceboe/trek</Registry>
+  <Branch>
+    <Tag>latest</Tag>
+    <TagDescription>Latest stable release</TagDescription>
+  </Branch>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/liketrek/TREK/issues</Support>
+  <Project>https://github.com/liketrek/TREK</Project>
+  <Overview>TREK is a self-hosted, real-time collaborative travel planner with interactive maps, budgets, bookings, packing lists, file management, and more. Plan trips together with your group — changes sync instantly across all connected users. Includes OIDC/SSO support, dark mode, PWA, and a modular addon system (Vacay, Atlas, Collab, Budget, Packing).</Overview>
+  <Category>Productivity: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:3000]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/liketrek/TREK/main/unraid-template.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/liketrek/TREK/main/docs/trek-icon.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <DonateText>Support TREK development</DonateText>
+  <DonateLink>https://ko-fi.com/mauriceboe</DonateLink>
+  <Requires/>
+
+  <!-- Ports & Volumes -->
+  <Config Name="Web UI Port" Target="3000" Default="3000" Mode="tcp" Description="Port for the web interface" Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="Data" Target="/app/data" Default="/mnt/user/appdata/trek/data" Mode="rw" Description="Database and app data" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/trek/data</Config>
+  <Config Name="Uploads" Target="/app/uploads" Default="/mnt/user/appdata/trek/uploads" Mode="rw" Description="Uploaded files (photos, documents)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/trek/uploads</Config>
+
+  <!-- Core -->
+  <Config Name="ENCRYPTION_KEY" Target="ENCRYPTION_KEY" Default="" Mode="" Description="At-rest encryption key for stored secrets (API keys, MFA, SMTP, OIDC). Recommended: generate with: openssl rand -hex 32. If unset, falls back to data/.jwt_secret (existing installs) or auto-generates a key (fresh installs)." Type="Variable" Display="always" Required="false" Mask="true"/>
+  <Config Name="PORT" Target="PORT" Default="3000" Mode="" Description="Internal server port (must match the container port mapping above)." Type="Variable" Display="advanced" Required="false" Mask="false">3000</Config>
+  <Config Name="NODE_ENV" Target="NODE_ENV" Default="production" Mode="" Description="Node environment (production / development)." Type="Variable" Display="advanced" Required="false" Mask="false">production</Config>
+  <Config Name="TZ" Target="TZ" Default="UTC" Mode="" Description="Timezone for logs, reminders and scheduled tasks (e.g. Europe/Berlin)." Type="Variable" Display="always" Required="false" Mask="false">UTC</Config>
+  <Config Name="LOG_LEVEL" Target="LOG_LEVEL" Default="info" Mode="" Description="Log verbosity: info = concise user actions, debug = verbose admin-level details." Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
+  <Config Name="TREK_WIKI_DIR" Target="TREK_WIKI_DIR" Default="" Mode="" Description="Where the in-app Help pages (/help) read their content from. Leave empty: the container ships the wiki at /app/wiki and finds it automatically. Only set this to serve your own docs from a mounted path. If the path does not exist, Help falls back to fetching the public GitHub wiki (needs outbound network, and tracks the latest release rather than your version)." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="DEFAULT_LANGUAGE" Target="DEFAULT_LANGUAGE" Default="en" Mode="" Description="Default language shown on the login page for users with no saved preference. Browser/OS language is auto-detected first; this is the fallback when no match is found. Supported: de, en, es, fr, hu, nl, br, cs, pl, ru, zh, zh-TW, it, ar." Type="Variable" Display="advanced" Required="false" Mask="false">en</Config>
+  <Config Name="ALLOWED_ORIGINS" Target="ALLOWED_ORIGINS" Default="" Mode="" Description="Comma-separated origins allowed for CORS and used as base URL in email notification links (e.g. https://trek.example.com)." Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="APP_URL" Target="APP_URL" Default="" Mode="" Description="Public base URL of this instance (e.g. https://trek.example.com). Required when OIDC is enabled — must match the redirect URI registered with your IdP. Also used as base URL for email notification links." Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="FORCE_HTTPS" Target="FORCE_HTTPS" Default="false" Mode="" Description="Optional. When true: HTTPS redirect, HSTS header, CSP upgrade-insecure-requests, and secure cookies. Only useful behind a TLS-terminating proxy. Requires TRUST_PROXY." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="HSTS_INCLUDE_SUBDOMAINS" Target="HSTS_INCLUDE_SUBDOMAINS" Default="false" Mode="" Description="When true: adds includeSubDomains to the HSTS header, extending HTTPS enforcement to all subdomains. Only effective when HSTS is active (FORCE_HTTPS=true or NODE_ENV=production). Leave false if you run other services on sibling subdomains over plain HTTP." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="COOKIE_SECURE" Target="COOKIE_SECURE" Default="true" Mode="" Description="Auto-derived (true in production or when FORCE_HTTPS=true). Set to false to force session cookies over plain HTTP. Not recommended for production." Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+  <Config Name="TRUST_PROXY" Target="TRUST_PROXY" Default="1" Mode="" Description="Trusted proxy hops for X-Forwarded-For/X-Forwarded-Proto. Defaults to 1 in production; off in development unless set. Required for FORCE_HTTPS." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
+  <Config Name="ALLOW_INTERNAL_NETWORK" Target="ALLOW_INTERNAL_NETWORK" Default="false" Mode="" Description="Allow outbound requests to private/RFC-1918 IP addresses. Set to true if Immich or other integrated services are hosted on your local network." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="SESSION_DURATION" Target="SESSION_DURATION" Default="24h" Mode="" Description="How long a login session stays valid when 'Remember me' is unchecked (the default): trek_session JWT exp + a browser-session cookie cleared when the browser closes. Accepts 1h, 12h, 7d, 30d, 90d. Defaults to 24h." Type="Variable" Display="advanced" Required="false" Mask="false">24h</Config>
+  <Config Name="SESSION_DURATION_REMEMBER" Target="SESSION_DURATION_REMEMBER" Default="30d" Mode="" Description="Session length when 'Remember me' is ticked at login: a longer-lived JWT + persistent cookie that survives browser restarts. Same format as SESSION_DURATION. Defaults to 30d." Type="Variable" Display="advanced" Required="false" Mask="false">30d</Config>
+
+  <!-- Initial Setup -->
+  <Config Name="ADMIN_EMAIL" Target="ADMIN_EMAIL" Default="admin@tt.local" Mode="" Description="Email for the first admin account created on initial boot. Has no effect once any user exists." Type="Variable" Display="always" Required="false" Mask="false">admin@tt.local</Config>
+  <Config Name="ADMIN_PASSWORD" Target="ADMIN_PASSWORD" Default="" Mode="" Description="Password for the first admin account created on initial boot. If omitted a random password is generated and printed to the server log. Has no effect once any user exists." Type="Variable" Display="always" Required="false" Mask="true"/>
+
+  <!-- OIDC / SSO -->
+  <Config Name="OIDC_ISSUER" Target="OIDC_ISSUER" Default="" Mode="" Description="OpenID Connect provider URL (e.g. https://auth.example.com)." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC_CLIENT_ID" Target="OIDC_CLIENT_ID" Default="" Mode="" Description="OIDC client ID registered with your identity provider." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC_CLIENT_SECRET" Target="OIDC_CLIENT_SECRET" Default="" Mode="" Description="OIDC client secret registered with your identity provider." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="OIDC_DISPLAY_NAME" Target="OIDC_DISPLAY_NAME" Default="SSO" Mode="" Description="Label shown on the SSO login button." Type="Variable" Display="advanced" Required="false" Mask="false">SSO</Config>
+  <Config Name="OIDC_ONLY" Target="OIDC_ONLY" Default="false" Mode="" Description="Set to true to force SSO-only mode. Disables password login and password registration — overrides the granular toggles in Admin &gt; Settings and cannot be changed at runtime. First SSO login becomes admin." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="OIDC_ADMIN_CLAIM" Target="OIDC_ADMIN_CLAIM" Default="" Mode="" Description="OIDC claim used to identify admin users (e.g. groups)." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC_ADMIN_VALUE" Target="OIDC_ADMIN_VALUE" Default="" Mode="" Description="Value of the OIDC claim that grants admin role (e.g. app-trek-admins)." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="OIDC_SCOPE" Target="OIDC_SCOPE" Default="openid email profile" Mode="" Description="Space-separated OIDC scopes to request. Fully overrides the default — always include openid email profile plus any extra scopes you need (e.g. add groups when using OIDC_ADMIN_CLAIM)." Type="Variable" Display="advanced" Required="false" Mask="false">openid email profile</Config>
+  <Config Name="OIDC_DISCOVERY_URL" Target="OIDC_DISCOVERY_URL" Default="" Mode="" Description="Override the auto-constructed OIDC discovery endpoint. Useful for providers with a non-standard path (e.g. Authentik)." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+
+  <!-- Other -->
+  <Config Name="DEMO_MODE" Target="DEMO_MODE" Default="false" Mode="" Description="Enable demo mode (resets all data hourly). Not intended for regular use." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="MCP_RATE_LIMIT" Target="MCP_RATE_LIMIT" Default="300" Mode="" Description="Max MCP API requests per user per minute." Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
+  <Config Name="MCP_MAX_SESSION_PER_USER" Target="MCP_MAX_SESSION_PER_USER" Default="20" Mode="" Description="Max concurrent MCP sessions per user." Type="Variable" Display="advanced" Required="false" Mask="false">20</Config>
+  <Config Name="UNSPLASH_ACCESS_KEY" Target="UNSPLASH_ACCESS_KEY" Default="" Mode="" Description="Optional Unsplash Access Key for trip-cover and place-image search. Without one, TREK uses Unsplash's unauthenticated endpoint, which some datacenter/VPS IPs are blocked from. Get a free key at unsplash.com/developers. Can also be set per-admin in Admin &gt; Settings; this env var overrides that." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+</Container>

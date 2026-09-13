@@ -1,0 +1,32 @@
+import type { TranslationStrings } from '../types';
+
+const inspector: TranslationStrings = {
+  'inspector.opened': 'Açık',
+  'inspector.closed': 'Kapalı',
+  'inspector.openingHours': 'Açılış Saatleri',
+  'inspector.showHours': 'Açılış saatlerini göster',
+  'inspector.files': 'Dosyalar',
+  'inspector.filesCount': '{count} dosya',
+  'inspector.remove': 'Kaldırmak',
+  'inspector.removeFromDay': 'Günden Kaldır',
+  'inspector.addToDay': 'Güne Ekle',
+  'inspector.confirmedRes': 'Onaylanmış Rezervasyon',
+  'inspector.pendingRes': 'Bekleyen Rezervasyon',
+  'inspector.google': "Google Haritalar'da aç",
+  'inspector.navigation': 'Navigasyon',
+  'inspector.openWith': 'Şununla aç',
+  'inspector.openStreetMap': 'OpenStreetMap',
+  'inspector.saveToCollection': 'Koleksiyona kaydet',
+  'inspector.savedToCollection': 'Kaydedildi',
+  'inspector.website': 'Web Sitesini Aç',
+  'inspector.addRes': 'Rezervasyon',
+  'inspector.editRes': 'Rezervasyonu Düzenle',
+  'inspector.participants': 'Katılımcılar',
+  'inspector.trackStats': 'İstatistikleri Takip Et',
+  'inspector.trackColor': 'İz rengi',
+  'inspector.trackColorAuto': 'Otomatik renk',
+  'inspector.trackColorCustom': 'Özel renk seç',
+  "inspector.checkin": "Check-in yap",
+  "inspector.checkinDone": "Check-in yapıldı",
+};
+export default inspector;

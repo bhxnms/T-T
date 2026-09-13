@@ -1,0 +1,38 @@
+import type { TranslationStrings } from '../types';
+
+const members: TranslationStrings = {
+  'members.shareTrip': 'Share Trip',
+  'members.inviteUser': 'Invite User',
+  'members.selectUser': 'Select user…',
+  'members.invite': 'Invite',
+  'members.allHaveAccess': 'All users already have access.',
+  'members.access': 'Access',
+  'members.person': 'person',
+  'members.persons': 'persons',
+  'members.you': 'you',
+  'members.owner': 'Owner',
+  'members.leaveTrip': 'Leave trip',
+  'members.removeAccess': 'Remove access',
+  'members.confirmLeave': 'Leave trip? You will lose access.',
+  'members.confirmRemove': 'Remove access for this user?',
+  'members.loadError': 'Failed to load members',
+  'members.added': 'added',
+  'members.addError': 'Failed to add',
+  'members.removed': 'Member removed',
+  'members.removeError': 'Failed to remove',
+  'members.makeOwner': 'Make owner',
+  'members.confirmTransfer': 'Transfer ownership to {name}? You will become a regular member.',
+  'members.transferError': 'Failed to transfer ownership',
+  'members.guests': 'Guests',
+  'members.guest': 'Guest',
+  'members.guestsHint':
+    'People without an account. They can be assigned to costs, packing and tasks, but cannot sign in.',
+  'members.addGuest': 'Add guest',
+  'members.guestNamePlaceholder': 'Guest name',
+  'members.guestAdded': 'Guest added',
+  'members.guestAddError': 'Failed to add guest',
+  'members.guestRenameError': 'Failed to rename guest',
+  'members.guestRemoved': 'Guest removed',
+  'members.confirmRemoveGuest': 'Remove this guest? Their assignments and cost shares will be removed too.',
+};
+export default members;

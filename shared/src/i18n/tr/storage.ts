@@ -1,0 +1,141 @@
+import type { TranslationStrings } from '../types';
+
+const storage: TranslationStrings = {
+  'storage.field.root': 'Kök dizin',
+  'storage.help.root': 'Bu arka ucun nesnelerini sakladığı sunucudaki mutlak yol.',
+  'storage.field.endpoint': "Uç nokta URL'si",
+  'storage.help.endpoint': "S3 uyumlu hizmetin taban URL'si, örn. https://s3.example.com veya http://127.0.0.1:9000.",
+  'storage.field.bucket': 'Bucket',
+  'storage.field.accessKeyId': 'Erişim anahtarı kimliği',
+  'storage.field.secretAccessKey': 'Gizli erişim anahtarı',
+  'storage.field.region': 'Bölge',
+  'storage.help.region': 'Sağlayıcınız belirli bir bölge gerektirmedikçe varsayılanı koruyun.',
+  'storage.field.keyPrefix': 'Anahtar öneki',
+  'storage.help.keyPrefix': 'Her nesne anahtarına eklenen isteğe bağlı önek, örn. trek/prod.',
+  'storage.field.retries': 'Yeniden deneme',
+  'storage.field.timeoutMs': 'Zaman aşımı (ms)',
+  'storage.field.primary': 'Birincil arka uç',
+  'storage.field.replicas': 'Kopyalar',
+  'storage.title': 'Depolama',
+  'storage.description':
+    "TREK'in yüklenen dosyaları, fotoğrafları ve yedekleri sakladığı yer. Kaydedene kadar hiçbir şey değişmez.",
+  'storage.loading': 'Yükleniyor…',
+  'storage.saved': 'Depolama yapılandırması kaydedildi',
+  'storage.save': 'Değişiklikleri kaydet',
+  'storage.unsaved': 'Kaydedilmemiş değişiklikler',
+  'storage.saveConflict':
+    'Depolama yapılandırması yüklendiğinden beri değişti, bu yüzden değişiklikleriniz kaydedilmedi. Değişiklikleri atıp kayıtlı ayarları yeniden yükleyerek baştan başlayın.',
+  'storage.discardAndReload': 'Değişikliklerimi at ve yeniden yükle',
+  'storage.configError.banner': 'Kaydedilmiş depolama ayarları yüklenemedi — kaydetmek onların yerini alacak: {error}',
+  'storage.backends.title': 'Arka uçlar',
+  'storage.backends.add': 'Arka uç ekle',
+  'storage.backends.usedBy': 'Kullanan: {categories}',
+  'storage.backends.unused': 'Herhangi bir kategoriye atanmamış',
+  'storage.backends.envReadOnly': 'Bir ortam değişkeni tarafından tanımlanmış — salt okunur',
+  'storage.source.built-in': 'Yerleşik',
+  'storage.source.env': 'Ortam',
+  'storage.source.settings': 'Ayarlar',
+  'storage.type.local': 'Yerel',
+  'storage.type.s3': 'S3',
+  'storage.type.mirror': 'Ayna',
+  'storage.actions.test': 'Test et',
+  'storage.actions.edit': 'Düzenle',
+  'storage.actions.remove': 'Kaldır',
+  'storage.test.running': 'Test ediliyor…',
+  'storage.test.ok': 'Bağlantı başarılı',
+  'storage.test.failed': 'Test başarısız',
+  'storage.remove.title': 'Arka ucu kaldır',
+  'storage.remove.body':
+    '{name} yapılandırmadan kaldırılsın mı? Hâlâ ona bağımlı bir şey varsa sunucu kaydetmeyi reddeder.',
+  'storage.remove.stillAssigned': 'Hâlâ şuna atanmış: {categories}',
+  'storage.form.addTitle': 'Arka uç ekle',
+  'storage.form.editTitle': 'Arka ucu düzenle',
+  'storage.form.name': 'Ad',
+  'storage.form.type': 'Tür',
+  'storage.form.apply': 'Uygula',
+  'storage.form.cancel': 'İptal',
+  'storage.form.duplicateName': '{name} adlı bir arka uç zaten var',
+  'storage.categories.title': 'Kategoriler',
+  'storage.categories.default': 'varsayılan',
+  'storage.categories.reassignWarning':
+    'Mevcut nesneler taşınmaz: yeni nesneler yeni atanan arka uca gider, eskiler oldukları yerde kalır.',
+  'storage.category.files': 'Seyahat belgeleri',
+  'storage.category.journey': 'Seyahat fotoğrafları',
+  'storage.category.covers': 'Kapak görselleri',
+  'storage.category.avatars': 'Profil fotoğrafları',
+  'storage.category.places': 'Yer görselleri',
+  'storage.category.photos-google': 'Google fotoğraf önbelleği',
+  'storage.category.photos-trek': 'TREK fotoğraf önbelleği',
+  'storage.category.backups': 'Yedekler',
+
+  // What each category stores — rendered under the label in the category map.
+  'storage.categoryDesc.files':
+    "Seyahatlere yüklenen dosya ekleri — biletler, PDF'ler, rezervasyon onayları ve seyahat sohbetinde paylaşılan dosyalar.",
+  'storage.categoryDesc.journey': 'Seyahat günlüğü kayıtlarına eklenen fotoğraflar ve küçük resimler.',
+  'storage.categoryDesc.covers':
+    "Unsplash'tan alınan kapaklar dahil olmak üzere seyahat ve koleksiyon kapak görselleri.",
+  'storage.categoryDesc.avatars': 'Kullanıcı hesabı profil fotoğrafları.',
+  'storage.categoryDesc.places': 'Yerlere ve koleksiyon yerlerine eklenen görseller — yüklenmiş veya içe aktarılmış.',
+  'storage.categoryDesc.photos-google':
+    'Google Places fotoğraflarının önbelleğe alınmış kopyaları — yeniden alınabilir, kaybı güvenlidir.',
+  'storage.categoryDesc.photos-trek':
+    'Fotoğraflar (Memories) özelliği tarafından kullanılan TREK fotoğraf hizmetinden önbelleğe alınmış fotoğraflar — yeniden alınabilir, kaybı güvenlidir.',
+  'storage.categoryDesc.backups': 'Yedekleme panelinin veya zamanlamanın oluşturduğu sunucu yedek arşivleri.',
+  'storage.health.title': 'Sağlık',
+  'storage.health.allClear': 'Kaydedilmiş kopya hatası yok.',
+  'storage.health.seedFile':
+    'Bir storage-config.json tohum dosyası mevcut ama yok sayılıyor — yapılandırma satırları zaten var. Depolamayı buradan yönetin.',
+  'storage.health.failureLine': '{backend} üzerinde {key} için {op} başarısız oldu: {error}',
+
+  // Replicas-on-primary mirror UX (2026-08-20 spec)
+  'storage.mirror.targets': 'Ayna hedefleri',
+  'storage.mirror.targetsHelp': 'Bu arka uca yapılan her yazma, seçilen her hedefe de kopyalanır.',
+  'storage.mirror.latencyNote':
+    'Kopyalar her yüklemede sırayla yazılır — yavaş veya erişilemeyen bir hedef, bu arka uçtaki her kategorinin her yüklemesini yavaşlatır.',
+  'storage.mirror.mirroredTo': 'Şuraya aynalandı: {targets}',
+  'storage.mirror.replicaOf': 'Şunun kopyası: {primaries}',
+  'storage.mirror.cacheWarning':
+    'Önerilmez: bu kategori yeniden alınabilir içerik barındırıyor — bunu çoğaltmak genellikle israftır.',
+  'storage.mirror.degenerate.duplicate-mirror':
+    'İkinci bir ayna {primary} öğesini sarmalıyor — panel yalnızca ilkini yönetir; {primary} üzerinden aynalamayı yönetmek için bunu kaldırın.',
+  'storage.mirror.degenerate.env-primary':
+    'Ortam değişkeniyle tanımlanmış bir arka ucu sarmalıyor — burada düzenlenemez.',
+  'storage.mirror.degenerate.missing-primary': 'Artık var olmayan bir arka uca başvuruyor.',
+  'storage.remove.usedAsReplicaBy': 'Kopya olarak kullanan: {primaries}',
+
+  // Backfill + usage (backfill/stats/notifications spec)
+  'storage.sync.now': 'Şimdi eşitle',
+  'storage.sync.running': 'Eşitleniyor… {done}/{total}',
+  'storage.sync.counts': '{copied} kopyalandı · {skipped} atlandı · {failed} başarısız',
+  'storage.sync.cancel': 'Eşitlemeyi iptal et',
+  'storage.sync.done': 'Eşitleme tamamlandı: {copied} kopyalandı, {deleted} silindi, {failed} başarısız',
+  'storage.sync.cancelled': 'Eşitleme iptal edildi',
+  'storage.sync.error': 'Eşitleme başarısız oldu: {error}',
+  'storage.sync.prompt': 'Mevcut nesneler henüz çoğaltılmadı — şimdi eşitlensin mi?',
+  'storage.sync.dismiss': 'Kapat',
+  'storage.usage.line': '{objects} nesne · {size}',
+  'storage.usage.computed': 'Kullanım hesaplandı {age}',
+  'storage.usage.never': 'Kullanım henüz hesaplanmadı',
+  'storage.usage.refresh': 'Yenile',
+  'storage.usage.compute': 'Şimdi hesapla',
+  'storage.usage.legacyNote': 'eski fotoğraf kitaplığını içerir',
+
+  // Category migration (copy → flip → delta sweep)
+  'storage.migrate.promptTitle': 'Mevcut nesneler yeni arka uca taşınsın mı?',
+  'storage.migrate.promptLine': '{category}: {from} konumundan {to} konumuna {objects} nesne ({size})',
+  'storage.migrate.promptLineUnknown':
+    '{category}: bilinmeyen boyut (henüz kullanım taraması yapılmadı) {from} konumundan {to} konumuna',
+  'storage.migrate.move': 'Mevcut nesneleri taşı',
+  'storage.migrate.routeOnly': 'Yalnızca yeni yazmaları yönlendir',
+  'storage.migrate.running': '{category} taşınıyor… {done}/{total}',
+  'storage.migrate.done': 'Taşıma tamamlandı: {copied} kopyalandı, {skipped} atlandı',
+  'storage.migrate.doneFailures': '{failed} başarısız oldu — bu nesneler yeni arka uca kopyalanmadı',
+  'storage.migrate.failed': 'Taşıma başarısız oldu: {error} — kategori değiştirilmedi',
+  'storage.migrate.cancelled': 'Taşıma iptal edildi — hiçbir şey değiştirilmedi',
+  'storage.migrate.reclaimable': '{objects} nesne ({size}) {from} üzerinde kalıyor — manuel olarak geri kazanın',
+  'storage.migrate.cancel': 'Taşımayı iptal et',
+  'storage.migrate.promptCancel': 'İptal',
+  'storage.migrate.queued': 'Sırada: {categories}',
+  'storage.migrate.queueDropped': 'Sonraki taşıma başlatılamadı — kalan kuyruk temizlendi: {categories}',
+};
+export default storage;

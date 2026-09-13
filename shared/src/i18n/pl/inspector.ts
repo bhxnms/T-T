@@ -1,0 +1,32 @@
+import type { TranslationStrings } from '../types';
+
+const inspector: TranslationStrings = {
+  'inspector.opened': 'Otwarte',
+  'inspector.closed': 'Zamknięte',
+  'inspector.openingHours': 'Godziny otwarcia',
+  'inspector.showHours': 'Pokaż godziny otwarcia',
+  'inspector.files': 'Pliki',
+  'inspector.filesCount': '{count} plików',
+  'inspector.removeFromDay': 'Usuń z dnia',
+  'inspector.remove': 'Usuń',
+  'inspector.addToDay': 'Dodaj do dnia',
+  'inspector.confirmedRes': 'Potwierdzona rezerwacja',
+  'inspector.pendingRes': 'Oczekująca rezerwacja',
+  'inspector.google': 'Google Maps',
+  'inspector.navigation': 'Nawigacja',
+  'inspector.openWith': 'Otwórz w',
+  'inspector.openStreetMap': 'OpenStreetMap',
+  'inspector.website': 'Otwórz stronę internetową',
+  'inspector.saveToCollection': 'Zapisz w kolekcji',
+  'inspector.savedToCollection': 'Zapisano',
+  'inspector.addRes': 'Rezerwacja',
+  'inspector.editRes': 'Edytuj rezerwację',
+  'inspector.participants': 'Uczestnicy',
+  'inspector.trackStats': 'Statystyki trasy',
+  'inspector.trackColor': 'Kolor trasy',
+  'inspector.trackColorAuto': 'Kolor automatyczny',
+  'inspector.trackColorCustom': 'Wybierz własny kolor',
+  "inspector.checkin": "Check-in",
+  "inspector.checkinDone": "Zameldowano",
+};
+export default inspector;
