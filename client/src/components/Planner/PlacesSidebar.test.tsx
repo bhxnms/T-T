@@ -621,26 +621,25 @@ describe('Google Maps list import', () => {
 
 });
 
-// #1616: a tablet is a coarse pointer at a desktop width, and it sees both panes, so
-// it has somewhere to drag a place to. A coarse pointer used to switch the drag off by
-// itself, which left the reporter's iPad selecting text instead of picking up a row.
-// Width is the only gate now: below lg the places live in their own tab.
-describe('touch device at desktop width (#1616)', () => {
-  const tabletProps = { ...defaultProps, isMobile: false };
+// #1432: a tablet is a coarse pointer at a desktop width. Its places list must
+// remain scrollable, so native HTML5 drag is disabled even though the layout is
+// wide enough to show both panes.
+describe('touch device at desktop width (#1432)', () => {
+  const tabletProps = { ...defaultProps, isMobile: false, isTouch: true };
 
-  it('FE-PLANNER-SIDEBAR-044: place rows are draggable and opt into the touch bridge', () => {
+  it('FE-PLANNER-SIDEBAR-044: place rows are not draggable and do not opt into the touch bridge', () => {
     const place = buildPlace({ id: 7, name: 'Tablet Place' });
     const { container } = render(<PlacesSidebar {...tabletProps} places={[place]} />);
     const placeRow = screen.getByText('Tablet Place').closest('div[draggable]')!;
-    expect(placeRow.getAttribute('draggable')).toBe('true');
-    expect((container.firstChild as HTMLElement).hasAttribute('data-touch-drag')).toBe(true);
+    expect(placeRow.getAttribute('draggable')).toBe('false');
+    expect((container.firstChild as HTMLElement).hasAttribute('data-touch-drag')).toBe(false);
   });
 
-  it('FE-PLANNER-SIDEBAR-045: dragging over the sidebar raises the drop-to-import overlay', () => {
+  it('FE-PLANNER-SIDEBAR-045: dragging over the sidebar does not raise the drop-to-import overlay', () => {
     const place = buildPlace({ id: 7, name: 'Tablet Place' });
     const { container } = render(<PlacesSidebar {...tabletProps} places={[place]} />);
     fireEvent.dragEnter(container.firstChild as HTMLElement);
-    expect(screen.getByText('Drop to import')).toBeInTheDocument();
+    expect(screen.queryByText('Drop to import')).not.toBeInTheDocument();
   });
 
   it('FE-PLANNER-SIDEBAR-046: below lg the rows stay undraggable and the bridge stays out', () => {

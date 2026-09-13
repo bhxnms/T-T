@@ -98,13 +98,15 @@ function isStale(trip: Trip): boolean {
 }
 
 function isPhoto(file: TripFile): boolean {
-  return file.mime_type.startsWith('image/')
+  // Imported rows (TREK backup) can carry a NULL mime_type — treat unknown as
+  // "not an image" instead of crashing the offline cache pass.
+  return (file.mime_type ?? '').startsWith('image/')
 }
 
 // Videos can be hundreds of MB — never prefetch them into the bounded offline
 // blob cache, or a single clip would evict the trip's real documents (#823).
 function isVideo(file: TripFile): boolean {
-  return file.mime_type.startsWith('video/')
+  return (file.mime_type ?? '').startsWith('video/')
 }
 
 // ── Core logic ────────────────────────────────────────────────────────────────

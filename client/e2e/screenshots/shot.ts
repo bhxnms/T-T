@@ -1,5 +1,5 @@
 import { test as base, expect, type Page, type Locator } from '@playwright/test'
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 /**
@@ -17,6 +17,15 @@ import path from 'node:path'
 // Playwright runs from the client workspace root, matching how
 // playwright.config.ts spells `storageState: 'e2e/.tmp/state.json'`.
 export const OUT_DIR = path.join(process.cwd(), 'e2e', '.tmp', 'shots')
+
+/**
+ * Read screenshot seed data at test execution time, not module evaluation time.
+ * Playwright collects every project's test files before it runs project
+ * dependencies, so a top-level read races the seed project's setup file.
+ */
+export function readSeed<T extends object = { tripId: number }>(): T {
+  return JSON.parse(readFileSync(path.join(process.cwd(), 'e2e', '.tmp', 'seed.json'), 'utf8')) as T
+}
 
 /** Desktop capture size. 2x scale keeps text crisp; images are squeezed on promote. */
 export const VIEWPORT = { width: 1440, height: 900 }

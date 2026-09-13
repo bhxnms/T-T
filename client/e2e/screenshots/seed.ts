@@ -335,12 +335,19 @@ export async function seedDemoData(
   //     Needs network. If the registry is unreachable the plugin screenshots are
   //     skipped loudly rather than silently captured in a misleading state.
   for (const id of ['koffi', 'trip-doctor']) {
-    const res = await api.post('/api/admin/plugins/install', { data: { id } })
-    if (!res.ok()) {
-      console.log(`PLUGIN INSTALL FAILED ${id} → ${res.status()} ${await res.text()}`)
-      continue
+    // Community registry installs are optional screenshot decoration. Bound
+    // each request so a blocked registry cannot consume the whole 45s seed
+    // test and prevent the actual application screenshots from running.
+    try {
+      const res = await api.post('/api/admin/plugins/install', { data: { id }, timeout: 5_000 })
+      if (!res.ok()) {
+        console.log(`PLUGIN INSTALL FAILED ${id} → ${res.status()} ${await res.text()}`)
+        continue
+      }
+      await api.post(`/api/admin/plugins/${id}/activate`, { data: {}, timeout: 5_000 }).catch(() => {})
+    } catch (err) {
+      console.log(`PLUGIN INSTALL SKIPPED ${id} → ${err instanceof Error ? err.message : String(err)}`)
     }
-    await api.post(`/api/admin/plugins/${id}/activate`, { data: {} })
   }
 
   return { tripId, memberIds, dayIds, placeIds, collectionId, journeyId }

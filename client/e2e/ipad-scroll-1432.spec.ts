@@ -63,7 +63,7 @@ test('#1432 iPad: places list is scrollable, not draggable', async ({ page }) =>
   await expect(row).toHaveAttribute('draggable', 'false')
 
   // 2. The list must scroll, and no drop-to-import overlay may appear.
-  const scroller = page.locator('div[draggable]').first().locator('xpath=ancestor::div[@class="trek-stagger"]')
+  const scroller = page.locator('.trek-stagger').first()
   const before = await scroller.evaluate(el => el.scrollTop)
   const box = (await scroller.boundingBox())!
   await page.touchscreen.tap(box.x + box.width / 2, box.y + 40)

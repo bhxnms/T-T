@@ -67,7 +67,7 @@ test('#1809 iPhone: flow screens scroll the document, full-screen ones do not', 
 
   // 3. The brand tile scrolls the page back up (it used to walk up to the shell
   //    container, which no longer exists).
-  await page.getByRole('button', { name: 'TREK' }).click()
+  await page.getByRole('button', { name: 'Tourism-Team' }).click()
   await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollTop)).toBe(0)
 
   // 4. The shared body scroll lock: with the document as the scroller, an open

@@ -17,14 +17,16 @@ const PlacesSidebar = React.memo(function PlacesSidebar(props: PlacesSidebarProp
     sidebarDragOver, handleSidebarDragEnter, handleSidebarDragOver, handleSidebarDragLeave, handleSidebarDrop,
     selectMode, filtered, t, dayPickerPlace, listImportOpen,
     fileImportOpen, setFileImportOpen, sidebarDropFile, setSidebarDropFile, tripId, pushUndo,
-    ctxMenu, isMobile, pendingDeleteIds, setPendingDeleteIds, onBulkDeleteConfirm,
+    ctxMenu, isMobile, isTouch, pendingDeleteIds, setPendingDeleteIds, onBulkDeleteConfirm,
     categories, selectedIds, exitSelectMode, onBulkChangeCategory, categoryPickerOpen, setCategoryPickerOpen,
     collectionsEnabled, saveToListOpen, setSaveToListOpen,
   } = S
   // Below lg the places sit in their own tab with no plan beside them to drag
-  // into. A coarse pointer no longer disables the drag on its own — tablets
-  // reach it through a long press (#1616).
-  const dragDisabled = isMobile
+  // into. A coarse pointer is the other half of the gate: a finger cannot start
+  // an HTML5 drag, so arming one turns the list's swipe into a drag and the
+  // scroll is lost (#1432). Hybrid laptops keep the drag — their primary pointer
+  // is fine, and they load the drag-drop-touch bridge instead.
+  const dragDisabled = isMobile || Boolean(isTouch)
   return (
     <div
       data-touch-drag={dragDisabled ? undefined : ''}

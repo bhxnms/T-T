@@ -11,11 +11,13 @@ import { getLandmarkIcon, getLandmarkColor } from '../../utils/landmarkIcons'
 interface LandmarkPopupProps {
   landmark: ProvinceLandmark & { provinceCode: string; provinceName: string }
   isVisited: boolean
+  /** Epoch ms the landmark was checked in at, when visited. */
+  visitedAt?: number
   onClose: () => void
   onToggleVisit: () => void
 }
 
-export default function LandmarkPopup({ landmark, isVisited, onClose, onToggleVisit }: LandmarkPopupProps) {
+export default function LandmarkPopup({ landmark, isVisited, visitedAt, onClose, onToggleVisit }: LandmarkPopupProps) {
   const iconSvg = getLandmarkIcon(landmark.type)
   const color = getLandmarkColor(landmark.type)
 
@@ -46,6 +48,11 @@ export default function LandmarkPopup({ landmark, isVisited, onClose, onToggleVi
         <div>
           <div className="mb-1 text-sm text-gray-500">{landmark.provinceName}</div>
           <h3 className="mb-3 text-xl font-bold text-gray-900">{landmark.name}</h3>
+          {isVisited && visitedAt != null && visitedAt > 0 && (
+            <p className="mb-3 text-sm text-gray-600">
+              打卡日期：{new Date(visitedAt).toLocaleDateString('zh-CN')}
+            </p>
+          )}
           <p className="leading-relaxed text-gray-700">{landmark.description}</p>
         </div>
 

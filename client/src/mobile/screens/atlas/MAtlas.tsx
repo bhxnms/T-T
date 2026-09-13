@@ -12,7 +12,7 @@ import MAtlasBucketSheet from './MAtlasBucketSheet'
 import MAtlasCheckinSheet from './MAtlasCheckinSheet'
 import MToggle from '../../components/MToggle'
 import LandmarkPopup from '../../../pages/atlas/LandmarkPopup'
-import { isLandmarkVisited } from '../../../utils/landmarkStorage'
+import { isLandmarkVisited, getLandmarkVisitedAt } from '../../../utils/landmarkStorage'
 import { countryStatus } from '../../../pages/atlas/atlasModel'
 
 const removeBtnCls = 'mt-4 w-full rounded-full bg-[rgba(214,39,59,.12)] py-[11px] text-center text-[0.8125rem] font-bold text-[color:var(--m-st-danger)]' // theme-lint-disable — fixed status-danger tint
@@ -220,6 +220,7 @@ export default function MAtlas() {
         <LandmarkPopup
           landmark={selectedLandmark}
           isVisited={isLandmarkVisited(selectedLandmark.provinceCode, selectedLandmark.name)}
+          visitedAt={getLandmarkVisitedAt(selectedLandmark.provinceCode, selectedLandmark.name)}
           onClose={() => setSelectedLandmark(null)}
           onToggleVisit={() => {
             toggleLandmarkVisit(selectedLandmark.provinceCode, selectedLandmark.name);

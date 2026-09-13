@@ -10,6 +10,15 @@
  */
 let locks = 0
 let savedOverflow = ''
+let savedPosition = ''
+let savedTop = ''
+let savedLeft = ''
+let savedWidth = ''
+let savedHtmlOverflow = ''
+let savedScrollBy: typeof window.scrollBy | null = null
+let savedScrollTo: typeof window.scrollTo | null = null
+let savedScrollX = 0
+let savedScrollY = 0
 
 /**
  * Locks body scrolling and returns the matching release. Releasing twice is a
@@ -17,8 +26,26 @@ let savedOverflow = ''
  */
 export function lockBodyScroll(): () => void {
   if (locks === 0) {
-    savedOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const body = document.body
+    const html = document.documentElement
+    savedOverflow = body.style.overflow
+    savedPosition = body.style.position
+    savedTop = body.style.top
+    savedLeft = body.style.left
+    savedWidth = body.style.width
+    savedHtmlOverflow = html.style.overflow
+    savedScrollX = window.scrollX
+    savedScrollY = window.scrollY
+    savedScrollBy = window.scrollBy
+    savedScrollTo = window.scrollTo
+    window.scrollBy = (() => {}) as typeof window.scrollBy
+    window.scrollTo = (() => {}) as typeof window.scrollTo
+
+    // The phone layout deliberately lets the viewport/root scroller move. A
+    // body-only overflow lock does not affect that scroller, so also guard the
+    // scrolling APIs while the overlay is open (#1809).
+    body.style.overflow = 'hidden'
+    html.style.overflow = 'hidden'
   }
   locks += 1
 
@@ -27,7 +54,21 @@ export function lockBodyScroll(): () => void {
     if (released) return
     released = true
     locks = Math.max(0, locks - 1)
-    if (locks === 0) document.body.style.overflow = savedOverflow
+    if (locks === 0) {
+      const body = document.body
+      const html = document.documentElement
+      if (savedScrollBy) window.scrollBy = savedScrollBy
+      savedScrollBy = null
+      if (savedScrollTo) window.scrollTo = savedScrollTo
+      savedScrollTo = null
+      body.style.overflow = savedOverflow
+      body.style.position = savedPosition
+      body.style.top = savedTop
+      body.style.left = savedLeft
+      body.style.width = savedWidth
+      html.style.overflow = savedHtmlOverflow
+      window.scrollTo(savedScrollX, savedScrollY)
+    }
   }
 }
 
@@ -40,4 +81,13 @@ export function bodyScrollLocks(): number {
 export function resetBodyScrollLock(): void {
   locks = 0
   savedOverflow = ''
+  savedPosition = ''
+  savedTop = ''
+  savedLeft = ''
+  savedWidth = ''
+  savedHtmlOverflow = ''
+  savedScrollBy = null
+  savedScrollTo = null
+  savedScrollX = 0
+  savedScrollY = 0
 }

@@ -788,6 +788,53 @@ export class AtlasService {
     return getRegionGeo(countries);
   }
 
+  /**
+   * Photos a place carries, for the atlas check-in popup: every photo the
+   * journey feature attached to this place (via its check-ins and via entries
+   * imported from the trip skeleton) plus the legacy trip-photo uploads.
+   * Numeric ids stream through /api/photos/:id/thumbnail like everywhere else.
+   */
+  placePhotos(userId: number, placeId: number): { photo_id: number; caption: string | null; taken_at: string | null }[] {
+    if (!Number.isFinite(placeId)) return [];
+    const rows: { photo_id: number; caption: string | null; taken_at: string | null }[] = [];
+    const seen = new Set<number>();
+
+    // Journey photos: entries created from the trip's places carry the place id
+    // forward (source_place_id); their gallery photos are the place's photos.
+    if (this.tableExists('journey_entry_photos')) {
+      for (const r of this.db.all<{ photo_id: number; caption: string | null; taken_at: string | null }>(
+        `SELECT gp.photo_id, gp.caption, tp.taken_at
+           FROM journey_entries je
+           JOIN journeys j  ON j.id = je.journey_id AND j.user_id = ?
+           JOIN journey_entry_photos jep ON jep.entry_id = je.id
+           JOIN journey_photos gp  ON gp.id = jep.journey_photo_id
+           JOIN trek_photos tp ON tp.id = gp.photo_id
+          WHERE je.source_place_id = ?`,
+        userId, placeId,
+      )) {
+        if (!seen.has(r.photo_id)) { seen.add(r.photo_id); rows.push(r); }
+      }
+    }
+
+    // Legacy trip-photo uploads (trip owner or member).
+    for (const r of this.db.all<{ photo_id: number; caption: string | null; taken_at: string | null }>(
+      `SELECT ph.id AS photo_id, ph.caption, ph.taken_at
+         FROM photos ph
+         JOIN trips t ON t.id = ph.trip_id
+         LEFT JOIN trip_members tm ON tm.trip_id = t.id AND tm.user_id = ?
+        WHERE ph.place_id = ? AND (t.user_id = ? OR tm.user_id IS NOT NULL)`,
+      userId, placeId, userId,
+    )) {
+      if (!seen.has(r.photo_id)) { seen.add(r.photo_id); rows.push(r); }
+    }
+
+    return rows.slice(0, 12);
+  }
+
+  private tableExists(name: string): boolean {
+    return !!this.db.get("SELECT name FROM sqlite_master WHERE type='table' AND name = ?", name);
+  }
+
   countryGeoGz(): Buffer | null {
     return getCountryGeoGz();
   }

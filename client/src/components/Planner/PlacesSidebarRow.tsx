@@ -18,6 +18,7 @@ interface MemoPlaceRowProps {
   selectedDayId: number | null
   canEditPlaces: boolean
   isMobile: boolean
+  isTouch?: boolean
   t: (key: string, params?: Record<string, any>) => string
   onPlaceClick: (id: number | null) => void
   onContextMenu: (e: React.MouseEvent, place: Place) => void
@@ -29,12 +30,11 @@ interface MemoPlaceRowProps {
 
 export const MemoPlaceRow = React.memo(function MemoPlaceRow({
   place, category: cat, isSelected, isPlanned, inDay, isChecked,
-  selectMode, selectedDayId, canEditPlaces, isMobile, t,
+  selectMode, selectedDayId, canEditPlaces, isMobile, isTouch, t,
   onPlaceClick, onContextMenu, onAssignToDay, toggleSelected, setDayPickerPlace, registerPlaceRow,
 }: MemoPlaceRowProps) {
   const hasGeometry = Boolean(place.route_geometry)
-  // Touch is reached through a long press instead of being locked out (#1616).
-  const dragDisabled = isMobile
+  const dragDisabled = isMobile || Boolean(isTouch)
   // One place for what a row does, so the keyboard path below cannot drift from the click.
   const activate = () => {
     if (selectMode) {
@@ -53,7 +53,7 @@ export const MemoPlaceRow = React.memo(function MemoPlaceRow({
       tabIndex={0}
       aria-selected={isSelected}
       data-place-id={place.id}
-      draggable={!selectMode && !dragDisabled}
+      draggable={dragDisabled || selectMode ? 'false' : 'true'}
       onDragStart={e => {
         if (dragDisabled) { e.preventDefault(); return }
         e.dataTransfer.setData('placeId', String(place.id))

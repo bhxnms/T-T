@@ -10,7 +10,7 @@ import { useToast } from '../components/shared/Toast';
 import { useTranslation } from '../i18n';
 import type { TranslationFn } from '../types';
 import { getApiErrorMessage } from '../types';
-import { isLandmarkVisited, getVisitedLandmarks } from '../utils/landmarkStorage';
+import { isLandmarkVisited, getLandmarkVisitedAt, getVisitedLandmarks } from '../utils/landmarkStorage';
 import { getCheckedPlaces } from '../utils/checkinStorage';
 import { getAllLandmarks } from '../data/chinaProvinces';
 import { getLandmarkColor } from '../utils/landmarkIcons';
@@ -28,6 +28,7 @@ import {
   type CountryDetail,
 } from './atlas/atlasModel';
 import LandmarkPopup from './atlas/LandmarkPopup';
+import CheckinPopup from './atlas/CheckinPopup';
 import { useAtlas } from './atlas/useAtlas';
 
 export default function AtlasPage(): React.ReactElement {
@@ -110,6 +111,8 @@ function AtlasPageDesktop(): React.ReactElement {
     setSelectedLandmark,
     showLandmarks,
     setShowLandmarks,
+    selectedCheckin,
+    setSelectedCheckin,
     toggleLandmarkVisit,
   } = useAtlas();
   const toast = useToast();
@@ -917,10 +920,18 @@ function AtlasPageDesktop(): React.ReactElement {
           belongs to AtlasPageDesktop's useAtlas scope. It previously sat inside
           SidebarContent, where the names don't exist, so clicking a landmark
           updated state that nothing rendered. */}
+      {selectedCheckin != null && (
+        <CheckinPopup
+          placeId={selectedCheckin}
+          onClose={() => setSelectedCheckin(null)}
+          onToggled={() => setSelectedCheckin(null)}
+        />
+      )}
       {selectedLandmark && (
         <LandmarkPopup
           landmark={selectedLandmark}
           isVisited={isLandmarkVisited(selectedLandmark.provinceCode, selectedLandmark.name)}
+          visitedAt={getLandmarkVisitedAt(selectedLandmark.provinceCode, selectedLandmark.name)}
           onClose={() => setSelectedLandmark(null)}
           onToggleVisit={() => {
             toggleLandmarkVisit(selectedLandmark.provinceCode, selectedLandmark.name);

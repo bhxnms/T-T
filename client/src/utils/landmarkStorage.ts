@@ -28,6 +28,21 @@ export function getVisitedLandmarks(): Set<string> {
 }
 
 /**
+ * Get the check-in timestamp for one landmark (epoch ms), or undefined.
+ * 地标的打卡时间
+ */
+export function getLandmarkVisitedAt(provinceCode: string, landmarkName: string): number | undefined {
+  try {
+    const data = localStorage.getItem(VISITED_LANDMARKS_KEY)
+    if (!data) return undefined
+    const visited: VisitedLandmark[] = JSON.parse(data)
+    return visited.find(v => `${v.provinceCode}:${v.landmarkName}` === `${provinceCode}:${landmarkName}`)?.visitedAt
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * Check if a landmark is visited
  * 检查地标是否已打卡
  */

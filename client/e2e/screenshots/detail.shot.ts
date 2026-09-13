@@ -1,6 +1,4 @@
-import { test, clearNotices, expect } from './shot'
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
+import { test, clearNotices, expect, readSeed } from './shot'
 
 /**
  * Detail pages and the surfaces that need a couple of clicks to reach.
@@ -10,20 +8,19 @@ import path from 'node:path'
  * the run instead of producing a screenshot of the wrong screen.
  */
 
-const seed = JSON.parse(
-  readFileSync(path.join(process.cwd(), 'e2e', '.tmp', 'seed.json'), 'utf8'),
-) as { tripId: number; collectionId?: number; journeyId?: number }
+type ScreenshotSeed = { tripId: number; collectionId?: number; journeyId?: number }
+const seed = (): ScreenshotSeed => readSeed<ScreenshotSeed>()
 
 test('collection detail', async ({ page, shot }) => {
-  test.skip(!seed.collectionId, 'collections addon unavailable during seed')
-  await page.goto(`/collections/${seed.collectionId}`)
+  test.skip(!seed().collectionId, 'collections addon unavailable during seed')
+  await page.goto(`/collections/${seed().collectionId}`)
   await clearNotices(page)
   await shot.page_('CollectionDetail')
 })
 
 test('journey detail', async ({ page, shot }) => {
-  test.skip(!seed.journeyId, 'journey addon unavailable during seed')
-  await page.goto(`/journey/${seed.journeyId}`)
+  test.skip(!seed().journeyId, 'journey addon unavailable during seed')
+  await page.goto(`/journey/${seed().journeyId}`)
   await clearNotices(page)
   await shot.page_('JourneyDetail')
 })
@@ -65,7 +62,7 @@ test('two-factor setup', async ({ page, shot }) => {
  * instead — same surface, no side effect — and close it again.
  */
 test('costs — record a settle-up payment', async ({ page, shot }) => {
-  await page.goto(`/trips/${seed.tripId}`)
+  await page.goto(`/trips/${seed().tripId}`)
   await clearNotices(page)
   await page.getByRole('button', { name: 'Costs', exact: true }).first().click()
   await page.waitForTimeout(800)
@@ -81,7 +78,7 @@ test('costs — record a settle-up payment', async ({ page, shot }) => {
 })
 
 test('trip files', async ({ page, shot }) => {
-  await page.goto(`/trips/${seed.tripId}/files`)
+  await page.goto(`/trips/${seed().tripId}/files`)
   await clearNotices(page)
   await expect(page).toHaveURL(/files/)
   await shot.page_('Documents')

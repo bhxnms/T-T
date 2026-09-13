@@ -13,8 +13,8 @@ import LoginPage from './LoginPage';
 import { useLogin } from './login/useLogin';
 
 vi.mock('./login/useLogin', () => ({ useLogin: vi.fn() }));
-vi.mock('./login/LoginWorld', () => ({
-  default: ({ variant }: { variant?: string }) => <div data-testid="login-world" data-variant={variant ?? 'ambient'} />,
+vi.mock('./login/ParticleField', () => ({
+  default: ({ variant }: { variant?: string }) => <div data-testid="particle-field" data-variant={variant ?? 'ambient'} />,
 }));
 
 const EMAIL_PLACEHOLDER = 'your@email.com';
@@ -109,7 +109,7 @@ describe('LoginPage — takeoff', () => {
     renderPage();
 
     expect(document.querySelector('.takeoff-overlay')).toBeInTheDocument();
-    expect(screen.getByTestId('login-world')).toHaveAttribute('data-variant', 'takeoff');
+    expect(screen.getByTestId('particle-field')).toHaveAttribute('data-variant', 'takeoff');
     expect(screen.getByAltText('Tourism-Team')).toHaveAttribute('src', '/logo-light.svg');
     expect(screen.queryByPlaceholderText(EMAIL_PLACEHOLDER)).toBeNull();
   });

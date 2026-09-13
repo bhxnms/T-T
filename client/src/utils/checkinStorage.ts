@@ -7,6 +7,8 @@
  * place's pool id, so re-adding a place to a day keeps its check-in state.
  */
 
+import apiClient from '../api/client'
+
 const CHECKED_PLACES_KEY = 'tt_checked_places'
 
 export interface CheckedPlace {
@@ -78,4 +80,35 @@ export function togglePlaceCheckin(place: {
 /** Count of checked-in places (only those with coordinates can draw a marker). */
 export function countCheckedPlaces(): number {
   return readAll().length
+}
+
+/** Look a checked place back up by id (the Atlas popup reads fresh state at click time). */
+export function getCheckedPlaceById(placeId: number): CheckedPlace | undefined {
+  return readAll().find((p) => p.id === placeId)
+}
+
+/**
+ * When a place is checked in, the Atlas should reflect it beyond the dot: the
+ * country (and sub-national region, where one exists) become "visited". The
+ * coordinates resolve server-side against the same bundled polygons the map
+ * colours, so the answer is always a feature the atlas can highlight.
+ * Fire-and-forget: a failed mark must never block the check-in itself.
+ */
+export function syncCheckinToAtlas(lat: number | null, lng: number | null): void {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return
+  apiClient
+    .get('/addons/atlas/locate', { params: { lat, lng } })
+    .then(({ data }: { data: { country_code: string | null; region_code: string | null; region_name: string | null } }) => {
+      if (!data.country_code) return
+      void apiClient.post(`/addons/atlas/country/${data.country_code}/mark`).catch(() => {})
+      if (data.region_code) {
+        void apiClient
+          .post(`/addons/atlas/region/${data.region_code}/mark`, {
+            name: data.region_name ?? data.region_code,
+            country_code: data.country_code,
+          })
+          .catch(() => {})
+      }
+    })
+    .catch(() => {})
 }

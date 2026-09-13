@@ -196,6 +196,7 @@ export function useAtlas() {
   const landmarkLayerRef = useRef<L.LayerGroup | null>(null);
   // Checked-in trip places (已打卡 in the planner) drawn on the world map
   const checkinLayerRef = useRef<L.LayerGroup | null>(null);
+  const [selectedCheckin, setSelectedCheckin] = useState<number | null>(null);
   // The pending "zoom settled" timer: while zooming the landmark layer is off
   // the map, and it only comes back once this fires (see the zoom handlers).
   const landmarkShowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -718,6 +719,10 @@ export function useAtlas() {
           pane: 'landmarkPane',
         });
         marker.bindTooltip(escapeHtml(place.name), { direction: 'top', offset: [0, -8] });
+        marker.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+          setSelectedCheckin(place.id);
+        });
         marker.addTo(checkinLayerRef.current);
       }
     };
@@ -1656,6 +1661,8 @@ export function useAtlas() {
     setSelectedLandmark,
     showLandmarks,
     setShowLandmarks,
+    selectedCheckin,
+    setSelectedCheckin,
     toggleLandmarkVisit: (provinceCode: string, landmarkName: string) => {
       toggleLandmarkVisit(provinceCode, landmarkName);
       setLandmarkRefreshTrigger((v) => v + 1);

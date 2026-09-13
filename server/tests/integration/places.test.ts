@@ -588,19 +588,23 @@ describe('Naver list import', () => {
     expect(fetchMock.mock.calls[2][0]).toContain('start=20');
   });
 
-  it('POST /import/naver-list returns 400 for invalid URL', async () => {
+  it('POST /import/naver-list rejects a non-Naver URL before parsing a folder ID', async () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);
 
     testDb.prepare("UPDATE addons SET enabled = 1 WHERE id = 'naver_list_import'").run();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
 
     const res = await request(app)
       .post(`/api/trips/${trip.id}/places/import/naver-list`)
       .set('Cookie', authCookie(user.id))
       .send({ url: 'https://example.com/not-a-naver-list' });
 
+    // SSRF validation is the first gate. The request must never reach Naver.
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('Could not extract folder ID');
+    expect(res.body.error).toBe('URL is not allowed');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('POST /import/naver-list returns 502 when Naver API is unavailable', async () => {

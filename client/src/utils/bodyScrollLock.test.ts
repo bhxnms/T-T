@@ -10,6 +10,11 @@ describe('bodyScrollLock', () => {
   beforeEach(() => {
     resetBodyScrollLock()
     document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.left = ''
+    document.body.style.width = ''
+    document.documentElement.style.overflow = ''
   })
 
   it('FE-UTIL-SCROLLLOCK-001: locks the body and restores the previous value', () => {
@@ -54,5 +59,18 @@ describe('bodyScrollLock', () => {
     nested()
     release()
     expect(document.body.style.overflow).toBe('scroll')
+  })
+
+  it('FE-UTIL-SCROLLLOCK-005: freezes the root scroll position and restores it', () => {
+    let scrollY = 120
+    vi.spyOn(window, 'scrollY', 'get').mockImplementation(() => scrollY)
+    vi.spyOn(window, 'scrollTo').mockImplementation((_x, y) => { scrollY = Number(y) })
+    const release = lockBodyScroll()
+    expect(document.body.style.overflow).toBe('hidden')
+    window.scrollTo(0, 400)
+    release()
+    expect(document.body.style.position).toBe('')
+    expect(document.body.style.top).toBe('')
+    expect(window.scrollY).toBe(120)
   })
 })

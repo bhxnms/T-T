@@ -28,7 +28,7 @@ import PluginFrame from '../Plugins/PluginFrame'
 import type { Place, Category, Day, Assignment, Reservation, TripFile, AssignmentsMap } from '../../types'
 import type { CollectionStatus } from '@trek/shared'
 import { splitReservationDateTime, formatTime, formatMoney } from '../../utils/formatters'
-import { isPlaceChecked, togglePlaceCheckin } from '../../utils/checkinStorage'
+import { isPlaceChecked, syncCheckinToAtlas, togglePlaceCheckin } from '../../utils/checkinStorage'
 import { useTripStore } from '../../store/tripStore'
 import { formatDistance, formatElevation } from '../../utils/units'
 import { getNavigationTargets, openNavigationTarget } from './placeNavigation'
@@ -217,13 +217,16 @@ export default function PlaceInspector({
   }, [place?.id])
   const handleToggleCheckin = useCallback(() => {
     if (!place) return
-    setCheckedIn(togglePlaceCheckin({
+    const nowChecked = togglePlaceCheckin({
       id: place.id,
       name: place.name,
       lat: place.lat,
       lng: place.lng,
       tripId: (place as { trip_id?: number | string | null }).trip_id ?? null,
-    }))
+    })
+    // Checking in marks the country (and region, if any) visited in the Atlas.
+    if (nowChecked) syncCheckinToAtlas(place.lat, place.lng)
+    setCheckedIn(nowChecked)
   }, [place])
   const [hoursExpanded, setHoursExpanded] = useState(false)
   const [filesExpanded, setFilesExpanded] = useState(false)

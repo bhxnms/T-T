@@ -110,6 +110,16 @@ export class AtlasController {
     return this.atlas.countryPlaces(user.id, code.toUpperCase());
   }
 
+  /** Photos of a checked-in place, for the atlas popup preview. */
+  @Get('place-photos')
+  placePhotos(@CurrentUser() user: User, @Query('place_id') placeId: string) {
+    const id = Number(placeId);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+      throw new HttpException({ error: 'Valid place_id is required' }, 400);
+    }
+    return { photos: this.atlas.placePhotos(user.id, id) };
+  }
+
   @Post('country/:code/mark')
   @HttpCode(200)
   markCountry(@CurrentUser() user: User, @Param('code') code: string): { success: boolean } {

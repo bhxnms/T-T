@@ -640,12 +640,19 @@ describe('importGoogleList', () => {
     vi.unstubAllGlobals();
   });
 
-  it('PLACE-SVC-026 — returns error when list ID cannot be extracted from URL', async () => {
+  it('PLACE-SVC-026 — rejects a non-Google URL before trying to extract a list ID', async () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
     const result = await svc.importGoogleList(String(trip.id), 'https://example.com/no-id-here') as any;
-    expect(result.error).toMatch(/Could not extract list ID/);
+
+    // SSRF validation deliberately runs before provider-specific parsing: an
+    // arbitrary URL must not reveal parser behaviour or trigger a fetch.
+    expect(result.error).toBe('URL is not allowed');
     expect(result.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('PLACE-SVC-026b — a single-place link gives a guiding error instead of the generic one (#1304)', async () => {

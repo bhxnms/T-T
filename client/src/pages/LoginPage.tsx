@@ -15,7 +15,7 @@ import React from 'react';
 import ToggleSwitch from '../components/Settings/ToggleSwitch';
 import { SUPPORTED_LANGUAGES, useTranslation } from '../i18n';
 import { useLogin } from './login/useLogin';
-import LoginWorld from './login/LoginWorld';
+import ParticleField from './login/ParticleField';
 import { PRODUCT_NAME } from '../config/brand';
 import { clearSignedOut } from '../utils/signedOut'
 
@@ -115,11 +115,11 @@ export default function LoginPage(): React.ReactElement {
         className="takeoff-overlay"
         style={{ position: 'fixed', inset: 0, zIndex: 99999, overflow: 'hidden', background: '#070c1a' }}
       >
-        {/* Signing in picks up exactly where the login panel left off: the same dot
-            map, except now every route departs at once. The network finishing is
-            the moment — no separate imagery, no plane flying off alone. */}
+        {/* Signing in picks up exactly where the login panel left off: the same
+            particle constellation, except now every light gathers toward the
+            centre. The network finishing is the moment. */}
         <div className="takeoff-world">
-          <LoginWorld variant="takeoff" />
+          <ParticleField variant="takeoff" />
         </div>
 
         {/* The colour rises with the departures rather than sitting there from the start. */}
@@ -369,10 +369,9 @@ export default function LoginPage(): React.ReactElement {
           ))}
         </div>
 
-        {/* Coastlines as a dot map, with routes lighting up between cities across
-            it. The geometry is Tourism-Team's Atlas bundle, baked in at build time
-            because this screen is unauthenticated. */}
-        <LoginWorld />
+        {/* Original particle constellation — drifting lights linking up as they
+            pass each other. Drawn entirely in code, no baked imagery. */}
+        <ParticleField />
 
         {/* No max-width: the tagline stays on one line, so the block is allowed to
             use the whole panel rather than wrapping inside it. */}

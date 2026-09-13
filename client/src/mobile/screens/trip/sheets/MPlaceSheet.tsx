@@ -22,7 +22,7 @@ import { openFile } from '../../../../utils/fileDownload'
 import { filesForPlace } from '../../../../utils/placeFiles'
 import { getNavigationTargets, openNavigationTarget } from '../../../../components/Planner/placeNavigation'
 import { NavigationMenu } from '../../../../components/shared/NavigationMenu'
-import { isPlaceChecked, togglePlaceCheckin } from '../../../../utils/checkinStorage'
+import { isPlaceChecked, syncCheckinToAtlas, togglePlaceCheckin } from '../../../../utils/checkinStorage'
 import { getAssignmentReservations } from '../../../../utils/dayMerge'
 import type { Assignment, Day, Reservation, TripMember } from '../../../../types'
 import { ActionCircle, Eyebrow, INNER_CLS } from './MTripSheetUi'
@@ -603,13 +603,16 @@ export default function MPlaceSheet({ planner, shell }: MTripSheetsProps) {
               <ActionCircle
                 onClick={() => {
                   if (!place) return
-                  setCheckedIn(togglePlaceCheckin({
+                  const nowChecked = togglePlaceCheckin({
                     id: place.id,
                     name: place.name,
                     lat: place.lat,
                     lng: place.lng,
                     tripId: (place as { trip_id?: number | string | null }).trip_id ?? null,
-                  }))
+                  })
+                  // Checking in marks the country (and region) visited in the Atlas.
+                  if (nowChecked) syncCheckinToAtlas(place.lat, place.lng)
+                  setCheckedIn(nowChecked)
                 }}
                 label={checkedIn ? t('inspector.checkinDone') : t('inspector.checkin')}
                 primary={checkedIn}

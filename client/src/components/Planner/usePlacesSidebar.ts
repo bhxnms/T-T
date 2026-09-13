@@ -39,6 +39,8 @@ export interface PlacesSidebarProps {
   onBulkChangeCategory?: (ids: number[], categoryId: number | null) => void
   days: Day[]
   isMobile: boolean
+  /** Coarse-pointer devices must keep place-list swipes scrollable. */
+  isTouch?: boolean
   pushUndo?: (label: string, undoFn: () => Promise<void> | void) => void
   initialScrollTop?: number
   onScrollTopChange?: (top: number) => void
