@@ -1,20 +1,13 @@
-# Source deployment: builds the image from this checkout, so
-# `docker compose up -d --build` always runs the code in the repository.
-#
-# First run:
-#   cp .env.example .env    # then fill in ENCRYPTION_KEY, ADMIN_EMAIL, ADMIN_PASSWORD
-#   docker compose up -d --build
-#
-# Only ./data and ./uploads persist. Never mount a volume at /app — that would
-# hide the application code baked into the image.
+# Default deployment pulls the published multi-arch image. Set SOURCE_BUILD=true
+# in .env to build this checkout instead (useful for development/verification).
 services:
   app:
+    image: ${IMAGE_NAME:-ghcr.io/bhxnms/tt-planner}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
       args:
         APP_VERSION: ${APP_VERSION:-dev}
-    image: tt-planner:local
     container_name: tt-planner
     read_only: true
     security_opt:

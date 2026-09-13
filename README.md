@@ -77,23 +77,39 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 ## 🚀 Deploy from a fresh checkout
 
 The repository is self-contained: clone it, copy the environment template, and
-build the production image locally. This avoids depending on a separately
-published image and guarantees the running code matches the checkout.
+run either the published multi-architecture image or build the production image
+locally. Both paths use the same persistent data and upload directories.
 
-### Docker Compose (recommended)
+### Prebuilt GHCR image (recommended)
 
-Requirements: Docker Engine with Compose v2.
+Stable multi-architecture images are published at
+`ghcr.io/bhxnms/tt-planner`. On a new machine, after creating `.env` and the
+persistent directories:
 
 ```bash
-git clone https://github.com/bhxnms/T-T.git
-cd T-T
-cp .env.example .env
-# Edit .env: set ENCRYPTION_KEY, ADMIN_EMAIL and ADMIN_PASSWORD.
-# Generate the key with: openssl rand -hex 32
-mkdir -p data uploads
-docker compose up -d --build
-docker compose ps
+docker compose pull
+docker compose up -d
 ```
+
+Use a fixed release in `.env` for production, for example
+`IMAGE_TAG=0.3.0`. `latest` tracks the newest stable release; the image
+supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
+first with a GitHub token that can read packages:
+
+```bash
+echo "$CR_PAT" | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
+```
+
+### Build from the checkout
+
+To verify or run unreleased source instead of pulling an image:
+
+```bash
+docker compose up -d --build
+```
+
+This uses the same `Dockerfile` and tags the local result as configured by
+`IMAGE_NAME`/`IMAGE_TAG` in `.env`.
 
 Open [http://localhost:3000](http://localhost:3000). To use another host port,
 set `HOST_PORT=8080` in `.env`; the container-side port remains `3000`.
@@ -114,9 +130,10 @@ To stop or update the deployment:
 
 ```bash
 docker compose down
-# after pulling a new version:
-git pull
-docker compose up -d --build
+# Published image:
+docker compose pull && docker compose up -d
+# Source build:
+git pull && docker compose up -d --build
 ```
 
 ### Docker without Compose

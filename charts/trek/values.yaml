@@ -1,6 +1,8 @@
 
 image:
-  repository: mauriceboe/trek
+  # Published from this repository by .github/workflows/docker.yml.
+  # Pin an explicit version tag for production instead of relying on latest.
+  repository: ghcr.io/bhxnms/tt-planner
   # tag: latest
   pullPolicy: IfNotPresent
 
