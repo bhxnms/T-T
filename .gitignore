@@ -23,6 +23,10 @@ client/public/icons/*.png
 server/data/*
 server/uploads/
 
+# Compose bind mounts (created on first `docker compose up`)
+/data/
+/uploads/
+
 # Environment
 .env
 .env.*

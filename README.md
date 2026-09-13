@@ -74,89 +74,119 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Deploy from a fresh checkout
 
-### Docker (Recommended)
+The repository is self-contained: clone it, copy the environment template, and
+build the production image locally. This avoids depending on a separately
+published image and guarantees the running code matches the checkout.
+
+### Docker Compose (recommended)
+
+Requirements: Docker Engine with Compose v2.
 
 ```bash
-docker run -d \
-  --name tt-planner \
+git clone https://github.com/bhxnms/T-T.git
+cd T-T
+cp .env.example .env
+# Edit .env: set ENCRYPTION_KEY, ADMIN_EMAIL and ADMIN_PASSWORD.
+# Generate the key with: openssl rand -hex 32
+mkdir -p data uploads
+docker compose up -d --build
+docker compose ps
+```
+
+Open [http://localhost:3000](http://localhost:3000). To use another host port,
+set `HOST_PORT=8080` in `.env`; the container-side port remains `3000`.
+
+The first administrator variables apply only when the database has no users and
+must be set together. If both are left empty, the server creates
+`admin@tt.local` with a random password and prints it in the container log:
+
+```bash
+docker compose logs app | grep -A4 "First Run"
+```
+
+Persist both `./data` (database, encryption key, logs) and `./uploads` (photos
+and files). **Do not mount a volume at `/app`**: that hides the application
+files inside the image.
+
+To stop or update the deployment:
+
+```bash
+docker compose down
+# after pulling a new version:
+git pull
+docker compose up -d --build
+```
+
+### Docker without Compose
+
+```bash
+git clone https://github.com/bhxnms/T-T.git
+cd T-T
+mkdir -p data uploads
+docker build --build-arg APP_VERSION=0.3.0 -t tt-planner:local .
+docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
-  -v tt-data:/app/data \
-  -e AMAP_API_KEY=your_amap_api_key \
-  ghcr.io/your-repo/tt-planner:0.3.0
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/uploads:/app/uploads" \
+  -e NODE_ENV=production \
+  -e PORT=3000 \
+  -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
+  -e ADMIN_EMAIL=admin@example.com \
+  -e ADMIN_PASSWORD='replace-with-a-strong-password' \
+  tt-planner:local
 ```
 
-### Docker Compose
+Keep the generated `ENCRYPTION_KEY` backed up and reuse the same value when
+recreating the container. Do not put real secrets in Git.
 
-```yaml
-version: '3.8'
-services:
-  tt-planner:
-    image: ghcr.io/your-repo/tt-planner:0.3.0
-    container_name: tt-planner
-    ports:
-      - "3000:3000"
-    volumes:
-      - tt-data:/app/data
-    environment:
-      - AMAP_API_KEY=your_amap_api_key
-      - NODE_ENV=production
-    restart: unless-stopped
+### Environment variables
 
-volumes:
-  tt-data:
-```
+| Variable | Purpose |
+|----------|---------|
+| `HOST_PORT` | Host port mapped to the container's port 3000 (Compose only) |
+| `ENCRYPTION_KEY` | Recommended 256-bit hex key for encrypted stored secrets |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | First admin, used together only on an empty database |
+| `TZ` | Timezone for logs, reminders and schedules; default `UTC` |
+| `LOG_LEVEL` | `info` or `debug`; default `info` |
+| `ALLOWED_ORIGINS` | Comma-separated browser origins for CORS |
+| `APP_URL` and `OIDC_*` | Optional OpenID Connect configuration |
 
-### Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `AMAP_API_KEY` | 高德地图 API key for China map features | Recommended |
-| `OPENAI_API_KEY` | OpenAI API key for AI features | Optional |
-| `MAPBOX_TOKEN` | Mapbox access token for maps | Optional |
-| `NODE_ENV` | Environment (production/development) | No |
-| `PORT` | Server port (default: 3000) | No |
+If `OIDC_ONLY=true`, password login is disabled and the first SSO user becomes
+administrator; local `ADMIN_EMAIL`/`ADMIN_PASSWORD` are not used.
 
 ---
 
-## 🛠️ Development
+## 🛠️ Development from source
 
 ### Prerequisites
-- Node.js 18+ and npm 9+
-- PostgreSQL 14+ or SQLite
+- Node.js 24+ and npm 11+
+- SQLite is the default local database; Docker is recommended for production
 
-### Local Setup
+### Local development
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-repo/tt-planner.git
-cd tt-planner
-
-# Install dependencies
+git clone https://github.com/bhxnms/T-T.git
+cd T-T
 npm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Run database migrations
-npm run migrate
-
-# Start development server
-npm run dev
+npm run build --workspace=shared
+cp server/.env.example server/.env
+npm run dev --workspace=server
+# In another terminal:
+npm run dev --workspace=client
 ```
 
-### Build for Production
+### Build and test
 
 ```bash
-# Build the application
 npm run build
-
-# Start production server
-npm start
+npm test
+npm run e2e --workspace=client
 ```
 
+For another machine, use the Docker Compose procedure above; it includes the
+production build and does not require a local Node.js installation.
 ---
 
 ## 📂 Project Structure
@@ -166,8 +196,9 @@ tt-planner/
 ├── client/          # React frontend application
 ├── server/          # Node.js backend server
 ├── shared/          # Shared types and utilities
-├── migrations/      # Database migration files
-└── docs/           # Documentation
+├── wiki/            # In-app help documentation
+├── Dockerfile       # Multi-stage production image
+└── docker-compose.yml # Source-based production deployment
 ```
 
 ---
