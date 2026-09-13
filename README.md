@@ -3,7 +3,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.3.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.4.0-blue?style=flat-square)
 
 ---
 
@@ -57,7 +57,7 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.3.0
+## 🆕 What's New in v0.4.0
 
 ### Atlas & Check-ins
 - Landmark markers redesigned as clean colored dots (visited landmarks glow)
@@ -92,7 +92,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.3.0`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.4.0`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -142,7 +142,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.3.0 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.4.0 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
