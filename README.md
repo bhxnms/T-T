@@ -1,3 +1,16 @@
+<div align="center">
+
+# ⚠️ AI-WRITTEN PROJECT / AI 编写项目
+
+<big><strong>本项目全程由 AI 编写，可能存在反人类操作。使用前请自行验证，并做好数据备份。</strong></big><br>
+<strong>This project was written entirely by AI and may contain unintuitive or hostile-to-human workflows. Verify everything and keep backups.</strong>
+
+</div>
+
+<p align="center">
+  <a href="README.zh-CN.md">简体中文</a> · <strong>English</strong>
+</p>
+
 # TT Travel Planner
 
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
