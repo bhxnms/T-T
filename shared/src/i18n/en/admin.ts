@@ -666,6 +666,8 @@ const admin: TranslationStrings = {
   'admin.update.available': 'Update available',
   'admin.update.text': 'TREK {version} is available. You are running {current}.',
   'admin.update.button': 'View on GitHub',
+  'admin.update.checkNow': 'Check again',
+  'admin.update.checkError': 'Could not check for updates',
   'admin.update.install': 'Install Update',
   'admin.update.confirmTitle': 'Install Update?',
   'admin.update.confirmText':

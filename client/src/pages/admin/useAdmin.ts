@@ -159,6 +159,7 @@ export function useAdmin() {
 
   // Version check & update
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
+  const [checkingVersion, setCheckingVersion] = useState(false)
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false)
 
   const { user: currentUser, updateApiKeys, setAppRequireMfa, setTripRemindersEnabled, setPlacesPhotosEnabled, setPlacesAutocompleteEnabled, setPlacesDetailsEnabled, setPlacesEnrichEnabled, logout } = useAuthStore()
@@ -185,6 +186,19 @@ export function useAdmin() {
     }).catch(() => {})
   }, [])
 
+  const handleCheckVersion = async () => {
+    if (checkingVersion || managed) return
+    setCheckingVersion(true)
+    try {
+      const data = await adminApi.checkVersion()
+      setUpdateInfo(data.update_available ? data : null)
+      toast.success(data.update_available ? t('admin.update.available') : t('admin.github.latest'))
+    } catch {
+      toast.error(t('admin.github.error'))
+    } finally {
+      setCheckingVersion(false)
+    }
+  }
   const loadData = async () => {
     setIsLoading(true)
     try {
@@ -455,7 +469,7 @@ export function useAdmin() {
     mapsKey, setMapsKey, weatherKey, setWeatherKey, unsplashKey, setUnsplashKey,
     amapKey, setAmapKey, amapSearchEnabledState, setAmapSearchEnabledState,
     showKeys, setShowKeys, savingKeys, validating, validation,
-    updateInfo, setUpdateInfo, showUpdateModal, setShowUpdateModal,
+    updateInfo, setUpdateInfo, checkingVersion, handleCheckVersion, showUpdateModal, setShowUpdateModal,
     showRotateJwtModal, setShowRotateJwtModal, rotatingJwt, setRotatingJwt,
     // handlers
     loadData, loadAppConfig, loadApiKeys, handleToggleAuthSetting, handleToggleRequireMfa,

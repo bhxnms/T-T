@@ -305,7 +305,7 @@ export default function AdminUserModals({ admin, t }: AdminUserModalsProps): Rea
 
               {updateInfo?.is_docker === false ? (
                 <a
-                  href="https://github.com/liketrek/TREK/wiki/Updating"
+                  href="https://github.com/bhxnms/T-T/wiki/Updating"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -338,14 +338,7 @@ export default function AdminUserModals({ admin, t }: AdminUserModalsProps): Rea
                   }}
                   className="border border-gray-700 bg-gray-900 text-gray-100 dark:bg-gray-950"
                 >
-                  {`docker pull mauriceboe/trek:latest
-docker stop trek && docker rm trek
-docker run -d --name trek \\
-  -p 3000:3000 \\
-  -v /opt/trek/data:/app/data \\
-  -v /opt/trek/uploads:/app/uploads \\
-  --restart unless-stopped \\
-  mauriceboe/trek:latest`}
+                  {`docker pull ghcr.io/bhxnms/tt-planner:latest\ndocker compose pull\ndocker compose up -d`}
                 </div>
               )}
 

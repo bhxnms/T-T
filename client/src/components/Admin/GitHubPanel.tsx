@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import apiClient from '../../api/client';
 import { getLocaleForLanguage, useTranslation } from '../../i18n';
 
-const REPO = 'liketrek/TREK';
+const REPO = 'bhxnms/T-T';
 const PER_PAGE = 10;
 
 interface GithubRelease {
@@ -272,7 +272,7 @@ export default function GitHubPanel({ isPrerelease = false }: { isPrerelease?: b
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <a
-          href="https://github.com/liketrek/TREK/issues/new?template=bug_report.yml"
+          href="https://github.com/bhxnms/T-T/issues/new?template=bug_report.yml"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
@@ -306,7 +306,7 @@ export default function GitHubPanel({ isPrerelease = false }: { isPrerelease?: b
           <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
         </a>
         <a
-          href="https://github.com/liketrek/TREK/discussions/new?category=feature-requests"
+          href="https://github.com/bhxnms/T-T/discussions/new?category=feature-requests"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
@@ -340,7 +340,7 @@ export default function GitHubPanel({ isPrerelease = false }: { isPrerelease?: b
           <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
         </a>
         <a
-          href="https://github.com/liketrek/TREK/wiki"
+          href="https://github.com/bhxnms/T-T/wiki"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"

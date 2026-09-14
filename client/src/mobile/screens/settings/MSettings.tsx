@@ -128,7 +128,7 @@ export default function MSettings() {
       {managed && appVersion && (
         <p className="mt-8 text-center text-caption text-m-muted">
           <a
-            href="https://github.com/liketrek/TREK"
+            href="https://github.com/bhxnms/T-T"
             target="_blank"
             rel="noopener noreferrer"
             className="no-underline"

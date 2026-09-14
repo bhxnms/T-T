@@ -191,7 +191,7 @@ describe('HelpPage', () => {
           '',
           '[planner](/trips/1)',
           '',
-          '[github](https://github.com/liketrek/TREK)',
+          '[github](https://github.com/bhxnms/T-T)',
         ].join('\n'),
       ),
     })

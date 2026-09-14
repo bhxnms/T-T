@@ -225,7 +225,7 @@ describe('AdminUserModals', () => {
 
     expect(screen.getByText('How to Update')).toBeInTheDocument();
     expect(screen.getByText('v3.4.1 → v3.5.0')).toBeInTheDocument();
-    expect(screen.getByText(/docker pull mauriceboe\/trek:latest/)).toBeInTheDocument();
+    expect(screen.getByText(/docker pull ghcr.io\/bhxnms\/tt-planner:latest/)).toBeInTheDocument();
   });
 
   it('FE-ADMMOD-016: a non-docker install links to the wiki instead', () => {
@@ -234,7 +234,7 @@ describe('AdminUserModals', () => {
     expect(screen.queryByText(/docker pull/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open the update guide/i })).toHaveAttribute(
       'href',
-      'https://github.com/liketrek/TREK/wiki/Updating'
+      'https://github.com/bhxnms/T-T/wiki/Updating'
     );
   });
 

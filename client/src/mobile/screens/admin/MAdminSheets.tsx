@@ -12,14 +12,7 @@ interface MAdminSheetsProps {
   t: TranslationFn
 }
 
-const DOCKER_UPDATE_COMMANDS = `docker pull mauriceboe/trek:latest
-docker stop trek && docker rm trek
-docker run -d --name trek \\
-  -p 3000:3000 \\
-  -v /opt/trek/data:/app/data \\
-  -v /opt/trek/uploads:/app/uploads \\
-  --restart unless-stopped \\
-  mauriceboe/trek:latest`
+const DOCKER_UPDATE_COMMANDS = `docker pull ghcr.io/bhxnms/tt-planner:latest\ndocker compose pull\ndocker compose up -d`
 
 // The admin screen's sheet layer: create user, edit user (incl. passkey reset
 // and delete), the "how to update" instructions and the rotate-JWT confirm.
@@ -210,7 +203,7 @@ export default function MAdminSheets({ admin, t }: MAdminSheetsProps) {
             </p>
             {updateInfo?.is_docker === false ? (
               <a
-                href="https://github.com/liketrek/TREK/wiki/Updating"
+                href="https://github.com/bhxnms/T-T/wiki/Updating"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-xl bg-[color:var(--m-ic)] px-3 py-3 text-[0.8125rem] font-bold text-m-ink underline"

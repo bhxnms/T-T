@@ -144,7 +144,7 @@ export default function AboutTab({ appVersion }: Props): React.ReactElement {
           bug-report links go; this does not. */}
       {managed && (
         <a
-          href="https://github.com/liketrek/TREK"
+          href="https://github.com/bhxnms/T-T"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline"

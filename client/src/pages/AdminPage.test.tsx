@@ -736,7 +736,7 @@ describe('AdminPage', () => {
       fireEvent.click(screen.getByRole('button', { name: /how to update/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/docker pull/i)).toBeInTheDocument();
+        expect(screen.getByText(/docker compose pull/i)).toBeInTheDocument();
       });
     });
   });
@@ -957,13 +957,13 @@ describe('AdminPage', () => {
       await waitFor(() => expect(screen.getByText(/update available/i)).toBeInTheDocument());
 
       fireEvent.click(screen.getByRole('button', { name: /how to update/i }));
-      await waitFor(() => expect(screen.getByText(/docker pull/i)).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText(/docker compose pull/i)).toBeInTheDocument());
 
       // Click the Close button to dismiss the modal
       fireEvent.click(screen.getByRole('button', { name: /close/i }));
 
       await waitFor(() => {
-        expect(screen.queryByText(/docker pull/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/docker compose pull/i)).not.toBeInTheDocument();
       });
     });
   });

@@ -94,7 +94,7 @@ describe('DemoBanner', () => {
   it('self-host link points to GitHub', () => {
     render(<DemoBanner />);
     const link = screen.getByText('self-host it').closest('a')!;
-    expect(link).toHaveAttribute('href', 'https://github.com/liketrek/TREK');
+    expect(link).toHaveAttribute('href', 'https://github.com/bhxnms/T-T');
     expect(link).toHaveAttribute('target', '_blank');
   });
 

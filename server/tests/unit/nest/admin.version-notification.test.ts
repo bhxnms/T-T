@@ -8,8 +8,27 @@
  */
 import { runMigrations } from '../../../src/db/migrations';
 import { createTables } from '../../../src/db/schema';
+import { AddonsService } from '../../../src/nest/addons/addons.service';
 import { __clearVersionCacheForTests } from '../../../src/nest/admin/admin.helpers';
+import { AdminService } from '../../../src/nest/admin/admin.service';
+import { AuthService } from '../../../src/nest/auth/auth.service';
+import { EphemeralTokenService } from '../../../src/nest/auth/ephemeral-token.service';
+import { PasskeyService } from '../../../src/nest/auth/passkey.service';
+import { UserCleanupService } from '../../../src/nest/auth/user-cleanup.service';
+import { WebauthnConfigService } from '../../../src/nest/auth/webauthn-config.service';
+import { BudgetService } from '../../../src/nest/budget/budget.service';
+import { ExchangeRatesService } from '../../../src/nest/budget/exchange-rates.service';
+import { DatabaseService } from '../../../src/nest/database/database.service';
+import { AllowedFileTypesService } from '../../../src/nest/files/allowed-file-types.service';
+import { MailerService } from '../../../src/nest/notifications/mailer/mailer.service';
+import { NotificationsService } from '../../../src/nest/notifications/notifications.service';
+import { PackingService } from '../../../src/nest/packing/packing.service';
+import { PermissionsService } from '../../../src/nest/permissions/permissions.service';
+import { RealtimeService } from '../../../src/nest/realtime/realtime.service';
+import { SettingsService } from '../../../src/nest/settings/settings.service';
+import { TripMembershipService } from '../../../src/nest/trip-membership/trip-membership.service';
 import { createAdmin } from '../../helpers/factories';
+import { makeNotificationsService, makeNotificationPreferencesService } from '../../helpers/notifications';
 import { resetTestDb } from '../../helpers/test-db';
 
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
@@ -39,38 +58,33 @@ vi.mock('../../../src/config', () => ({
 vi.mock('../../../src/websocket', () => ({ broadcastToUser: vi.fn() }));
 // Mock MCP to avoid session side-effects
 vi.mock('../../../src/mcp', () => ({ revokeUserSessions: vi.fn(), invalidateMcpSessions: vi.fn() }));
-vi.mock('../../../src/mcp/sessionManager', () => ({ revokeUserSessions: vi.fn(), revokeUserSessionsForClient: vi.fn() }));
-
-import { DatabaseService } from '../../../src/nest/database/database.service';
-import { RealtimeService } from '../../../src/nest/realtime/realtime.service';
-import { AddonsService } from '../../../src/nest/addons/addons.service';
-import { SettingsService } from '../../../src/nest/settings/settings.service';
-import { TripMembershipService } from '../../../src/nest/trip-membership/trip-membership.service';
-import { UserCleanupService } from '../../../src/nest/auth/user-cleanup.service';
-import { MailerService } from '../../../src/nest/notifications/mailer/mailer.service';
-import { WebauthnConfigService } from '../../../src/nest/auth/webauthn-config.service';
-import { AuthService } from '../../../src/nest/auth/auth.service';
-import { PasskeyService } from '../../../src/nest/auth/passkey.service';
-import { PackingService } from '../../../src/nest/packing/packing.service';
-import { PermissionsService } from '../../../src/nest/permissions/permissions.service';
-import { BudgetService } from '../../../src/nest/budget/budget.service';
-import { ExchangeRatesService } from '../../../src/nest/budget/exchange-rates.service';
-import { NotificationsService } from '../../../src/nest/notifications/notifications.service';
-import { AdminService } from '../../../src/nest/admin/admin.service';
-import { makeNotificationsService, makeNotificationPreferencesService } from '../../helpers/notifications';
-import { EphemeralTokenService } from '../../../src/nest/auth/ephemeral-token.service';
-import { AllowedFileTypesService } from '../../../src/nest/files/allowed-file-types.service';
+vi.mock('../../../src/mcp/sessionManager', () => ({
+  revokeUserSessions: vi.fn(),
+  revokeUserSessionsForClient: vi.fn(),
+}));
 
 const dbs = new DatabaseService(testDb);
 const realtime = new RealtimeService();
 const permissions = new PermissionsService(dbs);
 const webauthn = new WebauthnConfigService(dbs);
-const userCleanup = new UserCleanupService(dbs, new BudgetService(dbs, permissions, new ExchangeRatesService(), realtime));
+const userCleanup = new UserCleanupService(
+  dbs,
+  new BudgetService(dbs, permissions, new ExchangeRatesService(), realtime),
+);
 // Positional and previously wrong: an AtlasService sat in the membership slot
 // and the mailer was missing entirely, so `auth` was built with its last four
 // collaborators shifted by one. Nothing failed, because the version-check path
 // below never reaches them.
-const auth = new AuthService(dbs, permissions, new TripMembershipService(dbs), webauthn, userCleanup, new MailerService(dbs), new EphemeralTokenService(), new AllowedFileTypesService(dbs));
+const auth = new AuthService(
+  dbs,
+  permissions,
+  new TripMembershipService(dbs),
+  webauthn,
+  userCleanup,
+  new MailerService(dbs),
+  new EphemeralTokenService(),
+  new AllowedFileTypesService(dbs),
+);
 const svc = new AdminService(
   dbs,
   new AddonsService(dbs),
@@ -90,7 +104,8 @@ function mockGitHubLatest(tagName: string, ok = true): void {
     vi.fn().mockResolvedValue({
       ok,
       // fetchGithub reads text() and parses it itself (size cap), so stub both.
-      text: async () => JSON.stringify({ tag_name: tagName, html_url: `https://github.com/liketrek/TREK/releases/tag/${tagName}` }),
+      text: async () =>
+        JSON.stringify({ tag_name: tagName, html_url: `https://github.com/liketrek/TREK/releases/tag/${tagName}` }),
       json: async () => ({ tag_name: tagName, html_url: `https://github.com/liketrek/TREK/releases/tag/${tagName}` }),
     }),
   );
@@ -145,10 +160,8 @@ describe('checkAndNotifyVersion', () => {
     expect(getLastNotifiedVersion()).toBeUndefined();
   });
 
-  it('VNOTIF-002 — TT never notifies about updates, even when upstream TREK has a newer release', async () => {
-    // TT does not follow the TREK release channel: whatever GitHub reports,
-    // checkVersion answers update_available:false and the notification path
-    // stays silent.
+  it('VNOTIF-002 — notifies about a newer bhxnms/T-T release', async () => {
+    // A newer stable release is sent to both admins through the notification service.
     const { user: admin1 } = createAdmin(testDb);
     const { user: admin2 } = createAdmin(testDb);
     mockGitHubLatest('v99.0.0');
@@ -160,27 +173,27 @@ describe('checkAndNotifyVersion', () => {
       type: string;
       scope: string;
     }>;
-    expect(notifications.length).toBe(0);
+    expect(notifications.length).toBeGreaterThan(0);
     expect([admin1.id, admin2.id].length).toBe(2);
-    expect(getLastNotifiedVersion()).toBeUndefined();
+    expect(getLastNotifiedVersion()).toBe('99.0.0');
   });
 
-  it('VNOTIF-003 — last_notified_version is never set under TT', async () => {
+  it('VNOTIF-003 — stores the notified stable version', async () => {
     createAdmin(testDb);
     mockGitHubLatest('v99.1.0');
 
     await checkAndNotifyVersion();
 
-    expect(getLastNotifiedVersion()).toBeUndefined();
+    expect(getLastNotifiedVersion()).toBe('99.1.0');
   });
 
-  it('VNOTIF-004 — repeated ticks stay silent (no duplicate or first notification)', async () => {
+  it('VNOTIF-004 — repeated ticks send only one notification', async () => {
     createAdmin(testDb);
     mockGitHubLatest('v99.2.0');
 
     await checkAndNotifyVersion();
     await checkAndNotifyVersion();
-    expect(getNotificationCount()).toBe(0);
+    expect(getNotificationCount()).toBe(1);
   });
 
   it('VNOTIF-005 — a stale last_notified_version from an earlier install is left alone', async () => {
@@ -192,18 +205,18 @@ describe('checkAndNotifyVersion', () => {
 
     await checkAndNotifyVersion();
 
-    expect(getNotificationCount()).toBe(0);
-    expect(getLastNotifiedVersion()).toBe('98.0.0');
+    expect(getNotificationCount()).toBe(1);
+    expect(getLastNotifiedVersion()).toBe('99.3.0');
   });
 
-  it('VNOTIF-006 — no notification row is ever created for a version bump', async () => {
+  it('VNOTIF-006 — creates a notification row for a version bump', async () => {
     createAdmin(testDb);
     mockGitHubLatest('v99.4.0');
 
     await checkAndNotifyVersion();
 
     const notif = testDb.prepare('SELECT * FROM notifications LIMIT 1').get();
-    expect(notif).toBeUndefined();
+    expect(notif).toBeDefined();
   });
 
   it('VNOTIF-007 — silently handles GitHub API fetch failure (no crash, no notification)', async () => {

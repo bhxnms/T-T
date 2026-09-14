@@ -307,7 +307,7 @@ describe('LoginPage — password form', () => {
     expect(screen.getByText("Login won't stick over HTTP")).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /troubleshooting/i })).toHaveAttribute(
       'href',
-      'https://github.com/liketrek/TREK/wiki/Troubleshooting',
+      'https://github.com/bhxnms/T-T/wiki/Troubleshooting',
     );
   });
 });

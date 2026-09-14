@@ -41,7 +41,7 @@ function AdminPageDesktop(): React.ReactElement {
     bagTrackingEnabled, setBagTrackingEnabled,
     collabFeatures, setCollabFeatures,
     serverTimezone,
-    updateInfo, setShowUpdateModal,
+    updateInfo, setUpdateInfo, checkingVersion, handleCheckVersion, setShowUpdateModal,
   } = admin
 
   const gUsers = t('admin.group.users')
@@ -94,7 +94,7 @@ function AdminPageDesktop(): React.ReactElement {
 
           {/* Update Banner */}
           {updateInfo && (
-            <AdminUpdateBanner updateInfo={updateInfo} t={t} onHowTo={() => setShowUpdateModal(true)} />
+            <AdminUpdateBanner updateInfo={updateInfo} t={t} onHowTo={() => setShowUpdateModal(true)} onCheck={handleCheckVersion} checking={checkingVersion} />
           )}
 
           {/* Demo Baseline Button */}

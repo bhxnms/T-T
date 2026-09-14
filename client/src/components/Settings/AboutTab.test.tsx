@@ -62,7 +62,7 @@ describe('AboutTab', () => {
     expect(screen.queryByText('Report a Bug')).toBeNull();
     expect(screen.queryByText('Feature Request')).toBeNull();
     const source = screen.getByText('Source code').closest('a');
-    expect(source).toHaveAttribute('href', 'https://github.com/liketrek/TREK');
+    expect(source).toHaveAttribute('href', 'https://github.com/bhxnms/T-T');
     expect(source).toHaveAttribute('target', '_blank');
     expect(source).toHaveAttribute('rel', 'noopener noreferrer');
   });

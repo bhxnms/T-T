@@ -37,13 +37,13 @@ describe('AdminUpdateBanner', () => {
   it('FE-ADMBAN-004: links to the release when release_url is set', () => {
     render(
       <Harness
-        updateInfo={buildUpdateInfo({ release_url: 'https://github.com/liketrek/TREK/releases/tag/v3.5.0' })}
+        updateInfo={buildUpdateInfo({ release_url: 'https://github.com/bhxnms/T-T/releases/tag/v3.5.0' })}
         onHowTo={() => {}}
       />
     );
 
     const link = screen.getByRole('link', { name: /view on github/i });
-    expect(link).toHaveAttribute('href', 'https://github.com/liketrek/TREK/releases/tag/v3.5.0');
+    expect(link).toHaveAttribute('href', 'https://github.com/bhxnms/T-T/releases/tag/v3.5.0');
     expect(link).toHaveAttribute('target', '_blank');
   });
 
