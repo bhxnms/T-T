@@ -40,39 +40,39 @@ on:
   push:
     branches: [main, dev]
     paths:
-      - 'server/**'
-      - 'client/**'
-      - 'shared/**'
-      - 'plugin-sdk/**'
+      - "server/**"
+      - "client/**"
+      - "shared/**"
+      - "plugin-sdk/**"
       # npm workspaces hoist every dependency into the single root lockfile,
       # so a dependency bump touches none of the four directories above — and
       # a native binding like better-sqlite3 is exactly what needs the suite.
-      - 'package.json'
-      - 'package-lock.json'
-      - 'sonar-project.properties'
-      - '.github/workflows/test.yml'
+      - "package.json"
+      - "package-lock.json"
+      - "sonar-project.properties"
+      - ".github/workflows/test.yml"
       # Docs inside the workspaces (CLAUDE.md, READMEs, PATTERN.md) affect
       # neither the tests nor the scan — no test reads checked-in markdown
       # and SonarCloud has no markdown analyzer. Negations must stay last.
-      - '!**/*.md'
+      - "!**/*.md"
   pull_request:
     branches: [main, dev]
     paths:
-      - 'server/**'
-      - 'client/**'
-      - 'shared/**'
-      - 'plugin-sdk/**'
+      - "server/**"
+      - "client/**"
+      - "shared/**"
+      - "plugin-sdk/**"
       # npm workspaces hoist every dependency into the single root lockfile,
       # so a dependency bump touches none of the four directories above — and
       # a native binding like better-sqlite3 is exactly what needs the suite.
-      - 'package.json'
-      - 'package-lock.json'
-      - 'sonar-project.properties'
-      - '.github/workflows/test.yml'
+      - "package.json"
+      - "package-lock.json"
+      - "sonar-project.properties"
+      - ".github/workflows/test.yml"
       # Docs inside the workspaces (CLAUDE.md, READMEs, PATTERN.md) affect
       # neither the tests nor the scan — no test reads checked-in markdown
       # and SonarCloud has no markdown analyzer. Negations must stay last.
-      - '!**/*.md'
+      - "!**/*.md"
   workflow_dispatch:
 
 # A newer push to the same branch/PR supersedes the running one — cancel it
@@ -224,7 +224,14 @@ jobs:
   s3-contract:
     name: S3 Driver Contract (MinIO)
     runs-on: ubuntu-latest
-    needs: [plugin-facts, i18n-parity, server-quality, client-quality, plugin-sdk-quality]
+    needs:
+      [
+        plugin-facts,
+        i18n-parity,
+        server-quality,
+        client-quality,
+        plugin-sdk-quality,
+      ]
     # Fork PRs don't get repo secrets, so MINIO_LICENSE_KEY would be empty and
     # the AIStor container would fail to boot. Pushes and manual dispatches do
     # have secrets, so only fork PRs are filtered out. (The implicit success()
@@ -256,7 +263,11 @@ jobs:
         run: npm run build --workspace=shared
 
       - name: Write MinIO license
-        run: printf '%s' "${{ secrets.MINIO_LICENSE_KEY }}" > minio-licence.key
+        env:
+          MINIO_LICENSE_KEY: ${{ secrets.MINIO_LICENSE_KEY }}
+        run: |
+          test -n "$MINIO_LICENSE_KEY" || { echo 'MINIO_LICENSE_KEY is not configured'; exit 1; }
+          printf '%s' "$MINIO_LICENSE_KEY" > minio-licence.key
 
       - name: Start MinIO
         # `services:` can't pass the `server /data --license ...` command to
@@ -293,10 +304,24 @@ jobs:
           TREK_TEST_S3_SECRET_ACCESS_KEY: trekci-secret
         run: cd server && npx vitest run tests/unit/nest/storage/s3.driver.contract.test.ts
 
+      - name: Cleanup MinIO
+        if: always()
+        run: |
+          docker rm -f minio 2>/dev/null || true
+          rm -f minio-licence.key
+
   server-coverage:
     name: Server Coverage
+    timeout-minutes: 45
     runs-on: ubuntu-latest
-    needs: [plugin-facts, i18n-parity, server-quality, client-quality, plugin-sdk-quality]
+    needs:
+      [
+        plugin-facts,
+        i18n-parity,
+        server-quality,
+        client-quality,
+        plugin-sdk-quality,
+      ]
     steps:
       - uses: actions/checkout@v6
 
@@ -322,19 +347,44 @@ jobs:
         run: npm run build --workspace=shared
 
       - name: Run tests with coverage
-        run: cd server && npm run test:coverage
+        run: cd server && npm run test:coverage -- --maxWorkers=2 --minWorkers=1
+
+      - name: Verify coverage outputs
+        run: |
+          set -euxo pipefail
+          test -s server/coverage/lcov.info
+          test -s server/coverage/coverage-summary.json
+          wc -c server/coverage/lcov.info server/coverage/coverage-summary.json
 
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
           name: sonar-server-coverage
           path: server/coverage/
+          if-no-files-found: error
           retention-days: 1
+
+      - name: Diagnose coverage failure
+        if: ${{ failure() || cancelled() }}
+        run: |
+          node --version
+          npm --version
+          free -h || true
+          df -h || true
+          ps aux --sort=-%mem | head -20 || true
+          find server/coverage -maxdepth 2 -type f -ls 2>/dev/null || true
 
   client-coverage:
     name: Client Coverage
     runs-on: ubuntu-latest
-    needs: [plugin-facts, i18n-parity, server-quality, client-quality, plugin-sdk-quality]
+    needs:
+      [
+        plugin-facts,
+        i18n-parity,
+        server-quality,
+        client-quality,
+        plugin-sdk-quality,
+      ]
     steps:
       - uses: actions/checkout@v6
 
@@ -357,17 +407,42 @@ jobs:
       - name: Run tests with coverage
         run: cd client && npm run test:coverage
 
+      - name: Verify coverage outputs
+        run: |
+          set -euxo pipefail
+          test -s client/coverage/lcov.info
+          test -s client/coverage/coverage-summary.json
+          wc -c client/coverage/lcov.info client/coverage/coverage-summary.json
+
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
           name: sonar-client-coverage
           path: client/coverage/
+          if-no-files-found: error
           retention-days: 1
+
+      - name: Diagnose coverage failure
+        if: ${{ failure() || cancelled() }}
+        run: |
+          node --version
+          npm --version
+          free -h || true
+          df -h || true
+          ps aux --sort=-%mem | head -20 || true
+          find client/coverage -maxdepth 2 -type f -ls 2>/dev/null || true
 
   shared-coverage:
     name: Shared Coverage
     runs-on: ubuntu-latest
-    needs: [plugin-facts, i18n-parity, server-quality, client-quality, plugin-sdk-quality]
+    needs:
+      [
+        plugin-facts,
+        i18n-parity,
+        server-quality,
+        client-quality,
+        plugin-sdk-quality,
+      ]
     steps:
       - uses: actions/checkout@v6
 
@@ -393,7 +468,14 @@ jobs:
   plugin-sdk-coverage:
     name: Plugin SDK Coverage
     runs-on: ubuntu-latest
-    needs: [plugin-facts, i18n-parity, server-quality, client-quality, plugin-sdk-quality]
+    needs:
+      [
+        plugin-facts,
+        i18n-parity,
+        server-quality,
+        client-quality,
+        plugin-sdk-quality,
+      ]
     defaults:
       run:
         working-directory: plugin-sdk
@@ -431,7 +513,8 @@ jobs:
     # every line of that package report as uncovered, and the dashboard would
     # show a collapse that did not happen. The preflight gates already stop it
     # transitively through these four, so they aren't repeated here.
-    needs: [server-coverage, client-coverage, shared-coverage, plugin-sdk-coverage]
+    needs:
+      [server-coverage, client-coverage, shared-coverage, plugin-sdk-coverage]
 
     steps:
       - uses: actions/checkout@v6

@@ -59,7 +59,7 @@ function SheetView({ sheet, doc, marks, last }: { sheet: Sheet; doc: BookDocumen
 
   return (
     <div
-      className={`bx-sheet${sheet.single ? 'is-single' : ''}`}
+      className={`bx-sheet${sheet.single ? ' is-single' : ''}`}
       data-label={sheet.label}
       style={{
         position: 'relative',

@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'wiki/**'
-      - '.github/workflows/wiki.yml'
+      - "wiki/**"
+      - ".github/workflows/wiki.yml"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check Wiki repository
+        id: wiki
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$(gh api "repos/${{ github.repository }}" --jq '.has_wiki' 2>/dev/null)" == "true" ]] && git ls-remote "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git" >/dev/null 2>&1; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::GitHub Wiki is disabled or has not been initialized; skipping wiki deployment. Enable Wikis and create the first page, then rerun this workflow."
+          fi
       - name: Publish to GitHub wiki
+        if: steps.wiki.outputs.available == 'true'
         uses: Andrew-Chen-Wang/github-wiki-action@v5
         with:
           strategy: clone
