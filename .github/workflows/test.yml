@@ -1,15 +1,11 @@
-name: Tests & SonarQube
+name: Tests
 
 permissions:
   contents: read
 
-# The repo's test/quality CI and SonarQube Cloud analysis in one workflow, so
-# each test suite runs once per event instead of once for the old test.yml and
-# once more for Sonar's coverage. Pushes to dev and main produce branch
-# analysis; pull requests get PR analysis with decoration on the PR itself
-# (the scanner picks the context up from the Actions environment).
+# The repo's test/quality CI workflow.
 #
-# Job layout — three tiers:
+# Job layout — two tiers:
 #   - Preflight: plugin-facts, i18n-parity and the quality jobs
 #     (server-quality, client-quality, plugin-sdk-quality) hold the cheap
 #     generated-code/typecheck/lint/smoke gates. Every test job `needs:` all
@@ -18,24 +14,14 @@ permissions:
 #   - Tests: the *-coverage jobs run the suites and upload lcov; s3-contract
 #     runs the MinIO contract suite. Coverage jobs run tests only — with the
 #     gates cleared in preflight, they can only fail because tests failed.
-#   - Scan `needs:` exactly the four coverage jobs. A coverage job failing
-#     must stop the scan — a missing lcov file would make every line of that
-#     package report as uncovered, and the dashboard would show a collapse
-#     that did not happen. (The preflight gates stop it transitively.)
-#   - Fork PRs don't receive secrets, so the two jobs that need them skip
-#     themselves: s3-contract (MINIO_LICENSE_KEY) and scan (SONAR_TOKEN).
-#     Everything else runs on fork PRs so outside contributors still get the
-#     full test signal.
-#
-# Automatic Analysis must stay disabled on sonarcloud.io — it is mutually
-# exclusive with CI-based analysis, and it cannot import the lcov coverage
-# this workflow produces.
-# A push or PR that touches none of these paths can't change the tests or the
-# analysis, so don't spend the coverage fan-out on it. For a docs-only push
-# that means no run and no fresh branch analysis — harmless, since the last
-# analysis is still accurate for unchanged code. GitHub Actions doesn't
-# support YAML anchors, so the two lists are literal copies: keep them
-# identical when editing either one.
+#   - Fork PRs don't receive secrets, so s3-contract (MINIO_LICENSE_KEY) skips
+#     itself. Everything else runs on fork PRs so outside contributors still
+#     get the full test signal.
+# A push or PR that touches none of these paths can't change the tests,
+# so don't spend the coverage fan-out on it. For a docs-only push
+# that means no run — harmless, since the tests are still accurate for
+# unchanged code. GitHub Actions doesn't support YAML anchors, so the two
+# lists are literal copies: keep them identical when editing either one.
 on:
   push:
     branches: [main, dev]
@@ -49,11 +35,10 @@ on:
       # a native binding like better-sqlite3 is exactly what needs the suite.
       - "package.json"
       - "package-lock.json"
-      - "sonar-project.properties"
       - ".github/workflows/test.yml"
       # Docs inside the workspaces (CLAUDE.md, READMEs, PATTERN.md) affect
-      # neither the tests nor the scan — no test reads checked-in markdown
-      # and SonarCloud has no markdown analyzer. Negations must stay last.
+      # neither the tests — no test reads checked-in markdown.
+      # Negations must stay last.
       - "!**/*.md"
   pull_request:
     branches: [main, dev]
@@ -67,17 +52,15 @@ on:
       # a native binding like better-sqlite3 is exactly what needs the suite.
       - "package.json"
       - "package-lock.json"
-      - "sonar-project.properties"
       - ".github/workflows/test.yml"
       # Docs inside the workspaces (CLAUDE.md, READMEs, PATTERN.md) affect
-      # neither the tests nor the scan — no test reads checked-in markdown
-      # and SonarCloud has no markdown analyzer. Negations must stay last.
+      # neither the tests — no test reads checked-in markdown.
+      # Negations must stay last.
       - "!**/*.md"
   workflow_dispatch:
 
 # A newer push to the same branch/PR supersedes the running one — cancel it
-# rather than spending the coverage fan-out on a stale commit. Safe here
-# because the Sonar scan job runs last and only the latest commit matters.
+# rather than spending the coverage fan-out on a stale commit.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -367,7 +350,7 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
-          name: sonar-server-coverage
+          name: server-coverage
           path: server/coverage/
           if-no-files-found: error
           retention-days: 1
@@ -425,7 +408,7 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
-          name: sonar-client-coverage
+          name: client-coverage
           path: client/coverage/
           if-no-files-found: error
           retention-days: 1
@@ -469,7 +452,7 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
-          name: sonar-shared-coverage
+          name: shared-coverage
           path: shared/coverage/
           retention-days: 1
 
@@ -508,69 +491,6 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
-          name: sonar-plugin-sdk-coverage
+          name: plugin-sdk-coverage
           path: plugin-sdk/coverage/
           retention-days: 1
-
-  scan:
-    name: Scan
-    runs-on: ubuntu-latest
-    # Fork PRs don't receive SONAR_TOKEN — skip the scan rather than fail it.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    # Coverage jobs failing must stop the scan: a missing lcov file would make
-    # every line of that package report as uncovered, and the dashboard would
-    # show a collapse that did not happen. The preflight gates already stop it
-    # transitively through these four, so they aren't repeated here.
-    needs:
-      [server-coverage, client-coverage, shared-coverage, plugin-sdk-coverage]
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          # Sonar reads git blame to date each issue and to decide what counts
-          # as new code. A shallow clone leaves it blind to both.
-          fetch-depth: 0
-
-      - name: Download server coverage
-        uses: actions/download-artifact@v6
-        with:
-          name: sonar-server-coverage
-          path: server/coverage/
-
-      - name: Download client coverage
-        uses: actions/download-artifact@v6
-        with:
-          name: sonar-client-coverage
-          path: client/coverage/
-
-      - name: Download shared coverage
-        uses: actions/download-artifact@v6
-        with:
-          name: sonar-shared-coverage
-          path: shared/coverage/
-
-      - name: Download plugin-sdk coverage
-        uses: actions/download-artifact@v6
-        with:
-          name: sonar-plugin-sdk-coverage
-          path: plugin-sdk/coverage/
-
-      - name: Scan
-        uses: SonarSource/sonarqube-scan-action@v8
-        env:
-          # SonarQube Cloud is the scan action's default host, so no
-          # SONAR_HOST_URL — the token is a sonarcloud.io token for the
-          # liketrek org.
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          # New Code is configured as "previous version", so this string is what
-          # draws that line — changing it re-bases every "new code" metric.
-          # Pinned rather than read from package.json on purpose: package.json is
-          # still on 3.4.1 while the project has been analysed as 4.0.0 all along,
-          # and taking the lower number would silently move the baseline. Bump it
-          # here as part of the release, together with the version bump.
-          #
-          # Everything else — sources, tests, exclusions, the documented
-          # false-positive list — lives in sonar-project.properties so it stays
-          # reviewable in a PR rather than buried in workflow YAML.
-          args: -Dsonar.projectVersion=0.5.0
