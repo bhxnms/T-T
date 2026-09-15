@@ -9,7 +9,7 @@ interface ActivityCardProps {
   isDragging?: boolean;
 }
 
-export default function ActivityCard({ activity, onEdit, onDelete, isDragging }: ActivityCardProps) {
+export default function ActivityCard({ activity, onEdit: _onEdit, onDelete: _onDelete, isDragging }: ActivityCardProps) {
   const isPlace = activity.place_id !== null;
   const isReservation = activity.reservation_id !== null;
 

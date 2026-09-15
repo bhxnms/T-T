@@ -261,6 +261,8 @@ function RootRedirect() {
     return () => {
       cancelled = true;
     };
+    // loadSettings is a Zustand action with a stable reference, safe to omit
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthenticated, settingsLoaded, settingsGaveUp, settings, target]);
 
   if (isLoading || (isAuthenticated && !target)) {
