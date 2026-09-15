@@ -515,8 +515,8 @@ jobs:
   scan:
     name: Scan
     runs-on: ubuntu-latest
-    # TT project does not have SonarCloud configured — skip this job
-    if: false
+    # Fork PRs don't receive SONAR_TOKEN — skip the scan rather than fail it.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     # Coverage jobs failing must stop the scan: a missing lcov file would make
     # every line of that package report as uncovered, and the dashboard would
     # show a collapse that did not happen. The preflight gates already stop it
