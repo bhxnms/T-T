@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
 import { rtlTextAlias } from './rtlTextAlias.js';
 
 export default defineConfig({
@@ -9,10 +9,7 @@ export default defineConfig({
     root: '.',
     globals: true,
     environment: './tests/environment/jsdom-native-abort.ts',
-    include: [
-      'tests/**/*.test.{ts,tsx}',
-      'src/**/*.test.{ts,tsx}',
-    ],
+    include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
     setupFiles: ['tests/setup.ts'],
     testTimeout: 15000,
     hookTimeout: 15000,
@@ -21,7 +18,7 @@ export default defineConfig({
     reporters: ['verbose'],
     coverage: {
       provider: 'v8',
-      reporter: ['lcov', 'text'],
+      reporter: ['lcov', 'text', 'json-summary'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
       // All .d.ts, not just vite-env: declaration files carry no executable

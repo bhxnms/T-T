@@ -232,11 +232,12 @@ jobs:
         client-quality,
         plugin-sdk-quality,
       ]
-    # Fork PRs don't get repo secrets, so MINIO_LICENSE_KEY would be empty and
-    # the AIStor container would fail to boot. Pushes and manual dispatches do
-    # have secrets, so only fork PRs are filtered out. (The implicit success()
-    # on this expression also keeps the job skipped when a preflight fails.)
+    # Fork PRs do not receive repository secrets. Skip the live AIStor contract
+    # job when its license secret is unavailable; hermetic S3 unit tests still run
+    # in server-quality for every change.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      MINIO_LICENSE_KEY: ${{ secrets.MINIO_LICENSE_KEY }}
 
     steps:
       - uses: actions/checkout@v6
@@ -263,13 +264,18 @@ jobs:
         run: npm run build --workspace=shared
 
       - name: Write MinIO license
-        env:
-          MINIO_LICENSE_KEY: ${{ secrets.MINIO_LICENSE_KEY }}
+        id: license
         run: |
-          test -n "$MINIO_LICENSE_KEY" || { echo 'MINIO_LICENSE_KEY is not configured'; exit 1; }
+          if [[ -z "$MINIO_LICENSE_KEY" ]]; then
+            echo 'MINIO_LICENSE_KEY is not configured; skipping live S3 contract tests.'
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           printf '%s' "$MINIO_LICENSE_KEY" > minio-licence.key
+          echo 'available=true' >> "$GITHUB_OUTPUT"
 
       - name: Start MinIO
+        if: steps.license.outputs.available == 'true'
         # `services:` can't pass the `server /data --license ...` command to
         # the AIStor image, so it starts via docker run. 127.0.0.1 endpoint is
         # load-bearing: aws-lite picks path-style only for IP/localhost hosts,
@@ -281,6 +287,7 @@ jobs:
             quay.io/minio/aistor/minio:RELEASE.2026-08-07T18-34-35Z server /data --license /minio.license
 
       - name: Wait for MinIO
+        if: steps.license.outputs.available == 'true'
         # curl was removed from the AIStor image — poll from the runner instead.
         # 60 x 2s gives a wider margin on cold runners than the 30 x 1s the
         # pre-6fbff835 job used.
@@ -294,6 +301,7 @@ jobs:
           exit 1
 
       - name: Run the S3 driver contract suite
+        if: steps.license.outputs.available == 'true'
         # No --coverage: the src/nest/storage/** 94/84/97/94 pin must keep
         # holding from hermetic tests alone. The suite's beforeAll creates
         # the trek-test bucket idempotently — no separate bucket-init step.
@@ -347,7 +355,7 @@ jobs:
         run: npm run build --workspace=shared
 
       - name: Run tests with coverage
-        run: cd server && npm run test:coverage -- --maxWorkers=2 --minWorkers=1
+        run: cd server && npm run test:coverage -- --maxWorkers=2
 
       - name: Verify coverage outputs
         run: |
