@@ -60,5 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Hiện các quốc gia đã lên kế hoạch',
   'atlas.plannedFor': 'Dự kiến',
   'atlas.antarctica': 'Nam Cực',
+  'atlas.checkinEmpty': '',
+  'atlas.checkinLandmarks': '',
+  'atlas.checkinPlaces': '',
+  'atlas.checkinTab': '',
+  'atlas.checkinTotal': '',
 };
 export default atlas;

@@ -1,14 +1,32 @@
-import type { PackingState } from './usePackingListPanel'
-import { KategorieGruppe } from './PackingListPanelCategoryGroup'
-import EmptyState from '../shared/EmptyState'
+import EmptyState from '../shared/EmptyState';
+import { KategorieGruppe } from './PackingListPanelCategoryGroup';
+import type { PackingState } from './usePackingListPanel';
 
 export function PackingList(S: PackingState) {
   const {
-    items, gruppiert, t, tripId, allCategories, handleRenameCategory, handleDeleteCategory, handleDeleteItem,
-    handleAddItemToCategory, categoryAssignees, tripMembers, handleSetAssignees,
-    bagTrackingEnabled, bags, handleCreateBagByName, canEdit, reorderPackingItems,
-    currentUserId, handleSetSharing, handleCloneItem, handleJoinItem, handleLeaveItem,
-  } = S
+    items,
+    gruppiert,
+    t,
+    tripId,
+    allCategories,
+    handleRenameCategory,
+    handleDeleteCategory,
+    handleDeleteItem,
+    handleAddItemToCategory,
+    categoryAssignees,
+    tripMembers,
+    handleSetAssignees,
+    bagTrackingEnabled,
+    bags,
+    handleCreateBagByName,
+    canEdit,
+    reorderPackingItems,
+    currentUserId,
+    handleSetSharing,
+    handleCloneItem,
+    handleJoinItem,
+    handleLeaveItem,
+  } = S;
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0 16px' }}>
       {items.length === 0 ? (
@@ -18,7 +36,7 @@ export function PackingList(S: PackingState) {
           <p style={{ fontSize: 'calc(13px * var(--fs-scale-body, 1))', margin: 0 }}>{t('packing.emptyFiltered')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           {Object.entries(gruppiert).map(([kat, katItems]) => (
             <KategorieGruppe
               key={kat}
@@ -49,5 +67,5 @@ export function PackingList(S: PackingState) {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 # Map Settings
 
-The Map tab controls which map engine and tile source TREK uses in the Trip Planner and Journey maps.
+The Map tab controls which map engine and tile source TT Travel Planner uses in the Trip Planner and Journey maps.
 
 > **Note:** The Atlas view always uses Leaflet regardless of this setting.
 
@@ -69,7 +69,9 @@ OpenFreeMap instead of drawing watermarked tiles. Save a key and your template i
 Offline pre-download works on OpenFreeMap and on CARTO. It does not work on the OpenStreetMap presets, whose tile
 servers do not permit bulk downloading.
 
-## Mapbox GL — access token and style
+## Journey AMap (Amap JS API)
+
+Journey maps can use AMap when a Web JS API key is provided by the deployment. The browser reads the existing compatibility runtime value `window.__TREK_AMAP_JS_KEY__`; configure that value through the deployment's frontend runtime injection rather than placing a secret in source control. If the key is missing or the AMap SDK fails to load, TT Travel Planner falls back to the configured Leaflet/GL map and keeps the journey data available.
 
 Enter your **public token** (`pk.*`) from [mapbox.com → Access tokens](https://console.mapbox.com/account/access-tokens/).
 

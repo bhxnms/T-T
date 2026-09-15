@@ -98,7 +98,7 @@ export default function ActivityCard({ activity, onEdit, onDelete, isDragging }:
         className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium text-white"
         style={{
           background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)',
-          boxShadow: 'var(--shadow-sm)'
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
         {activity.order_index + 1}

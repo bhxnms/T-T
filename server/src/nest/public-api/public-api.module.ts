@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { PublicApiController } from './public-api.controller';
-import { PublicApiService } from './public-api.service';
-import { ApiTokenGuard } from './api-token.guard';
+import { RateLimitModule } from '../common/rate-limit.module';
 import { TokensModule } from '../tokens/tokens.module';
 import { TripMembershipModule } from '../trip-membership/trip-membership.module';
-import { RateLimitModule } from '../common/rate-limit.module';
+import { ApiTokenGuard } from './api-token.guard';
+import { PublicApiController } from './public-api.controller';
+import { PublicApiService } from './public-api.service';
+import { Module } from '@nestjs/common';
 
 /**
  * Public API v1 — the versioned read-only surface for third-party integrations.

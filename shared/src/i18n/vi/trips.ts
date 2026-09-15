@@ -12,5 +12,15 @@ const trips: TranslationStrings = {
   'trips.reminderCustom': 'Tùy chọn',
   'trips.reminderDaysBefore': 'ngày trước khi khởi hành',
   'trips.reminderDisabledHint': 'Lời nhắc chuyến đi bị tắt. Kích hoạt chúng trong Quản trị > Cài đặt > Thông báo.',
+  'trips.importTrekTab': '',
+  'trips.importTrekIntro': '',
+  'trips.importTrekPick': '',
+  'trips.importTrekScanning': '',
+  'trips.importTrekImport': '',
+  'trips.importTrekSuccess': 'Imported {count} trip(s)',
+  'trips.importTrekNone': '',
+  'trips.importTrekFailed': '',
+  'trips.importTrekStats': '{days} days · {places} places · {photos} photos · {budget} budget items',
+  'trips.importTrekUntitled': '',
 };
 export default trips;

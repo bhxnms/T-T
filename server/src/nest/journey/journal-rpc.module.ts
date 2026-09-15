@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
 import { AllowedFileTypesModule } from '../files/allowed-file-types.module';
 import { MemoriesModule } from '../memories/memories.module';
 import { PluginGuardsModule } from '../plugins/host/plugin-guards.module';
 import { StorageModule } from '../storage/storage.module';
-import { JourneyDomainModule } from './journey-domain.module';
 import { JournalRpc } from './journal.rpc';
+import { JourneyDomainModule } from './journey-domain.module';
+import { Module } from '@nestjs/common';
 
 /**
  * The journal plugin surface, in its own container.

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
 import { decrypt_api_key } from '../common/crypto/apiKeyCrypto';
+import { DatabaseService } from '../database/database.service';
 import { safeParseConfig } from './plugin-config-parse';
 import { isFilled, settingDefaults } from './settings-defaults';
+import { Injectable } from '@nestjs/common';
 
 /**
  * A plugin's per-user settings, decrypted host-side.

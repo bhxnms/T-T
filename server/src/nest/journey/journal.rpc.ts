@@ -1,20 +1,21 @@
-import pathMod from 'node:path';
-import { randomUUID } from 'node:crypto';
-import { Readable } from 'node:stream';
-import { journalPluginPhotoInputSchema } from '@trek/shared';
-import { PluginController, PluginMethod } from '../plugins/host/rpc-kit/decorators';
-import { PluginGuards } from '../plugins/host/plugin-guards.service';
-import { BadParams, ForbiddenResource } from '../plugins/host/rpc-errors';
-import { asPayload, num } from '../plugins/host/rpc-params';
-import type { PluginRpcContext } from '../plugins/host/rpc-kit/types';
 import { ADDON_IDS } from '../../addons';
 import { readEnv } from '../../app-config';
 import { isDemoEmail } from '../common/demo';
+import { DatabaseService } from '../database/database.service';
 import { AllowedFileTypesService } from '../files/allowed-file-types.service';
 import { PhotoCaptureBackfillService } from '../memories/photo-capture-backfill.service';
-import { DatabaseService } from '../database/database.service';
+import { PluginGuards } from '../plugins/host/plugin-guards.service';
+import { BadParams, ForbiddenResource } from '../plugins/host/rpc-errors';
+import { PluginController, PluginMethod } from '../plugins/host/rpc-kit/decorators';
+import type { PluginRpcContext } from '../plugins/host/rpc-kit/types';
+import { asPayload, num } from '../plugins/host/rpc-params';
 import { StorageService } from '../storage/storage.service';
 import { JourneyDomainService } from './journey-domain.service';
+import { journalPluginPhotoInputSchema } from '@trek/shared';
+
+import { randomUUID } from 'node:crypto';
+import pathMod from 'node:path';
+import { Readable } from 'node:stream';
 
 /** 10MB decoded, the same cap the file surface applies to plugin uploads. */
 const PHOTO_CONTENT_MAX = 10 * 1024 * 1024;
@@ -26,8 +27,14 @@ const PHOTO_CONTENT_MAX = 10 * 1024 * 1024;
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic', '.heif'];
 
 const MIME_BY_EXT: Record<string, string> = {
-  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.heic': 'image/heic', '.heif': 'image/heif',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
 };
 
 /**
@@ -146,7 +153,9 @@ export class JournalRpc {
     // Mirrors the REST upload guard: a demo user must not write bytes to the
     // shared demo instance, not even through a plugin's db:write:journal.
     if (readEnv().demo.enabled) {
-      const uploader = this.db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as { email?: string } | undefined;
+      const uploader = this.db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as
+        | { email?: string }
+        | undefined;
       if (isDemoEmail(uploader?.email)) throw new ForbiddenResource('Uploads are disabled in demo mode.');
     }
 
@@ -158,7 +167,10 @@ export class JournalRpc {
     }
     // The operator's allow-list gates this path too, or the RPC would be the way
     // around an admin setting that the REST upload obeys (journeyImageFileFilter).
-    const allowed = this.allowedTypes.get().split(',').map((e) => e.trim().toLowerCase());
+    const allowed = this.allowedTypes
+      .get()
+      .split(',')
+      .map((e) => e.trim().toLowerCase());
     if (!allowed.includes('*') && !allowed.includes(ext.slice(1))) {
       throw new BadParams(`file type ${ext} is not allowed`);
     }
@@ -183,7 +195,10 @@ export class JournalRpc {
     }
     // Best-effort, exactly as the REST route does it: reads EXIF so the photo
     // carries its capture date.
-    this.captureBackfill.schedule([photo.photo_id].filter((id): id is number => typeof id === 'number'), userId);
+    this.captureBackfill.schedule(
+      [photo.photo_id].filter((id): id is number => typeof id === 'number'),
+      userId,
+    );
     return photo;
   }
 

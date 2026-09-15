@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'İz rengi',
   'inspector.trackColorAuto': 'Otomatik renk',
   'inspector.trackColorCustom': 'Özel renk seç',
-  "inspector.checkin": "Check-in yap",
-  "inspector.checkinDone": "Check-in yapıldı",
+  'inspector.checkin': 'Check-in yap',
+  'inspector.checkinDone': 'Check-in yapıldı',
 };
 export default inspector;

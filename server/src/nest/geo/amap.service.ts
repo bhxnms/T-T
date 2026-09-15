@@ -180,9 +180,14 @@ export async function amapRoute(
     const destination = toGcj(waypoints[i + 1]);
 
     if (profile === 'cycling') {
-      const data = await amapFetchV4('/v4/direction/bicycling', new URLSearchParams({
-        origin, destination,
-      }), key);
+      const data = await amapFetchV4(
+        '/v4/direction/bicycling',
+        new URLSearchParams({
+          origin,
+          destination,
+        }),
+        key,
+      );
       const path = data.data?.paths?.[0];
       if (!path) throw new Error('AMap: no cycling route found');
       legs.push({ distance: Number(path.distance) || 0, duration: Number(path.duration) || 0 });
@@ -190,7 +195,10 @@ export async function amapRoute(
     } else {
       const path = profile === 'walking' ? '/v3/direction/walking' : '/v3/direction/driving';
       const params = new URLSearchParams({
-        origin, destination, extensions: 'base', output: 'JSON',
+        origin,
+        destination,
+        extensions: 'base',
+        output: 'JSON',
       });
       if (profile === 'driving') params.set('strategy', '0');
       const data = await amapFetchV3(path, params, key);

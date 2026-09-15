@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Planlanan ülkeleri göster',
   'atlas.plannedFor': 'Planlanan tarih',
   'atlas.antarctica': 'Antarktika',
-  "atlas.checkinTab": "Ziyaretler",
-  "atlas.checkinTotal": "Ziyaretler",
-  "atlas.checkinLandmarks": "Gezilecek yerler",
-  "atlas.checkinPlaces": "Seyahat yerleri",
-  "atlas.checkinEmpty": "Henüz ziyaret yok — bir simge yapıyı veya seyahat yerini ziyaret edildi olarak işaretleyin",
+  'atlas.checkinTab': 'Ziyaretler',
+  'atlas.checkinTotal': 'Ziyaretler',
+  'atlas.checkinLandmarks': 'Gezilecek yerler',
+  'atlas.checkinPlaces': 'Seyahat yerleri',
+  'atlas.checkinEmpty': 'Henüz ziyaret yok — bir simge yapıyı veya seyahat yerini ziyaret edildi olarak işaretleyin',
 };
 export default atlas;

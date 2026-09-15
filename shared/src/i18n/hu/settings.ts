@@ -497,12 +497,14 @@ const settings: TranslationStrings = {
   'settings.offline.storage.tripOff': 'Nincs tárolva',
   'settings.offline.storage.tripFinished': 'Befejezve. Csak akkor mentjük, ha bekapcsolod.',
   'settings.offline.notice.stored': '{count} utazás mentve ezen az eszközön',
-  'settings.offline.notice.nothing': 'Nincs mit menteni. Kapcsold be azokat az utazásokat, amelyeket meg szeretnél tartani.',
+  'settings.offline.notice.nothing':
+    'Nincs mit menteni. Kapcsold be azokat az utazásokat, amelyeket meg szeretnél tartani.',
   'settings.offline.notice.busy': 'Már fut egy szinkronizálás. Próbáld újra egy pillanat múlva.',
   'settings.offline.notice.offline': 'Nincs kapcsolat. Csatlakozz, hogy offline menthesd az utazásokat.',
   'settings.offline.notice.signedOut': 'A munkamenet lejárt. Jelentkezz be újra a szinkronizáláshoz.',
   'settings.offline.notice.failed': 'A letöltés nem fejeződött be. Ellenőrizd a kapcsolatot, és próbáld újra.',
-  'settings.offline.notice.loadFailed': 'Nem sikerült olvasni az eszköz offline tárhelyét. Általában segít a gyorsítótár törlése.',
+  'settings.offline.notice.loadFailed':
+    'Nem sikerült olvasni az eszköz offline tárhelyét. Általában segít a gyorsítótár törlése.',
   'settings.offline.clear': 'Gyorsítótár törlése',
   'settings.offline.clearConfirm':
     'Törlöd az összes offline utazási adatot? Online állapotban bármikor újraszinkronizálhatsz.',
@@ -546,7 +548,8 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'API-kulcsok',
-  'settings.apiKeys.description': 'Kulcsok a nyilvános API-hoz, hogy más szoftverek olvashassák az utazásaidat. Csak olvasható: a kulcs semmit nem módosít és nem töröl.',
+  'settings.apiKeys.description':
+    'Kulcsok a nyilvános API-hoz, hogy más szoftverek olvashassák az utazásaidat. Csak olvasható: a kulcs semmit nem módosít és nem töröl.',
   'settings.apiKeys.create': 'Kulcs létrehozása',
   'settings.apiKeys.empty': 'Még nincs kulcs. Hozz létre egyet más szoftver csatlakoztatásához.',
   'settings.apiKeys.createdAt': 'létrehozva',
@@ -557,7 +560,8 @@ const settings: TranslationStrings = {
   'settings.apiKeys.deleteFailed': 'A kulcsot nem sikerült törölni',
   'settings.apiKeys.createFailed': 'A kulcsot nem sikerült létrehozni',
   'settings.apiKeys.copy': 'Másolás',
-  'settings.apiKeys.docsHint': 'Küldd a kulcsot "Authorization: Bearer ..." vagy "X-API-Key: ..." fejlécként a /api/v1 címre.',
+  'settings.apiKeys.docsHint':
+    'Küldd a kulcsot "Authorization: Bearer ..." vagy "X-API-Key: ..." fejlécként a /api/v1 címre.',
   'settings.apiKeys.modal.createTitle': 'API-kulcs létrehozása',
   'settings.apiKeys.modal.name': 'Név',
   'settings.apiKeys.modal.namePlaceholder': 'pl. Dawarich',

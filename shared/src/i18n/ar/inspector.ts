@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'لون المسار',
   'inspector.trackColorAuto': 'لون تلقائي',
   'inspector.trackColorCustom': 'اختيار لون مخصص',
-  "inspector.checkin": "سجّل الزيارة",
-  "inspector.checkinDone": "تم التسجيل",
+  'inspector.checkin': 'سجّل الزيارة',
+  'inspector.checkinDone': 'تم التسجيل',
 };
 export default inspector;

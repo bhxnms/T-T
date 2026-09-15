@@ -52,7 +52,6 @@ The departure and arrival fields use the **Airport picker** — type a city name
 
 Once you select an airport, the **timezone** for that airport appears next to the time field. This lets you enter local departure and arrival times without confusion across time zones.
 
-<!-- TODO: screenshot: Transport modal for a flight with airport picker and timezone -->
 
 ### Trains, cars, and cruises
 

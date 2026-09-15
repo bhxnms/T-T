@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'Barva trasy',
   'inspector.trackColorAuto': 'Automatická barva',
   'inspector.trackColorCustom': 'Vybrat vlastní barvu',
-  "inspector.checkin": "Zapsat se",
-  "inspector.checkinDone": "Zapsáno",
+  'inspector.checkin': 'Zapsat se',
+  'inspector.checkinDone': 'Zapsáno',
 };
 export default inspector;

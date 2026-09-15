@@ -1,17 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Headers,
-  HttpException,
-  Param,
-  Post,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
 import type { User } from '../../types';
-import { AssignmentsService } from './assignments.service';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RequirePermission, TripAccessGuard } from '../permissions/trip-access.guard';
 import {
   AssignmentCreateDto,
   AssignmentReorderDto,
@@ -21,13 +11,10 @@ import {
   AssignmentTransportDto,
   AssignmentParticipantsDto,
 } from './assignments.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CurrentUser } from '../auth/current-user.decorator';
-import { RequirePermission, TripAccessGuard } from '../permissions/trip-access.guard';
+import { AssignmentsService } from './assignments.service';
+import { Body, Controller, Delete, Get, Headers, HttpException, Param, Post, Put, UseGuards } from '@nestjs/common';
 
 type Trip = NonNullable<ReturnType<AssignmentsService['verifyTripAccess']>>;
-
-
 
 /**
  * /api/trips/:tripId/days/:dayId/assignments — the day's ordered itinerary items.
@@ -88,7 +75,12 @@ export class DayAssignmentsController {
       throw new HttpException({ error: 'Day not found' }, 404);
     }
     this.assignments.reorderAssignments(dayId, body.orderedIds);
-    this.assignments.broadcast(tripId, 'assignment:reordered', { dayId: Number(dayId), orderedIds: body.orderedIds }, socketId);
+    this.assignments.broadcast(
+      tripId,
+      'assignment:reordered',
+      { dayId: Number(dayId), orderedIds: body.orderedIds },
+      socketId,
+    );
     return { success: true };
   }
 
@@ -105,7 +97,12 @@ export class DayAssignmentsController {
       throw new HttpException({ error: 'Assignment not found' }, 404);
     }
     this.assignments.deleteAssignment(id);
-    this.assignments.broadcast(tripId, 'assignment:deleted', { assignmentId: Number(id), dayId: Number(dayId) }, socketId);
+    this.assignments.broadcast(
+      tripId,
+      'assignment:deleted',
+      { assignmentId: Number(id), dayId: Number(dayId) },
+      socketId,
+    );
     this.assignments.reconcile(tripId, socketId);
     return { success: true };
   }
@@ -141,7 +138,12 @@ export class AssignmentOpsController {
       throw new HttpException({ error: 'Target day not found' }, 404);
     }
     const { assignment, oldDayId } = this.assignments.moveAssignment(id, body.new_day_id, body.order_index);
-    this.assignments.broadcast(tripId, 'assignment:moved', { assignment, oldDayId: Number(oldDayId), newDayId: Number(body.new_day_id) }, socketId);
+    this.assignments.broadcast(
+      tripId,
+      'assignment:moved',
+      { assignment, oldDayId: Number(oldDayId), newDayId: Number(body.new_day_id) },
+      socketId,
+    );
     this.assignments.reconcile(tripId, socketId);
     return { assignment };
   }
@@ -204,9 +206,10 @@ export class AssignmentOpsController {
     if (!this.assignments.getAssignmentForTrip(id, tripId)) {
       throw new HttpException({ error: 'Assignment not found' }, 404);
     }
-    const assignment = body.direction === 'incoming'
-      ? this.assignments.setIncomingLegTransportMode(id, body.transport_mode ?? null)
-      : this.assignments.setLegTransportMode(id, body.transport_mode ?? null);
+    const assignment =
+      body.direction === 'incoming'
+        ? this.assignments.setIncomingLegTransportMode(id, body.transport_mode ?? null)
+        : this.assignments.setLegTransportMode(id, body.transport_mode ?? null);
     this.assignments.broadcast(tripId, 'assignment:updated', { assignment }, socketId);
     return { assignment };
   }

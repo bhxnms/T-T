@@ -1,3 +1,12 @@
+import {
+  extractBookingRef,
+  extractTotalPrice,
+  normCurrency,
+  detectFlightNumbers,
+  fixArrivalDate,
+  routeExtraction,
+} from '../../../../src/nest/llm-parse/router/extraction-router';
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // The router's single model call and the schema.org mapper are mocked: we drive the
@@ -7,15 +16,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const { extractEnforced, mapToKi } = vi.hoisted(() => ({ extractEnforced: vi.fn(), mapToKi: vi.fn() }));
 vi.mock('../../../../src/nest/llm-parse/router/ollama-format.client', () => ({ extractEnforced }));
 vi.mock('../../../../src/nest/llm-parse/clients/nuextract', () => ({ nuExtractToKiReservations: mapToKi }));
-
-import {
-  extractBookingRef,
-  extractTotalPrice,
-  normCurrency,
-  detectFlightNumbers,
-  fixArrivalDate,
-  routeExtraction,
-} from '../../../../src/nest/llm-parse/router/extraction-router';
 
 const CTX = { baseUrl: 'http://ollama:11434/v1', model: 'qwen3:8b' };
 
@@ -29,7 +29,9 @@ describe('extractBookingRef', () => {
     expect(extractBookingRef('Bestätigungs-Code\nHMHJ9RTEEK')).toBe('HMHJ9RTEEK');
   });
   it('prefers the customer "Reservation No." over a later "Supplier Reference"', () => {
-    expect(extractBookingRef('Reservation No.: G72820729\nSUPPLIER DETAILS\nSupplier Reference: IT587200464')).toBe('G72820729');
+    expect(extractBookingRef('Reservation No.: G72820729\nSUPPLIER DETAILS\nSupplier Reference: IT587200464')).toBe(
+      'G72820729',
+    );
   });
   it('reads an Expedia "Reiseplan" number', () => {
     expect(extractBookingRef('Expedia-Reiseplan: 73222406755286')).toBe('73222406755286');
@@ -52,7 +54,10 @@ describe('extractTotalPrice', () => {
     expect(extractTotalPrice('Bezahlter Betrag\n651,86 €')).toEqual({ price: '651,86', currency: 'EUR' });
   });
   it('falls back to a standalone ¥ voucher price (JPY) with no nearby label', () => {
-    expect(extractTotalPrice('Price (consumption tax included)\n金額(消費税込)\n¥9,400\nAdult')).toEqual({ price: '9,400', currency: 'JPY' });
+    expect(extractTotalPrice('Price (consumption tax included)\n金額(消費税込)\n¥9,400\nAdult')).toEqual({
+      price: '9,400',
+      currency: 'JPY',
+    });
   });
   it('returns null when there is neither a labeled nor a symbol amount', () => {
     expect(extractTotalPrice('Just some terms and conditions, no price here.')).toBeNull();
@@ -104,8 +109,20 @@ describe('routeExtraction', () => {
   it('extracts every flight leg in one call and normalizes/rolls arrival dates', async () => {
     extractEnforced.mockResolvedValue({
       flights: [
-        { vehicle_number: 'LH400', from_code: 'FRA', to_code: 'JFK', departure_time: 'Aug 23 2025 10:00', arrival_time: '13:00' },
-        { vehicle_number: 'LH401', from_code: 'JFK', to_code: 'FRA', departure_time: '2025-08-30T18:00', arrival_time: '07:00' },
+        {
+          vehicle_number: 'LH400',
+          from_code: 'FRA',
+          to_code: 'JFK',
+          departure_time: 'Aug 23 2025 10:00',
+          arrival_time: '13:00',
+        },
+        {
+          vehicle_number: 'LH401',
+          from_code: 'JFK',
+          to_code: 'FRA',
+          departure_time: '2025-08-30T18:00',
+          arrival_time: '07:00',
+        },
       ],
     });
     const res = await routeExtraction('Flug LH 400 hin und zurück', CTX);
@@ -122,7 +139,12 @@ describe('routeExtraction', () => {
   });
 
   it('extracts a single reservation with the type-specific schema when keywords give the type away', async () => {
-    extractEnforced.mockResolvedValue({ name: 'B&B Hotel', address: 'Str 1', checkin_time: '2025-05-01', checkout_time: '2025-05-02' });
+    extractEnforced.mockResolvedValue({
+      name: 'B&B Hotel',
+      address: 'Str 1',
+      checkin_time: '2025-05-01',
+      checkout_time: '2025-05-02',
+    });
     const res = await routeExtraction('Hotel booking — check-in 1 May', CTX);
     expect(res.warnings).toEqual([]);
     const flats = mapToKi.mock.calls[0][0];
@@ -154,7 +176,13 @@ describe('routeExtraction', () => {
   });
 
   it("lets the document's currency override the model but keeps a price the model already found", async () => {
-    extractEnforced.mockResolvedValue({ name: 'B&B Hotel', checkin_time: '2025-05-01', checkout_time: '2025-05-02', price: '50', currency: 'USD' });
+    extractEnforced.mockResolvedValue({
+      name: 'B&B Hotel',
+      checkin_time: '2025-05-01',
+      checkout_time: '2025-05-02',
+      price: '50',
+      currency: 'USD',
+    });
     await routeExtraction('Hotel check-in\nGesamtpreis 99,00 €', CTX);
     const flat = mapToKi.mock.calls[0][0][0];
     expect(flat.currency).toBe('EUR'); // document symbol wins over the model guess
@@ -215,24 +243,36 @@ describe('routeExtraction', () => {
     await routeExtraction('Lufthansa LH 400 FRA-JFK, Gate A12.', CTX);
     expect(mapToKi.mock.calls[0][0][0].type).toBe('flight');
   });
-
 });
 
 describe('printed 12-hour clocks and unreadable types (#2094, #2076)', () => {
   it('fixArrivalDate resolves both meridiems before deciding the day rolled over', () => {
     // '01:11 pm' used to be read as '01:11', which sorts before the 09:51
     // departure, so a three-hour hop was rolled onto the next day.
-    const out = fixArrivalDate({ type: 'flight', departure_time: '2026-06-11T09:51 am', arrival_time: '2026-06-11T01:11 pm' });
+    const out = fixArrivalDate({
+      type: 'flight',
+      departure_time: '2026-06-11T09:51 am',
+      arrival_time: '2026-06-11T01:11 pm',
+    });
     expect(out.arrival_time).toBe('2026-06-11T13:11:00');
   });
 
   it('fixArrivalDate still rolls a genuine overnight', () => {
-    const out = fixArrivalDate({ type: 'flight', departure_time: '2026-06-11T10:00 pm', arrival_time: '2026-06-12T06:00 am' });
+    const out = fixArrivalDate({
+      type: 'flight',
+      departure_time: '2026-06-11T10:00 pm',
+      arrival_time: '2026-06-12T06:00 am',
+    });
     expect(out.arrival_time).toBe('2026-06-12T06:00:00');
   });
 
   it('resolves a meridiem that sits behind an ISO date', async () => {
-    extractEnforced.mockResolvedValue({ name: 'B&B Hotel', address: 'Str 1', checkin_time: '2026-05-01T03:00 pm', checkout_time: '2026-05-02T11:00 am' });
+    extractEnforced.mockResolvedValue({
+      name: 'B&B Hotel',
+      address: 'Str 1',
+      checkin_time: '2026-05-01T03:00 pm',
+      checkout_time: '2026-05-02T11:00 am',
+    });
     await routeExtraction('Hotel booking — check-in 1 May', CTX);
     const flats = mapToKi.mock.calls[0][0];
     expect(flats[0].checkin_time).toBe('2026-05-01T15:00:00');

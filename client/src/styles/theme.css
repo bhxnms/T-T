@@ -1,20 +1,20 @@
 :root {
   /* Primary Colors - Purple Theme */
-  --color-primary: #8B5CF6;
-  --color-primary-hover: #7C3AED;
-  --color-primary-light: #A78BFA;
-  --color-primary-lighter: #EDE9FE;
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-primary-light: #a78bfa;
+  --color-primary-lighter: #ede9fe;
 
   /* Secondary Colors */
-  --color-secondary: #10B981;
+  --color-secondary: #10b981;
   --color-secondary-hover: #059669;
-  --color-accent: #F59E0B;
+  --color-accent: #f59e0b;
 
   /* Neutral Colors */
-  --color-gray-50: #F9FAFB;
-  --color-gray-100: #F3F4F6;
-  --color-gray-200: #E5E7EB;
-  --color-gray-500: #6B7280;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-500: #6b7280;
   --color-gray-900: #111827;
 
   /* Shadows */

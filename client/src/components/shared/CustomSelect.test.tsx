@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
+import { render, screen } from '../../../tests/helpers/render';
 import CustomSelect from './CustomSelect';
 
 const OPTIONS = [
@@ -50,7 +50,7 @@ describe('CustomSelect', () => {
     // Options in dropdown are also buttons
     const optionBtns = screen.getAllByRole('button');
     // Find the Cherry option button (not the trigger which shows placeholder)
-    const cherryBtn = optionBtns.find(b => b.textContent?.includes('Cherry'));
+    const cherryBtn = optionBtns.find((b) => b.textContent?.includes('Cherry'));
     await user.click(cherryBtn!);
     expect(onChange).toHaveBeenCalledWith('cherry');
   });
@@ -60,7 +60,7 @@ describe('CustomSelect', () => {
     render(<CustomSelect value="" onChange={onChange} options={OPTIONS} />);
     await user.click(screen.getByRole('button')); // open
     const optionBtns = screen.getAllByRole('button');
-    const appleBtn = optionBtns.find(b => b.textContent?.includes('Apple'));
+    const appleBtn = optionBtns.find((b) => b.textContent?.includes('Apple'));
     await user.click(appleBtn!);
     // After selection, only the trigger button remains in DOM
     expect(screen.getAllByRole('button')).toHaveLength(1);

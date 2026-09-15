@@ -1,10 +1,11 @@
-import express, { Request, Response, NextFunction } from 'express';
-import compression from 'compression';
-import cors from 'cors';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
 import { readEnv, type AppEnv } from '../app-config';
 import { logDebug, logWarn, logError } from '../nest/audit/audit-log.logger';
+
+import compression from 'compression';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import express, { Request, Response, NextFunction } from 'express';
+import helmet from 'helmet';
 
 /**
  * Field names redacted from request-log query/body dumps (case-insensitive —
@@ -72,10 +73,7 @@ export function redact(value: unknown): unknown {
  * bootstrap.ts. The flag that used to switch a second parser on had exactly one
  * caller, which passed false.
  */
-export function applyGlobalMiddleware(
-  app: express.Application,
-  opts: { http?: AppEnv['http'] } = {},
-): void {
+export function applyGlobalMiddleware(app: express.Application, opts: { http?: AppEnv['http'] } = {}): void {
   // The whole pipeline is configured at APPLY time (the per-request closures
   // capture these values), so a snapshot is the correct semantic. bootstrap
   // threads in the DI-loaded httpConfig; direct callers fall back to an
@@ -149,96 +147,131 @@ export function applyGlobalMiddleware(
   // session per tool call until the per-user cap wedges the connection. Same reasoning for
   // WWW-Authenticate, which carries the RFC 9728 resource-metadata challenge that drives
   // OAuth discovery.
-  app.use(
-    (req: Request, _res: Response, next: NextFunction) => {
-      if (
-        req.path.startsWith('/.well-known/') ||
-        req.path === '/oauth/register' ||
-        req.path === '/oauth/authorize' ||
-        req.path === '/oauth/userinfo' ||
-        req.path === '/mcp'
-      ) {
-        cors({
-          origin: '*',
-          credentials: false,
-          exposedHeaders: ['Mcp-Session-Id', 'MCP-Protocol-Version', 'WWW-Authenticate'],
-        })(req, _res, next);
-      } else {
-        next();
-      }
-    },
-  );
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (
+      req.path.startsWith('/.well-known/') ||
+      req.path === '/oauth/register' ||
+      req.path === '/oauth/authorize' ||
+      req.path === '/oauth/userinfo' ||
+      req.path === '/mcp'
+    ) {
+      cors({
+        origin: '*',
+        credentials: false,
+        exposedHeaders: ['Mcp-Session-Id', 'MCP-Protocol-Version', 'WWW-Authenticate'],
+      })(req, _res, next);
+    } else {
+      next();
+    }
+  });
   app.use(cors({ origin: corsOrigin, credentials: true }));
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        // 'unsafe-eval' is load-bearing, not leftover: heic-to's libheif build
-        // initialises embind through new Function(), and that is what converts
-        // an iPhone .heic the moment somebody picks one. 'wasm-unsafe-eval'
-        // alone was tried first and was not enough (93b51a0b). The package
-        // ships a CSP-safe entry point at heic-to/csp; dropping this directive
-        // means switching client/src/utils/convertHeic.ts over to it and
-        // verifying a real .heic upload in a browser, not just deleting the
-        // string here.
-        scriptSrc: ["'self'", "'wasm-unsafe-eval'", "'unsafe-eval'", "https://webapi.amap.com", "https://restapi.amap.com", "https://jsapi-service.amap.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
-        imgSrc: ["'self'", "data:", "blob:", "https:"],
-        connectSrc: [
-          "'self'", "ws:", "wss:",
-          "https://nominatim.openstreetmap.org", "https://overpass-api.de",
-          "https://places.googleapis.com", "https://api.openweathermap.org",
-          "https://en.wikipedia.org", "https://commons.wikimedia.org",
-          // Both forms here too: CARTO documents the apex host on its key page,
-          // so that is the template users paste in, and the {s} sharded form is
-          // what TREK ships (#2054).
-          "https://basemaps.cartocdn.com", "https://*.basemaps.cartocdn.com",
-          // Both forms: a CSP wildcard host never matches the apex, and OSM
-          // serves everything from the bare tile.openstreetmap.org since it
-          // retired the a/b/c/d shards (#1733). The sharded hosts stay listed
-          // for tile templates users saved before that.
-          "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org",
-          // The other two raster presets TREK ships. `mode: 'no-cors'` relaxes
-          // CORS, not CSP, so without these the tile prefetch is refused in the
-          // document and never reaches the Service Worker that would cache it
-          // (#2180). routing.openstreetmap.de below is a different host.
-          "https://tile.openstreetmap.de", "https://tiles.stadiamaps.com",
-          "https://unpkg.com", "https://open-meteo.com", "https://api.open-meteo.com",
-          "https://geocoding-api.open-meteo.com", "https://api.frankfurter.dev",
-          "https://router.project-osrm.org/route/v1/", "https://routing.openstreetmap.de/",
-          "https://api.mapbox.com", "https://*.tiles.mapbox.com", "https://events.mapbox.com",
-          "https://tiles.openfreemap.org",
-          "https://restapi.amap.com", "https://webapi.amap.com", "https://*.amap.com", "https://jsapi-service.amap.com", "https://jsapi.amap.com", "https://vdata.amap.com", "https://mvt.amap.com", "https://glyph.amap.com", "https://*.sdf.amap.com",
-          // AMap native renderer's documented raster tile shards.
-          "https://wprd01.is.autonavi.com", "https://wprd02.is.autonavi.com",
-          "https://wprd03.is.autonavi.com", "https://wprd04.is.autonavi.com",
-          "https://webst01.is.autonavi.com", "https://webst02.is.autonavi.com",
-          "https://webst03.is.autonavi.com", "https://webst04.is.autonavi.com",
-          // AMap JS API 2D standard raster tiles (browser-side tile shards).
-          "https://webrd01.is.autonavi.com", "https://webrd02.is.autonavi.com",
-          "https://webrd03.is.autonavi.com", "https://webrd04.is.autonavi.com"
-        ],
-        workerSrc: ["'self'", "blob:"],
-        childSrc: ["'self'", "blob:"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        // 'self' so same-origin file previews can embed PDFs via <object>/<embed>
-        // (Firefox/Chrome enforce object-src; 'none' broke inline PDF previews there).
-        objectSrc: ["'self'"],
-        // 'self' so the app can embed same-origin, sandboxed plugin frames
-        // (/plugin-frame/*). Those frames are sandboxed WITHOUT allow-same-origin,
-        // so they run at an opaque origin and get their own locked-down CSP.
-        frameSrc: ["'self'"],
-        frameAncestors: ["'self'"],
-        // Restrict <form> submission targets (form-action has no default-src
-        // fallback, so it must be set explicitly).
-        formAction: ["'self'"],
-        upgradeInsecureRequests: shouldForceHttps ? [] : null
-      }
-    },
-    crossOriginEmbedderPolicy: false,
-    hsts: hstsActive ? { maxAge: 31536000, includeSubDomains: hstsIncludeSubdomains } : false,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          // 'unsafe-eval' is load-bearing, not leftover: heic-to's libheif build
+          // initialises embind through new Function(), and that is what converts
+          // an iPhone .heic the moment somebody picks one. 'wasm-unsafe-eval'
+          // alone was tried first and was not enough (93b51a0b). The package
+          // ships a CSP-safe entry point at heic-to/csp; dropping this directive
+          // means switching client/src/utils/convertHeic.ts over to it and
+          // verifying a real .heic upload in a browser, not just deleting the
+          // string here.
+          scriptSrc: [
+            "'self'",
+            "'wasm-unsafe-eval'",
+            "'unsafe-eval'",
+            'https://webapi.amap.com',
+            'https://restapi.amap.com',
+            'https://jsapi-service.amap.com',
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
+          imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+          connectSrc: [
+            "'self'",
+            'ws:',
+            'wss:',
+            'https://nominatim.openstreetmap.org',
+            'https://overpass-api.de',
+            'https://places.googleapis.com',
+            'https://api.openweathermap.org',
+            'https://en.wikipedia.org',
+            'https://commons.wikimedia.org',
+            // Both forms here too: CARTO documents the apex host on its key page,
+            // so that is the template users paste in, and the {s} sharded form is
+            // what TREK ships (#2054).
+            'https://basemaps.cartocdn.com',
+            'https://*.basemaps.cartocdn.com',
+            // Both forms: a CSP wildcard host never matches the apex, and OSM
+            // serves everything from the bare tile.openstreetmap.org since it
+            // retired the a/b/c/d shards (#1733). The sharded hosts stay listed
+            // for tile templates users saved before that.
+            'https://tile.openstreetmap.org',
+            'https://*.tile.openstreetmap.org',
+            // The other two raster presets TREK ships. `mode: 'no-cors'` relaxes
+            // CORS, not CSP, so without these the tile prefetch is refused in the
+            // document and never reaches the Service Worker that would cache it
+            // (#2180). routing.openstreetmap.de below is a different host.
+            'https://tile.openstreetmap.de',
+            'https://tiles.stadiamaps.com',
+            'https://unpkg.com',
+            'https://open-meteo.com',
+            'https://api.open-meteo.com',
+            'https://geocoding-api.open-meteo.com',
+            'https://api.frankfurter.dev',
+            'https://router.project-osrm.org/route/v1/',
+            'https://routing.openstreetmap.de/',
+            'https://api.mapbox.com',
+            'https://*.tiles.mapbox.com',
+            'https://events.mapbox.com',
+            'https://tiles.openfreemap.org',
+            'https://restapi.amap.com',
+            'https://webapi.amap.com',
+            'https://*.amap.com',
+            'https://jsapi-service.amap.com',
+            'https://jsapi.amap.com',
+            'https://vdata.amap.com',
+            'https://mvt.amap.com',
+            'https://glyph.amap.com',
+            'https://*.sdf.amap.com',
+            // AMap native renderer's documented raster tile shards.
+            'https://wprd01.is.autonavi.com',
+            'https://wprd02.is.autonavi.com',
+            'https://wprd03.is.autonavi.com',
+            'https://wprd04.is.autonavi.com',
+            'https://webst01.is.autonavi.com',
+            'https://webst02.is.autonavi.com',
+            'https://webst03.is.autonavi.com',
+            'https://webst04.is.autonavi.com',
+            // AMap JS API 2D standard raster tiles (browser-side tile shards).
+            'https://webrd01.is.autonavi.com',
+            'https://webrd02.is.autonavi.com',
+            'https://webrd03.is.autonavi.com',
+            'https://webrd04.is.autonavi.com',
+          ],
+          workerSrc: ["'self'", 'blob:'],
+          childSrc: ["'self'", 'blob:'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+          // 'self' so same-origin file previews can embed PDFs via <object>/<embed>
+          // (Firefox/Chrome enforce object-src; 'none' broke inline PDF previews there).
+          objectSrc: ["'self'"],
+          // 'self' so the app can embed same-origin, sandboxed plugin frames
+          // (/plugin-frame/*). Those frames are sandboxed WITHOUT allow-same-origin,
+          // so they run at an opaque origin and get their own locked-down CSP.
+          frameSrc: ["'self'"],
+          frameAncestors: ["'self'"],
+          // Restrict <form> submission targets (form-action has no default-src
+          // fallback, so it must be set explicitly).
+          formAction: ["'self'"],
+          upgradeInsecureRequests: shouldForceHttps ? [] : null,
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      hsts: hstsActive ? { maxAge: 31536000, includeSubDomains: hstsIncludeSubdomains } : false,
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    }),
+  );
 
   // The instance's own hostname, when the operator configured one. The redirect
   // below is a 301, so echoing a client-supplied Host header would let a stranger

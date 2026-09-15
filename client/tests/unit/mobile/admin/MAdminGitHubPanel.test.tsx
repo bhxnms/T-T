@@ -1,11 +1,11 @@
 // FE-MOB-AGH-001 to FE-MOB-AGH-019
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { http, HttpResponse } from 'msw';
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '../../../helpers/render';
-import { server } from '../../../helpers/msw/server';
-import { resetAllStores } from '../../../helpers/store';
+import { http, HttpResponse } from 'msw';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import MAdminGitHubPanel from '../../../../src/mobile/screens/admin/MAdminGitHubPanel';
+import { server } from '../../../helpers/msw/server';
+import { render, screen, waitFor } from '../../../helpers/render';
+import { resetAllStores } from '../../../helpers/store';
 
 interface ReleaseOverrides {
   id?: number;
@@ -55,22 +55,12 @@ async function renderPanel(props: { isPrerelease?: boolean } = {}) {
 }
 
 describe('MAdminGitHubPanel', () => {
-  it('FE-MOB-AGH-001: renders the six support cards with their external hrefs', async () => {
+  it('FE-MOB-AGH-001: renders current TT project links', async () => {
     await renderPanel();
-
-    expect(screen.getByText('Ko-fi').closest('a')).toHaveAttribute('href', 'https://ko-fi.com/mauriceboe');
-    expect(screen.getByText('Buy Me a Coffee').closest('a')).toHaveAttribute(
-      'href',
-      'https://buymeacoffee.com/mauriceboe',
-    );
-    const discord = screen.getByText('Discord').closest('a')!;
-    expect(discord).toHaveAttribute('href', 'https://discord.gg/NhZBDSd4qW');
-    expect(discord).toHaveAttribute('target', '_blank');
-    expect(discord).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(screen.queryByText('Ko-fi')).not.toBeInTheDocument();
+    expect(screen.queryByText('Discord')).not.toBeInTheDocument();
     expect(screen.getByText('Report a Bug')).toBeInTheDocument();
-    expect(screen.getByText('Feature Request')).toBeInTheDocument();
-    expect(screen.getByText('Wiki').closest('a')).toHaveAttribute('href', 'https://github.com/mauriceboe/TREK/wiki');
-    expect(screen.getAllByText('Helps me keep building TREK')).toHaveLength(2);
+    expect(screen.getByText('Wiki').closest('a')).toHaveAttribute('href', 'https://github.com/bhxnms/T-T/wiki');
   });
 
   it('FE-MOB-AGH-002: shows a spinner while the releases request is in flight', () => {
@@ -78,7 +68,7 @@ describe('MAdminGitHubPanel', () => {
       http.get('/api/admin/github-releases', async () => {
         await new Promise(() => {});
         return HttpResponse.json([]);
-      }),
+      })
     );
     render(<MAdminGitHubPanel />);
 
@@ -87,9 +77,7 @@ describe('MAdminGitHubPanel', () => {
   });
 
   it('FE-MOB-AGH-003: renders the error card with the axios message when the request fails', async () => {
-    server.use(
-      http.get('/api/admin/github-releases', () => HttpResponse.json({ message: 'boom' }, { status: 500 })),
-    );
+    server.use(http.get('/api/admin/github-releases', () => HttpResponse.json({ message: 'boom' }, { status: 500 })));
     render(<MAdminGitHubPanel />);
 
     await screen.findByText('Failed to load releases');
@@ -102,11 +90,8 @@ describe('MAdminGitHubPanel', () => {
     await renderPanel();
 
     expect(screen.getByText('Release History')).toBeInTheDocument();
-    expect(screen.getByText('Latest updates from mauriceboe/TREK')).toBeInTheDocument();
-    expect(screen.getByText('GitHub').closest('a')).toHaveAttribute(
-      'href',
-      'https://github.com/mauriceboe/TREK/releases',
-    );
+    expect(screen.getByText('Latest updates from bhxnms/T-T')).toBeInTheDocument();
+    expect(screen.getByText('GitHub').closest('a')).toHaveAttribute('href', 'https://github.com/bhxnms/T-T/releases');
   });
 
   it('FE-MOB-AGH-005: marks only the first release as latest and shows the release name and author', async () => {
@@ -202,9 +187,7 @@ describe('MAdminGitHubPanel', () => {
   });
 
   it('FE-MOB-AGH-013: keeps http links and rewrites unsafe link targets to #', async () => {
-    releasesRespondWith([
-      buildRelease({ body: '- [click here](https://example.com)\n- [evil](javascript:alert(1))' }),
-    ]);
+    releasesRespondWith([buildRelease({ body: '- [click here](https://example.com)\n- [evil](javascript:alert(1))' })]);
     const user = userEvent.setup();
     await renderPanel();
     await user.click(screen.getByText('Show details'));
@@ -239,7 +222,7 @@ describe('MAdminGitHubPanel', () => {
       http.get('/api/admin/github-releases', ({ request }) => {
         const page = new URL(request.url).searchParams.get('page');
         return HttpResponse.json(page === '2' ? PAGE_2 : PAGE_1);
-      }),
+      })
     );
     const user = userEvent.setup();
     await renderPanel();
@@ -259,7 +242,7 @@ describe('MAdminGitHubPanel', () => {
         calls += 1;
         if (calls === 2) return HttpResponse.json({ message: 'nope' }, { status: 500 });
         return HttpResponse.json(calls === 1 ? PAGE_1 : PAGE_2);
-      }),
+      })
     );
     const user = userEvent.setup();
     await renderPanel();
@@ -285,13 +268,13 @@ describe('MAdminGitHubPanel', () => {
 
   it('FE-MOB-AGH-019: skips over a full page that only contains prereleases', async () => {
     const prereleasePage = Array.from({ length: 10 }, (_, i) =>
-      buildRelease({ id: 200 + i, tag_name: `v4.0.0-beta.${i}`, prerelease: true }),
+      buildRelease({ id: 200 + i, tag_name: `v4.0.0-beta.${i}`, prerelease: true })
     );
     server.use(
       http.get('/api/admin/github-releases', ({ request }) => {
         const page = new URL(request.url).searchParams.get('page');
         return HttpResponse.json(page === '1' ? prereleasePage : PAGE_2);
-      }),
+      })
     );
     await renderPanel();
 

@@ -501,8 +501,10 @@ const settings: TranslationStrings = {
   'settings.offline.notice.busy': 'Er loopt al een synchronisatie. Probeer het zo opnieuw.',
   'settings.offline.notice.offline': 'Geen verbinding. Maak verbinding om reizen offline op te slaan.',
   'settings.offline.notice.signedOut': 'Je sessie is verlopen. Meld je opnieuw aan om te synchroniseren.',
-  'settings.offline.notice.failed': 'De download kon niet worden voltooid. Controleer je verbinding en probeer het opnieuw.',
-  'settings.offline.notice.loadFailed': 'Kan de offlineopslag van dit apparaat niet lezen. De cache wissen helpt meestal.',
+  'settings.offline.notice.failed':
+    'De download kon niet worden voltooid. Controleer je verbinding en probeer het opnieuw.',
+  'settings.offline.notice.loadFailed':
+    'Kan de offlineopslag van dit apparaat niet lezen. De cache wissen helpt meestal.',
   'settings.offline.clear': 'Cache wissen',
   'settings.offline.clearConfirm':
     'Alle offline reisgegevens wissen? Je kunt altijd opnieuw synchroniseren wanneer je online bent.',
@@ -545,13 +547,15 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'API-sleutels',
-  'settings.apiKeys.description': 'Sleutels voor de publieke API, zodat andere software je reizen kan lezen. Alleen-lezen: een sleutel kan niets wijzigen of verwijderen.',
+  'settings.apiKeys.description':
+    'Sleutels voor de publieke API, zodat andere software je reizen kan lezen. Alleen-lezen: een sleutel kan niets wijzigen of verwijderen.',
   'settings.apiKeys.create': 'Sleutel aanmaken',
   'settings.apiKeys.empty': 'Nog geen sleutels. Maak er een om andere software te koppelen.',
   'settings.apiKeys.createdAt': 'aangemaakt',
   'settings.apiKeys.usedAt': 'laatst gebruikt',
   'settings.apiKeys.deleteTitle': 'Sleutel verwijderen',
-  'settings.apiKeys.deleteMessage': 'Alles wat deze sleutel gebruikt, stopt direct met werken. Dit kan niet ongedaan worden gemaakt.',
+  'settings.apiKeys.deleteMessage':
+    'Alles wat deze sleutel gebruikt, stopt direct met werken. Dit kan niet ongedaan worden gemaakt.',
   'settings.apiKeys.deleted': 'Sleutel verwijderd',
   'settings.apiKeys.deleteFailed': 'Sleutel kon niet worden verwijderd',
   'settings.apiKeys.createFailed': 'Sleutel kon niet worden aangemaakt',
@@ -564,7 +568,8 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.creating': 'Aanmaken...',
   'settings.apiKeys.modal.create': 'Aanmaken',
   'settings.apiKeys.modal.createdTitle': 'API-sleutel aangemaakt',
-  'settings.apiKeys.modal.createdWarning': 'Kopieer de sleutel nu. Hij wordt één keer getoond en kan later niet worden opgehaald.',
+  'settings.apiKeys.modal.createdWarning':
+    'Kopieer de sleutel nu. Hij wordt één keer getoond en kan later niet worden opgehaald.',
   'settings.apiKeys.modal.done': 'Klaar',
 };
 

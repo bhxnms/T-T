@@ -1,6 +1,6 @@
-import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { ArrowRight, Coffee, Heart, Infinity as InfinityIcon, Sparkles, X } from 'lucide-react';
+import React from 'react';
 import { useTranslation } from '../../i18n/TranslationContext.js';
 import type { SystemNoticeDTO } from '../../store/systemNoticeStore.js';
 import './releaseNotice.css';
@@ -15,7 +15,10 @@ interface Props {
 
 /** Splits a translated block into paragraphs the way the notice bodies are written. */
 function paragraphs(text: string): string[] {
-  return text.split('\n\n').map(p => p.trim()).filter(Boolean);
+  return text
+    .split('\n\n')
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -41,15 +44,15 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
       className="rn-overlay"
       role="presentation"
       style={{ opacity: visible ? 1 : 0, transition: 'opacity 260ms ease' }}
-      onClick={notice.dismissible ? e => { if (e.target === e.currentTarget) onDismiss() } : undefined}
+      onClick={
+        notice.dismissible
+          ? (e) => {
+              if (e.target === e.currentTarget) onDismiss();
+            }
+          : undefined
+      }
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={bodyId}
-        className="rn-panel"
-      >
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} className="rn-panel">
         {/* ── Left: the release ─────────────────────────────────────────── */}
         <div className="rn-release">
           <div className="rn-release-grain" aria-hidden="true" />
@@ -67,11 +70,15 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
               <div className="rn-tag">{t(release.tagKey)}</div>
             </div>
 
-            <h2 id={titleId} className="rn-headline">{t(release.headlineKey)}</h2>
-            <p id={bodyId} className="rn-intro">{t(release.introKey)}</p>
+            <h2 id={titleId} className="rn-headline">
+              {t(release.headlineKey)}
+            </h2>
+            <p id={bodyId} className="rn-intro">
+              {t(release.introKey)}
+            </p>
 
             <div className="rn-features">
-              {release.features.map(f => {
+              {release.features.map((f) => {
                 const Icon: React.ElementType =
                   ((LucideIcons as Record<string, unknown>)[f.iconName] as React.ElementType) ?? Sparkles;
                 return (
@@ -95,7 +102,7 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
               <div className="rn-release-foot">
                 {release.stats && release.stats.length > 0 && (
                   <div className="rn-stats">
-                    {release.stats.map(s => (
+                    {release.stats.map((s) => (
                       <div key={s.labelKey}>
                         <div className="rn-stat-value">{s.value}</div>
                         <div className="rn-stat-label">{t(s.labelKey)}</div>
@@ -105,12 +112,7 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
                 )}
 
                 {release.notes && (
-                  <a
-                    className="rn-notes"
-                    href={release.notes.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a className="rn-notes" href={release.notes.href} target="_blank" rel="noopener noreferrer">
                     {t(release.notes.labelKey)}
                     <span className="rn-notes-arrow">
                       <ArrowRight size={16} strokeWidth={2.4} aria-hidden="true" />
@@ -120,9 +122,7 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
               </div>
             )}
 
-            {release.footnoteKey && (
-              <div className="rn-footnote">{t(release.footnoteKey)}</div>
-            )}
+            {release.footnoteKey && <div className="rn-footnote">{t(release.footnoteKey)}</div>}
           </div>
         </div>
 
@@ -138,7 +138,9 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
             <div className="rn-note-eyebrow">{t(release.note.eyebrowKey)}</div>
             <h3 className="rn-note-title">{t(release.note.titleKey)}</h3>
 
-            {paragraphs(t(release.note.bodyKey)).map((p, i) => <p key={i}>{p}</p>)}
+            {paragraphs(t(release.note.bodyKey)).map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
 
             <div className="rn-promise">
               <div className="rn-promise-label">
@@ -148,7 +150,9 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
               <div className="rn-promise-text">{t(release.note.promiseTextKey)}</div>
             </div>
 
-            {paragraphs(t(release.note.bodyAfterKey)).map((p, i) => <p key={i}>{p}</p>)}
+            {paragraphs(t(release.note.bodyAfterKey)).map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
 
             <div className="rn-signoff">
               <div className="rn-closing">{t(release.note.closingKey)}</div>
@@ -160,7 +164,8 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
             <div className="rn-support-text">{t(release.supportTextKey)}</div>
             <div className="rn-support-buttons">
               {notice.cta && (
-                <button type="button"
+                <button
+                  type="button"
                   id={`notice-cta-${notice.id}`}
                   className="rn-support-btn rn-support-bmc"
                   onClick={onCTA}
@@ -170,7 +175,8 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
                 </button>
               )}
               {notice.secondaryCta && (
-                <button type="button"
+                <button
+                  type="button"
                   id={`notice-cta2-${notice.id}`}
                   className="rn-support-btn rn-support-kofi"
                   onClick={onSecondaryCTA}

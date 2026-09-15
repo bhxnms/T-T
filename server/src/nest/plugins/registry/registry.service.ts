@@ -1,7 +1,14 @@
 import { readEnv } from '../../../app-config';
 import { DatabaseService } from '../../database/database.service';
 import { discoverPlugins } from '../install/discovery';
-import { bypassedRange, hostSatisfies, hostVersion, normalizedHost, trekRangeBypassed, warnRangeBypass } from '../install/host-compat';
+import {
+  bypassedRange,
+  hostSatisfies,
+  hostVersion,
+  normalizedHost,
+  trekRangeBypassed,
+  warnRangeBypass,
+} from '../install/host-compat';
 import type { TrekRangeBypass } from '../install/host-compat';
 import type { PluginDependency } from '../install/manifest';
 import { parseJsonText, parseManifest } from '../install/manifest';
@@ -9,15 +16,15 @@ import { scanForNativeBinaries } from '../install/native-scan';
 import { extractArchive } from '../install/safe-extract';
 import { safeDownload, sha256Matches } from '../install/safe-fetch';
 import { verifyAuthorSignature, SignatureError } from '../install/verify-signature';
+import { MCP_TOOLS_MAX, TOOL_DESCRIPTION_MAX, TOOL_TITLE_MAX } from '../mcp-tool-schema';
 import { pluginCodeDir, pluginsCodeRoot, pluginsDataRoot } from '../paths';
 import { clearUpdateBlock, isSignatureCode, setUpdateBlock, RETRUSTABLE_CODE } from '../signature-status';
+import { sanitiseAssistantText } from '../text-sanitize';
 import { Injectable } from '@nestjs/common';
 
 import fs from 'node:fs';
 import path from 'node:path';
 import semver from 'semver';
-import { MCP_TOOLS_MAX, TOOL_DESCRIPTION_MAX, TOOL_TITLE_MAX } from '../mcp-tool-schema';
-import { sanitiseAssistantText } from '../text-sanitize';
 
 /**
  * TREK-side of the plugin registry (#plugins, M5). Fetches the single aggregated
@@ -316,7 +323,8 @@ export class PluginRegistryService {
       publishedAt: latest?.publishedAt ?? null,
       requiredAddons: latest?.requiredAddons ?? [],
       pluginDependencies: latest?.pluginDependencies ?? [],
-      screenshotUrl: entry.screenshotUrl ?? (latest ? rawFileUrl(entry.repo, latest.commitSha, 'docs/screenshot.png') : null),
+      screenshotUrl:
+        entry.screenshotUrl ?? (latest ? rawFileUrl(entry.repo, latest.commitSha, 'docs/screenshot.png') : null),
       signed: !!entry.authorPublicKey && !!latest?.signature,
       authorPublicKey: entry.authorPublicKey ?? null,
       // The version picker's data: every published version with its OWN server-computed
@@ -448,7 +456,8 @@ export class PluginRegistryService {
     try {
       this.verifySignatureAndTofu(id, bytes, entry, ver, opts?.retrustKey);
     } catch (e) {
-      if (e instanceof RegistryError && isSignatureCode(e.code)) setUpdateBlock(this.dbs.connection, id, e.code, e.message, ver.version);
+      if (e instanceof RegistryError && isSignatureCode(e.code))
+        setUpdateBlock(this.dbs.connection, id, e.code, e.message, ver.version);
       throw e;
     }
 
@@ -481,13 +490,9 @@ export class PluginRegistryService {
 
       // 7. register INACTIVE (record provenance)
       discoverPlugins(this.db);
-      this.db.prepare('UPDATE plugins SET source_repo = ?, source_commit = ?, sha256 = ?, reviewed_at = ? WHERE id = ?').run(
-        entry.repo,
-        ver.commitSha,
-        ver.sha256,
-        entry.reviewedAt ?? null,
-        id,
-      );
+      this.db
+        .prepare('UPDATE plugins SET source_repo = ?, source_commit = ?, sha256 = ?, reviewed_at = ? WHERE id = ?')
+        .run(entry.repo, ver.commitSha, ver.sha256, entry.reviewedAt ?? null, id);
       // Pin the author key on first successful install of a signed plugin (TOFU) —
       // and, after a re-trust, re-pin to the new key the admin blessed. Only ever set
       // to a key the artifact just verified under; NEVER cleared to NULL, because a
@@ -578,7 +583,13 @@ export class PluginRegistryService {
    * binaries) — only the registry sha256/signature checks are absent, because a
    * sideload has no registry entry. Throws (and self-cleans staging) on failure.
    */
-  stageUpload(bytes: Buffer): { id: string; version: string; root: string; stagingDir: string; trekRangeBypassed: TrekRangeBypass | null } {
+  stageUpload(bytes: Buffer): {
+    id: string;
+    version: string;
+    root: string;
+    stagingDir: string;
+    trekRangeBypassed: TrekRangeBypass | null;
+  } {
     if (bytes.length > MAX_UPLOAD_BYTES) throw new RegistryError('archive exceeds the 50MB limit');
     const stagingDir = path.join(pluginsDataRoot(), '.staging', `upload-${Date.now()}`);
     try {
@@ -619,12 +630,14 @@ export class PluginRegistryService {
       // plugin has just left the registry trust model entirely — the code is now whatever
       // the admin uploaded. Leaving the block would have the row insist an update was
       // blocked over a signing key that no longer applies to the code that is running.
-      this.db.prepare(
-        `UPDATE plugins SET source_repo = ?, source_commit = ?, sha256 = ?, reviewed_at = ?, author_pubkey = NULL,
+      this.db
+        .prepare(
+          `UPDATE plugins SET source_repo = ?, source_commit = ?, sha256 = ?, reviewed_at = ?, author_pubkey = NULL,
                             update_block_code = NULL, update_block_detail = NULL, update_block_version = NULL,
                             status = 'inactive', enabled = 0
          WHERE id = ?`,
-      ).run('local:upload', null, null, null, staged.id);
+        )
+        .run('local:upload', null, null, null, staged.id);
     } finally {
       fs.rmSync(staged.stagingDir, { recursive: true, force: true });
     }
@@ -658,8 +671,11 @@ export class PluginRegistryService {
     retrustKey?: string,
   ): void {
     const pinned =
-      (this.db.prepare('SELECT author_pubkey FROM plugins WHERE id = ?').get(id) as { author_pubkey?: string } | undefined)
-        ?.author_pubkey ?? null;
+      (
+        this.db.prepare('SELECT author_pubkey FROM plugins WHERE id = ?').get(id) as
+          | { author_pubkey?: string }
+          | undefined
+      )?.author_pubkey ?? null;
 
     if (!entry.authorPublicKey && !ver.signature) {
       if (pinned) {

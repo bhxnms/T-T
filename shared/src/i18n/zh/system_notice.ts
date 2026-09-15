@@ -2,7 +2,8 @@ import type { TranslationStrings } from '../types';
 
 const system_notice: TranslationStrings = {
   'system_notice.welcome_v1.title': '欢迎使用 TT',
-  'system_notice.welcome_v1.body': 'TT 是一个由团队维护的旅行规划与活动管理工具，帮助您制定行程、管理活动并与旅行伙伴协作。本项目基于 TREK 开源项目分支开发而来。',
+  'system_notice.welcome_v1.body':
+    'TT 是一个由团队维护的旅行规划与活动管理工具，帮助您制定行程、管理活动并与旅行伙伴协作。本项目基于 TREK 开源项目分支开发而来。',
   'system_notice.welcome_v1.cta_label': '规划行程',
   'system_notice.welcome_v1.hero_alt': '风景优美的旅游目的地与 TREK 界面',
   'system_notice.welcome_v1.highlight_plan': '逐日行程规划',
@@ -11,7 +12,8 @@ const system_notice: TranslationStrings = {
   'system_notice.dev_test_modal.title': '[开发] 测试通知',
   'system_notice.dev_test_modal.body': '这是一条仅用于开发环境的测试通知。',
   'system_notice.thank_you_support.title': '感谢你使用 TT',
-  'system_notice.thank_you_support.body': '感谢您使用 TT。TT 由团队持续维护和增强，专注于旅行规划与活动管理。它基于 TREK 开源项目分支开发，并将继续保持开放、透明和便于自托管。',
+  'system_notice.thank_you_support.body':
+    '感谢您使用 TT。TT 由团队持续维护和增强，专注于旅行规划与活动管理。它基于 TREK 开源项目分支开发，并将继续保持开放、透明和便于自托管。',
   'system_notice.thank_you_support.highlight_opensource': '在 GitHub 上 100% 开源',
   'system_notice.thank_you_support.highlight_free': '永久免费——绝无付费档位',
   'system_notice.thank_you_support.highlight_community': '与社区一起共建',

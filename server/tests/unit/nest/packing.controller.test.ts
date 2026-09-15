@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import { HttpException } from '@nestjs/common';
 import { PackingController } from '../../../src/nest/packing/packing.controller';
 import type { PackingService } from '../../../src/nest/packing/packing.service';
 import type { User } from '../../../src/types';
+import { HttpException } from '@nestjs/common';
+
+import { describe, it, expect, vi } from 'vitest';
 
 const user = { id: 1, role: 'user', email: 'u@example.test' } as User;
 const admin = { id: 1, role: 'admin', email: 'a@example.test' } as User;
@@ -19,8 +20,12 @@ function makeService(overrides: Partial<PackingService> = {}): PackingService {
     // Content-free "the bag weights moved" ping fired after every item write (#2191).
     broadcastBagTotals: vi.fn(),
     // Real viewer logic so the emit-to-viewers routing is exercised faithfully.
-    viewersOf: (item: { is_private?: number; owner_id?: number | null; recipients?: { user_id: number }[] } | null | undefined) =>
-      !item || !item.is_private ? null : [item.owner_id, ...(item.recipients || []).map(r => r.user_id)].filter((x): x is number => x != null),
+    viewersOf: (
+      item: { is_private?: number; owner_id?: number | null; recipients?: { user_id: number }[] } | null | undefined,
+    ) =>
+      !item || !item.is_private
+        ? null
+        : [item.owner_id, ...(item.recipients || []).map((r) => r.user_id)].filter((x): x is number => x != null),
     getItemPrivacy: vi.fn().mockReturnValue(undefined),
     notifyTagged: vi.fn(),
     ...overrides,
@@ -65,14 +70,12 @@ function thrown(fn: () => unknown): { status: number; body: unknown } {
 // The 404 "Trip not found" and 403 "No permission" cases moved to
 // trip-access.guard.test.ts with the check itself.
 describe('PackingController (parity with the legacy /api/trips/:tripId/packing route)', () => {
-
   it('GET / returns items for an accessible trip', () => {
     const svc = makeService({ listItems: vi.fn().mockReturnValue([{ id: 1 }]) } as Partial<PackingService>);
     expect(new PackingController(svc).list(user, '5')).toEqual({ items: [{ id: 1 }] });
   });
 
   describe('POST / (create)', () => {
-
     // The missing-name 400 moved from a bespoke controller check into the
     // ZodValidationPipe (packingCreateItemRequestSchema) — direct method calls
     // bypass parameter pipes, so that path is covered by the e2e suite and
@@ -83,10 +86,17 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const createItem = vi.fn().mockReturnValue({ id: 9, name: 'Socks', is_private: 0 });
       const broadcast = vi.fn();
       const svc = makeService({ createItem, broadcast } as Partial<PackingService>);
-      expect(new PackingController(svc).create(user, '5', { name: 'Socks' }, 'sock')).toEqual({ item: { id: 9, name: 'Socks', is_private: 0 } });
+      expect(new PackingController(svc).create(user, '5', { name: 'Socks' }, 'sock')).toEqual({
+        item: { id: 9, name: 'Socks', is_private: 0 },
+      });
       // Stamps the creator as owner (#858) and routes the broadcast to viewers.
       expect(createItem).toHaveBeenCalledWith('5', expect.objectContaining({ name: 'Socks' }), user.id);
-      expect(broadcast).toHaveBeenCalledWith('5', 'packing:created', { item: { id: 9, name: 'Socks', is_private: 0 } }, 'sock');
+      expect(broadcast).toHaveBeenCalledWith(
+        '5',
+        'packing:created',
+        { item: { id: 9, name: 'Socks', is_private: 0 } },
+        'sock',
+      );
     });
 
     it('pings the room that bag weights moved after a create (#2191)', () => {
@@ -133,7 +143,12 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const createItem = vi.fn().mockReturnValue(item);
       const broadcastToViewers = vi.fn();
       const svc = makeService({ createItem, broadcastToViewers } as Partial<PackingService>);
-      new PackingController(svc).create(user, '5', { name: 'Power bank', visibility: 'shared', recipient_ids: [2] }, 'sock');
+      new PackingController(svc).create(
+        user,
+        '5',
+        { name: 'Power bank', visibility: 'shared', recipient_ids: [2] },
+        'sock',
+      );
       expect(broadcastToViewers).toHaveBeenCalledWith('5', 'packing:created', { item }, [1, 2], 'sock');
     });
 
@@ -143,16 +158,24 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const createItem = vi.fn().mockReturnValue({ id: 9, name: 'Tent', is_private: 0 });
       const svc = makeService({ createItem, broadcast: vi.fn() } as Partial<PackingService>);
       new PackingController(svc).create(user, '5', { name: 'Tent', weight_grams: 250, bag_id: 3, quantity: 3 }, 'sock');
-      expect(createItem).toHaveBeenCalledWith('5', expect.objectContaining({ weight_grams: 250, bag_id: 3, quantity: 3 }), user.id);
+      expect(createItem).toHaveBeenCalledWith(
+        '5',
+        expect.objectContaining({ weight_grams: 250, bag_id: 3, quantity: 3 }),
+        user.id,
+      );
     });
 
     it('400 "Bag not found" for a bag off the trip (#2154), broadcasting nothing', () => {
       // Body validation error, so 400 — the 404 'Bag not found' stays with the
       // /bags/:bagId path routes.
       const broadcast = vi.fn();
-      const svc = makeService({ createItem: vi.fn().mockReturnValue({ invalidBag: true }), broadcast } as Partial<PackingService>);
+      const svc = makeService({
+        createItem: vi.fn().mockReturnValue({ invalidBag: true }),
+        broadcast,
+      } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).create(user, '5', { name: 'Tent', bag_id: 999 }))).toEqual({
-        status: 400, body: { error: 'Bag not found' },
+        status: 400,
+        body: { error: 'Bag not found' },
       });
       expect(broadcast).not.toHaveBeenCalled();
     });
@@ -169,14 +192,14 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     it('400 when items is an empty array (bespoke check, schema permits [])', () => {
       const svc = makeService();
       expect(thrown(() => new PackingController(svc).importItems(user, '5', { items: [] }))).toEqual({
-        status: 400, body: { error: 'items must be a non-empty array' },
+        status: 400,
+        body: { error: 'items must be a non-empty array' },
       });
     });
 
     // The non-array 400 moved into the ZodValidationPipe (packingImportRequestSchema
     // requires an array) — direct method calls bypass parameter pipes, so that
     // path is covered by the e2e suite and the schema spec in @trek/shared.
-
 
     it('imports (owned by the importer) and broadcasts per item', () => {
       const bulkImport = vi.fn().mockReturnValue([{ id: 1 }, { id: 2 }]);
@@ -193,7 +216,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     it('404 when the item is missing', () => {
       const svc = makeService({ updateItem: vi.fn().mockReturnValue(null) } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).update(user, '5', '9', { name: 'X' }))).toEqual({
-        status: 404, body: { error: 'Item not found' },
+        status: 404,
+        body: { error: 'Item not found' },
       });
     });
 
@@ -204,7 +228,14 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       new PackingController(svc).update(user, '5', '9', { name: 'X', checked: true }, 'sock');
       // acting user id is forwarded so privatizing an unowned item can stamp the
       // owner (#858); checked is normalized to the 0/1 the SQL binds.
-      expect(updateItem).toHaveBeenCalledWith('5', '9', expect.objectContaining({ name: 'X', checked: 1 }), ['name', 'checked'], undefined, user.id);
+      expect(updateItem).toHaveBeenCalledWith(
+        '5',
+        '9',
+        expect.objectContaining({ name: 'X', checked: 1 }),
+        ['name', 'checked'],
+        undefined,
+        user.id,
+      );
       // A public item (is_private undefined, was public) broadcasts to the whole room.
       expect(broadcast).toHaveBeenCalledWith('5', 'packing:updated', { item: { id: 9, name: 'X' } }, 'sock');
     });
@@ -217,7 +248,13 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const getItemPrivacy = vi.fn().mockReturnValue({ is_private: 1, owner_id: 1 });
       const svc = makeService({ updateItem, broadcast, broadcastItem, getItemPrivacy } as Partial<PackingService>);
       new PackingController(svc).update(user, '5', '9', { name: 'X' }, 'sock');
-      expect(broadcastItem).toHaveBeenCalledWith('5', 'packing:updated', { item: { id: 9, name: 'X', is_private: 1, owner_id: 1 } }, { id: 9, name: 'X', is_private: 1, owner_id: 1 }, 'sock');
+      expect(broadcastItem).toHaveBeenCalledWith(
+        '5',
+        'packing:updated',
+        { item: { id: 9, name: 'X', is_private: 1, owner_id: 1 } },
+        { id: 9, name: 'X', is_private: 1, owner_id: 1 },
+        'sock',
+      );
       expect(broadcast).not.toHaveBeenCalled();
     });
 
@@ -247,9 +284,13 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
 
     it('400 "Bag not found" for a bag off the trip (#2154), broadcasting nothing', () => {
       const broadcast = vi.fn();
-      const svc = makeService({ updateItem: vi.fn().mockReturnValue({ invalidBag: true }), broadcast } as Partial<PackingService>);
+      const svc = makeService({
+        updateItem: vi.fn().mockReturnValue({ invalidBag: true }),
+        broadcast,
+      } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).update(user, '5', '9', { bag_id: 999 }))).toEqual({
-        status: 400, body: { error: 'Bag not found' },
+        status: 400,
+        body: { error: 'Bag not found' },
       });
       expect(broadcast).not.toHaveBeenCalled();
     });
@@ -258,10 +299,22 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const updateItem = vi.fn().mockReturnValue({ conflict: true, server: { id: 9, name: 'Theirs' } });
       const broadcast = vi.fn();
       const svc = makeService({ updateItem, broadcast } as Partial<PackingService>);
-      expect(thrown(() => new PackingController(svc).update(user, '5', '9', { name: 'Mine' }, 'sock', '2026-01-01 00:00:00'))).toEqual({
-        status: 409, body: { error: 'conflict', server: { id: 9, name: 'Theirs' } },
+      expect(
+        thrown(() =>
+          new PackingController(svc).update(user, '5', '9', { name: 'Mine' }, 'sock', '2026-01-01 00:00:00'),
+        ),
+      ).toEqual({
+        status: 409,
+        body: { error: 'conflict', server: { id: 9, name: 'Theirs' } },
       });
-      expect(updateItem).toHaveBeenCalledWith('5', '9', expect.objectContaining({ name: 'Mine' }), ['name'], '2026-01-01 00:00:00', user.id);
+      expect(updateItem).toHaveBeenCalledWith(
+        '5',
+        '9',
+        expect.objectContaining({ name: 'Mine' }),
+        ['name'],
+        '2026-01-01 00:00:00',
+        user.id,
+      );
       expect(broadcast).not.toHaveBeenCalled();
     });
   });
@@ -273,14 +326,14 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       expect(new PackingController(svc).reorder(user, '5', { orderedIds: [3, 1, 2] })).toEqual({ success: true });
       expect(reorderItems).toHaveBeenCalledWith('5', [3, 1, 2]);
     });
-
   });
 
   describe('DELETE /:id (remove)', () => {
     it('404 when the item is missing', () => {
       const svc = makeService({ deleteItem: vi.fn().mockReturnValue(null) } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).remove(user, '5', '9'))).toEqual({
-        status: 404, body: { error: 'Item not found' },
+        status: 404,
+        body: { error: 'Item not found' },
       });
     });
 
@@ -309,8 +362,20 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     // bypass parameter pipes, so that path is covered by the e2e suite and the
     // schema spec in @trek/shared.
     it('PUT /:id/sharing 404 missing, 403 non-owner, else drops + re-emits', () => {
-      expect(thrown(() => new PackingController(makeService({ setItemSharing: vi.fn().mockReturnValue(null) } as Partial<PackingService>)).setSharing(user, '5', '9', { visibility: 'personal' }))).toEqual({ status: 404, body: { error: 'Item not found' } });
-      expect(thrown(() => new PackingController(makeService({ setItemSharing: vi.fn().mockReturnValue({ forbidden: true }) } as Partial<PackingService>)).setSharing(user, '5', '9', { visibility: 'personal' }))).toEqual({ status: 403, body: { error: 'Only the owner can change sharing' } });
+      expect(
+        thrown(() =>
+          new PackingController(
+            makeService({ setItemSharing: vi.fn().mockReturnValue(null) } as Partial<PackingService>),
+          ).setSharing(user, '5', '9', { visibility: 'personal' }),
+        ),
+      ).toEqual({ status: 404, body: { error: 'Item not found' } });
+      expect(
+        thrown(() =>
+          new PackingController(
+            makeService({ setItemSharing: vi.fn().mockReturnValue({ forbidden: true }) } as Partial<PackingService>),
+          ).setSharing(user, '5', '9', { visibility: 'personal' }),
+        ),
+      ).toEqual({ status: 403, body: { error: 'Only the owner can change sharing' } });
 
       const updated = { id: 9, is_private: 1, owner_id: 1, recipients: [{ user_id: 2 }] };
       const setItemSharing = vi.fn().mockReturnValue(updated);
@@ -324,7 +389,13 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     });
 
     it('POST /:id/clone 404 missing, else creates a personal copy for the caller', () => {
-      expect(thrown(() => new PackingController(makeService({ cloneItem: vi.fn().mockReturnValue(null) } as Partial<PackingService>)).clone(user, '5', '9'))).toEqual({ status: 404, body: { error: 'Item not found' } });
+      expect(
+        thrown(() =>
+          new PackingController(
+            makeService({ cloneItem: vi.fn().mockReturnValue(null) } as Partial<PackingService>),
+          ).clone(user, '5', '9'),
+        ),
+      ).toEqual({ status: 404, body: { error: 'Item not found' } });
       const item = { id: 12, is_private: 1, owner_id: 1 };
       const cloneItem = vi.fn().mockReturnValue(item);
       const broadcastToViewers = vi.fn();
@@ -335,7 +406,13 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     });
 
     it('POST /:id/contributors 404 missing, else adds the caller + broadcasts', () => {
-      expect(thrown(() => new PackingController(makeService({ addContributor: vi.fn().mockReturnValue(null) } as Partial<PackingService>)).addContributor(user, '5', '9'))).toEqual({ status: 404, body: { error: 'Item not found or not a shared list item' } });
+      expect(
+        thrown(() =>
+          new PackingController(
+            makeService({ addContributor: vi.fn().mockReturnValue(null) } as Partial<PackingService>),
+          ).addContributor(user, '5', '9'),
+        ),
+      ).toEqual({ status: 404, body: { error: 'Item not found or not a shared list item' } });
       const item = { id: 9, is_private: 0, contributors: [{ user_id: 1 }] };
       const addContributor = vi.fn().mockReturnValue(item);
       const broadcast = vi.fn();
@@ -375,7 +452,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     it('400 on bag create with blank name (bespoke check — the schema cannot see whitespace)', () => {
       const svc = makeService();
       expect(thrown(() => new PackingController(svc).createBag(user, '5', { name: '  ' }))).toEqual({
-        status: 400, body: { error: 'Name is required' },
+        status: 400,
+        body: { error: 'Name is required' },
       });
     });
 
@@ -403,7 +481,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     it('404 on bag update when missing', () => {
       const svc = makeService({ updateBag: vi.fn().mockReturnValue(null) } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).updateBag(user, '5', '3', { name: 'X' }))).toEqual({
-        status: 404, body: { error: 'Bag not found' },
+        status: 404,
+        body: { error: 'Bag not found' },
       });
     });
 
@@ -412,14 +491,18 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const broadcast = vi.fn();
       const svc = makeService({ updateBag, broadcast } as Partial<PackingService>);
       new PackingController(svc).updateBag(user, '5', '3', { name: 'X', color: '#000' }, 'sock');
-      expect(updateBag).toHaveBeenCalledWith('5', '3', expect.objectContaining({ name: 'X', color: '#000' }), ['name', 'color']);
+      expect(updateBag).toHaveBeenCalledWith('5', '3', expect.objectContaining({ name: 'X', color: '#000' }), [
+        'name',
+        'color',
+      ]);
       expect(broadcast).toHaveBeenCalledWith('5', 'packing:bag-updated', { bag: { id: 3, name: 'X' } }, 'sock');
     });
 
     it('404 on bag delete when missing', () => {
       const svc = makeService({ deleteBag: vi.fn().mockReturnValue(false) } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).deleteBag(user, '5', '3'))).toEqual({
-        status: 404, body: { error: 'Bag not found' },
+        status: 404,
+        body: { error: 'Bag not found' },
       });
     });
 
@@ -434,7 +517,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     it('404 on set-members when the bag is missing', () => {
       const svc = makeService({ setBagMembers: vi.fn().mockReturnValue(null) } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).setBagMembers(user, '5', '3', { user_ids: [1, 2] }))).toEqual({
-        status: 404, body: { error: 'Bag not found' },
+        status: 404,
+        body: { error: 'Bag not found' },
       });
     });
 
@@ -445,7 +529,12 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const res = new PackingController(svc).setBagMembers(user, '5', '3', { user_ids: [1, 2] }, 'sock');
       expect(res).toEqual({ members: [{ user_id: 1 }, { user_id: 2 }] });
       expect(setBagMembers).toHaveBeenCalledWith('5', '3', [1, 2]);
-      expect(broadcast).toHaveBeenCalledWith('5', 'packing:bag-members-updated', { bagId: 3, members: [{ user_id: 1 }, { user_id: 2 }] }, 'sock');
+      expect(broadcast).toHaveBeenCalledWith(
+        '5',
+        'packing:bag-members-updated',
+        { bagId: 3, members: [{ user_id: 1 }, { user_id: 2 }] },
+        'sock',
+      );
     });
 
     // The non-array coercion is gone: packingBagMembersRequestSchema requires
@@ -465,7 +554,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     it('404 when applying a missing/empty template (POST stays 200 otherwise)', () => {
       const svc = makeService({ applyTemplate: vi.fn().mockReturnValue(null) } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).applyTemplate(user, '5', 't1', {}))).toEqual({
-        status: 404, body: { error: 'Template not found or empty' },
+        status: 404,
+        body: { error: 'Template not found or empty' },
       });
     });
 
@@ -503,7 +593,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const saveAsTemplate = vi.fn();
       const svc = makeService({ saveAsTemplate } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).saveAsTemplate(admin, '5', { name: '   ' }))).toEqual({
-        status: 400, body: { error: 'Template name is required' },
+        status: 400,
+        body: { error: 'Template name is required' },
       });
       expect(saveAsTemplate).not.toHaveBeenCalled();
     });
@@ -517,7 +608,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const saveAsTemplate = vi.fn();
       const svc = makeService({ saveAsTemplate } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).saveAsTemplate(user, '5', { name: 'My template' }))).toEqual({
-        status: 403, body: { error: 'Admin access required' },
+        status: 403,
+        body: { error: 'Admin access required' },
       });
       expect(saveAsTemplate).not.toHaveBeenCalled();
     });
@@ -525,7 +617,8 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
     it('400 when an admin saves a template with no items', () => {
       const svc = makeService({ saveAsTemplate: vi.fn().mockReturnValue(null) } as Partial<PackingService>);
       expect(thrown(() => new PackingController(svc).saveAsTemplate(admin, '5', { name: 'My template' }))).toEqual({
-        status: 400, body: { error: 'No items to save' },
+        status: 400,
+        body: { error: 'No items to save' },
       });
     });
 
@@ -565,7 +658,12 @@ describe('PackingController (parity with the legacy /api/trips/:tripId/packing r
       const svc = makeService({ updateCategoryAssignees, broadcast, notifyTagged } as Partial<PackingService>);
       const res = new PackingController(svc).updateCategoryAssignees(user, '5', 'Clothes', { user_ids: [2] }, 'sock');
       expect(res).toEqual({ assignees: [{ user_id: 2 }] });
-      expect(broadcast).toHaveBeenCalledWith('5', 'packing:assignees', { category: 'Clothes', assignees: [{ user_id: 2 }] }, 'sock');
+      expect(broadcast).toHaveBeenCalledWith(
+        '5',
+        'packing:assignees',
+        { category: 'Clothes', assignees: [{ user_id: 2 }] },
+        'sock',
+      );
       expect(notifyTagged).toHaveBeenCalledWith('5', user, 'Clothes', [2]);
     });
   });

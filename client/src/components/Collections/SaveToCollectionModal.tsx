@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router'
-import { Bookmark, BookmarkCheck, Check, CheckCircle2, Loader2, Plus } from 'lucide-react'
-import Modal from '../shared/Modal'
-import { useToast } from '../shared/Toast'
-import { useTranslation } from '../../i18n'
-import { collectionsApi } from '../../api/collections'
-import StatusBadge from './StatusBadge'
-import { useSaveToCollectionStore } from '../../store/saveToCollectionStore'
-import { getApiErrorMessage } from '../../utils/apiError'
-import type { Collection, CollectionMembership, CollectionStatus } from '@trek/shared'
+import type { Collection, CollectionMembership, CollectionStatus } from '@trek/shared';
+import { Bookmark, BookmarkCheck, Check, CheckCircle2, Loader2, Plus } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { collectionsApi } from '../../api/collections';
+import { useTranslation } from '../../i18n';
+import { useSaveToCollectionStore } from '../../store/saveToCollectionStore';
+import { getApiErrorMessage } from '../../utils/apiError';
+import Modal from '../shared/Modal';
+import { useToast } from '../shared/Toast';
+import StatusBadge from './StatusBadge';
 
 /**
  * Globally-mounted list picker for the "Save to Collection" entry points
@@ -19,101 +19,115 @@ import type { Collection, CollectionMembership, CollectionStatus } from '@trek/s
  * so the inspector bookmark indicator stays in sync. One mount, no prop drilling.
  */
 export default function SaveToCollectionModal(): React.ReactElement | null {
-  const target = useSaveToCollectionStore(s => s.target)
-  const close = useSaveToCollectionStore(s => s.close)
-  const bumpVersion = useSaveToCollectionStore(s => s.bumpVersion)
-  const { t } = useTranslation()
-  const toast = useToast()
-  const navigate = useNavigate()
+  const target = useSaveToCollectionStore((s) => s.target);
+  const close = useSaveToCollectionStore((s) => s.close);
+  const bumpVersion = useSaveToCollectionStore((s) => s.bumpVersion);
+  const { t } = useTranslation();
+  const toast = useToast();
+  const navigate = useNavigate();
 
-  const [lists, setLists] = useState<Collection[]>([])
-  const [membership, setMembership] = useState<CollectionMembership | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [busyId, setBusyId] = useState<number | null>(null)
+  const [lists, setLists] = useState<Collection[]>([]);
+  const [membership, setMembership] = useState<CollectionMembership | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [busyId, setBusyId] = useState<number | null>(null);
 
   const membershipQuery = useMemo(() => {
-    if (!target) return null
+    if (!target) return null;
     return {
       google_place_id: target.google_place_id ?? undefined,
       google_ftid: target.google_ftid ?? undefined,
       name: target.name,
       lat: target.lat ?? undefined,
       lng: target.lng ?? undefined,
-    }
-  }, [target])
+    };
+  }, [target]);
 
   const refreshMembership = useCallback(async () => {
-    if (!membershipQuery) return
+    if (!membershipQuery) return;
     try {
-      const m = await collectionsApi.membership(membershipQuery)
-      setMembership(m)
+      const m = await collectionsApi.membership(membershipQuery);
+      setMembership(m);
     } catch {
-      setMembership({ saved: false, lists: [] })
+      setMembership({ saved: false, lists: [] });
     }
-  }, [membershipQuery])
+  }, [membershipQuery]);
 
   // Load lists + membership whenever the picker opens for a new target.
   useEffect(() => {
-    if (!target) return
-    let cancelled = false
-    setLoading(true)
-    setMembership(null)
-    Promise.all([collectionsApi.list().catch(() => ({ collections: [], incomingInvites: [] })), membershipQuery ? collectionsApi.membership(membershipQuery).catch(() => ({ saved: false, lists: [] as CollectionMembership['lists'] })) : Promise.resolve({ saved: false, lists: [] as CollectionMembership['lists'] })])
+    if (!target) return;
+    let cancelled = false;
+    setLoading(true);
+    setMembership(null);
+    Promise.all([
+      collectionsApi.list().catch(() => ({ collections: [], incomingInvites: [] })),
+      membershipQuery
+        ? collectionsApi
+            .membership(membershipQuery)
+            .catch(() => ({ saved: false, lists: [] as CollectionMembership['lists'] }))
+        : Promise.resolve({ saved: false, lists: [] as CollectionMembership['lists'] }),
+    ])
       .then(([listRes, m]) => {
-        if (cancelled) return
-        setLists(listRes.collections)
-        setMembership(m)
+        if (cancelled) return;
+        setLists(listRes.collections);
+        setMembership(m);
       })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target])
+  }, [target]);
 
-  if (!target) return null
+  if (!target) return null;
 
-  const savedByCollection = new Map<number, CollectionMembership['lists'][number]>()
-  for (const l of membership?.lists ?? []) savedByCollection.set(l.collection_id, l)
+  const savedByCollection = new Map<number, CollectionMembership['lists'][number]>();
+  for (const l of membership?.lists ?? []) savedByCollection.set(l.collection_id, l);
 
   /** Lists holding this place that the viewer may edit and that are not visited yet. */
-  const unvisited = (membership?.lists ?? []).filter(l => l.can_edit && l.status !== 'visited')
+  const unvisited = (membership?.lists ?? []).filter((l) => l.can_edit && l.status !== 'visited');
 
   const handleStatus = async (entry: CollectionMembership['lists'][number], next: CollectionStatus) => {
-    if (busyId != null) return
-    setBusyId(entry.collection_id)
+    if (busyId != null) return;
+    setBusyId(entry.collection_id);
     try {
-      await collectionsApi.setStatus(entry.place_id, next)
-      await refreshMembership()
-      bumpVersion()
+      await collectionsApi.setStatus(entry.place_id, next);
+      await refreshMembership();
+      bumpVersion();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, t('common.error')))
+      toast.error(getApiErrorMessage(err, t('common.error')));
     } finally {
-      setBusyId(null)
+      setBusyId(null);
     }
-  }
+  };
 
   const handleVisitedEverywhere = async () => {
-    if (busyId != null || unvisited.length === 0) return
-    setBusyId(-1)
+    if (busyId != null || unvisited.length === 0) return;
+    setBusyId(-1);
     try {
-      const { updated } = await collectionsApi.setStatusMany(unvisited.map(l => l.place_id), 'visited')
-      toast.success(t('collections.markedVisited', { count: updated }))
-      await refreshMembership()
-      bumpVersion()
+      const { updated } = await collectionsApi.setStatusMany(
+        unvisited.map((l) => l.place_id),
+        'visited'
+      );
+      toast.success(t('collections.markedVisited', { count: updated }));
+      await refreshMembership();
+      bumpVersion();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, t('common.error')))
+      toast.error(getApiErrorMessage(err, t('common.error')));
     } finally {
-      setBusyId(null)
+      setBusyId(null);
     }
-  }
+  };
 
   const handleToggle = async (list: Collection) => {
-    if (busyId != null) return
-    const savedPlaceId = savedByCollection.get(list.id)?.place_id
-    setBusyId(list.id)
+    if (busyId != null) return;
+    const savedPlaceId = savedByCollection.get(list.id)?.place_id;
+    setBusyId(list.id);
     try {
       if (savedPlaceId != null) {
-        await collectionsApi.deletePlace(savedPlaceId)
-        toast.success(t('collections.removedFromList', { name: list.name }))
+        await collectionsApi.deletePlace(savedPlaceId);
+        toast.success(t('collections.removedFromList', { name: list.name }));
       } else {
         await collectionsApi.savePlace({
           collection_id: list.id,
@@ -135,17 +149,17 @@ export default function SaveToCollectionModal(): React.ReactElement | null {
           website: target.website ?? null,
           phone: target.phone ?? null,
           force: true,
-        })
-        toast.success(t('collections.addedToList', { name: list.name }))
+        });
+        toast.success(t('collections.addedToList', { name: list.name }));
       }
-      await refreshMembership()
-      bumpVersion()
+      await refreshMembership();
+      bumpVersion();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, t('common.error')))
+      toast.error(getApiErrorMessage(err, t('common.error')));
     } finally {
-      setBusyId(null)
+      setBusyId(null);
     }
-  }
+  };
 
   return (
     <Modal
@@ -157,7 +171,10 @@ export default function SaveToCollectionModal(): React.ReactElement | null {
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
-            onClick={() => { close(); navigate('/collections') }}
+            onClick={() => {
+              close();
+              navigate('/collections');
+            }}
             className="text-[13px] font-medium text-accent hover:underline"
           >
             {t('collections.viewInCollection')}
@@ -165,7 +182,7 @@ export default function SaveToCollectionModal(): React.ReactElement | null {
           <button
             type="button"
             onClick={close}
-            className="px-3 py-1.5 rounded-lg border border-edge text-content-secondary text-[13px] hover:bg-surface-hover"
+            className="rounded-lg border border-edge px-3 py-1.5 text-[13px] text-content-secondary hover:bg-surface-hover"
           >
             {t('common.close')}
           </button>
@@ -173,19 +190,21 @@ export default function SaveToCollectionModal(): React.ReactElement | null {
       }
     >
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <p className="flex-1 min-w-0 text-[13px] font-semibold text-content truncate">{target.name}</p>
+        <div className="flex min-w-0 items-center gap-2">
+          <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-content">{target.name}</p>
           {/* One tap for "I have been here", however many lists hold it (#1469). */}
           {unvisited.length > 0 && (
             <button
               type="button"
               onClick={handleVisitedEverywhere}
               disabled={busyId != null}
-              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-edge bg-surface-card text-[11px] font-semibold text-content-secondary hover:bg-surface-hover disabled:opacity-60"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-edge bg-surface-card px-2.5 py-1 text-[11px] font-semibold text-content-secondary hover:bg-surface-hover disabled:opacity-60"
             >
-              {busyId === -1
-                ? <Loader2 size={12} className="animate-spin" />
-                : <CheckCircle2 size={12} strokeWidth={2.2} />}
+              {busyId === -1 ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <CheckCircle2 size={12} strokeWidth={2.2} />
+              )}
               {unvisited.length > 1 ? t('collections.markVisitedAll') : t('collections.markVisited')}
             </button>
           )}
@@ -195,37 +214,45 @@ export default function SaveToCollectionModal(): React.ReactElement | null {
             <Loader2 size={20} className="animate-spin" />
           </div>
         ) : lists.length === 0 ? (
-          <div className="flex flex-col items-center text-center py-8 px-4">
-            <div className="w-11 h-11 rounded-2xl bg-surface-secondary flex items-center justify-center mb-3 text-content-faint">
+          <div className="flex flex-col items-center px-4 py-8 text-center">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-surface-secondary text-content-faint">
               <Bookmark size={20} />
             </div>
-            <p className="text-[13px] text-content-faint mb-3">{t('collections.noListsYet')}</p>
+            <p className="mb-3 text-[13px] text-content-faint">{t('collections.noListsYet')}</p>
             <button
               type="button"
-              onClick={() => { close(); navigate('/collections') }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-text text-[13px] font-semibold"
+              onClick={() => {
+                close();
+                navigate('/collections');
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-[13px] font-semibold text-accent-text"
             >
               <Plus size={14} /> {t('collections.newList')}
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-1 max-h-[50vh] overflow-y-auto -mx-1 px-1">
-            {lists.map(list => {
-              const entry = savedByCollection.get(list.id)
-              const saved = !!entry
-              const busy = busyId === list.id
+          <div className="-mx-1 flex max-h-[50vh] flex-col gap-1 overflow-y-auto px-1">
+            {lists.map((list) => {
+              const entry = savedByCollection.get(list.id);
+              const saved = !!entry;
+              const busy = busyId === list.id;
               return (
                 <button
                   key={list.id}
                   type="button"
                   onClick={() => handleToggle(list)}
                   disabled={busyId != null}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-colors disabled:opacity-60 ${saved ? 'border-accent bg-accent-subtle' : 'border-edge bg-surface-card hover:bg-surface-hover'}`}
+                  className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors disabled:opacity-60 ${saved ? 'border-accent bg-accent-subtle' : 'border-edge bg-surface-card hover:bg-surface-hover'}`}
                 >
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: list.color || 'var(--accent)' }} />
-                  <span className="flex-1 min-w-0 text-[13px] font-medium text-content truncate">{list.name}</span>
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ background: list.color || 'var(--accent)' }}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-content">{list.name}</span>
                   {list.is_owner === false && (
-                    <span className="text-[10px] uppercase font-semibold text-content-faint">{t('collections.shared')}</span>
+                    <span className="text-[10px] font-semibold uppercase text-content-faint">
+                      {t('collections.shared')}
+                    </span>
                   )}
                   {/* Per-list status, so one place can be an idea in one list and
                       visited in another. A role=button span, safe to nest here. */}
@@ -234,19 +261,33 @@ export default function SaveToCollectionModal(): React.ReactElement | null {
                       status={entry.status}
                       showLabel={false}
                       size={12}
-                      onChange={entry.can_edit ? next => { void handleStatus(entry, next) } : undefined}
+                      onChange={
+                        entry.can_edit
+                          ? (next) => {
+                              void handleStatus(entry, next);
+                            }
+                          : undefined
+                      }
                       t={t}
                     />
                   )}
-                  <span className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${saved ? 'bg-accent text-accent-text' : 'border border-edge text-transparent'}`}>
-                    {busy ? <Loader2 size={13} className="animate-spin text-content-faint" /> : saved ? <BookmarkCheck size={13} /> : <Check size={13} />}
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${saved ? 'bg-accent text-accent-text' : 'border border-edge text-transparent'}`}
+                  >
+                    {busy ? (
+                      <Loader2 size={13} className="animate-spin text-content-faint" />
+                    ) : saved ? (
+                      <BookmarkCheck size={13} />
+                    ) : (
+                      <Check size={13} />
+                    )}
                   </span>
                 </button>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </Modal>
-  )
+  );
 }

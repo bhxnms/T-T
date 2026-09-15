@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   publish:
-    if: github.repository == 'liketrek/TREK'
+    if: github.repository == 'bhxnms/T-T'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,9 +25,15 @@ jobs:
         with:
           # 22 matches the TREK server runtime and has node:sqlite, which the
           # dev-server tests exercise.
-          node-version: 22
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
+      - name: Verify tag matches package version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          test "$REF_NAME" = "plugin-sdk-v$version"
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

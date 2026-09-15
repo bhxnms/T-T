@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Показать запланированные страны',
   'atlas.plannedFor': 'Запланировано на',
   'atlas.antarctica': 'Антарктида',
-  "atlas.checkinTab": "Чек-ины",
-  "atlas.checkinTotal": "Чек-ины",
-  "atlas.checkinLandmarks": "Достопримечательности",
-  "atlas.checkinPlaces": "Места поездки",
-  "atlas.checkinEmpty": "Пока нет отметок — отметьте достопримечательность или место поездки как посещённое",
+  'atlas.checkinTab': 'Чек-ины',
+  'atlas.checkinTotal': 'Чек-ины',
+  'atlas.checkinLandmarks': 'Достопримечательности',
+  'atlas.checkinPlaces': 'Места поездки',
+  'atlas.checkinEmpty': 'Пока нет отметок — отметьте достопримечательность или место поездки как посещённое',
 };
 export default atlas;

@@ -1,18 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import { pluginsEnabled } from './kill-switch';
-import { devLinkEnabled } from './dev-link';
-import { maybe_encrypt_api_key, decrypt_api_key } from '../common/crypto/apiKeyCrypto';
-import { readAudit } from './host/plugin-audit';
-import { keyFingerprint } from './signature-status';
-import { pluginBudgetUsage } from './host/plugin-host-state';
-import { safeParseConfig as safeParse } from './plugin-config-parse';
-import { isFilled, parseDefaultValue, settingDefaults } from './settings-defaults';
 import { AddonsService } from '../addons/addons.service';
-import { parseDependencies, disabledRequiredAddons, resolveDependencyState, type PluginDepRow, type PluginDependencies, type VersionMismatch } from './dependencies';
+import { maybe_encrypt_api_key, decrypt_api_key } from '../common/crypto/apiKeyCrypto';
+import { DatabaseService } from '../database/database.service';
+import {
+  parseDependencies,
+  disabledRequiredAddons,
+  resolveDependencyState,
+  type PluginDepRow,
+  type PluginDependencies,
+  type VersionMismatch,
+} from './dependencies';
+import { devLinkEnabled } from './dev-link';
+import { readAudit } from './host/plugin-audit';
+import { pluginBudgetUsage } from './host/plugin-host-state';
 import { bypassedRange, hostSatisfies, hostVersion, trekRangeBypassed } from './install/host-compat';
 import type { TrekRangeBypass } from './install/host-compat';
 import type { PluginDependency } from './install/manifest';
+import { pluginsEnabled } from './kill-switch';
+import { safeParseConfig as safeParse } from './plugin-config-parse';
+import { isFilled, parseDefaultValue, settingDefaults } from './settings-defaults';
+import { keyFingerprint } from './signature-status';
+import { Injectable } from '@nestjs/common';
 import type { PluginSettingsField } from '@trek/shared';
 
 const SECRET_MASK = '••••••••';
@@ -130,7 +137,9 @@ export class PluginsService {
   /** Hosts an admin has added for a plugin (0 unless it declared operatorEgress). */
   private egressHostCount(id: string): number {
     try {
-      return (this.db.prepare('SELECT COUNT(*) AS n FROM plugin_egress_hosts WHERE plugin_id = ?').get(id) as { n: number }).n;
+      return (
+        this.db.prepare('SELECT COUNT(*) AS n FROM plugin_egress_hosts WHERE plugin_id = ?').get(id) as { n: number }
+      ).n;
     } catch {
       return 0; // table absent (a slimmed test app)
     }
@@ -139,7 +148,9 @@ export class PluginsService {
   private instanceSettingsCount(id: string): number {
     try {
       return (
-        this.db.prepare("SELECT COUNT(*) AS n FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'instance'").get(id) as { n: number }
+        this.db
+          .prepare("SELECT COUNT(*) AS n FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'instance'")
+          .get(id) as { n: number }
       ).n;
     } catch {
       return 0; // table absent (a slimmed test app)
@@ -149,7 +160,9 @@ export class PluginsService {
   private instanceActionsCount(id: string): number {
     try {
       return (
-        this.db.prepare("SELECT COUNT(*) AS n FROM plugin_actions WHERE plugin_id = ? AND scope = 'instance'").get(id) as { n: number }
+        this.db
+          .prepare("SELECT COUNT(*) AS n FROM plugin_actions WHERE plugin_id = ? AND scope = 'instance'")
+          .get(id) as { n: number }
       ).n;
     } catch {
       return 0; // table absent (a slimmed test app)
@@ -176,13 +189,14 @@ export class PluginsService {
       // Mirrors the order of assertActivatable's gate, so the card explains the same
       // blocker the activate call would hit rather than a second, lesser one.
       const trekBypass = bypassedRange(r.trek_range);
-      const dependencyStatus: PluginDependencyStatus = !hostSatisfies(r.trek_range) && !trekBypass
-        ? 'hostIncompatible'
-        : disabledAddons.length
-          ? 'addonDisabled'
-          : state.missing.length || state.versionMismatch.length
-            ? 'missingPlugin'
-            : 'ok';
+      const dependencyStatus: PluginDependencyStatus =
+        !hostSatisfies(r.trek_range) && !trekBypass
+          ? 'hostIncompatible'
+          : disabledAddons.length
+            ? 'addonDisabled'
+            : state.missing.length || state.versionMismatch.length
+              ? 'missingPlugin'
+              : 'ok';
       const {
         dependencies: _raw,
         operator_egress: _oe,
@@ -238,7 +252,9 @@ export class PluginsService {
     const secretKeys = new Set(
       (
         this.db
-          .prepare("SELECT field_key FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'instance' AND secret = 1")
+          .prepare(
+            "SELECT field_key FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'instance' AND secret = 1",
+          )
           .all(id) as Array<{ field_key: string }>
       ).map((r) => r.field_key),
     );
@@ -262,7 +278,9 @@ export class PluginsService {
       }
     }
     this.assertRequiredFilled(id, 'instance', config);
-    this.db.prepare('UPDATE plugins SET config = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(JSON.stringify(config), id);
+    this.db
+      .prepare('UPDATE plugins SET config = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(JSON.stringify(config), id);
     return maskSecrets(config, secretKeys);
   }
 
@@ -315,9 +333,9 @@ export class PluginsService {
 
   /** A user's own config for a plugin, secrets masked (safe to send to the client). */
   getUserConfig(id: string, userId: number): Record<string, unknown> {
-    const row = this.db.prepare('SELECT config FROM plugin_user_config WHERE plugin_id = ? AND user_id = ?').get(id, userId) as
-      | { config: string }
-      | undefined;
+    const row = this.db
+      .prepare('SELECT config FROM plugin_user_config WHERE plugin_id = ? AND user_id = ?')
+      .get(id, userId) as { config: string } | undefined;
     return maskSecrets(safeParse(row?.config ?? '{}'), this.userSecretKeys(id));
   }
 
@@ -325,14 +343,16 @@ export class PluginsService {
    * ciphertext). Only keys declared as `scope:'user'` fields are accepted. Returns masked. */
   updateUserConfig(id: string, userId: number, patch: Record<string, unknown>): Record<string, unknown> {
     const allowed = new Set(
-      (this.db.prepare("SELECT field_key FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'user'").all(id) as Array<{ field_key: string }>).map(
-        (r) => r.field_key,
-      ),
+      (
+        this.db
+          .prepare("SELECT field_key FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'user'")
+          .all(id) as Array<{ field_key: string }>
+      ).map((r) => r.field_key),
     );
     const secretKeys = this.userSecretKeys(id);
-    const existing = this.db.prepare('SELECT config FROM plugin_user_config WHERE plugin_id = ? AND user_id = ?').get(id, userId) as
-      | { config: string }
-      | undefined;
+    const existing = this.db
+      .prepare('SELECT config FROM plugin_user_config WHERE plugin_id = ? AND user_id = ?')
+      .get(id, userId) as { config: string } | undefined;
     const config = safeParse(existing?.config ?? '{}');
     for (const [k, v] of Object.entries(patch)) {
       if (!allowed.has(k)) continue; // never store an undeclared key
@@ -344,19 +364,21 @@ export class PluginsService {
       }
     }
     this.assertRequiredFilled(id, 'user', config);
-    this.db.prepare(
-      `INSERT INTO plugin_user_config (plugin_id, user_id, config, updated_at) VALUES (?, ?, ?, datetime('now'))
+    this.db
+      .prepare(
+        `INSERT INTO plugin_user_config (plugin_id, user_id, config, updated_at) VALUES (?, ?, ?, datetime('now'))
        ON CONFLICT(plugin_id, user_id) DO UPDATE SET config = excluded.config, updated_at = excluded.updated_at`,
-    ).run(id, userId, JSON.stringify(config));
+      )
+      .run(id, userId, JSON.stringify(config));
     return maskSecrets(config, secretKeys);
   }
 
   /** A user's own config with secrets DECRYPTED — host-only, for runtime `ctx.settings`.
    * Never sent to a client; the acting user is resolved host-side. */
   getUserConfigDecrypted(id: string, userId: number): Record<string, unknown> {
-    const row = this.db.prepare('SELECT config FROM plugin_user_config WHERE plugin_id = ? AND user_id = ?').get(id, userId) as
-      | { config: string }
-      | undefined;
+    const row = this.db
+      .prepare('SELECT config FROM plugin_user_config WHERE plugin_id = ? AND user_id = ?')
+      .get(id, userId) as { config: string } | undefined;
     const config = safeParse(row?.config ?? '{}');
     const secretKeys = this.userSecretKeys(id);
     const out: Record<string, unknown> = {};
@@ -367,7 +389,9 @@ export class PluginsService {
   /** A plugin's error log, newest first. */
   errors(id: string): Array<{ ts: string; level: string; message: string }> {
     return this.db
-      .prepare('SELECT ts, level, message FROM plugin_error_log WHERE plugin_id = ? ORDER BY ts DESC, id DESC LIMIT 200')
+      .prepare(
+        'SELECT ts, level, message FROM plugin_error_log WHERE plugin_id = ? ORDER BY ts DESC, id DESC LIMIT 200',
+      )
       .all(id) as Array<{ ts: string; level: string; message: string }>;
   }
 
@@ -392,7 +416,9 @@ export class PluginsService {
     const secretKeys = new Set(
       (
         this.db
-          .prepare("SELECT field_key FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'instance' AND secret = 1")
+          .prepare(
+            "SELECT field_key FROM plugin_settings_fields WHERE plugin_id = ? AND scope = 'instance' AND secret = 1",
+          )
           .all(id) as Array<{ field_key: string }>
       ).map((r) => r.field_key),
     );

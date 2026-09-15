@@ -4,16 +4,19 @@
  * notes, packing, budget, photos, files, accommodations, tags, categories,
  * ratings) into the live database with fresh, remapped ids.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import { DatabaseService } from '../../../src/nest/database/database.service';
+import { TrekImportService } from '../../../src/nest/trips/trek-import.service';
+import { createUser } from '../../helpers/factories';
+import { resetTestDb } from '../../helpers/test-db';
+
+import archiver from 'archiver';
+import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import archiver from 'archiver';
-import Database from 'better-sqlite3';
-import { runMigrations } from '../../../src/db/migrations';
-import { createTables } from '../../../src/db/schema';
-import { resetTestDb } from '../../helpers/test-db';
-import { createUser } from '../../helpers/factories';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { testDb, dbMock, storageMock, tempRoot } = vi.hoisted(() => {
   const Database = require('better-sqlite3');
@@ -42,20 +45,16 @@ const { testDb, dbMock, storageMock, tempRoot } = vi.hoisted(() => {
 vi.mock('../../../src/db/database', () => dbMock);
 vi.mock('../../../src/nest/storage/storage.service', () => ({ StorageService: class {} }));
 
-import { DatabaseService } from '../../../src/nest/database/database.service';
-import { TrekImportService } from '../../../src/nest/trips/trek-import.service';
-
 const dbs = new DatabaseService(testDb);
 const svc = new TrekImportService(dbs, storageMock as never);
 
 let USER_ID = 7;
 
 describe('TrekImportService', () => {
-
-/** Build a realistic TREK snapshot db with one trip to import. */
-function buildTrekDb(dir: string): string {
-  const src = new Database(path.join(dir, 'travel.db'));
-  src.exec(`
+  /** Build a realistic TREK snapshot db with one trip to import. */
+  function buildTrekDb(dir: string): string {
+    const src = new Database(path.join(dir, 'travel.db'));
+    src.exec(`
     CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, email TEXT);
     CREATE TABLE trips (
       id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, title TEXT, description TEXT,
@@ -188,9 +187,13 @@ function buildTrekDb(dir: string): string {
     expect(cat.name).toBe('Sight');
     expect(cat.user_id).toBe(USER_ID);
 
-    const assignments = testDb.prepare(`
+    const assignments = testDb
+      .prepare(
+        `
       SELECT a.* FROM day_assignments a JOIN days d ON d.id = a.day_id WHERE d.trip_id = ?
-    `).all(newTripId) as any[];
+    `,
+      )
+      .all(newTripId) as any[];
     expect(assignments).toHaveLength(2);
 
     const reservation = testDb.prepare('SELECT * FROM reservations WHERE trip_id = ?').get(newTripId) as any;
@@ -200,10 +203,18 @@ function buildTrekDb(dir: string): string {
     expect(reservation.place_id).toBe(castle.id);
     expect(reservation.assignment_id).toBe(assignments[0].id);
 
-    expect((testDb.prepare('SELECT text FROM day_notes WHERE trip_id = ?').get(newTripId) as any).text).toBe('buy transit card');
-    expect(testDb.prepare('SELECT COUNT(*) AS n FROM packing_items WHERE trip_id = ?').get(newTripId)).toEqual({ n: 1 });
-    expect(testDb.prepare('SELECT total_price AS n FROM budget_items WHERE trip_id = ?').get(newTripId)).toEqual({ n: 42.5 });
-    expect(testDb.prepare('SELECT filename AS n FROM photos WHERE trip_id = ?').get(newTripId)).toEqual({ n: 'castle-photo.jpg' });
+    expect((testDb.prepare('SELECT text FROM day_notes WHERE trip_id = ?').get(newTripId) as any).text).toBe(
+      'buy transit card',
+    );
+    expect(testDb.prepare('SELECT COUNT(*) AS n FROM packing_items WHERE trip_id = ?').get(newTripId)).toEqual({
+      n: 1,
+    });
+    expect(testDb.prepare('SELECT total_price AS n FROM budget_items WHERE trip_id = ?').get(newTripId)).toEqual({
+      n: 42.5,
+    });
+    expect(testDb.prepare('SELECT filename AS n FROM photos WHERE trip_id = ?').get(newTripId)).toEqual({
+      n: 'castle-photo.jpg',
+    });
 
     const file = testDb.prepare('SELECT * FROM trip_files WHERE trip_id = ?').get(newTripId) as any;
     expect(file.reservation_id).toBe(reservation.id);
@@ -218,10 +229,14 @@ function buildTrekDb(dir: string): string {
     expect(rating.user_id).toBe(USER_ID);
 
     // Tags dedupe by name onto the importer's own set.
-    const tag = testDb.prepare(`
+    const tag = testDb
+      .prepare(
+        `
       SELECT t.name, t.user_id FROM place_tags pt JOIN tags t ON t.id = pt.tag_id
       JOIN places p ON p.id = pt.place_id WHERE p.trip_id = ?
-    `).get(newTripId) as any;
+    `,
+      )
+      .get(newTripId) as any;
     expect(tag.name).toBe('must-see');
     expect(tag.user_id).toBe(USER_ID);
 
@@ -234,7 +249,11 @@ function buildTrekDb(dir: string): string {
     const zipPath = await makeBackupZip();
     const { token, trips } = await svc.previewFromZip(zipPath);
     svc.importTrips(USER_ID, token, [trips[0].id]);
-    expect(storageMock.put).toHaveBeenCalledWith('covers', 'old-cover.jpg', expect.objectContaining({ tmpPath: expect.stringContaining('old-cover.jpg') }));
+    expect(storageMock.put).toHaveBeenCalledWith(
+      'covers',
+      'old-cover.jpg',
+      expect.objectContaining({ tmpPath: expect.stringContaining('old-cover.jpg') }),
+    );
   });
 
   it('TREKIMP-004 — an unknown or expired token is refused', () => {

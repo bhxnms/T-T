@@ -1,3 +1,6 @@
+import { createPinnedDispatcher, safeFetchLlm, safeFetchAdminConfigured } from '../../../src/utils/ssrfGuard';
+
+import dns from 'dns/promises';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 /**
@@ -27,9 +30,6 @@ const { readEnvMock } = vi.hoisted(() => ({
   readEnvMock: vi.fn(() => ({ net: { allowInternalNetwork: true }, integrations: { llmTimeoutMs: 900_000 } })),
 }));
 vi.mock('../../../src/app-config', () => ({ readEnv: readEnvMock }));
-
-import dns from 'dns/promises';
-import { createPinnedDispatcher, safeFetchLlm, safeFetchAdminConfigured } from '../../../src/utils/ssrfGuard';
 
 const mockLookup = vi.mocked(dns.lookup);
 
@@ -73,7 +73,8 @@ describe('createPinnedDispatcher — response ceiling', () => {
   it('still pins the connection to the validated IP', () => {
     createPinnedDispatcher('10.0.0.5', true, 900_000);
 
-    const lookup = (optionsOf().connect as { lookup: (h: string, o: object, cb: (...a: unknown[]) => void) => void }).lookup;
+    const lookup = (optionsOf().connect as { lookup: (h: string, o: object, cb: (...a: unknown[]) => void) => void })
+      .lookup;
     const seen: unknown[] = [];
     lookup('evil.example', {}, (...args: unknown[]) => seen.push(...args));
     expect(seen).toContain('10.0.0.5');

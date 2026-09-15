@@ -501,7 +501,8 @@ const settings: TranslationStrings = {
   'settings.offline.notice.offline': 'Brak połączenia. Połącz się, aby zapisać podróże offline.',
   'settings.offline.notice.signedOut': 'Twoja sesja wygasła. Zaloguj się ponownie, aby zsynchronizować.',
   'settings.offline.notice.failed': 'Nie udało się ukończyć pobierania. Sprawdź połączenie i spróbuj ponownie.',
-  'settings.offline.notice.loadFailed': 'Nie udało się odczytać pamięci offline tego urządzenia. Zwykle pomaga wyczyszczenie pamięci podręcznej.',
+  'settings.offline.notice.loadFailed':
+    'Nie udało się odczytać pamięci offline tego urządzenia. Zwykle pomaga wyczyszczenie pamięci podręcznej.',
   'settings.offline.clear': 'Wyczyść pamięć podręczną',
   'settings.offline.clearConfirm':
     'Wyczyścić wszystkie dane podróży zapisane offline? Możesz je w każdej chwili zsynchronizować ponownie, będąc online.',
@@ -544,13 +545,15 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'Klucze API',
-  'settings.apiKeys.description': 'Klucze do publicznego API, aby inne oprogramowanie mogło odczytywać Twoje podróże. Tylko odczyt: klucz niczego nie zmieni ani nie usunie.',
+  'settings.apiKeys.description':
+    'Klucze do publicznego API, aby inne oprogramowanie mogło odczytywać Twoje podróże. Tylko odczyt: klucz niczego nie zmieni ani nie usunie.',
   'settings.apiKeys.create': 'Utwórz klucz',
   'settings.apiKeys.empty': 'Brak kluczy. Utwórz jeden, aby połączyć inne oprogramowanie.',
   'settings.apiKeys.createdAt': 'utworzono',
   'settings.apiKeys.usedAt': 'ostatnio użyty',
   'settings.apiKeys.deleteTitle': 'Usuń klucz',
-  'settings.apiKeys.deleteMessage': 'Wszystko, co korzysta z tego klucza, natychmiast przestanie działać. Tej operacji nie można cofnąć.',
+  'settings.apiKeys.deleteMessage':
+    'Wszystko, co korzysta z tego klucza, natychmiast przestanie działać. Tej operacji nie można cofnąć.',
   'settings.apiKeys.deleted': 'Klucz usunięty',
   'settings.apiKeys.deleteFailed': 'Nie udało się usunąć klucza',
   'settings.apiKeys.createFailed': 'Nie udało się utworzyć klucza',
@@ -563,7 +566,8 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.creating': 'Tworzenie...',
   'settings.apiKeys.modal.create': 'Utwórz',
   'settings.apiKeys.modal.createdTitle': 'Klucz API utworzony',
-  'settings.apiKeys.modal.createdWarning': 'Skopiuj klucz teraz. Jest pokazywany tylko raz i później nie można go odzyskać.',
+  'settings.apiKeys.modal.createdWarning':
+    'Skopiuj klucz teraz. Jest pokazywany tylko raz i później nie można go odzyskać.',
   'settings.apiKeys.modal.done': 'Gotowe',
 };
 

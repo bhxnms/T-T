@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen } from '../../../tests/helpers/render';
 import ConfirmDialog from './ConfirmDialog';
 
 describe('ConfirmDialog', () => {
@@ -12,16 +12,12 @@ describe('ConfirmDialog', () => {
   });
 
   it('FE-COMP-CONFIRM-001: does not render when isOpen is false', () => {
-    render(
-      <ConfirmDialog isOpen={false} onClose={onClose} onConfirm={onConfirm} message="Are you sure?" />
-    );
+    render(<ConfirmDialog isOpen={false} onClose={onClose} onConfirm={onConfirm} message="Are you sure?" />);
     expect(screen.queryByText('Are you sure?')).toBeNull();
   });
 
   it('FE-COMP-CONFIRM-002: renders with default title "Confirm" and message', () => {
-    render(
-      <ConfirmDialog isOpen={true} onClose={onClose} onConfirm={onConfirm} message="Are you sure?" />
-    );
+    render(<ConfirmDialog isOpen={true} onClose={onClose} onConfirm={onConfirm} message="Are you sure?" />);
     expect(screen.getByText('Confirm')).toBeTruthy();
     expect(screen.getByText('Are you sure?')).toBeTruthy();
   });
@@ -83,7 +79,7 @@ describe('ConfirmDialog', () => {
 
     render(<ConfirmDialog isOpen={true} onClose={onClose} onConfirm={failing} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(failing).toHaveBeenCalledOnce();
     expect(onClose).toHaveBeenCalledOnce();

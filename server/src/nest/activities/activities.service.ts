@@ -1,3 +1,6 @@
+import { DatabaseService } from '../database/database.service';
+import { Injectable } from '@nestjs/common';
+
 import type Database from 'better-sqlite3';
 
 export interface Activity {
@@ -108,16 +111,18 @@ export function createActivityService(db: Database.Database) {
    */
   function createActivity(input: CreateActivityInput): Activity {
     // Validate: exactly one of place_id or reservation_id must be set
-    if ((input.place_id && input.reservation_id) || (!input.place_id && !input.reservation_id)) {
+    const hasPlace = input.place_id !== undefined && input.place_id !== null;
+    const hasReservation = input.reservation_id !== undefined && input.reservation_id !== null;
+    if (hasPlace === hasReservation) {
       throw new Error('Exactly one of place_id or reservation_id must be provided');
     }
 
     // If order_index not provided, append to end
     let orderIndex = input.order_index;
     if (orderIndex === undefined) {
-      const maxOrder = db.prepare(
-        'SELECT MAX(order_index) as max_order FROM activities WHERE day_id = ?'
-      ).get(input.day_id) as { max_order: number | null };
+      const maxOrder = db
+        .prepare('SELECT MAX(order_index) as max_order FROM activities WHERE day_id = ?')
+        .get(input.day_id) as { max_order: number | null };
       orderIndex = (maxOrder.max_order ?? -1) + 1;
     }
 
@@ -128,16 +133,18 @@ export function createActivityService(db: Database.Database) {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const result = db.prepare(sql).run(
-      input.day_id,
-      input.trip_id,
-      input.place_id ?? null,
-      input.reservation_id ?? null,
-      orderIndex,
-      input.start_time ?? null,
-      input.duration_minutes ?? null,
-      input.notes ?? null
-    );
+    const result = db
+      .prepare(sql)
+      .run(
+        input.day_id,
+        input.trip_id,
+        input.place_id ?? null,
+        input.reservation_id ?? null,
+        orderIndex,
+        input.start_time ?? null,
+        input.duration_minutes ?? null,
+        input.notes ?? null,
+      );
 
     return getActivityById(result.lastInsertRowid as number)!;
   }
@@ -199,7 +206,9 @@ export function createActivityService(db: Database.Database) {
    * Takes an array of activity IDs in the desired order
    */
   function reorderActivities(dayId: number, activityIds: number[]): void {
-    const stmt = db.prepare('UPDATE activities SET order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND day_id = ?');
+    const stmt = db.prepare(
+      'UPDATE activities SET order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND day_id = ?',
+    );
 
     db.transaction(() => {
       activityIds.forEach((activityId, index) => {
@@ -220,15 +229,17 @@ export function createActivityService(db: Database.Database) {
     // If no order index provided, append to end of new day
     let orderIndex = newOrderIndex;
     if (orderIndex === undefined) {
-      const maxOrder = db.prepare(
-        'SELECT MAX(order_index) as max_order FROM activities WHERE day_id = ?'
-      ).get(newDayId) as { max_order: number | null };
+      const maxOrder = db
+        .prepare('SELECT MAX(order_index) as max_order FROM activities WHERE day_id = ?')
+        .get(newDayId) as { max_order: number | null };
       orderIndex = (maxOrder.max_order ?? -1) + 1;
     }
 
-    db.prepare(
-      'UPDATE activities SET day_id = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-    ).run(newDayId, orderIndex, activityId);
+    db.prepare('UPDATE activities SET day_id = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(
+      newDayId,
+      orderIndex,
+      activityId,
+    );
 
     return getActivityById(activityId)!;
   }
@@ -237,18 +248,18 @@ export function createActivityService(db: Database.Database) {
    * Get activities for a specific place (across all days)
    */
   function getActivitiesForPlace(placeId: number): Activity[] {
-    return db.prepare(
-      'SELECT * FROM activities WHERE place_id = ? ORDER BY day_id ASC, order_index ASC'
-    ).all(placeId) as Activity[];
+    return db
+      .prepare('SELECT * FROM activities WHERE place_id = ? ORDER BY day_id ASC, order_index ASC')
+      .all(placeId) as Activity[];
   }
 
   /**
    * Get activities for a specific reservation (across all days)
    */
   function getActivitiesForReservation(reservationId: number): Activity[] {
-    return db.prepare(
-      'SELECT * FROM activities WHERE reservation_id = ? ORDER BY day_id ASC, order_index ASC'
-    ).all(reservationId) as Activity[];
+    return db
+      .prepare('SELECT * FROM activities WHERE reservation_id = ? ORDER BY day_id ASC, order_index ASC')
+      .all(reservationId) as Activity[];
   }
 
   return {
@@ -265,4 +276,36 @@ export function createActivityService(db: Database.Database) {
   };
 }
 
-export type ActivityService = ReturnType<typeof createActivityService>;
+export type ActivityServiceFunctions = ReturnType<typeof createActivityService>;
+export class ActivityService {
+  private readonly databaseService: DatabaseService;
+
+  constructor(databaseService: DatabaseService) {
+    this.databaseService = databaseService;
+  }
+
+  private get delegate(): ActivityServiceFunctions {
+    return createActivityService(this.databaseService.connection);
+  }
+
+  getActivitiesForDay = (...args: Parameters<ActivityServiceFunctions['getActivitiesForDay']>) =>
+    this.delegate.getActivitiesForDay(...args);
+  getActivitiesForTrip = (...args: Parameters<ActivityServiceFunctions['getActivitiesForTrip']>) =>
+    this.delegate.getActivitiesForTrip(...args);
+  createActivity = (...args: Parameters<ActivityServiceFunctions['createActivity']>) =>
+    this.delegate.createActivity(...args);
+  updateActivity = (...args: Parameters<ActivityServiceFunctions['updateActivity']>) =>
+    this.delegate.updateActivity(...args);
+  deleteActivity = (...args: Parameters<ActivityServiceFunctions['deleteActivity']>) =>
+    this.delegate.deleteActivity(...args);
+  getActivityById = (...args: Parameters<ActivityServiceFunctions['getActivityById']>) =>
+    this.delegate.getActivityById(...args);
+  reorderActivities = (...args: Parameters<ActivityServiceFunctions['reorderActivities']>) =>
+    this.delegate.reorderActivities(...args);
+  moveActivityToDay = (...args: Parameters<ActivityServiceFunctions['moveActivityToDay']>) =>
+    this.delegate.moveActivityToDay(...args);
+  getActivitiesForPlace = (...args: Parameters<ActivityServiceFunctions['getActivitiesForPlace']>) =>
+    this.delegate.getActivitiesForPlace(...args);
+  getActivitiesForReservation = (...args: Parameters<ActivityServiceFunctions['getActivitiesForReservation']>) =>
+    this.delegate.getActivitiesForReservation(...args);
+}

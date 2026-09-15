@@ -5,11 +5,11 @@
  * covers: every app built without the plugins runtime, and every test that
  * never registers a source, goes through it on each session.
  */
-import { getPluginMcpToolSource, setPluginMcpToolSource } from '../../../src/plugin-mcp-tools';
 import { registerTools } from '../../../src/mcp/tools';
 import type { McpContext, McpDynamicTool } from '../../../src/nest-mcp';
-
+import { getPluginMcpToolSource, setPluginMcpToolSource } from '../../../src/plugin-mcp-tools';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const echo: McpDynamicTool = {

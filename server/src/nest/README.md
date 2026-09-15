@@ -1,10 +1,7 @@
 # NestJS migration layer — module & test guide
 
-This folder holds the co-hosted NestJS app that incrementally strangles the legacy
-Express API (see the "Brownfield Rewrite" board). Until a prefix is migrated, the
-top-level dispatcher in `src/index.ts` routes it to the legacy app; migrated
-prefixes go to Nest. **Weather (`weather/`) is the reference implementation** — copy
-its shape when migrating a new domain.
+This folder holds the NestJS application and its domain modules. **Weather (`weather/`)
+is the reference implementation** — copy its shape when adding a new domain.
 
 ## Module layout (per domain)
 
@@ -80,8 +77,8 @@ remains as the platform underneath `@nestjs/platform-express`.
   whole anonymous surface of the server, in one reviewable place. Stale entries
   fail too.
 
-**`src/services/` is gone.** It was the legacy layer this whole migration existed
-to empty, and the last of it — `airtrail/`, 1305 lines of plain functions over the
+**Domain services now live beside their Nest modules.** The legacy layer has been
+removed; the last of it — `airtrail/`, 1305 lines of plain functions over the
 better-sqlite3 singleton — folded into `integrations/`. An ESLint
 `no-restricted-imports` rule now refuses any import of a `services/` path, because
 the directory disappearing is not what keeps it gone: it grew one reasonable file

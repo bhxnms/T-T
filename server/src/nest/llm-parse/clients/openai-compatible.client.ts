@@ -1,8 +1,8 @@
+import { readEnv } from '../../../app-config';
+import { safeFetchLlm } from '../../../utils/ssrfGuard';
+import { parseLenientJson, toReservationList } from '../lenient-json';
 import type { LlmExtractionClient, LlmExtractionInput } from '../llm-provider.interface';
 import { isNuExtractModel, buildNuExtractUserText, nuExtractToKiReservations } from './nuextract';
-import { parseLenientJson, toReservationList } from '../lenient-json';
-import { safeFetchLlm } from '../../../utils/ssrfGuard';
-import { readEnv } from '../../../app-config';
 
 const MAX_TOKENS = 4096;
 
@@ -26,8 +26,7 @@ interface RequestShape {
  * exactly as it does today.
  */
 function rejectsTemperature(detail: string): boolean {
-  return /temperature/i.test(detail)
-    && /unsupported|not supported|does not support|only the default/i.test(detail);
+  return /temperature/i.test(detail) && /unsupported|not supported|does not support|only the default/i.test(detail);
 }
 
 /**
@@ -104,7 +103,10 @@ export class OpenAiCompatibleClient implements LlmExtractionClient {
         ...baseBody,
         response_format: shape.jsonObject
           ? { type: 'json_object' as const }
-          : { type: 'json_schema' as const, json_schema: { name: 'reservations', schema: input.jsonSchema, strict: false } },
+          : {
+              type: 'json_schema' as const,
+              json_schema: { name: 'reservations', schema: input.jsonSchema, strict: false },
+            },
       };
     };
 

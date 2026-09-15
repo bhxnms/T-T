@@ -1,5 +1,3 @@
-import { createActivityService } from '../../services/activityService';
-import type { CreateActivityInput, UpdateActivityInput } from '../../services/activityService';
 import type { User } from '../../types';
 import { RuntimeEnvService } from '../app-config/runtime-env.service';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -8,6 +6,8 @@ import { isDemoWriteBlocked, DEMO_WRITE_ERROR } from '../common/demo-write';
 import { DatabaseService } from '../database/database.service';
 import { RequirePermission, TripAccessGuard } from '../permissions/trip-access.guard';
 import { CreateActivityDto, UpdateActivityDto, ReorderActivitiesDto, MoveActivityDto } from './activities.dto';
+import { ActivityService } from './activities.service';
+import type { CreateActivityInput, UpdateActivityInput } from './activities.service';
 import { Body, Controller, Delete, Get, HttpException, Param, Post, Put, UseGuards } from '@nestjs/common';
 
 @Controller('api/activities')
@@ -16,7 +16,21 @@ export class ActivitiesController {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly env: RuntimeEnvService,
+    private readonly activityService: ActivityService,
   ) {}
+
+  private requireTripAccess(tripId: number, user: User): void {
+    if (!Number.isInteger(tripId) || !this.databaseService.canAccessTrip(tripId, user.id)) {
+      throw new HttpException('Trip not found', 404);
+    }
+  }
+
+  private activityTripId(activityId: number): number | null {
+    const row = this.databaseService.connection
+      .prepare('SELECT trip_id FROM activities WHERE id = ?')
+      .get(activityId) as { trip_id: number } | undefined;
+    return row?.trip_id ?? null;
+  }
 
   /**
    * GET /api/activities/day/:dayId
@@ -25,7 +39,6 @@ export class ActivitiesController {
   @Get('day/:dayId')
   getActivitiesForDay(@Param('dayId') dayId: string, @CurrentUser() user: User) {
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
     // Verify day belongs to a trip the user has access to
     const day = db.prepare('SELECT * FROM days WHERE id = ?').get(Number(dayId)) as
@@ -34,8 +47,9 @@ export class ActivitiesController {
     if (!day) {
       throw new HttpException('Day not found', 404);
     }
+    this.requireTripAccess(day.trip_id, user);
 
-    return activityService.getActivitiesForDay(Number(dayId));
+    return this.activityService.getActivitiesForDay(Number(dayId));
   }
 
   /**
@@ -45,9 +59,9 @@ export class ActivitiesController {
   @Get('trip/:tripId')
   getActivitiesForTrip(@Param('tripId') tripId: string, @CurrentUser() user: User) {
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
-    return activityService.getActivitiesForTrip(Number(tripId));
+    this.requireTripAccess(Number(tripId), user);
+    return this.activityService.getActivitiesForTrip(Number(tripId));
   }
 
   /**
@@ -57,9 +71,13 @@ export class ActivitiesController {
   @Get('place/:placeId')
   getActivitiesForPlace(@Param('placeId') placeId: string, @CurrentUser() user: User) {
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
-    return activityService.getActivitiesForPlace(Number(placeId));
+    const place = this.databaseService.connection
+      .prepare('SELECT trip_id FROM places WHERE id = ?')
+      .get(Number(placeId)) as { trip_id: number } | undefined;
+    if (!place) throw new HttpException('Place not found', 404);
+    this.requireTripAccess(place.trip_id, user);
+    return this.activityService.getActivitiesForPlace(Number(placeId));
   }
 
   /**
@@ -74,18 +92,20 @@ export class ActivitiesController {
     }
 
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
-    // Validate input
-    if (!dto.day_id || !dto.trip_id) {
-      throw new HttpException('day_id and trip_id are required', 400);
-    }
+    this.requireTripAccess(dto.trip_id, user);
+    const day = this.databaseService.connection.prepare('SELECT trip_id FROM days WHERE id = ?').get(dto.day_id) as
+      | { trip_id: number }
+      | undefined;
+    if (!day || day.trip_id !== dto.trip_id) throw new HttpException('Day not found', 404);
 
-    if (!dto.place_id && !dto.reservation_id) {
+    const hasPlace = dto.place_id !== undefined && dto.place_id !== null;
+    const hasReservation = dto.reservation_id !== undefined && dto.reservation_id !== null;
+    if (!hasPlace && !hasReservation) {
       throw new HttpException('Either place_id or reservation_id must be provided', 400);
     }
 
-    if (dto.place_id && dto.reservation_id) {
+    if (hasPlace && hasReservation) {
       throw new HttpException('Cannot specify both place_id and reservation_id', 400);
     }
 
@@ -101,7 +121,7 @@ export class ActivitiesController {
         notes: dto.notes,
       };
 
-      return activityService.createActivity(input);
+      return this.activityService.createActivity(input);
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Failed to create activity', 400);
     }
@@ -119,13 +139,13 @@ export class ActivitiesController {
     }
 
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
     // Check activity exists
-    const activity = activityService.getActivityById(Number(id));
+    const activity = this.activityService.getActivityById(Number(id));
     if (!activity) {
       throw new HttpException('Activity not found', 404);
     }
+    this.requireTripAccess(activity.trip_id, user);
 
     try {
       const input: UpdateActivityInput = {
@@ -135,7 +155,7 @@ export class ActivitiesController {
         notes: dto.notes,
       };
 
-      return activityService.updateActivity(Number(id), input);
+      return this.activityService.updateActivity(Number(id), input);
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Failed to update activity', 400);
     }
@@ -153,15 +173,15 @@ export class ActivitiesController {
     }
 
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
     // Check activity exists
-    const activity = activityService.getActivityById(Number(id));
+    const activity = this.activityService.getActivityById(Number(id));
     if (!activity) {
       throw new HttpException('Activity not found', 404);
     }
+    this.requireTripAccess(activity.trip_id, user);
 
-    activityService.deleteActivity(Number(id));
+    this.activityService.deleteActivity(Number(id));
     return { success: true };
   }
 
@@ -177,13 +197,12 @@ export class ActivitiesController {
     }
 
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
     if (!Array.isArray(dto.activity_ids)) {
       throw new HttpException('activity_ids must be an array', 400);
     }
 
-    activityService.reorderActivities(Number(dayId), dto.activity_ids);
+    this.activityService.reorderActivities(Number(dayId), dto.activity_ids);
     return { success: true };
   }
 
@@ -199,18 +218,18 @@ export class ActivitiesController {
     }
 
     const db = this.databaseService.connection;
-    const activityService = createActivityService(db);
 
     // Check activity exists
-    const activity = activityService.getActivityById(Number(id));
+    const activity = this.activityService.getActivityById(Number(id));
     if (!activity) {
       throw new HttpException('Activity not found', 404);
     }
+    this.requireTripAccess(activity.trip_id, user);
 
-    if (!dto.day_id) {
+    if (!Number.isInteger(dto.day_id) || dto.day_id <= 0) {
       throw new HttpException('day_id is required', 400);
     }
 
-    return activityService.moveActivityToDay(Number(id), dto.day_id, dto.order_index);
+    return this.activityService.moveActivityToDay(Number(id), dto.day_id, dto.order_index);
   }
 }

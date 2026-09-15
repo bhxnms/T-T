@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': '予定の国を表示',
   'atlas.plannedFor': '予定日',
   'atlas.antarctica': '南極',
-  "atlas.checkinTab": "チェックイン",
-  "atlas.checkinTotal": "チェックイン",
-  "atlas.checkinLandmarks": "ランドマーク",
-  "atlas.checkinPlaces": "旅行先の地点",
-  "atlas.checkinEmpty": "まだチェックインはありません — ランドマークや旅行先の地点を訪問済みとして記録しましょう",
+  'atlas.checkinTab': 'チェックイン',
+  'atlas.checkinTotal': 'チェックイン',
+  'atlas.checkinLandmarks': 'ランドマーク',
+  'atlas.checkinPlaces': '旅行先の地点',
+  'atlas.checkinEmpty': 'まだチェックインはありません — ランドマークや旅行先の地点を訪問済みとして記録しましょう',
 };
 export default atlas;

@@ -1,12 +1,12 @@
 // FE-COMP-FILEMANAGER-001 to FE-COMP-FILEMANAGER-012
-import { render, screen, waitFor, fireEvent } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { buildTrip, buildUser } from '../../../tests/helpers/factories';
 import { server } from '../../../tests/helpers/msw/server';
+import { fireEvent, render, screen, waitFor } from '../../../tests/helpers/render';
+import { resetAllStores, seedStore } from '../../../tests/helpers/store';
 import { useAuthStore } from '../../store/authStore';
 import { useTripStore } from '../../store/tripStore';
-import { resetAllStores, seedStore } from '../../../tests/helpers/store';
-import { buildUser, buildTrip } from '../../../tests/helpers/factories';
 import type { TripFile } from '../../types';
 import FileManager from './FileManager';
 
@@ -101,7 +101,7 @@ beforeEach(() => {
         return HttpResponse.json({ files: [] });
       }
       return HttpResponse.json({ files: [] });
-    }),
+    })
   );
 
   // Stub window.confirm
@@ -164,7 +164,8 @@ describe('FileManager', () => {
   it('FE-COMP-FILEMANAGER-006: trash toggle loads and displays trashed files', async () => {
     // filesApi.list is mocked — configure it to return trash files when called with trash=true
     (filesApi.list as ReturnType<typeof vi.fn>).mockImplementation((_tripId, trash) => {
-      if (trash) return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
+      if (trash)
+        return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
       return Promise.resolve({ files: [] });
     });
 
@@ -181,7 +182,8 @@ describe('FileManager', () => {
 
   it('FE-COMP-FILEMANAGER-007: restore button calls filesApi.restore', async () => {
     (filesApi.list as ReturnType<typeof vi.fn>).mockImplementation((_tripId, trash) => {
-      if (trash) return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
+      if (trash)
+        return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
       return Promise.resolve({ files: [] });
     });
 
@@ -202,7 +204,8 @@ describe('FileManager', () => {
 
   it('FE-COMP-FILEMANAGER-008: permanent delete calls filesApi.permanentDelete after confirm', async () => {
     (filesApi.list as ReturnType<typeof vi.fn>).mockImplementation((_tripId, trash) => {
-      if (trash) return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
+      if (trash)
+        return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
       return Promise.resolve({ files: [] });
     });
 
@@ -222,7 +225,8 @@ describe('FileManager', () => {
 
   it('FE-COMP-FILEMANAGER-009: empty trash calls filesApi.emptyTrash', async () => {
     (filesApi.list as ReturnType<typeof vi.fn>).mockImplementation((_tripId, trash) => {
-      if (trash) return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
+      if (trash)
+        return Promise.resolve({ files: [buildFile({ id: 5, original_name: 'old.pdf', deleted_at: '2025-02-01' })] });
       return Promise.resolve({ files: [] });
     });
 
@@ -241,9 +245,7 @@ describe('FileManager', () => {
   });
 
   it('FE-COMP-FILEMANAGER-010: image file click opens lightbox', async () => {
-    const files = [
-      buildFile({ id: 1, mime_type: 'image/jpeg', original_name: 'photo.jpg' }),
-    ];
+    const files = [buildFile({ id: 1, mime_type: 'image/jpeg', original_name: 'photo.jpg' })];
     render(<FileManager {...defaultProps} files={files} />);
     const user = userEvent.setup();
 
@@ -258,9 +260,7 @@ describe('FileManager', () => {
   });
 
   it('FE-COMP-FILEMANAGER-011: escape key closes lightbox', async () => {
-    const files = [
-      buildFile({ id: 1, mime_type: 'image/jpeg', original_name: 'photo.jpg' }),
-    ];
+    const files = [buildFile({ id: 1, mime_type: 'image/jpeg', original_name: 'photo.jpg' })];
     render(<FileManager {...defaultProps} files={files} />);
     const user = userEvent.setup();
 
@@ -323,7 +323,14 @@ describe('FileManager', () => {
   });
 
   it('FE-COMP-FILEMANAGER-035: pkpass click downloads via blob helper, not the PDF preview (#1447)', async () => {
-    const files = [buildFile({ id: 1, mime_type: 'application/octet-stream', original_name: 'boarding.pkpass', url: '/uploads/trips/1/boarding.pkpass' })];
+    const files = [
+      buildFile({
+        id: 1,
+        mime_type: 'application/octet-stream',
+        original_name: 'boarding.pkpass',
+        url: '/uploads/trips/1/boarding.pkpass',
+      }),
+    ];
     render(<FileManager {...defaultProps} files={files} />);
     const user = userEvent.setup();
 
@@ -432,7 +439,7 @@ describe('FileManager', () => {
     // Close via X button in the modal (second X button — first might be something else)
     const closeButtons = screen.getAllByRole('button', { name: '' });
     // Find a close button near the modal header — click the last X-like button
-    const xBtn = closeButtons.find(btn => btn.closest('[style*="z-index: 10000"]'));
+    const xBtn = closeButtons.find((btn) => btn.closest('[style*="z-index: 10000"]'));
     if (xBtn) await user.click(xBtn);
   });
 
@@ -539,7 +546,9 @@ describe('FileManager', () => {
     const day = buildDay({ id: 5, date: '2025-06-01', day_number: 1 });
     const assignments = { '5': [{ id: 1, day_id: 5, place_id: 10, order_index: 0, place }] };
 
-    render(<FileManager {...defaultProps} files={[buildFile()]} places={[place]} days={[day]} assignments={assignments} />);
+    render(
+      <FileManager {...defaultProps} files={[buildFile()]} places={[place]} days={[day]} assignments={assignments} />
+    );
     const user = userEvent.setup();
 
     await user.click(screen.getByTitle(/assign/i));

@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': '트랙 색상',
   'inspector.trackColorAuto': '자동 색상',
   'inspector.trackColorCustom': '사용자 지정 색상 선택',
-  "inspector.checkin": "체크인",
-  "inspector.checkinDone": "체크인됨",
+  'inspector.checkin': '체크인',
+  'inspector.checkinDone': '체크인됨',
 };
 export default inspector;

@@ -1,46 +1,46 @@
-import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Footprints, Paperclip, Pencil, Route as RouteIcon, Trash2 } from 'lucide-react'
-import MSheet from '../../../components/MSheet'
-import type { MTripSheetsProps } from '../MTripShell'
-import { useTranslation } from '../../../../i18n'
-import { useSettingsStore } from '../../../../store/settingsStore'
-import { RES_ICONS } from '../../../../components/Planner/DayPlanSidebar.constants'
-import { splitReservationDateTime } from '../../../../utils/formatters'
-import { getFlightLegs, getTrainLegs } from '../../../../utils/flightLegs'
-import { openFile } from '../../../../utils/fileDownload'
-import type { Reservation } from '../../../../types'
-import { Eyebrow, INNER_CLS, StatBox, TileHeader, displayTime } from './MTripSheetUi'
+import { ArrowRight, Footprints, Paperclip, Pencil, Route as RouteIcon, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { RES_ICONS } from '../../../../components/Planner/DayPlanSidebar.constants';
+import { useTranslation } from '../../../../i18n';
+import { useSettingsStore } from '../../../../store/settingsStore';
+import type { Reservation } from '../../../../types';
+import { openFile } from '../../../../utils/fileDownload';
+import { getFlightLegs, getTrainLegs } from '../../../../utils/flightLegs';
+import { splitReservationDateTime } from '../../../../utils/formatters';
+import MSheet from '../../../components/MSheet';
+import type { MTripSheetsProps } from '../MTripShell';
+import { Eyebrow, INNER_CLS, StatBox, TileHeader, displayTime } from './MTripSheetUi';
 
 interface TransportSheetPayload {
-  reservationId?: number
+  reservationId?: number;
 }
 
 interface TransitLeg {
-  mode?: string
-  line?: string | null
-  line_color?: string | null
-  line_text_color?: string | null
-  headsign?: string | null
-  duration?: number
-  stops?: number
-  from?: { name?: string; time?: string | null }
-  to?: { name?: string; time?: string | null }
+  mode?: string;
+  line?: string | null;
+  line_color?: string | null;
+  line_text_color?: string | null;
+  headsign?: string | null;
+  duration?: number;
+  stops?: number;
+  from?: { name?: string; time?: string | null };
+  to?: { name?: string; time?: string | null };
 }
 
 interface TransportMeta {
-  airline?: string
-  flight_number?: string
-  train_number?: string
-  seat?: string
-  platform?: string
-  transit?: { legs?: TransitLeg[] }
+  airline?: string;
+  flight_number?: string;
+  train_number?: string;
+  seat?: string;
+  platform?: string;
+  transit?: { legs?: TransitLeg[] };
 }
 
 function parseMetadata(res: Reservation): TransportMeta {
   try {
-    return (typeof res.metadata === 'string' ? JSON.parse(res.metadata || '{}') : (res.metadata || {})) as TransportMeta
+    return (typeof res.metadata === 'string' ? JSON.parse(res.metadata || '{}') : res.metadata || {}) as TransportMeta;
   } catch {
-    return {}
+    return {};
   }
 }
 
@@ -51,88 +51,95 @@ function parseMetadata(res: Reservation): TransportMeta {
  * on-map/edit/delete actions.
  */
 export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
-  const { t, locale } = useTranslation()
-  const open = shell.sheet?.id === 'transport'
-  const payload = (shell.sheet?.payload ?? {}) as TransportSheetPayload
-  const liveRes = planner.reservations.find(r => r.id === payload.reservationId) ?? null
+  const { t, locale } = useTranslation();
+  const open = shell.sheet?.id === 'transport';
+  const payload = (shell.sheet?.payload ?? {}) as TransportSheetPayload;
+  const liveRes = planner.reservations.find((r) => r.id === payload.reservationId) ?? null;
 
-  const canEditDays = planner.can('day_edit', planner.trip)
-  const timeFormat = useSettingsStore(s => s.settings.time_format) || '24h'
-  const blurCodes = useSettingsStore(s => s.settings.blur_booking_codes)
-  const [codeRevealed, setCodeRevealed] = useState(false)
-  useEffect(() => { if (!open) setCodeRevealed(false) }, [open])
+  const canEditDays = planner.can('day_edit', planner.trip);
+  const timeFormat = useSettingsStore((s) => s.settings.time_format) || '24h';
+  const blurCodes = useSettingsStore((s) => s.settings.blur_booking_codes);
+  const [codeRevealed, setCodeRevealed] = useState(false);
+  useEffect(() => {
+    if (!open) setCodeRevealed(false);
+  }, [open]);
 
   // Hold the last reservation so the card content survives the exit animation.
-  const heldRef = useRef<Reservation | null>(null)
-  if (liveRes) heldRef.current = liveRes
-  const res = liveRes ?? heldRef.current
+  const heldRef = useRef<Reservation | null>(null);
+  if (liveRes) heldRef.current = liveRes;
+  const res = liveRes ?? heldRef.current;
 
   if (!res) {
-    return <MSheet open={false} onClose={shell.closeSheet} variant="card" material="glass" />
+    return <MSheet open={false} onClose={shell.closeSheet} variant="card" material="glass" />;
   }
 
-  const meta = parseMetadata(res)
-  const ResIcon = RES_ICONS[res.type as keyof typeof RES_ICONS] || RES_ICONS.other
+  const meta = parseMetadata(res);
+  const ResIcon = RES_ICONS[res.type as keyof typeof RES_ICONS] || RES_ICONS.other;
 
-  const from = (res.endpoints || []).find(e => e.role === 'from')
-  const to = (res.endpoints || []).find(e => e.role === 'to')
-  const { date, time: startTime } = splitReservationDateTime(res.reservation_time)
-  const { time: endTime } = splitReservationDateTime(res.reservation_end_time)
-  const depTime = from?.local_time || startTime
-  const arrTime = to?.local_time || endTime
+  const from = (res.endpoints || []).find((e) => e.role === 'from');
+  const to = (res.endpoints || []).find((e) => e.role === 'to');
+  const { date, time: startTime } = splitReservationDateTime(res.reservation_time);
+  const { time: endTime } = splitReservationDateTime(res.reservation_end_time);
+  const depTime = from?.local_time || startTime;
+  const arrTime = to?.local_time || endTime;
 
-  const subParts: string[] = []
-  if (meta.airline) subParts.push(meta.airline)
-  if (meta.flight_number) subParts.push(meta.flight_number)
-  if (meta.train_number) subParts.push(meta.train_number)
-  if (from?.name && to?.name) subParts.push(`${from.name} → ${to.name}`)
+  const subParts: string[] = [];
+  if (meta.airline) subParts.push(meta.airline);
+  if (meta.flight_number) subParts.push(meta.flight_number);
+  if (meta.train_number) subParts.push(meta.train_number);
+  if (from?.name && to?.name) subParts.push(`${from.name} → ${to.name}`);
   else if (date) {
-    subParts.push(new Date(`${date}T00:00:00Z`).toLocaleDateString(locale, {
-      weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC',
-    }))
+    subParts.push(
+      new Date(`${date}T00:00:00Z`).toLocaleDateString(locale, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        timeZone: 'UTC',
+      })
+    );
   }
 
-  const seat = meta.seat
-  const platform = meta.platform
-  const transitLegs: TransitLeg[] = Array.isArray(meta.transit?.legs) ? meta.transit.legs : []
+  const seat = meta.seat;
+  const platform = meta.platform;
+  const transitLegs: TransitLeg[] = Array.isArray(meta.transit?.legs) ? meta.transit.legs : [];
 
   // Per-segment booking codes (#1943), only on a real stopover booking: the
   // single-leg fallback would just echo the booking's own code shown below.
-  const routeLegs = res.type === 'flight' ? getFlightLegs(res) : res.type === 'train' ? getTrainLegs(res) : []
-  const legCodes = routeLegs.length > 1 ? routeLegs.filter(l => l.confirmation_number) : []
+  const routeLegs = res.type === 'flight' ? getFlightLegs(res) : res.type === 'train' ? getTrainLegs(res) : [];
+  const legCodes = routeLegs.length > 1 ? routeLegs.filter((l) => l.confirmation_number) : [];
 
-  const resFiles = (planner.files || []).filter(f =>
-    !f.deleted_at && (f.reservation_id === res.id || (f.linked_reservation_ids || []).includes(res.id)),
-  )
+  const resFiles = (planner.files || []).filter(
+    (f) => !f.deleted_at && (f.reservation_id === res.id || (f.linked_reservation_ids || []).includes(res.id))
+  );
 
-  const confirmed = res.status === 'confirmed'
-  const codeBlurred = blurCodes && !codeRevealed
-  const onMap = planner.visibleConnections.includes(res.id)
+  const confirmed = res.status === 'confirmed';
+  const codeBlurred = blurCodes && !codeRevealed;
+  const onMap = planner.visibleConnections.includes(res.id);
 
   // First tap draws the overlay and jumps to the map; while drawn, the same
   // button hides it again (per-booking overlay toggle, desktop parity).
   const showOnMap = () => {
     if (onMap) {
-      planner.toggleConnection(res.id)
-      return
+      planner.toggleConnection(res.id);
+      return;
     }
-    planner.toggleConnection(res.id)
-    shell.closeSheet()
-    if (shell.trTab !== 'plan') shell.setTrTab('plan')
-    if (shell.view !== 'map') shell.toggleView()
-  }
+    planner.toggleConnection(res.id);
+    shell.closeSheet();
+    if (shell.trTab !== 'plan') shell.setTrTab('plan');
+    if (shell.view !== 'map') shell.toggleView();
+  };
 
   const editTransport = () => {
-    planner.setEditingTransport(res)
-    planner.setTransportModalDayId(res.day_id ?? null)
-    planner.setShowTransportModal(true)
-    shell.closeSheet()
-  }
+    planner.setEditingTransport(res);
+    planner.setTransportModalDayId(res.day_id ?? null);
+    planner.setShowTransportModal(true);
+    shell.closeSheet();
+  };
 
   const deleteTransport = () => {
-    planner.handleDeleteReservation(res.id)
-    shell.closeSheet()
-  }
+    planner.handleDeleteReservation(res.id);
+    shell.closeSheet();
+  };
 
   return (
     <MSheet open={open && !!liveRes} onClose={shell.closeSheet} variant="card" material="glass" ariaLabel={res.title}>
@@ -165,8 +172,8 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
         {transitLegs.length > 0 && (
           <div className={`mt-3 flex flex-col gap-2 rounded-[14px] px-3 py-[10px] ${INNER_CLS}`}>
             {transitLegs.map((leg, i) => {
-              const isWalk = leg.mode === 'WALK'
-              const mins = leg.duration ? Math.round(leg.duration / 60) : null
+              const isWalk = leg.mode === 'WALK';
+              const mins = leg.duration ? Math.round(leg.duration / 60) : null;
               return (
                 <div key={i} className="flex items-start gap-2">
                   {isWalk ? (
@@ -176,7 +183,7 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
                       className="flex-none rounded-[5px] px-[6px] py-px text-[0.625rem] font-bold"
                       style={{
                         background: leg.line_color || 'var(--m-ic)',
-                        color: leg.line_color ? (leg.line_text_color || '#fff') : 'var(--m-ink)',
+                        color: leg.line_color ? leg.line_text_color || '#fff' : 'var(--m-ink)',
                       }}
                     >
                       {leg.line || leg.mode}
@@ -199,11 +206,13 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
                         leg.from?.time && !isWalk ? `${leg.from.time}${leg.to?.time ? ` – ${leg.to.time}` : ''}` : null,
                         mins ? t('transit.min', { count: mins }) : null,
                         !isWalk && leg.stops ? t('transit.stops', { count: leg.stops }) : null,
-                      ].filter(Boolean).join(' · ')}
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
@@ -220,8 +229,10 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
           {res.confirmation_number && (
             <button
               type="button"
-              onClick={() => { if (blurCodes) setCodeRevealed(v => !v) }}
-              className={`flex-none font-geist text-[0.71875rem] tabular-nums text-m-muted ${codeBlurred ? 'blur-[4px] select-none' : ''}`}
+              onClick={() => {
+                if (blurCodes) setCodeRevealed((v) => !v);
+              }}
+              className={`flex-none font-geist text-[0.71875rem] tabular-nums text-m-muted ${codeBlurred ? 'select-none blur-[4px]' : ''}`}
             >
               #{res.confirmation_number}
             </button>
@@ -238,8 +249,10 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
                 </span>
                 <button
                   type="button"
-                  onClick={() => { if (blurCodes) setCodeRevealed(v => !v) }}
-                  className={`flex-none font-geist text-[0.71875rem] tabular-nums text-m-muted ${codeBlurred ? 'blur-[4px] select-none' : ''}`}
+                  onClick={() => {
+                    if (blurCodes) setCodeRevealed((v) => !v);
+                  }}
+                  className={`flex-none font-geist text-[0.71875rem] tabular-nums text-m-muted ${codeBlurred ? 'select-none blur-[4px]' : ''}`}
                 >
                   #{leg.confirmation_number}
                 </button>
@@ -253,7 +266,9 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
           <>
             <Eyebrow className="mb-[6px] mt-3">{t('reservations.notes')}</Eyebrow>
             <div className={`rounded-[14px] px-3 py-[10px] ${INNER_CLS}`}>
-              <div className="whitespace-pre-wrap font-geist text-[0.75rem] leading-[1.5] text-m-muted">{res.notes}</div>
+              <div className="whitespace-pre-wrap font-geist text-[0.75rem] leading-[1.5] text-m-muted">
+                {res.notes}
+              </div>
             </div>
           </>
         )}
@@ -271,7 +286,7 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
             <RouteIcon size={13} strokeWidth={2} />
             {t('mobileTrip.onMap')}
           </button>
-          {resFiles.map(f => (
+          {resFiles.map((f) => (
             <button
               key={f.id}
               type="button"
@@ -305,5 +320,5 @@ export default function MTransportSheet({ planner, shell }: MTripSheetsProps) {
         </div>
       </div>
     </MSheet>
-  )
+  );
 }

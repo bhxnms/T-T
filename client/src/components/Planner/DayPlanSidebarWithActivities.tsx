@@ -26,7 +26,7 @@ export default function DayPlanSidebarWithActivities(props: DayPlanSidebarWithAc
           className="flex-1 px-3 py-2 text-sm"
         >
           <ListChecks {...getIconProps('toggle')} />
-          <span className="hidden sm:inline font-medium">传统视图</span>
+          <span className="hidden font-medium sm:inline">传统视图</span>
         </Button>
         <Button
           type="button"
@@ -36,7 +36,7 @@ export default function DayPlanSidebarWithActivities(props: DayPlanSidebarWithAc
           className="flex-1 px-3 py-2 text-sm"
         >
           <Calendar {...getIconProps('toggle')} />
-          <span className="hidden sm:inline font-medium">活动视图</span>
+          <span className="hidden font-medium sm:inline">活动视图</span>
         </Button>
       </div>
 

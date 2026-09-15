@@ -1,24 +1,32 @@
 // FE-COMP-PLACEFORM-001 to FE-COMP-PLACEFORM-036, FE-PLANNER-PLACEFORM-016 to FE-PLANNER-PLACEFORM-067, plus FE-PLANNER-PLACEFORM-068 to -072
-import { render, screen, waitFor, fireEvent, within } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { buildAssignment, buildCategory, buildPlace, buildTrip, buildUser } from '../../../tests/helpers/factories';
 import { server } from '../../../tests/helpers/msw/server';
-import { useAuthStore } from '../../store/authStore';
-import { useTripStore } from '../../store/tripStore';
-import { useAddonStore } from '../../store/addonStore';
-import { usePermissionsStore } from '../../store/permissionsStore';
+import { fireEvent, render, screen, waitFor, within } from '../../../tests/helpers/render';
 import { resetAllStores, seedStore } from '../../../tests/helpers/store';
-import { buildUser, buildTrip, buildPlace, buildCategory, buildAssignment } from '../../../tests/helpers/factories';
+import { useAddonStore } from '../../store/addonStore';
+import { useAuthStore } from '../../store/authStore';
+import { usePermissionsStore } from '../../store/permissionsStore';
+import { useTripStore } from '../../store/tripStore';
 import PlaceFormModal from './PlaceFormModal';
 
 // Mock CustomTimePicker so we get a simple text input instead of the portal-heavy UI
 vi.mock('../shared/CustomTimePicker', () => ({
-  default: ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
+  default: ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder?: string;
+  }) => (
     <input
       data-testid="time-picker"
       type="text"
       value={value}
-      onChange={e => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder ?? '00:00'}
     />
   ),
@@ -147,7 +155,7 @@ describe('PlaceFormModal', () => {
         {...defaultProps}
         place={null}
         prefillCoords={{ lat: 48.8566, lng: 2.3522, name: 'Paris', address: 'Paris, France' }}
-      />,
+      />
     );
     expect(screen.getByDisplayValue('48.8566')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Paris')).toBeInTheDocument();
@@ -170,8 +178,8 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/search', () =>
         HttpResponse.json({
           places: [{ name: 'Eiffel Tower', address: 'Paris', lat: '48.8584', lng: '2.2945' }],
-        }),
-      ),
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -192,8 +200,8 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/search', () =>
         HttpResponse.json({
           places: [{ name: 'Eiffel Tower', address: 'Paris', lat: '48.8584', lng: '2.2945' }],
-        }),
-      ),
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -210,8 +218,8 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/search', () =>
         HttpResponse.json({
           places: [{ name: 'Eiffel Tower', address: 'Paris', lat: '48.8584', lng: '2.2945' }],
-        }),
-      ),
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -235,7 +243,11 @@ describe('PlaceFormModal', () => {
     // the modal must show it instead of a generic "search failed" so the cause is visible.
     server.use(
       http.post('/api/maps/search', () =>
-        HttpResponse.json({ error: 'Places API (New) has not been used in project 123 or it is disabled' }, { status: 403 })),
+        HttpResponse.json(
+          { error: 'Places API (New) has not been used in project 123 or it is disabled' },
+          { status: 403 }
+        )
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -247,7 +259,7 @@ describe('PlaceFormModal', () => {
       expect(addToast).toHaveBeenCalledWith(
         expect.stringMatching(/Places API \(New\) has not been used/i),
         'error',
-        undefined,
+        undefined
       );
     });
 
@@ -276,7 +288,7 @@ describe('PlaceFormModal', () => {
         HttpResponse.json({
           suggestions: [{ placeId: 'node:123', mainText: 'Eiffel Tower', secondaryText: 'Paris, France' }],
           source: 'nominatim',
-        }),
+        })
       ),
       // details rejects (e.g. proxy 504 from a hung Overpass mirror)
       http.get('/api/maps/details/:placeId', () => HttpResponse.json({ error: 'boom' }, { status: 500 })),
@@ -284,8 +296,8 @@ describe('PlaceFormModal', () => {
         HttpResponse.json({
           places: [{ name: 'Eiffel Tower', address: 'Paris, France', lat: '48.8584', lng: '2.2945' }],
           source: 'openstreetmap',
-        }),
-      ),
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -306,15 +318,15 @@ describe('PlaceFormModal', () => {
         HttpResponse.json({
           suggestions: [{ placeId: 'node:123', mainText: 'Eiffel Tower', secondaryText: 'Paris, France' }],
           source: 'nominatim',
-        }),
+        })
       ),
       http.get('/api/maps/details/:placeId', () => HttpResponse.json({ place: null, disabled: true })),
       http.post('/api/maps/search', () =>
         HttpResponse.json({
           places: [{ name: 'Eiffel Tower', address: 'Paris, France', lat: '48.8584', lng: '2.2945' }],
           source: 'openstreetmap',
-        }),
-      ),
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -333,10 +345,10 @@ describe('PlaceFormModal', () => {
         HttpResponse.json({
           suggestions: [{ placeId: 'node:123', mainText: 'Eiffel Tower', secondaryText: 'Paris, France' }],
           source: 'nominatim',
-        }),
+        })
       ),
       http.get('/api/maps/details/:placeId', () => HttpResponse.json({ place: null, disabled: true })),
-      http.post('/api/maps/search', () => HttpResponse.json({ places: [], source: 'openstreetmap' })),
+      http.post('/api/maps/search', () => HttpResponse.json({ places: [], source: 'openstreetmap' }))
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -473,7 +485,7 @@ describe('PlaceFormModal', () => {
         place={currentPlace}
         assignmentId={10}
         dayAssignments={[currentAssignment, otherAssignment]}
-      />,
+      />
     );
 
     // English translation: 'places.timeCollision' = 'Time overlap with:'
@@ -687,7 +699,7 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/autocomplete', async ({ request }) => {
         bodies.push((await request.json()) as Record<string, unknown>);
         return HttpResponse.json({ suggestions: [] });
-      }),
+      })
     );
     seedStore(useTripStore, {
       trip: buildTrip({ id: 1 }),
@@ -716,7 +728,7 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/autocomplete', async ({ request }) => {
         bodies.push((await request.json()) as Record<string, unknown>);
         return HttpResponse.json({ suggestions: [] });
-      }),
+      })
     );
     seedStore(useTripStore, {
       trip: buildTrip({ id: 1 }),
@@ -737,7 +749,7 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/autocomplete', async ({ request }) => {
         bodies.push((await request.json()) as Record<string, unknown>);
         return HttpResponse.json({ suggestions: [] });
-      }),
+      })
     );
     seedStore(useTripStore, {
       trip: buildTrip({ id: 1 }),
@@ -758,7 +770,7 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/autocomplete', () => {
         calls += 1;
         return HttpResponse.json({ suggestions: [] });
-      }),
+      })
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -794,7 +806,7 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/autocomplete', () => {
         calls += 1;
         return HttpResponse.json({ suggestions: [] });
-      }),
+      })
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -815,7 +827,7 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/search', () => {
         calls += 1;
         return HttpResponse.json({ places: [] });
-      }),
+      })
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -832,8 +844,14 @@ describe('PlaceFormModal', () => {
     const user = userEvent.setup();
     server.use(
       http.post('/api/maps/resolve-url', () =>
-        HttpResponse.json({ name: 'Notre-Dame', address: 'Parvis Notre-Dame, Paris', lat: 48.8530, lng: 2.3499, google_ftid: 'ftid-1' }),
-      ),
+        HttpResponse.json({
+          name: 'Notre-Dame',
+          address: 'Parvis Notre-Dame, Paris',
+          lat: 48.853,
+          lng: 2.3499,
+          google_ftid: 'ftid-1',
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -855,8 +873,8 @@ describe('PlaceFormModal', () => {
     server.use(
       http.post('/api/maps/resolve-url', () => HttpResponse.json({ name: 'Notre-Dame', lat: null, lng: null })),
       http.post('/api/maps/search', () =>
-        HttpResponse.json({ places: [{ name: 'Notre-Dame de Paris', address: 'Paris', lat: '48.853', lng: '2.3499' }] }),
-      ),
+        HttpResponse.json({ places: [{ name: 'Notre-Dame de Paris', address: 'Paris', lat: '48.853', lng: '2.3499' }] })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -875,7 +893,7 @@ describe('PlaceFormModal', () => {
           { placeId: 'node:1', mainText: 'Eiffel Tower', secondaryText: 'Paris, France' },
           { placeId: 'node:2', mainText: 'Eiffel Museum', secondaryText: 'Berlin, Germany' },
         ],
-      }),
+      })
     );
 
   it('FE-PLANNER-PLACEFORM-049: ArrowDown/ArrowUp move the highlight and Enter picks the highlighted suggestion', async () => {
@@ -883,8 +901,8 @@ describe('PlaceFormModal', () => {
     server.use(
       twoSuggestions(),
       http.get('/api/maps/details/:placeId', () =>
-        HttpResponse.json({ place: { name: 'Eiffel Museum', address: 'Berlin', lat: 52.52, lng: 13.405 } }),
-      ),
+        HttpResponse.json({ place: { name: 'Eiffel Museum', address: 'Berlin', lat: 52.52, lng: 13.405 } })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -913,7 +931,7 @@ describe('PlaceFormModal', () => {
       http.post('/api/maps/search', () => {
         searches += 1;
         return HttpResponse.json({ places: [] });
-      }),
+      })
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -930,8 +948,10 @@ describe('PlaceFormModal', () => {
     server.use(
       twoSuggestions(),
       http.post('/api/maps/search', () =>
-        HttpResponse.json({ places: [{ name: 'Eiffel Tower', address: 'Champ de Mars', lat: '48.8584', lng: '2.2945' }] }),
-      ),
+        HttpResponse.json({
+          places: [{ name: 'Eiffel Tower', address: 'Champ de Mars', lat: '48.8584', lng: '2.2945' }],
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -950,7 +970,7 @@ describe('PlaceFormModal', () => {
     server.use(
       twoSuggestions(),
       http.get('/api/maps/details/:placeId', () => HttpResponse.json({ error: 'nope' }, { status: 500 })),
-      http.post('/api/maps/search', () => HttpResponse.json({ error: 'nope' }, { status: 500 })),
+      http.post('/api/maps/search', () => HttpResponse.json({ error: 'nope' }, { status: 500 }))
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -958,7 +978,7 @@ describe('PlaceFormModal', () => {
     await user.click(await screen.findByText('Paris, France'));
 
     await waitFor(() =>
-      expect(addToast).toHaveBeenCalledWith(expect.stringMatching(/Place search failed|nope/i), 'error', undefined),
+      expect(addToast).toHaveBeenCalledWith(expect.stringMatching(/Place search failed|nope/i), 'error', undefined)
     );
     // The typed query comes back so the user can retry instead of starting over.
     await waitFor(() => expect(screen.getByPlaceholderText('Search places...')).toHaveValue('Eiffel'));
@@ -978,8 +998,10 @@ describe('PlaceFormModal', () => {
     });
     server.use(
       http.post('/api/maps/search', () =>
-        HttpResponse.json({ places: [{ name: 'Same Spot', address: 'Somewhere', lat: '10', lng: '10', google_place_id: 'gp-1' }] }),
-      ),
+        HttpResponse.json({
+          places: [{ name: 'Same Spot', address: 'Somewhere', lat: '10', lng: '10', google_place_id: 'gp-1' }],
+        })
+      )
     );
 
     render(<PlaceFormModal {...defaultProps} onSave={onSave} />);
@@ -999,7 +1021,7 @@ describe('PlaceFormModal', () => {
   function pasteItems(target: Element, items: { type: string; file: File | null }[]) {
     fireEvent.paste(target, {
       clipboardData: {
-        items: items.map(i => ({ type: i.type, getAsFile: () => i.file })),
+        items: items.map((i) => ({ type: i.type, getAsFile: () => i.file })),
       },
     });
   }
@@ -1018,12 +1040,18 @@ describe('PlaceFormModal', () => {
     // A POI tapped on the map opens the dialog through prefillCoords, never
     // through the search handler — the column used to keep the last place.
     const { rerender } = render(
-      <PlaceFormModal {...defaultProps} prefillCoords={{ lat: 53.55, lng: 9.99, name: 'Helgas Kitchen', osm_id: 'node:1' }} />,
+      <PlaceFormModal
+        {...defaultProps}
+        prefillCoords={{ lat: 53.55, lng: 9.99, name: 'Helgas Kitchen', osm_id: 'node:1' }}
+      />
     );
     expect(screen.getByDisplayValue('Helgas Kitchen')).toBeInTheDocument();
 
     rerender(
-      <PlaceFormModal {...defaultProps} prefillCoords={{ lat: 50.9, lng: 6.96, name: 'Museum Ludwig', osm_id: 'node:2' }} />,
+      <PlaceFormModal
+        {...defaultProps}
+        prefillCoords={{ lat: 50.9, lng: 6.96, name: 'Museum Ludwig', osm_id: 'node:2' }}
+      />
     );
     expect(screen.getByDisplayValue('Museum Ludwig')).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Helgas Kitchen')).not.toBeInTheDocument();
@@ -1090,7 +1118,7 @@ describe('PlaceFormModal', () => {
         lng: 2.3376,
         website: 'https://louvre.fr',
         category_id: String(cat.id),
-      }),
+      })
     );
   });
 
@@ -1115,7 +1143,9 @@ describe('PlaceFormModal', () => {
     const place = buildPlace({ name: 'Museum' });
     const assignment = buildAssignment({ id: 12, day_id: 4, place });
 
-    render(<PlaceFormModal {...defaultProps} place={place} assignmentId={12} dayAssignments={[assignment]} onSave={onSave} />);
+    render(
+      <PlaceFormModal {...defaultProps} place={place} assignmentId={12} dayAssignments={[assignment]} onSave={onSave} />
+    );
     const [start, end] = screen.getAllByTestId('time-picker');
     fireEvent.change(start, { target: { value: '09:00' } });
     fireEvent.change(end, { target: { value: '10:30' } });
@@ -1149,7 +1179,7 @@ describe('PlaceFormModal', () => {
           buildAssignment({ id: 30, day_id: 5, place: timeless }),
           buildAssignment({ id: 40, day_id: 5, place: overlapping }),
         ]}
-      />,
+      />
     );
 
     const warning = screen.getByText(/Time overlap with:/i).closest('div') as HTMLElement;
@@ -1164,8 +1194,15 @@ describe('PlaceFormModal', () => {
 describe('PlaceFormModal remaining branches', () => {
   it('FE-W5PFM-001: an existing place with empty fields opens on the defaults', () => {
     const place = buildPlace({
-      name: null, description: null, address: null, lat: null, lng: null,
-      category_id: null, notes: null, transport_mode: null, website: null,
+      name: null,
+      description: null,
+      address: null,
+      lat: null,
+      lng: null,
+      category_id: null,
+      notes: null,
+      transport_mode: null,
+      website: null,
     });
     render(<PlaceFormModal {...defaultProps} place={place} />);
 
@@ -1203,11 +1240,14 @@ describe('PlaceFormModal remaining branches', () => {
     server.use(
       http.post('/api/maps/autocomplete', async () => {
         seen += 1;
-        if (seen === 1) await new Promise<void>(res => { gate.release = res; });
+        if (seen === 1)
+          await new Promise<void>((res) => {
+            gate.release = res;
+          });
         return HttpResponse.json({
           suggestions: [{ placeId: 'node:1', mainText: 'Eiffel Tower', secondaryText: 'Paris, France' }],
         });
-      }),
+      })
     );
 
     render(<PlaceFormModal {...defaultProps} />);
@@ -1227,9 +1267,7 @@ describe('PlaceFormModal remaining branches', () => {
 
   it('FE-W5PFM-005: a resolved URL without a name or address keeps the form values', async () => {
     const user = userEvent.setup();
-    server.use(
-      http.post('/api/maps/resolve-url', () => HttpResponse.json({ lat: 48.853, lng: 2.3499 })),
-    );
+    server.use(http.post('/api/maps/resolve-url', () => HttpResponse.json({ lat: 48.853, lng: 2.3499 })));
 
     render(<PlaceFormModal {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/e\.g\. Eiffel Tower/i), 'Kept Name');
@@ -1254,9 +1292,7 @@ describe('PlaceFormModal remaining branches', () => {
 
   it('FE-W5PFM-007: picking a bare search result leaves the typed fields alone', async () => {
     const user = userEvent.setup();
-    server.use(
-      http.post('/api/maps/search', () => HttpResponse.json({ places: [{ name: 'Bare Result' }] })),
-    );
+    server.use(http.post('/api/maps/search', () => HttpResponse.json({ places: [{ name: 'Bare Result' }] })));
 
     render(<PlaceFormModal {...defaultProps} />);
     await user.type(screen.getByPlaceholderText(/Street, City, Country/i), 'Rue de Rivoli');
@@ -1274,7 +1310,10 @@ describe('PlaceFormModal remaining branches', () => {
     window.__addToast = addToast;
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);
-    seedStore(useTripStore, { trip: buildTrip({ id: 1 }), places: [buildPlace({ name: 'Louvre', lat: null, lng: null })] });
+    seedStore(useTripStore, {
+      trip: buildTrip({ id: 1 }),
+      places: [buildPlace({ name: 'Louvre', lat: null, lng: null })],
+    });
 
     render(<PlaceFormModal {...defaultProps} onSave={onSave} />);
     await user.type(screen.getByPlaceholderText(/e\.g\. Eiffel Tower/i), 'louvre');
@@ -1295,7 +1334,10 @@ describe('PlaceFormModal remaining branches', () => {
     window.__addToast = addToast;
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);
-    seedStore(useTripStore, { trip: buildTrip({ id: 1 }), places: [buildPlace({ name: null, lat: 48.8584, lng: 2.2945 })] });
+    seedStore(useTripStore, {
+      trip: buildTrip({ id: 1 }),
+      places: [buildPlace({ name: null, lat: 48.8584, lng: 2.2945 })],
+    });
 
     render(<PlaceFormModal {...defaultProps} onSave={onSave} />);
     await user.type(screen.getByPlaceholderText(/e\.g\. Eiffel Tower/i), 'Tour Eiffel');
@@ -1365,7 +1407,7 @@ describe('PlaceFormModal remaining branches', () => {
           buildAssignment({ id: 20, day_id: 5, place: spanning }),
           buildAssignment({ id: 30, day_id: 5, place: earlier }),
         ]}
-      />,
+      />
     );
 
     const warning = screen.getByText(/Time overlap with:/i).closest('div') as HTMLElement;
@@ -1459,7 +1501,7 @@ describe('PlaceFormModal remaining branches', () => {
         <PlaceFormModal
           {...defaultProps}
           place={{ id: 7, name: 'Old', website: 'https://stored.example', lat: 1, lng: 2 } as never}
-        />,
+        />
       );
       expect(websiteInput().value).toBe('https://stored.example');
 
@@ -1471,10 +1513,11 @@ describe('PlaceFormModal remaining branches', () => {
   // ── Linked expense (#1298) — the same block bookings have ──────────────────
 
   describe('Costs section', () => {
-    const withBudget = () => seedStore(useAddonStore, {
-      addons: [{ id: 'budget', name: 'Budget', type: 'budget', icon: '', enabled: true }],
-      loaded: true,
-    });
+    const withBudget = () =>
+      seedStore(useAddonStore, {
+        addons: [{ id: 'budget', name: 'Budget', type: 'budget', icon: '', enabled: true }],
+        loaded: true,
+      });
 
     it('FE-PLANNER-PLACEFORM-068: the block only appears while the Budget addon is on', () => {
       const { unmount } = render(<PlaceFormModal {...defaultProps} />);
@@ -1537,7 +1580,9 @@ describe('PlaceFormModal remaining branches', () => {
       withBudget();
       seedStore(useTripStore, {
         trip: buildTrip({ id: 1 }),
-        budgetItems: [{ id: 8, trip_id: 1, name: 'Louvre tickets', total_price: 34, category: 'activities', place_id: 7 }],
+        budgetItems: [
+          { id: 8, trip_id: 1, name: 'Louvre tickets', total_price: 34, category: 'activities', place_id: 7 },
+        ],
       });
       render(<PlaceFormModal {...defaultProps} place={{ id: 7, name: 'Louvre' } as never} />);
 
@@ -1549,7 +1594,9 @@ describe('PlaceFormModal remaining branches', () => {
       withBudget();
       seedStore(useTripStore, {
         trip: buildTrip({ id: 1 }),
-        budgetItems: [{ id: 8, trip_id: 1, name: 'Orsay tickets', total_price: 16, category: 'activities', place_id: 99 }],
+        budgetItems: [
+          { id: 8, trip_id: 1, name: 'Orsay tickets', total_price: 16, category: 'activities', place_id: 99 },
+        ],
       });
       render(<PlaceFormModal {...defaultProps} place={{ id: 7, name: 'Louvre' } as never} />);
 

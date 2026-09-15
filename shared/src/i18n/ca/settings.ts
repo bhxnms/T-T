@@ -482,7 +482,8 @@ const settings: TranslationStrings = {
   'settings.offline.notice.offline': 'Sense connexió. Connecta’t per desar viatges fora de línia.',
   'settings.offline.notice.signedOut': 'La teva sessió ha caducat. Torna a iniciar la sessió per sincronitzar.',
   'settings.offline.notice.failed': 'La descàrrega no s’ha pogut completar. Comprova la connexió i torna-ho a provar.',
-  'settings.offline.notice.loadFailed': 'No s’ha pogut llegir l’emmagatzematge fora de línia d’aquest dispositiu. Normalment es resol buidant la memòria cau.',
+  'settings.offline.notice.loadFailed':
+    'No s’ha pogut llegir l’emmagatzematge fora de línia d’aquest dispositiu. Normalment es resol buidant la memòria cau.',
   'settings.offline.clear': 'Netejar memòria cau',
   'settings.offline.clearConfirm':
     'Vols netejar totes les dades de viatge fora de línia? Pots tornar a sincronitzar en qualsevol moment mentre estiguis connectat.',
@@ -547,23 +548,25 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'Claus API',
-  'settings.apiKeys.description': 'Claus per a l\'API pública, perquè altres programes puguin llegir els teus viatges. Només lectura: una clau no pot canviar ni esborrar res.',
+  'settings.apiKeys.description':
+    "Claus per a l'API pública, perquè altres programes puguin llegir els teus viatges. Només lectura: una clau no pot canviar ni esborrar res.",
   'settings.apiKeys.create': 'Crea una clau',
-  'settings.apiKeys.empty': 'Encara no hi ha claus. Crea\'n una per connectar altres programes.',
+  'settings.apiKeys.empty': "Encara no hi ha claus. Crea'n una per connectar altres programes.",
   'settings.apiKeys.createdAt': 'creada',
   'settings.apiKeys.usedAt': 'últim ús',
   'settings.apiKeys.deleteTitle': 'Elimina la clau',
-  'settings.apiKeys.deleteMessage': 'Tot el que faci servir aquesta clau deixarà de funcionar immediatament. Això no es pot desfer.',
+  'settings.apiKeys.deleteMessage':
+    'Tot el que faci servir aquesta clau deixarà de funcionar immediatament. Això no es pot desfer.',
   'settings.apiKeys.deleted': 'Clau eliminada',
-  'settings.apiKeys.deleteFailed': 'No s\'ha pogut eliminar la clau',
-  'settings.apiKeys.createFailed': 'No s\'ha pogut crear la clau',
+  'settings.apiKeys.deleteFailed': "No s'ha pogut eliminar la clau",
+  'settings.apiKeys.createFailed': "No s'ha pogut crear la clau",
   'settings.apiKeys.copy': 'Copia',
   'settings.apiKeys.docsHint': 'Envia la clau com a "Authorization: Bearer ..." o "X-API-Key: ..." a /api/v1.',
   'settings.apiKeys.modal.createTitle': 'Crea una clau API',
   'settings.apiKeys.modal.name': 'Nom',
   'settings.apiKeys.modal.namePlaceholder': 'p. ex. Dawarich',
   'settings.apiKeys.modal.nameHint': 'Només per a tu, perquè reconeguis la clau més endavant.',
-  'settings.apiKeys.modal.creating': 'S\'està creant...',
+  'settings.apiKeys.modal.creating': "S'està creant...",
   'settings.apiKeys.modal.create': 'Crea',
   'settings.apiKeys.modal.createdTitle': 'Clau API creada',
   'settings.apiKeys.modal.createdWarning': 'Copia la clau ara. Només es mostra un cop i no es pot recuperar després.',

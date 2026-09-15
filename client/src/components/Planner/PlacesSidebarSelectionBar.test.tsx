@@ -1,7 +1,7 @@
 // FE-PLANNER-SELBAR-001 to FE-PLANNER-SELBAR-014
 import userEvent from '@testing-library/user-event';
-import { render, screen, fireEvent } from '../../../tests/helpers/render';
 import { buildPlace } from '../../../tests/helpers/factories';
+import { fireEvent, render, screen } from '../../../tests/helpers/render';
 import { useTranslation } from '../../i18n';
 import type { Place } from '../../types';
 import { PlacesSelectionBar } from './PlacesSidebarSelectionBar';
@@ -139,7 +139,7 @@ describe('PlacesSelectionBar', () => {
         selectedIds={new Set([2, 3])}
         onBulkDeletePlaces={onBulkDeletePlaces}
         setPendingDeleteIds={setPendingDeleteIds}
-      />,
+      />
     );
 
     await user.click(screen.getByRole('button', { name: 'Delete selected' }));
@@ -158,7 +158,7 @@ describe('PlacesSelectionBar', () => {
         selectedIds={new Set([2, 3])}
         onBulkDeletePlaces={onBulkDeletePlaces}
         setPendingDeleteIds={setPendingDeleteIds}
-      />,
+      />
     );
 
     await user.click(screen.getByRole('button', { name: 'Delete selected' }));

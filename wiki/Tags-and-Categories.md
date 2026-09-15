@@ -5,7 +5,6 @@ TREK has two independent labelling systems for places:
 - **Global Place Categories** — admin-managed, shared across every user on the instance (e.g. `Restaurant`, `Museum`).
 - **Personal Tags** — user-scoped labels (e.g. `hidden gem`, `kid-friendly`).
 
-<!-- TODO: screenshot: tag list on place detail -->
 
 ## Global Place Categories
 

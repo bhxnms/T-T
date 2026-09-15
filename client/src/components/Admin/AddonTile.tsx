@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import ToggleSwitch from '../Settings/ToggleSwitch'
+import type { ReactNode } from 'react';
+import ToggleSwitch from '../Settings/ToggleSwitch';
 
 /**
  * One addon in the admin grid: a card whose fill carries the on/off state, with
@@ -26,13 +26,13 @@ export default function AddonTile({
   onToggle,
   children,
 }: {
-  icon: ReactNode
-  name: string
-  description?: string
-  enabled: boolean
-  onToggle: () => void
+  icon: ReactNode;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  onToggle: () => void;
   /** The sub-shelf: `<AddonSubRow>` children. */
-  children?: ReactNode
+  children?: ReactNode;
 }) {
   return (
     <article
@@ -76,5 +76,5 @@ export default function AddonTile({
         </div>
       )}
     </article>
-  )
+  );
 }

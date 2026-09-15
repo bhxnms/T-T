@@ -391,7 +391,8 @@ const admin: TranslationStrings = {
     'Färgkoda dagar i dagsplanen (till exempel vilken etapp av resan en dag tillhör)',
   'admin.plugins.cap.mcpTools': 'Publicerar AI-verktyg',
   'admin.plugins.mcpToolsTitle': 'Publicerade AI-verktyg',
-  'admin.plugins.mcpToolsHint': 'En assistent kan köra dem åt en användare. Varje verktyg agerar med de rättigheter som getts ovan.',
+  'admin.plugins.mcpToolsHint':
+    'En assistent kan köra dem åt en användare. Varje verktyg agerar med de rättigheter som getts ovan.',
   'admin.plugins.perm.mcp:tools':
     'Publicera verktyg som en AI-assistent kan köra åt dig (det agerar med de rättigheter du ger tillägget här, inte med assistentens egna)',
   'admin.plugins.perm.geolocation:read':
@@ -495,7 +496,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Byt version…',
   'admin.plugins.noVersions': 'Inga publicerade versioner hittades i registret.',
   'admin.plugins.downgradeTitle': 'Rulla tillbaka detta tillägg?',
-  'admin.plugins.downgradeBody': 'Byte från v{from} till v{to}: data som skrivits av den nyare versionen finns kvar, och den äldre versionen kanske inte förstår dem.',
+  'admin.plugins.downgradeBody':
+    'Byte från v{from} till v{to}: data som skrivits av den nyare versionen finns kvar, och den äldre versionen kanske inte förstår dem.',
   'admin.plugins.downgradeConfirm': 'Rulla tillbaka',
   'admin.plugins.updatesHeld': 'Uppdateringar pausade vid v{version}',
   'admin.plugins.resumeUpdates': 'Återuppta uppdateringar',
@@ -566,8 +568,7 @@ const admin: TranslationStrings = {
     '”{name}” anger stöd för TREK {range}, och den här servern kör {host}. TREK släpper igenom det bara för att TREK_PLUGINS_IGNORE_TREK_RANGE är satt. Upphovspersonen har inte uppdaterat pluginets versionsintervall för den här TREK-versionen, så det finns ingen garanti att det fungerar — och i sällsynta fall kan ett plugin som inte passar skada TREK-data. Fortsätt bara om du accepterar den risken.',
   'admin.plugins.rangeBypass.bodyUnknown':
     '”{name}” anger inte vilka TREK-versioner det stöder; den här servern kör {host}. TREK släpper igenom det bara för att TREK_PLUGINS_IGNORE_TREK_RANGE är satt. Inget tyder på att upphovspersonen har testat det på den här TREK-versionen, så det finns ingen garanti att det fungerar — och i sällsynta fall kan ett plugin som inte passar skada TREK-data. Fortsätt bara om du accepterar den risken.',
-  'admin.plugins.dep.trekBypassed':
-    'Utanför sitt TREK-intervall ({range}) — versionskontroller av',
+  'admin.plugins.dep.trekBypassed': 'Utanför sitt TREK-intervall ({range}) — versionskontroller av',
   'admin.plugins.dep.trekBypassedUnknown': 'Anger inget TREK-intervall — versionskontroller av',
   'admin.plugins.incompatible': 'Inkompatibel',
   'admin.plugins.accessTitle': 'Vad det har åtkomst till',
@@ -604,7 +605,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'Synkronisera flyg från din AirTrail-instans',
   'admin.addons.catalog.llm_parsing.name': 'AI-tolkning',
-  'admin.addons.catalog.llm_parsing.description': 'Läser bokningar som den inbyggda tolken inte klarar, med en AI-modell du väljer',
+  'admin.addons.catalog.llm_parsing.description':
+    'Läser bokningar som den inbyggda tolken inte klarar, med en AI-modell du väljer',
   'admin.addons.enabled': 'Aktiverad',
   'admin.addons.disabled': 'Inaktiverad',
   'admin.addons.type.trip': 'Resa',
@@ -736,5 +738,11 @@ const admin: TranslationStrings = {
   'admin.invite.tripHint':
     'Den nya användaren läggs automatiskt till i den här resan när de registrerar sig via länken.',
   'admin.invite.boundTo': 'läggs till i {trip}',
+  'admin.amapKey': '',
+  'admin.amapKeyHint': '',
+  'admin.amapSearch.subtitle': '',
+  'admin.amapSearch.title': '',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

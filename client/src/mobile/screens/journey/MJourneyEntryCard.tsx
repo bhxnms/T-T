@@ -1,30 +1,31 @@
-import { MapPin, RouteOff } from 'lucide-react'
-import { useTranslation } from '../../../i18n'
-import { formatLocationName } from '../../../utils/formatters'
-import { stripMarkdown } from '../../../components/Journey/stripMarkdown'
-import type { JourneyEntry } from '../../../store/journeyStore'
-import { moodMeta, weatherMeta } from './mobileJourneyMeta'
+import { MapPin, RouteOff } from 'lucide-react';
+import { stripMarkdown } from '../../../components/Journey/stripMarkdown';
+import { useTranslation } from '../../../i18n';
+import type { JourneyEntry } from '../../../store/journeyStore';
+import { formatLocationName } from '../../../utils/formatters';
+import { moodMeta, weatherMeta } from './mobileJourneyMeta';
 
 interface MJourneyEntryCardProps {
-  entry: JourneyEntry
-  number: number
-  onClick: () => void
+  entry: JourneyEntry;
+  number: number;
+  onClick: () => void;
 }
 
 /** One 280px card of the horizontal journey timeline (photo column, number badge, mood/weather dots). */
 export default function MJourneyEntryCard({ entry, number, onClick }: MJourneyEntryCardProps) {
-  const { t, locale } = useTranslation()
-  const firstPhoto = entry.photos?.[0]
-  const mood = moodMeta(entry.mood)
-  const weather = weatherMeta(entry.weather)
-  const location = formatLocationName(entry.location_name)
+  const { t, locale } = useTranslation();
+  const firstPhoto = entry.photos?.[0];
+  const mood = moodMeta(entry.mood);
+  const weather = weatherMeta(entry.weather);
+  const location = formatLocationName(entry.location_name);
 
   const dateLabel = new Date(entry.entry_date + 'T00:00:00').toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
-  })
-  const storyPreview = entry.story ? stripMarkdown(entry.story) : ''
-  const title = entry.title || (entry.type === 'checkin' ? t('journey.detail.journeyTab') : t('journey.editor.titlePlaceholder'))
+  });
+  const storyPreview = entry.story ? stripMarkdown(entry.story) : '';
+  const title =
+    entry.title || (entry.type === 'checkin' ? t('journey.detail.journeyTab') : t('journey.editor.titlePlaceholder'));
 
   // The timeline this card sits in is bottom-anchored with no height of its own, so a card
   // that grows with its story climbs over the map and swallows its touches (#2022). Cap the
@@ -85,7 +86,7 @@ export default function MJourneyEntryCard({ entry, number, onClick }: MJourneyEn
         <span className="mt-1 block truncate text-[0.875rem] font-extrabold">{title}</span>
         {/* No display utility on the preview: Tailwind emits it after line-clamp-2 and would kill the clamp. */}
         {storyPreview && (
-          <span className="mt-[2px] font-geist text-[0.65625rem] leading-[1.4] text-m-muted line-clamp-2">
+          <span className="mt-[2px] line-clamp-2 font-geist text-[0.65625rem] leading-[1.4] text-m-muted">
             {storyPreview}
           </span>
         )}
@@ -97,5 +98,5 @@ export default function MJourneyEntryCard({ entry, number, onClick }: MJourneyEn
         )}
       </span>
     </button>
-  )
+  );
 }

@@ -60,5 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Visa planerade länder',
   'atlas.plannedFor': 'Planerat till',
   'atlas.antarctica': 'Antarktis',
+  'atlas.checkinEmpty': '',
+  'atlas.checkinLandmarks': '',
+  'atlas.checkinPlaces': '',
+  'atlas.checkinTab': '',
+  'atlas.checkinTotal': '',
 };
 export default atlas;

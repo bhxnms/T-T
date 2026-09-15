@@ -5,12 +5,13 @@
  * through is easy; one that also lets a session JWT, an OAuth bearer or a random
  * string through is a credential-confusion bug, and those are the tests below.
  */
-import { describe, it, expect, vi } from 'vitest';
-import { HttpException } from '@nestjs/common';
-import type { ExecutionContext } from '@nestjs/common';
 import { ApiTokenGuard } from '../../../src/nest/public-api/api-token.guard';
 import type { TokenService } from '../../../src/nest/tokens/token.service';
 import type { User } from '../../../src/types';
+import { HttpException } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
+
+import { describe, it, expect, vi } from 'vitest';
 
 const USER: User = { id: 7, username: 'ada', email: 'ada@example.com', role: 'user' } as User;
 
@@ -80,9 +81,7 @@ describe('ApiTokenGuard', () => {
 
   it('401s on a token the store does not know, without saying which part was wrong', () => {
     const verify = vi.fn().mockReturnValue(null);
-    expect(
-      refused(() => makeGuard(verify).canActivate(contextWith({ authorization: 'Bearer trek_nope' }))),
-    ).toEqual({
+    expect(refused(() => makeGuard(verify).canActivate(contextWith({ authorization: 'Bearer trek_nope' })))).toEqual({
       status: 401,
       body: { error: 'Invalid API token', code: 'API_TOKEN_INVALID' },
     });

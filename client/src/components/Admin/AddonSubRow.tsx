@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import ToggleSwitch from '../Settings/ToggleSwitch'
+import type { ReactNode } from 'react';
+import ToggleSwitch from '../Settings/ToggleSwitch';
 
 /**
  * One child row inside an {@link AddonTile}'s sub-shelf: bag tracking under
@@ -22,19 +22,23 @@ export default function AddonSubRow({
   onToggle,
 }: {
   /** Vendor mark or lucide glyph at 14px. Omit it and the slot keeps its width. */
-  icon?: ReactNode
-  title: string
-  description?: string
-  enabled: boolean
-  onToggle: () => void
+  icon?: ReactNode;
+  title: string;
+  description?: string;
+  enabled: boolean;
+  onToggle: () => void;
 }) {
   return (
     <li className="flex min-h-[36px] items-center gap-3">
-      {icon ? <span className="shrink-0 text-content-faint">{icon}</span> : <span className="w-3.5 shrink-0" aria-hidden />}
+      {icon ? (
+        <span className="shrink-0 text-content-faint">{icon}</span>
+      ) : (
+        <span className="w-3.5 shrink-0" aria-hidden />
+      )}
       <span className="min-w-0 flex-1 truncate text-caption font-medium text-content-secondary" title={description}>
         {title}
       </span>
       <ToggleSwitch on={enabled} onToggle={onToggle} label={title} />
     </li>
-  )
+  );
 }

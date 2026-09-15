@@ -1,12 +1,12 @@
 // FE-COMP-APIKEYS-001 to FE-COMP-APIKEYS-010
-import { render, screen, waitFor } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { server } from '../../../tests/helpers/msw/server';
-import { useAuthStore } from '../../store/authStore';
-import { useAddonStore } from '../../store/addonStore';
-import { resetAllStores, seedStore } from '../../../tests/helpers/store';
 import { buildUser } from '../../../tests/helpers/factories';
+import { server } from '../../../tests/helpers/msw/server';
+import { render, screen, waitFor } from '../../../tests/helpers/render';
+import { resetAllStores, seedStore } from '../../../tests/helpers/store';
+import { useAddonStore } from '../../store/addonStore';
+import { useAuthStore } from '../../store/authStore';
 import { ToastContainer } from '../shared/Toast';
 import ApiKeysSection from './ApiKeysSection';
 
@@ -34,7 +34,7 @@ function renderSection() {
     <>
       <ApiKeysSection />
       <ToastContainer />
-    </>,
+    </>
   );
 }
 
@@ -54,7 +54,7 @@ describe('ApiKeysSection', () => {
       http.get('/api/auth/mcp-tokens', ({ request }) => {
         seen.push(new URL(request.url).pathname);
         return HttpResponse.json({ tokens: [] });
-      }),
+      })
     );
     renderSection();
     await waitFor(() => expect(seen).toContain('/api/auth/api-tokens'));
@@ -74,8 +74,8 @@ describe('ApiKeysSection', () => {
               last_used_at: null,
             },
           ],
-        }),
-      ),
+        })
+      )
     );
     renderSection();
     expect(await screen.findByText('Dawarich')).toBeInTheDocument();
@@ -98,8 +98,8 @@ describe('ApiKeysSection', () => {
             token_prefix: 'trek_thefull',
             created_at: '2026-08-27T10:00:00Z',
           },
-        }),
-      ),
+        })
+      )
     );
     const user = userEvent.setup();
     renderSection();
@@ -123,8 +123,8 @@ describe('ApiKeysSection', () => {
             token_prefix: 'trek_thefull',
             created_at: '2026-08-27T10:00:00Z',
           },
-        }),
-      ),
+        })
+      )
     );
     const user = userEvent.setup();
     renderSection();
@@ -153,14 +153,20 @@ describe('ApiKeysSection', () => {
       http.get('/api/auth/api-tokens', () =>
         HttpResponse.json({
           tokens: [
-            { id: 7, name: 'Dawarich', token_prefix: 'trek_abc', created_at: '2026-08-01T10:00:00Z', last_used_at: null },
+            {
+              id: 7,
+              name: 'Dawarich',
+              token_prefix: 'trek_abc',
+              created_at: '2026-08-01T10:00:00Z',
+              last_used_at: null,
+            },
           ],
-        }),
+        })
       ),
       http.delete('/api/auth/api-tokens/7', () => {
         deleted += 1;
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     const user = userEvent.setup();
     renderSection();
@@ -202,8 +208,8 @@ describe('ApiKeysSection', () => {
             token_prefix: 'trek_thefull',
             created_at: '2026-08-27T10:00:00Z',
           },
-        }),
-      ),
+        })
+      )
     );
     const user = userEvent.setup();
     // userEvent.setup() installs its own clipboard stub, so the spy goes back on

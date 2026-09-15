@@ -1,20 +1,35 @@
-import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
-import { findFocusDayId } from '../../../components/Planner/today'
+import type { LucideIcon } from 'lucide-react';
 import {
-  CalendarDays, ChevronDown, ChevronLeft, Download, FileDown, List, Map as MapIcon, MoreHorizontal, PackageCheck,
-  Plane, Plus, Rows3, Ticket, TrainFront, Trash2, Upload, Wallet,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import { useTripPlanner } from '../../../pages/tripPlanner/useTripPlanner'
-import MIconBtn from '../../components/MIconBtn'
-import MPlanTimeline from './plan/MPlanTimeline'
-import MMapArea from './map/MMapArea'
-import MPlacesBrowser from './places/MPlacesBrowser'
-import MTripTabPanel from './tabs/MTripTabPanel'
-import MTripSheets from './sheets/MTripSheets'
-import MTripLoadingSplash from './MTripLoadingSplash'
-import { usePluginDayTints, dayTintBackground } from '../../../components/Plugins/PluginDaySchedule'
-import type { Day } from '../../../types'
+  CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  Download,
+  FileDown,
+  List,
+  Map as MapIcon,
+  MoreHorizontal,
+  PackageCheck,
+  Plane,
+  Plus,
+  Rows3,
+  Ticket,
+  TrainFront,
+  Trash2,
+  Upload,
+  Wallet,
+} from 'lucide-react';
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
+import { findFocusDayId } from '../../../components/Planner/today';
+import { dayTintBackground, usePluginDayTints } from '../../../components/Plugins/PluginDaySchedule';
+import { useTripPlanner } from '../../../pages/tripPlanner/useTripPlanner';
+import type { Day } from '../../../types';
+import MIconBtn from '../../components/MIconBtn';
+import MMapArea from './map/MMapArea';
+import MTripLoadingSplash from './MTripLoadingSplash';
+import MPlacesBrowser from './places/MPlacesBrowser';
+import MPlanTimeline from './plan/MPlanTimeline';
+import MTripSheets from './sheets/MTripSheets';
+import MTripTabPanel from './tabs/MTripTabPanel';
 
 /**
  * Mobile trip screen frame. Owns the chrome the design shares across every
@@ -30,12 +45,12 @@ import type { Day } from '../../../types'
  */
 
 /** Everything useTripPlanner() returns — data, permissions, CRUD, modal state. */
-export type TripPlanner = ReturnType<typeof useTripPlanner>
+export type TripPlanner = ReturnType<typeof useTripPlanner>;
 
-export type MTripView = 'plan' | 'map'
-export type MTripMode = 'go' | 'edit' | 'browse'
-export type MTripListsTab = 'packing' | 'todo'
-export type MTripCollabTab = 'chat' | 'notes' | 'polls'
+export type MTripView = 'plan' | 'map';
+export type MTripMode = 'go' | 'edit' | 'browse';
+export type MTripListsTab = 'packing' | 'todo';
+export type MTripCollabTab = 'chat' | 'notes' | 'polls';
 
 /**
  * Currently open bottom/floating sheet. Well-known ids (owned by the sheets
@@ -48,8 +63,8 @@ export type MTripCollabTab = 'chat' | 'notes' | 'polls'
  * form, transport, booking, expense) keep using the planner's own modal flags.
  */
 export interface MTripSheetState {
-  id: string
-  payload?: unknown
+  id: string;
+  payload?: unknown;
 }
 
 /**
@@ -59,35 +74,35 @@ export interface MTripSheetState {
  */
 export interface MTripShellApi {
   /** 'plan' = list chrome, 'map' = fullscreen map. Plan tab only. */
-  view: MTripView
+  view: MTripView;
   /** Travel/Plan/Places segment: go | edit | browse. */
-  mode: MTripMode
+  mode: MTripMode;
   /** Legacy tab ids: plan · transports · buchungen · listen · finanzplan · dateien · collab · plugin:* */
-  trTab: string
+  trTab: string;
   /** Switch trip tab (persists to sessionStorage['trip-tab-{id}'], resets browse → go). */
-  setTrTab: (tabId: string) => void
+  setTrTab: (tabId: string) => void;
   /** Set go/edit/browse — forces the plan tab and the plan view. */
-  setTravelMode: (mode: MTripMode) => void
+  setTravelMode: (mode: MTripMode) => void;
   /** Plan ⇄ map. Leaving to the map resets browse → go. */
-  toggleView: () => void
+  toggleView: () => void;
   /** True while browse was entered from edit — the places browser seeds its 'unplanned' filter. */
-  browseFromEdit: boolean
-  sheet: MTripSheetState | null
-  openSheet: (id: string, payload?: unknown) => void
-  closeSheet: () => void
+  browseFromEdit: boolean;
+  sheet: MTripSheetState | null;
+  openSheet: (id: string, payload?: unknown) => void;
+  closeSheet: () => void;
   /** Lists header segment; persisted per trip like the desktop sub-tab. */
-  listsTab: MTripListsTab
-  setListsTab: (tab: MTripListsTab) => void
-  collabTab: MTripCollabTab
-  setCollabTab: (tab: MTripCollabTab) => void
+  listsTab: MTripListsTab;
+  setListsTab: (tab: MTripListsTab) => void;
+  collabTab: MTripCollabTab;
+  setCollabTab: (tab: MTripCollabTab) => void;
   /** Header compact toggles for the transports / bookings lists. */
-  transportsCompact: boolean
-  bookingsCompact: boolean
+  transportsCompact: boolean;
+  bookingsCompact: boolean;
   /** Header intent signals — increment-only counters, consumed by the tab panels. */
-  addExpenseSignal: number
-  exportCostsCsvSignal: number
-  uploadFilesSignal: number
-  openFilesTrashSignal: number
+  addExpenseSignal: number;
+  exportCostsCsvSignal: number;
+  uploadFilesSignal: number;
+  openFilesTrashSignal: number;
 }
 
 /**
@@ -97,8 +112,8 @@ export interface MTripShellApi {
  * Reads the active day from planner.selectedDayId.
  */
 export interface MPlanTimelineProps {
-  planner: TripPlanner
-  shell: MTripShellApi
+  planner: TripPlanner;
+  shell: MTripShellApi;
 }
 
 /**
@@ -107,8 +122,8 @@ export interface MPlanTimelineProps {
  * Marker/route data comes from planner (mapPlaces, dayPlaces, route, …).
  */
 export interface MMapAreaProps {
-  planner: TripPlanner
-  shell: MTripShellApi
+  planner: TripPlanner;
+  shell: MTripShellApi;
 }
 
 /**
@@ -116,8 +131,8 @@ export interface MMapAreaProps {
  * selection state; seeds the 'unplanned' filter when shell.browseFromEdit.
  */
 export interface MPlacesBrowserProps {
-  planner: TripPlanner
-  shell: MTripShellApi
+  planner: TripPlanner;
+  shell: MTripShellApi;
 }
 
 /**
@@ -127,9 +142,9 @@ export interface MPlacesBrowserProps {
  * toggles, listsTab/collabTab, intent signals).
  */
 export interface MTripTabPanelProps {
-  planner: TripPlanner
-  shell: MTripShellApi
-  tab: string
+  planner: TripPlanner;
+  shell: MTripShellApi;
+  tab: string;
 }
 
 /**
@@ -138,16 +153,16 @@ export interface MTripTabPanelProps {
  * members, trip edit) as MSheet instances portaled to #m-sheet-root.
  */
 export interface MTripSheetsProps {
-  planner: TripPlanner
-  shell: MTripShellApi
+  planner: TripPlanner;
+  shell: MTripShellApi;
 }
 
 interface MTripShellProps {
-  PlanTimeline?: ComponentType<MPlanTimelineProps>
-  MapArea?: ComponentType<MMapAreaProps>
-  PlacesBrowser?: ComponentType<MPlacesBrowserProps>
-  TabPanel?: ComponentType<MTripTabPanelProps>
-  Sheets?: ComponentType<MTripSheetsProps>
+  PlanTimeline?: ComponentType<MPlanTimelineProps>;
+  MapArea?: ComponentType<MMapAreaProps>;
+  PlacesBrowser?: ComponentType<MPlacesBrowserProps>;
+  TabPanel?: ComponentType<MTripTabPanelProps>;
+  Sheets?: ComponentType<MTripSheetsProps>;
 }
 
 /** The 5 dock tabs in demo order; files/collab/plugins live in the Mehr sheet. */
@@ -157,16 +172,16 @@ const DOCK_TABS: { id: string; icon: LucideIcon }[] = [
   { id: 'buchungen', icon: Ticket },
   { id: 'finanzplan', icon: Wallet },
   { id: 'listen', icon: PackageCheck },
-]
+];
 
 function dayChipLabel(day: Day, language: string, fallback: string): string {
   if (day.date) {
-    const date = new Date(`${day.date.slice(0, 10)}T00:00:00`)
+    const date = new Date(`${day.date.slice(0, 10)}T00:00:00`);
     if (!Number.isNaN(date.getTime())) {
-      return `${new Intl.DateTimeFormat(language, { weekday: 'short' }).format(date)} ${date.getDate()}`
+      return `${new Intl.DateTimeFormat(language, { weekday: 'short' }).format(date)} ${date.getDate()}`;
     }
   }
-  return fallback
+  return fallback;
 }
 
 export default function MTripShell({
@@ -176,82 +191,85 @@ export default function MTripShell({
   TabPanel = MTripTabPanel,
   Sheets = MTripSheets,
 }: MTripShellProps) {
-  const planner = useTripPlanner()
-  const { t, language, tripId, days, trip, navigate, packingItems, todoItems } = planner
+  const planner = useTripPlanner();
+  const { t, language, tripId, days, trip, navigate, packingItems, todoItems } = planner;
 
   // Per-day colours from the dayTintProvider plugin hook — the mobile counterpart
   // of the desktop day-card wash, carried on the day chips. Empty without a plugin.
-  const dayTints = usePluginDayTints(tripId)
+  const dayTints = usePluginDayTints(tripId);
 
-  const [view, setView] = useState<MTripView>('plan')
-  const [mode, setMode] = useState<MTripMode>('go')
-  const [browseFromEdit, setBrowseFromEdit] = useState(false)
-  const [sheet, setSheet] = useState<MTripSheetState | null>(null)
+  const [view, setView] = useState<MTripView>('plan');
+  const [mode, setMode] = useState<MTripMode>('go');
+  const [browseFromEdit, setBrowseFromEdit] = useState(false);
+  const [sheet, setSheet] = useState<MTripSheetState | null>(null);
   const [listsTab, setListsTabState] = useState<MTripListsTab>(() => {
-    const saved = sessionStorage.getItem(`trip-lists-subtab-${tripId}`)
-    return saved === 'todo' ? 'todo' : 'packing'
-  })
-  const [collabTab, setCollabTab] = useState<MTripCollabTab>('chat')
-  const [transportsCompact, setTransportsCompact] = useState(false)
-  const [bookingsCompact, setBookingsCompact] = useState(false)
-  const [addExpenseSignal, setAddExpenseSignal] = useState(0)
-  const [exportCostsCsvSignal, setExportCostsCsvSignal] = useState(0)
-  const [uploadFilesSignal, setUploadFilesSignal] = useState(0)
-  const [openFilesTrashSignal, setOpenFilesTrashSignal] = useState(0)
+    const saved = sessionStorage.getItem(`trip-lists-subtab-${tripId}`);
+    return saved === 'todo' ? 'todo' : 'packing';
+  });
+  const [collabTab, setCollabTab] = useState<MTripCollabTab>('chat');
+  const [transportsCompact, setTransportsCompact] = useState(false);
+  const [bookingsCompact, setBookingsCompact] = useState(false);
+  const [addExpenseSignal, setAddExpenseSignal] = useState(0);
+  const [exportCostsCsvSignal, setExportCostsCsvSignal] = useState(0);
+  const [uploadFilesSignal, setUploadFilesSignal] = useState(0);
+  const [openFilesTrashSignal, setOpenFilesTrashSignal] = useState(0);
 
   // The mobile plan is single-day: make sure a day is active once days arrive.
   // Only seed once so an intentional deselect elsewhere is not fought. Open on
   // today while the trip is running, otherwise on the next day that is still
   // ahead — a gap in the dates should not throw you back to day 1 — and fall
   // back to the first day once the whole trip is behind us.
-  const seededDayRef = useRef(false)
+  const seededDayRef = useRef(false);
   useEffect(() => {
-    if (seededDayRef.current) return
+    if (seededDayRef.current) return;
     // A day that is already active counts as seeded: a later deselect is the
     // user's, and re-seeding it here would be exactly the fight this guard
     // exists to avoid.
-    if (planner.selectedDayId != null) { seededDayRef.current = true; return }
-    if (days.length === 0) return
-    seededDayRef.current = true
+    if (planner.selectedDayId != null) {
+      seededDayRef.current = true;
+      return;
+    }
+    if (days.length === 0) return;
+    seededDayRef.current = true;
     // Off the same helper file as the desktop day plan (#1567), so the two
     // cannot drift on what "today" means.
-    planner.tripActions.setSelectedDay(findFocusDayId(days) ?? days[0].id)
-  }, [planner.selectedDayId, days, planner.tripActions])
+    planner.tripActions.setSelectedDay(findFocusDayId(days) ?? days[0].id);
+  }, [planner.selectedDayId, days, planner.tripActions]);
 
   // Swiping the day panel (#2051) can move the day well past the chips on
   // screen — the rail overflows from roughly six days on — so the active chip
   // pulls itself back into view. Only when it is really clipped, so tapping a
   // chip you can already see never shifts the rail under your thumb.
-  const chipRefs = useRef(new Map<number, HTMLButtonElement>())
+  const chipRefs = useRef(new Map<number, HTMLButtonElement>());
   useEffect(() => {
-    const chip = planner.selectedDayId != null ? chipRefs.current.get(planner.selectedDayId) : undefined
-    const rail = chip?.parentElement
-    if (!chip || !rail) return
-    const c = chip.getBoundingClientRect()
-    const r = rail.getBoundingClientRect()
-    if (c.left >= r.left - 1 && c.right <= r.right + 1) return
+    const chip = planner.selectedDayId != null ? chipRefs.current.get(planner.selectedDayId) : undefined;
+    const rail = chip?.parentElement;
+    if (!chip || !rail) return;
+    const c = chip.getBoundingClientRect();
+    const r = rail.getBoundingClientRect();
+    if (c.left >= r.left - 1 && c.right <= r.right + 1) return;
     // block:'nearest' is not optional: the shell root is `fixed inset-0`, and
     // 'center' would scroll the document behind it instead.
     chip.scrollIntoView({
       behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ? 'auto' : 'smooth',
       inline: 'center',
       block: 'nearest',
-    })
-  }, [planner.selectedDayId, days])
+    });
+  }, [planner.selectedDayId, days]);
 
-  const trTab = planner.activeTab
+  const trTab = planner.activeTab;
 
   const setTrTab = (tabId: string) => {
-    planner.handleTabChange(tabId)
-    if (mode === 'browse') setMode('go')
-  }
+    planner.handleTabChange(tabId);
+    if (mode === 'browse') setMode('go');
+  };
 
   const setTravelMode = (next: MTripMode) => {
-    setBrowseFromEdit(next === 'browse' && mode === 'edit')
-    setMode(next)
-    setView('plan')
-    if (trTab !== 'plan') planner.handleTabChange('plan')
-  }
+    setBrowseFromEdit(next === 'browse' && mode === 'edit');
+    setMode(next);
+    setView('plan');
+    if (trTab !== 'plan') planner.handleTabChange('plan');
+  };
 
   // Map focus on the selected day. Drives the same declutter the desktop sidebar's
   // collapse chevron drives (#216) rather than adding a second filter — the phone
@@ -259,25 +277,25 @@ export default function MTripShell({
   // could not be told apart from the rest of the trip at all (#1962). Unplanned
   // places stay visible either way, which is what the collapse path has always done.
   const focusMapOnDay = (dayId: number | null) => {
-    planner.setExpandedDayIds(dayId == null ? null : new Set([dayId]))
-  }
+    planner.setExpandedDayIds(dayId == null ? null : new Set([dayId]));
+  };
 
   // The map's day selection: frame the day, draw its route, drop the other days'
   // pins. Shared by the chip tap and the all-days toggle so the two cannot drift.
   const selectDayOnMap = (dayId: number) => {
-    planner.handleSelectDay(dayId, false)
-    planner.autoShowRoute()
-    focusMapOnDay(dayId)
-  }
+    planner.handleSelectDay(dayId, false);
+    planner.autoShowRoute();
+    focusMapOnDay(dayId);
+  };
 
   // The day an "all days" deselect came from, so the toggle can put it back.
   // A remote day:deleted can retire it while it is parked here, hence the
   // membership check before it is trusted.
-  const lastDayRef = useRef<number | null>(null)
+  const lastDayRef = useRef<number | null>(null);
   const dayToRestore = (): number | null =>
-    (lastDayRef.current != null && days.some(d => d.id === lastDayRef.current)
+    (lastDayRef.current != null && days.some((d) => d.id === lastDayRef.current)
       ? lastDayRef.current
-      : findFocusDayId(days) ?? days[0]?.id) ?? null
+      : (findFocusDayId(days) ?? days[0]?.id)) ?? null;
 
   // Whole trip ⇄ one day on the map (#2257). Its own control rather than a
   // second tap on the active chip: that tap already opens the day sheet, the
@@ -285,75 +303,90 @@ export default function MTripShell({
   // what the map is filtered to is exactly when it should reframe.
   const toggleAllDays = () => {
     if (planner.selectedDayId != null) {
-      lastDayRef.current = planner.selectedDayId
-      focusMapOnDay(null)
-      planner.handleSelectDay(null, false)
-      return
+      lastDayRef.current = planner.selectedDayId;
+      focusMapOnDay(null);
+      planner.handleSelectDay(null, false);
+      return;
     }
-    const back = dayToRestore()
-    if (back != null) selectDayOnMap(back)
-  }
+    const back = dayToRestore();
+    if (back != null) selectDayOnMap(back);
+  };
 
   const toggleView = () => {
-    const next = view === 'plan' ? 'map' : 'plan'
-    setView(next)
-    if (mode === 'browse') setMode('go')
+    const next = view === 'plan' ? 'map' : 'plan';
+    setView(next);
+    if (mode === 'browse') setMode('go');
     // Entering the map: draw the current day's route and frame it — the
     // BoundsController re-fits to include the polyline once OSRM resolves.
     if (next === 'map') {
-      planner.autoShowRoute()
-      if (planner.selectedDayId != null) planner.handleSelectDay(planner.selectedDayId, false)
-      focusMapOnDay(planner.selectedDayId)
+      planner.autoShowRoute();
+      if (planner.selectedDayId != null) planner.handleSelectDay(planner.selectedDayId, false);
+      focusMapOnDay(planner.selectedDayId);
     } else {
       // Leaving the map: nothing is filtered while the timeline is up, so the next
       // visit starts from the whole trip unless a day is picked again.
-      focusMapOnDay(null)
+      focusMapOnDay(null);
       // The timeline is single-day and renders empty without one, so an "all days"
       // deselect on the map must not follow the user back into the plan. Same day
       // the toggle would restore, so the two ways back agree.
       if (planner.selectedDayId == null) {
-        const back = dayToRestore()
-        if (back != null) planner.handleSelectDay(back, true)
+        const back = dayToRestore();
+        if (back != null) planner.handleSelectDay(back, true);
       }
     }
-  }
+  };
 
   const setListsTab = (tab: MTripListsTab) => {
-    setListsTabState(tab)
-    sessionStorage.setItem(`trip-lists-subtab-${tripId}`, tab)
-  }
+    setListsTabState(tab);
+    sessionStorage.setItem(`trip-lists-subtab-${tripId}`, tab);
+  };
 
-  const openSheet = (id: string, payload?: unknown) => setSheet({ id, payload })
-  const closeSheet = () => setSheet(null)
+  const openSheet = (id: string, payload?: unknown) => setSheet({ id, payload });
+  const closeSheet = () => setSheet(null);
 
   const shell: MTripShellApi = {
-    view, mode, trTab, setTrTab, setTravelMode, toggleView, browseFromEdit,
-    sheet, openSheet, closeSheet,
-    listsTab, setListsTab, collabTab, setCollabTab,
-    transportsCompact, bookingsCompact,
-    addExpenseSignal, exportCostsCsvSignal, uploadFilesSignal, openFilesTrashSignal,
-  }
+    view,
+    mode,
+    trTab,
+    setTrTab,
+    setTravelMode,
+    toggleView,
+    browseFromEdit,
+    sheet,
+    openSheet,
+    closeSheet,
+    listsTab,
+    setListsTab,
+    collabTab,
+    setCollabTab,
+    transportsCompact,
+    bookingsCompact,
+    addExpenseSignal,
+    exportCostsCsvSignal,
+    uploadFilesSignal,
+    openFilesTrashSignal,
+  };
 
   // Splash — same gate as the desktop page, in the mobile design language.
   if (planner.isLoading || !planner.splashDone) {
-    return <MTripLoadingSplash title={trip?.title || ''} />
+    return <MTripLoadingSplash title={trip?.title || ''} />;
   }
-  if (!trip) return null
+  if (!trip) return null;
 
-  const enabledTabIds = new Set(planner.TRIP_TABS.map(tab => tab.id))
-  const dockTabs = DOCK_TABS.filter(d => enabledTabIds.has(d.id))
-  const tabLabel = (id: string) => planner.TRIP_TABS.find(tab => tab.id === id)?.label ?? id
+  const enabledTabIds = new Set(planner.TRIP_TABS.map((tab) => tab.id));
+  const dockTabs = DOCK_TABS.filter((d) => enabledTabIds.has(d.id));
+  const tabLabel = (id: string) => planner.TRIP_TABS.find((tab) => tab.id === id)?.label ?? id;
 
   const onDayChipTap = (dayId: number) => {
-    if (dayId === planner.selectedDayId) openSheet('day', { dayId })
+    if (dayId === planner.selectedDayId) openSheet('day', { dayId });
     // In map mode a day tap fits to that day's places, draws its route and drops
     // the other days' pins, so the day it framed is the day it shows.
-    else if (view === 'map') selectDayOnMap(dayId)
-    else planner.handleSelectDay(dayId, true)
-  }
+    else if (view === 'map') selectDayOnMap(dayId);
+    else planner.handleSelectDay(dayId, true);
+  };
 
-  const packedCount = packingItems.filter(i => i.checked).length
-  const todoOpenCount = todoItems.filter(i => !i.checked).length
+  const packedCount = packingItems.filter((i) => i.checked).length;
+  const todoOpenCount = todoItems.filter((i) => !i.checked).length;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-[color:var(--m-bg)] bg-[image:var(--m-scr)] text-m-ink">
@@ -381,15 +414,18 @@ export default function MTripShell({
 
       {/* ── Day chips (z-25 — covered by non-plan tab overlays, stays mounted) ── */}
       {days.length > 0 && (
-        <div className="absolute left-4 right-4 z-[25] flex gap-[6px] top-[calc(var(--m-safe-top,12px)+50px)]">
+        <div className="absolute left-4 right-4 top-[calc(var(--m-safe-top,12px)+50px)] z-[25] flex gap-[6px]">
           <div className="flex flex-1 items-center gap-[2px] overflow-x-auto rounded-full border border-[color:var(--m-gbr)] bg-[color:var(--m-glass)] p-[3px] backdrop-blur-[24px] backdrop-saturate-[1.7]">
             {days.map((day, idx) => {
-              const active = day.id === planner.selectedDayId
-              const tint = dayTints[day.id]
+              const active = day.id === planner.selectedDayId;
+              const tint = dayTints[day.id];
               return (
                 <button
                   key={day.id}
-                  ref={el => { if (el) chipRefs.current.set(day.id, el); else chipRefs.current.delete(day.id) }}
+                  ref={(el) => {
+                    if (el) chipRefs.current.set(day.id, el);
+                    else chipRefs.current.delete(day.id);
+                  }}
                   type="button"
                   onClick={() => onDayChipTap(day.id)}
                   aria-current={active ? 'true' : undefined}
@@ -405,9 +441,11 @@ export default function MTripShell({
                   {dayChipLabel(day, language, t('planner.dayN', { n: day.day_number ?? idx + 1 }))}
                   {/* Marks the second tap as "opens the day", the only day-sheet
                       route that also exists in map view. */}
-                  {active && <ChevronDown size={11} strokeWidth={2.6} aria-hidden="true" className="flex-none opacity-70" />}
+                  {active && (
+                    <ChevronDown size={11} strokeWidth={2.6} aria-hidden="true" className="flex-none opacity-70" />
+                  )}
                 </button>
-              )
+              );
             })}
           </div>
           {/* Drop the day filter and show the whole trip (#2257). Map only: the
@@ -434,24 +472,30 @@ export default function MTripShell({
       )}
 
       {/* ── Top controls (z-42 — above every layer incl. tab overlays) ── */}
-      <div className="absolute left-4 right-4 z-[42] flex h-10 items-center justify-between top-[var(--m-safe-top,12px)]">
-        <MIconBtn ariaLabel={t('common.back')} onClick={() => navigate('/dashboard')} className="backdrop-blur-[24px] backdrop-saturate-[1.7]">
+      <div className="absolute left-4 right-4 top-[var(--m-safe-top,12px)] z-[42] flex h-10 items-center justify-between">
+        <MIconBtn
+          ariaLabel={t('common.back')}
+          onClick={() => navigate('/dashboard')}
+          className="backdrop-blur-[24px] backdrop-saturate-[1.7]"
+        >
           <ChevronLeft size={19} strokeWidth={2.2} />
         </MIconBtn>
 
         {trTab === 'plan' && (
           <GlassSegment>
-            {([
+            {[
               { value: 'go' as const, label: t('mobileTrip.travel') },
               { value: 'edit' as const, label: t('trip.mobilePlan') },
               { value: 'browse' as const, label: t('trip.mobilePlaces') },
-            ]).map(seg => (
+            ].map((seg) => (
               <button
                 key={seg.value}
                 type="button"
                 onClick={() => setTravelMode(seg.value)}
                 className={`whitespace-nowrap rounded-full px-4 py-2 text-[0.8125rem] ${
-                  mode === seg.value && view !== 'map' ? 'bg-m-act font-semibold text-m-actfg' : 'font-medium text-m-ink'
+                  mode === seg.value && view !== 'map'
+                    ? 'bg-m-act font-semibold text-m-actfg'
+                    : 'font-medium text-m-ink'
                 }`}
               >
                 {seg.label}
@@ -465,23 +509,40 @@ export default function MTripShell({
             <PrimaryPill
               label={t('transport.addTransport')}
               onClick={() => {
-                planner.setEditingTransport(null)
-                planner.setTransitPrefill(null)
-                planner.setTransportModalAutomated(false)
-                planner.setShowTransportModal(true)
+                planner.setEditingTransport(null);
+                planner.setTransitPrefill(null);
+                planner.setTransportModalAutomated(false);
+                planner.setShowTransportModal(true);
               }}
             />
             {planner.bookingImportAvailable && (
-              <MIconBtn ariaLabel={t('reservations.import.title')} onClick={() => { planner.setBookingImportKind('transports'); planner.setShowBookingImport(true) }} size={40} className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]">
+              <MIconBtn
+                ariaLabel={t('reservations.import.title')}
+                onClick={() => {
+                  planner.setBookingImportKind('transports');
+                  planner.setShowBookingImport(true);
+                }}
+                size={40}
+                className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]"
+              >
                 <Download size={15} strokeWidth={2} />
               </MIconBtn>
             )}
             {planner.airTrailAvailable && (
-              <MIconBtn ariaLabel={t('reservations.airtrail.title')} onClick={() => planner.setShowAirTrailImport(true)} size={40} className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]">
+              <MIconBtn
+                ariaLabel={t('reservations.airtrail.title')}
+                onClick={() => planner.setShowAirTrailImport(true)}
+                size={40}
+                className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]"
+              >
                 <Plane size={15} strokeWidth={2} />
               </MIconBtn>
             )}
-            <CompactToggle active={transportsCompact} onToggle={() => setTransportsCompact(v => !v)} label={t('mobileTrip.compactView')} />
+            <CompactToggle
+              active={transportsCompact}
+              onToggle={() => setTransportsCompact((v) => !v)}
+              label={t('mobileTrip.compactView')}
+            />
           </div>
         )}
 
@@ -489,21 +550,41 @@ export default function MTripShell({
           <div className="absolute left-[52px] right-2 top-1/2 flex -translate-y-1/2 items-center justify-center gap-[7px]">
             <PrimaryPill
               label={t('mobileTrip.newReservation')}
-              onClick={() => { planner.setEditingReservation(null); planner.setShowReservationModal(true) }}
+              onClick={() => {
+                planner.setEditingReservation(null);
+                planner.setShowReservationModal(true);
+              }}
             />
             {planner.bookingImportAvailable && (
-              <MIconBtn ariaLabel={t('reservations.import.title')} onClick={() => { planner.setBookingImportKind('bookings'); planner.setShowBookingImport(true) }} size={40} className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]">
+              <MIconBtn
+                ariaLabel={t('reservations.import.title')}
+                onClick={() => {
+                  planner.setBookingImportKind('bookings');
+                  planner.setShowBookingImport(true);
+                }}
+                size={40}
+                className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]"
+              >
                 <Download size={15} strokeWidth={2} />
               </MIconBtn>
             )}
-            <CompactToggle active={bookingsCompact} onToggle={() => setBookingsCompact(v => !v)} label={t('mobileTrip.compactView')} />
+            <CompactToggle
+              active={bookingsCompact}
+              onToggle={() => setBookingsCompact((v) => !v)}
+              label={t('mobileTrip.compactView')}
+            />
           </div>
         )}
 
         {trTab === 'finanzplan' && (
           <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[7px]">
-            <PrimaryPill label={t('costs.addExpense')} onClick={() => setAddExpenseSignal(s => s + 1)} />
-            <MIconBtn ariaLabel={t('budget.exportCsv')} onClick={() => setExportCostsCsvSignal(s => s + 1)} size={40} className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]">
+            <PrimaryPill label={t('costs.addExpense')} onClick={() => setAddExpenseSignal((s) => s + 1)} />
+            <MIconBtn
+              ariaLabel={t('budget.exportCsv')}
+              onClick={() => setExportCostsCsvSignal((s) => s + 1)}
+              size={40}
+              className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]"
+            >
               <FileDown size={15} strokeWidth={2} />
             </MIconBtn>
           </div>
@@ -511,10 +592,18 @@ export default function MTripShell({
 
         {trTab === 'listen' && (
           <GlassSegment>
-            {([
-              { value: 'packing' as const, label: t('todo.subtab.packing'), count: `${packedCount}/${packingItems.length}` },
-              { value: 'todo' as const, label: t('todo.subtab.todo'), count: t('mobileTrip.todoOpenCount', { count: todoOpenCount }) },
-            ]).map(seg => (
+            {[
+              {
+                value: 'packing' as const,
+                label: t('todo.subtab.packing'),
+                count: `${packedCount}/${packingItems.length}`,
+              },
+              {
+                value: 'todo' as const,
+                label: t('todo.subtab.todo'),
+                count: t('mobileTrip.todoOpenCount', { count: todoOpenCount }),
+              },
+            ].map((seg) => (
               <button
                 key={seg.value}
                 type="button"
@@ -534,11 +623,11 @@ export default function MTripShell({
 
         {trTab === 'collab' && (
           <GlassSegment>
-            {([
+            {[
               { value: 'chat' as const, label: t('collab.tabs.chat') },
               { value: 'notes' as const, label: t('collab.tabs.notes') },
               { value: 'polls' as const, label: t('collab.tabs.polls') },
-            ]).map(seg => (
+            ].map((seg) => (
               <button
                 key={seg.value}
                 type="button"
@@ -555,8 +644,17 @@ export default function MTripShell({
 
         {trTab === 'dateien' && (
           <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[7px]">
-            <PrimaryPill icon={<Upload size={13} strokeWidth={2.2} />} label={t('common.upload')} onClick={() => setUploadFilesSignal(s => s + 1)} />
-            <MIconBtn ariaLabel={t('files.trash')} onClick={() => setOpenFilesTrashSignal(s => s + 1)} size={40} className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]">
+            <PrimaryPill
+              icon={<Upload size={13} strokeWidth={2.2} />}
+              label={t('common.upload')}
+              onClick={() => setUploadFilesSignal((s) => s + 1)}
+            />
+            <MIconBtn
+              ariaLabel={t('files.trash')}
+              onClick={() => setOpenFilesTrashSignal((s) => s + 1)}
+              size={40}
+              className="text-m-muted backdrop-blur-[24px] backdrop-saturate-[1.7]"
+            >
               <Trash2 size={15} strokeWidth={2} />
             </MIconBtn>
           </div>
@@ -566,19 +664,20 @@ export default function MTripShell({
             not in the dock, so nothing was lit up there either, and the screen
             gave no clue which plugin was open. Same treatment as the others, from
             the tab entry the planner already builds (id, label, icon). */}
-        {trTab.startsWith('plugin:') && (() => {
-          const tab = planner.TRIP_TABS.find(x => x.id === trTab)
-          if (!tab) return null
-          const Icon = tab.icon
-          return (
-            <div className="pointer-events-none absolute left-[52px] right-[52px] top-1/2 flex -translate-y-1/2 items-center justify-center gap-[7px]">
-              <div className="flex min-w-0 items-center gap-[7px] rounded-full border border-[color:var(--m-gbr)] bg-[color:var(--m-glass)] px-[13px] py-[7px] backdrop-blur-[24px] backdrop-saturate-[1.7]">
-                {Icon && <Icon size={14} strokeWidth={2} className="flex-none text-m-muted" />}
-                <span className="truncate text-[0.8125rem] font-semibold text-m-ink">{tab.label}</span>
+        {trTab.startsWith('plugin:') &&
+          (() => {
+            const tab = planner.TRIP_TABS.find((x) => x.id === trTab);
+            if (!tab) return null;
+            const Icon = tab.icon;
+            return (
+              <div className="pointer-events-none absolute left-[52px] right-[52px] top-1/2 flex -translate-y-1/2 items-center justify-center gap-[7px]">
+                <div className="flex min-w-0 items-center gap-[7px] rounded-full border border-[color:var(--m-gbr)] bg-[color:var(--m-glass)] px-[13px] py-[7px] backdrop-blur-[24px] backdrop-saturate-[1.7]">
+                  {Icon && <Icon size={14} strokeWidth={2} className="flex-none text-m-muted" />}
+                  <span className="truncate text-[0.8125rem] font-semibold text-m-ink">{tab.label}</span>
+                </div>
               </div>
-            </div>
-          )
-        })()}
+            );
+          })()}
 
         {trTab === 'plan' ? (
           <MIconBtn
@@ -594,9 +693,9 @@ export default function MTripShell({
       </div>
 
       {/* ── Bottom dock (replaces the global bottom nav on this screen) ── */}
-      <nav className="absolute left-4 right-4 z-40 flex h-[62px] items-center justify-around rounded-[31px] border border-[color:var(--m-gbr)] bg-[color:var(--m-glass)] px-[14px] shadow-[0_16px_44px_-14px_rgba(0,0,0,.35)] backdrop-blur-[30px] backdrop-saturate-[1.8] bottom-[calc(env(safe-area-inset-bottom,0px)+12px)]">
+      <nav className="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+12px)] left-4 right-4 z-40 flex h-[62px] items-center justify-around rounded-[31px] border border-[color:var(--m-gbr)] bg-[color:var(--m-glass)] px-[14px] shadow-[0_16px_44px_-14px_rgba(0,0,0,.35)] backdrop-blur-[30px] backdrop-saturate-[1.8]">
         {dockTabs.map(({ id, icon: Icon }) => {
-          const active = trTab === id
+          const active = trTab === id;
           return (
             <button
               key={id}
@@ -610,7 +709,7 @@ export default function MTripShell({
             >
               <Icon size={19} strokeWidth={2} />
             </button>
-          )
+          );
         })}
         <button
           type="button"
@@ -624,7 +723,7 @@ export default function MTripShell({
 
       <Sheets planner={planner} shell={shell} />
     </div>
-  )
+  );
 }
 
 /** Centre glass pill of the top controls (segments for plan/lists/collab). */
@@ -633,7 +732,7 @@ function GlassSegment({ children }: { children: ReactNode }) {
     <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 rounded-full border border-[color:var(--m-gbr)] bg-[color:var(--m-glass)] p-[3px] backdrop-blur-[24px] backdrop-saturate-[1.7]">
       {children}
     </div>
-  )
+  );
 }
 
 /** Primary header action (Add transport / New reservation / Add expense / Upload). */
@@ -647,7 +746,7 @@ function PrimaryPill({ label, onClick, icon }: { label: string; onClick: () => v
       {icon ?? <Plus size={14} strokeWidth={2.2} />}
       {label}
     </button>
-  )
+  );
 }
 
 /** 40px list-density toggle on the transports/bookings headers. */
@@ -666,5 +765,5 @@ function CompactToggle({ active, onToggle, label }: { active: boolean; onToggle:
     >
       {active ? <Rows3 size={15} strokeWidth={2} /> : <List size={15} strokeWidth={2} />}
     </button>
-  )
+  );
 }

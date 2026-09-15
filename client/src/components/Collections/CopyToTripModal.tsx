@@ -1,29 +1,29 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Search, MapPin, Loader2, Copy, CalendarDays } from 'lucide-react'
-import Modal from '../shared/Modal'
-import { useToast } from '../shared/Toast'
-import { tripsApi } from '../../api/client'
-import { getApiErrorMessage } from '../../utils/apiError'
-import { formatDate } from '../../utils/formatters'
-import { useTranslation } from '../../i18n'
-import type { TranslationFn } from '../../types'
+import { CalendarDays, Copy, Loader2, MapPin, Search } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { tripsApi } from '../../api/client';
+import { useTranslation } from '../../i18n';
+import type { TranslationFn } from '../../types';
+import { getApiErrorMessage } from '../../utils/apiError';
+import { formatDate } from '../../utils/formatters';
+import Modal from '../shared/Modal';
+import { useToast } from '../shared/Toast';
 
 interface TripOption {
-  id: number
-  title: string
-  start_date?: string | null
-  end_date?: string | null
-  cover_image?: string | null
+  id: number;
+  title: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  cover_image?: string | null;
 }
 
 interface CopyToTripModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
   /** The collection place ids to copy. */
-  placeIds: number[]
+  placeIds: number[];
   /** Delegates to collectionStore.copyToTrip; returns the server reconcile result. */
-  onCopy: (tripId: number) => Promise<{ copied: number; skipped: { id: number; name: string }[] }>
-  t: TranslationFn
+  onCopy: (tripId: number) => Promise<{ copied: number; skipped: { id: number; name: string }[] }>;
+  t: TranslationFn;
 }
 
 /**
@@ -32,68 +32,85 @@ interface CopyToTripModalProps {
  * dedup result into a copied / skipped-duplicates toast. Works for a single
  * place (detail panel) and bulk select-mode ("Copy N to trip").
  */
-export default function CopyToTripModal({ isOpen, onClose, placeIds, onCopy, t }: CopyToTripModalProps): React.ReactElement | null {
-  const toast = useToast()
-  const { language } = useTranslation()
-  const [trips, setTrips] = useState<TripOption[]>([])
-  const [loading, setLoading] = useState(false)
-  const [search, setSearch] = useState('')
-  const [busyTripId, setBusyTripId] = useState<number | null>(null)
+export default function CopyToTripModal({
+  isOpen,
+  onClose,
+  placeIds,
+  onCopy,
+  t,
+}: CopyToTripModalProps): React.ReactElement | null {
+  const toast = useToast();
+  const { language } = useTranslation();
+  const [trips, setTrips] = useState<TripOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [busyTripId, setBusyTripId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!isOpen) return
-    let cancelled = false
-    setLoading(true)
-    setSearch('')
-    tripsApi.list()
-      .then((res: { trips?: TripOption[] }) => { if (!cancelled) setTrips(res.trips ?? []) })
-      .catch(() => { if (!cancelled) setTrips([]) })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [isOpen])
+    if (!isOpen) return;
+    let cancelled = false;
+    setLoading(true);
+    setSearch('');
+    tripsApi
+      .list()
+      .then((res: { trips?: TripOption[] }) => {
+        if (!cancelled) setTrips(res.trips ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setTrips([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return trips
-    return trips.filter(tr => (tr.title ?? '').toLowerCase().includes(q))
-  }, [trips, search])
+    const q = search.trim().toLowerCase();
+    if (!q) return trips;
+    return trips.filter((tr) => (tr.title ?? '').toLowerCase().includes(q));
+  }, [trips, search]);
 
   const dateRange = (tr: TripOption): string => {
-    const s = formatDate(tr.start_date, language)
-    const e = formatDate(tr.end_date, language)
-    if (s && e) return `${s} – ${e}`
-    return s || e || ''
-  }
+    const s = formatDate(tr.start_date, language);
+    const e = formatDate(tr.end_date, language);
+    if (s && e) return `${s} – ${e}`;
+    return s || e || '';
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const handleCopy = async (tripId: number) => {
-    if (busyTripId != null || placeIds.length === 0) return
-    setBusyTripId(tripId)
+    if (busyTripId != null || placeIds.length === 0) return;
+    setBusyTripId(tripId);
     try {
-      const res = await onCopy(tripId)
+      const res = await onCopy(tripId);
       if (res.copied > 0) {
-        toast.success(t('collections.copiedCount', { count: res.copied }))
+        toast.success(t('collections.copiedCount', { count: res.copied }));
       }
       if (res.skipped.length > 0) {
-        toast.info(t('collections.skippedDuplicates', { count: res.skipped.length }))
+        toast.info(t('collections.skippedDuplicates', { count: res.skipped.length }));
       }
       if (res.copied === 0 && res.skipped.length === 0) {
-        toast.info(t('collections.copyNothing'))
+        toast.info(t('collections.copyNothing'));
       }
-      onClose()
+      onClose();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, t('common.error')))
+      toast.error(getApiErrorMessage(err, t('common.error')));
     } finally {
-      setBusyTripId(null)
+      setBusyTripId(null);
     }
-  }
+  };
 
   return (
     <Modal
       isOpen
       onClose={onClose}
-      title={placeIds.length > 1 ? t('collections.copyN', { count: placeIds.length }) : t('collections.copyToTripTitle')}
+      title={
+        placeIds.length > 1 ? t('collections.copyN', { count: placeIds.length }) : t('collections.copyToTripTitle')
+      }
       size="sm"
     >
       <div className="flex flex-col gap-3">
@@ -102,9 +119,9 @@ export default function CopyToTripModal({ isOpen, onClose, placeIds, onCopy, t }
           <input
             autoFocus
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder={t('collections.copyToTripSearch')}
-            className="w-full pl-8 pr-3 py-2 rounded-lg border border-edge bg-surface-input text-content text-[13px] outline-none focus:border-accent"
+            className="w-full rounded-lg border border-edge bg-surface-input py-2 pl-8 pr-3 text-[13px] text-content outline-none focus:border-accent"
           />
         </div>
         {loading ? (
@@ -112,37 +129,45 @@ export default function CopyToTripModal({ isOpen, onClose, placeIds, onCopy, t }
             <Loader2 size={20} className="animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-[13px] text-content-faint py-10">{t('collections.noTrips')}</p>
+          <p className="py-10 text-center text-[13px] text-content-faint">{t('collections.noTrips')}</p>
         ) : (
-          <div className="flex flex-col gap-1 max-h-[50vh] overflow-y-auto -mx-1 px-1">
-            {filtered.map(trip => {
-              const busy = busyTripId === trip.id
+          <div className="-mx-1 flex max-h-[50vh] flex-col gap-1 overflow-y-auto px-1">
+            {filtered.map((trip) => {
+              const busy = busyTripId === trip.id;
               return (
                 <button
                   key={trip.id}
                   type="button"
                   onClick={() => handleCopy(trip.id)}
                   disabled={busy}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-edge bg-surface-card text-left hover:bg-surface-hover transition-colors disabled:opacity-60"
+                  className="flex items-center gap-3 rounded-xl border border-edge bg-surface-card px-3 py-2.5 text-left transition-colors hover:bg-surface-hover disabled:opacity-60"
                 >
-                  <span className="w-9 h-9 rounded-lg bg-surface-secondary flex items-center justify-center shrink-0 overflow-hidden text-content-faint">
-                    {trip.cover_image ? <img src={trip.cover_image} alt="" className="w-full h-full object-cover" /> : <MapPin size={15} />}
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary text-content-faint">
+                    {trip.cover_image ? (
+                      <img src={trip.cover_image} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <MapPin size={15} />
+                    )}
                   </span>
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-[13px] font-medium text-content truncate">{trip.title}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium text-content">{trip.title}</span>
                     {dateRange(trip) && (
-                      <span className="flex items-center gap-1 text-[11.5px] text-content-faint truncate">
+                      <span className="flex items-center gap-1 truncate text-[11.5px] text-content-faint">
                         <CalendarDays size={11} className="shrink-0" /> {dateRange(trip)}
                       </span>
                     )}
                   </span>
-                  {busy ? <Loader2 size={15} className="animate-spin text-content-faint shrink-0" /> : <Copy size={15} className="text-content-faint shrink-0" />}
+                  {busy ? (
+                    <Loader2 size={15} className="shrink-0 animate-spin text-content-faint" />
+                  ) : (
+                    <Copy size={15} className="shrink-0 text-content-faint" />
+                  )}
                 </button>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </Modal>
-  )
+  );
 }

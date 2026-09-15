@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   close-stale:
-    if: github.repository == 'liketrek/TREK'
+    if: github.repository == 'bhxnms/T-T'
     runs-on: ubuntu-latest
     steps:
       - name: Close stale wrong-base-branch PRs

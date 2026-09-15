@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'トラックの色',
   'inspector.trackColorAuto': '自動の色',
   'inspector.trackColorCustom': 'カスタムカラーを選択',
-  "inspector.checkin": "チェックイン",
-  "inspector.checkinDone": "チェックイン済み",
+  'inspector.checkin': 'チェックイン',
+  'inspector.checkinDone': 'チェックイン済み',
 };
 export default inspector;

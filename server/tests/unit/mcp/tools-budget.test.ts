@@ -4,6 +4,12 @@
  * payment was made in (the rest of the settlement surface lives in
  * tools-budget-advanced.test.ts).
  */
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import { createUser, createTrip, createBudgetItem, createPlace, addTripMember } from '../../helpers/factories';
+import { createMcpHarness, parseToolResult, parseResourceResult, type McpHarness } from '../../helpers/mcp-harness';
+import { resetTestDb } from '../../helpers/test-db';
+
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 
 const { testDb, dbMock } = vi.hoisted(() => {
@@ -18,7 +24,11 @@ const { testDb, dbMock } = vi.hoisted(() => {
     reinitialize: () => {},
     getPlaceWithTags: () => null,
     canAccessTrip: (tripId: any, userId: number) =>
-      db.prepare(`SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`).get(userId, tripId, userId),
+      db
+        .prepare(
+          `SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`,
+        )
+        .get(userId, tripId, userId),
     isOwner: (tripId: any, userId: number) =>
       !!db.prepare('SELECT id FROM trips WHERE id = ? AND user_id = ?').get(tripId, userId),
   };
@@ -35,12 +45,6 @@ vi.mock('../../../src/config', () => ({
 const { broadcastMock } = vi.hoisted(() => ({ broadcastMock: vi.fn() }));
 vi.mock('../../../src/websocket', () => ({ broadcast: broadcastMock }));
 
-import { createTables } from '../../../src/db/schema';
-import { runMigrations } from '../../../src/db/migrations';
-import { resetTestDb } from '../../helpers/test-db';
-import { createUser, createTrip, createBudgetItem, createPlace, addTripMember } from '../../helpers/factories';
-import { createMcpHarness, parseToolResult, parseResourceResult, type McpHarness } from '../../helpers/mcp-harness';
-
 beforeAll(() => {
   createTables(testDb);
   runMigrations(testDb);
@@ -53,7 +57,12 @@ beforeEach(() => {
   // Freezing the FX rate of a foreign currency is a real fetch to
   // api.frankfurter.dev with a 10 s abort. Fail closed by default; the cases
   // that assert a frozen rate install their own rate stub.
-  vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline'); }));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => {
+      throw new Error('offline');
+    }),
+  );
 });
 
 afterAll(() => {
@@ -63,7 +72,11 @@ afterAll(() => {
 
 async function withHarness(userId: number, fn: (h: McpHarness) => Promise<void>) {
   const h = await createMcpHarness({ userId, withResources: false });
-  try { await fn(h); } finally { await h.cleanup(); }
+  try {
+    await fn(h);
+  } finally {
+    await h.cleanup();
+  }
 }
 
 function errorText(result: Awaited<ReturnType<McpHarness['client']['callTool']>>): string {
@@ -80,41 +93,62 @@ function tripWithTwo() {
 }
 
 function memberRows(itemId: number) {
-  return testDb.prepare('SELECT user_id, amount FROM budget_item_members WHERE budget_item_id = ? ORDER BY user_id')
+  return testDb
+    .prepare('SELECT user_id, amount FROM budget_item_members WHERE budget_item_id = ? ORDER BY user_id')
     .all(itemId) as { user_id: number; amount: number | null }[];
 }
 
 function itemRow(itemId: number) {
-  return testDb.prepare('SELECT total_price, currency, exchange_rate, persons, expense_date, place_id FROM budget_items WHERE id = ?')
+  return testDb
+    .prepare(
+      'SELECT total_price, currency, exchange_rate, persons, expense_date, place_id FROM budget_items WHERE id = ?',
+    )
     .get(itemId) as {
-      total_price: number; currency: string | null; exchange_rate: number | null;
-      persons: number | null; expense_date: string | null; place_id: number | null;
-    };
+    total_price: number;
+    currency: string | null;
+    exchange_rate: number | null;
+    persons: number | null;
+    expense_date: string | null;
+    place_id: number | null;
+  };
 }
 
 function itemCount(tripId: number): number {
-  return (testDb.prepare('SELECT COUNT(*) AS count FROM budget_items WHERE trip_id = ?').get(tripId) as { count: number }).count;
+  return (
+    testDb.prepare('SELECT COUNT(*) AS count FROM budget_items WHERE trip_id = ?').get(tripId) as { count: number }
+  ).count;
 }
 
 function settlementRow(id: number) {
-  return testDb.prepare('SELECT amount, currency, exchange_rate FROM budget_settlements WHERE id = ?')
-    .get(id) as { amount: number; currency: string | null; exchange_rate: number | null };
+  return testDb.prepare('SELECT amount, currency, exchange_rate FROM budget_settlements WHERE id = ?').get(id) as {
+    amount: number;
+    currency: string | null;
+    exchange_rate: number | null;
+  };
 }
 
 // budget_settlements is not one of the tables the reset clears, and trip ids are
 // reused, so a count is only ever compared against the count taken in the same test.
 function settlementCount(tripId: number): number {
-  return (testDb.prepare('SELECT COUNT(*) AS count FROM budget_settlements WHERE trip_id = ?').get(tripId) as { count: number }).count;
+  return (
+    testDb.prepare('SELECT COUNT(*) AS count FROM budget_settlements WHERE trip_id = ?').get(tripId) as {
+      count: number;
+    }
+  ).count;
 }
 
 /** Frankfurter's shape: one entry per quote, the base's own rate omitted. */
 function stubRates(rates: Record<string, number>): void {
-  vi.stubGlobal('fetch', vi.fn(async () => ({
-    ok: true,
-    text: async () => JSON.stringify(
-      Object.entries(rates).map(([quote, rate]) => ({ date: '2026-08-28', base: 'EUR', quote, rate })),
-    ),
-  })));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({
+      ok: true,
+      text: async () =>
+        JSON.stringify(
+          Object.entries(rates).map(([quote, rate]) => ({ date: '2026-08-28', base: 'EUR', quote, rate })),
+        ),
+    })),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +162,13 @@ describe('Tool: create_budget_item', () => {
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
-        arguments: { tripId: trip.id, name: 'Hotel Paris', category: 'Accommodation', total_price: 500, note: 'Prepaid' },
+        arguments: {
+          tripId: trip.id,
+          name: 'Hotel Paris',
+          category: 'Accommodation',
+          total_price: 500,
+          note: 'Prepaid',
+        },
       });
       const data = parseToolResult(result) as any;
       expect(data.item.name).toBe('Hotel Paris');
@@ -155,7 +195,10 @@ describe('Tool: create_budget_item', () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);
     await withHarness(user.id, async (h) => {
-      await h.client.callTool({ name: 'create_budget_item', arguments: { tripId: trip.id, name: 'Taxi', total_price: 25 } });
+      await h.client.callTool({
+        name: 'create_budget_item',
+        arguments: { tripId: trip.id, name: 'Taxi', total_price: 25 },
+      });
       expect(broadcastMock).toHaveBeenCalledWith(trip.id, 'budget:created', expect.any(Object));
     });
   });
@@ -230,8 +273,12 @@ describe('Tool: create_budget_item', () => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Museum', total_price: 30, currency: 'EUR',
-          expense_date: '2026-07-01', payers: [{ user_id: user.id, amount: 30 }],
+          tripId: trip.id,
+          name: 'Museum',
+          total_price: 30,
+          currency: 'EUR',
+          expense_date: '2026-07-01',
+          payers: [{ user_id: user.id, amount: 30 }],
         },
       });
       const data = parseToolResult(result) as any;
@@ -248,7 +295,10 @@ describe('Tool: create_budget_item', () => {
     const { user: other } = createUser(testDb);
     const trip = createTrip(testDb, other.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'create_budget_item', arguments: { tripId: trip.id, name: 'Hack', total_price: 0 } });
+      const result = await h.client.callTool({
+        name: 'create_budget_item',
+        arguments: { tripId: trip.id, name: 'Hack', total_price: 0 },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -258,7 +308,10 @@ describe('Tool: create_budget_item', () => {
     const { user } = createUser(testDb, { email: 'demo@nomad.app' });
     const trip = createTrip(testDb, user.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'create_budget_item', arguments: { tripId: trip.id, name: 'X', total_price: 0 } });
+      const result = await h.client.callTool({
+        name: 'create_budget_item',
+        arguments: { tripId: trip.id, name: 'X', total_price: 0 },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -290,7 +343,10 @@ describe('Tool: update_budget_item', () => {
     const trip = createTrip(testDb, user.id);
     const item = createBudgetItem(testDb, trip.id);
     await withHarness(user.id, async (h) => {
-      await h.client.callTool({ name: 'update_budget_item', arguments: { tripId: trip.id, itemId: item.id, name: 'Updated' } });
+      await h.client.callTool({
+        name: 'update_budget_item',
+        arguments: { tripId: trip.id, itemId: item.id, name: 'Updated' },
+      });
       expect(broadcastMock).toHaveBeenCalledWith(trip.id, 'budget:updated', expect.any(Object));
     });
   });
@@ -299,7 +355,10 @@ describe('Tool: update_budget_item', () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'update_budget_item', arguments: { tripId: trip.id, itemId: 99999, name: 'X' } });
+      const result = await h.client.callTool({
+        name: 'update_budget_item',
+        arguments: { tripId: trip.id, itemId: 99999, name: 'X' },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -310,7 +369,10 @@ describe('Tool: update_budget_item', () => {
     const trip = createTrip(testDb, other.id);
     const item = createBudgetItem(testDb, trip.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'update_budget_item', arguments: { tripId: trip.id, itemId: item.id, name: 'X' } });
+      const result = await h.client.callTool({
+        name: 'update_budget_item',
+        arguments: { tripId: trip.id, itemId: item.id, name: 'X' },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -326,7 +388,10 @@ describe('Tool: delete_budget_item', () => {
     const trip = createTrip(testDb, user.id);
     const item = createBudgetItem(testDb, trip.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'delete_budget_item', arguments: { tripId: trip.id, itemId: item.id } });
+      const result = await h.client.callTool({
+        name: 'delete_budget_item',
+        arguments: { tripId: trip.id, itemId: item.id },
+      });
       const data = parseToolResult(result) as any;
       expect(data.success).toBe(true);
       expect(testDb.prepare('SELECT id FROM budget_items WHERE id = ?').get(item.id)).toBeUndefined();
@@ -347,7 +412,10 @@ describe('Tool: delete_budget_item', () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'delete_budget_item', arguments: { tripId: trip.id, itemId: 99999 } });
+      const result = await h.client.callTool({
+        name: 'delete_budget_item',
+        arguments: { tripId: trip.id, itemId: 99999 },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -358,7 +426,10 @@ describe('Tool: delete_budget_item', () => {
     const trip = createTrip(testDb, other.id);
     const item = createBudgetItem(testDb, trip.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'delete_budget_item', arguments: { tripId: trip.id, itemId: item.id } });
+      const result = await h.client.callTool({
+        name: 'delete_budget_item',
+        arguments: { tripId: trip.id, itemId: item.id },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -408,8 +479,13 @@ describe('Tool: create_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Dinner', total_price: 100,
-          members: [{ user_id: user.id, amount: 70 }, { user_id: other.id, amount: 30 }],
+          tripId: trip.id,
+          name: 'Dinner',
+          total_price: 100,
+          members: [
+            { user_id: user.id, amount: 70 },
+            { user_id: other.id, amount: 30 },
+          ],
         },
       });
       const data = parseToolResult(result) as any;
@@ -427,8 +503,13 @@ describe('Tool: create_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Dinner', total_price: 100,
-          members: [{ user_id: user.id, amount: 60 }, { user_id: other.id, amount: 30 }],
+          tripId: trip.id,
+          name: 'Dinner',
+          total_price: 100,
+          members: [
+            { user_id: user.id, amount: 60 },
+            { user_id: other.id, amount: 30 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
@@ -443,14 +524,19 @@ describe('Tool: create_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Groceries', total_price: 100,
+          tripId: trip.id,
+          name: 'Groceries',
+          total_price: 100,
           payers: [{ user_id: user.id, amount: 90 }],
-          members: [{ user_id: user.id, amount: 60 }, { user_id: other.id, amount: 30 }],
+          members: [
+            { user_id: user.id, amount: 60 },
+            { user_id: other.id, amount: 30 },
+          ],
         },
       });
       const data = parseToolResult(result) as any;
       expect(itemRow(data.item.id).total_price).toBe(90);
-      expect(memberRows(data.item.id).map(m => m.amount)).toEqual([60, 30]);
+      expect(memberRows(data.item.id).map((m) => m.amount)).toEqual([60, 30]);
     });
   });
 
@@ -460,9 +546,14 @@ describe('Tool: create_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Groceries', total_price: 100,
+          tripId: trip.id,
+          name: 'Groceries',
+          total_price: 100,
           payers: [{ user_id: user.id, amount: 90 }],
-          members: [{ user_id: user.id, amount: 70 }, { user_id: other.id, amount: 30 }],
+          members: [
+            { user_id: user.id, amount: 70 },
+            { user_id: other.id, amount: 30 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
@@ -477,8 +568,13 @@ describe('Tool: create_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Dinner', total_price: 100,
-          members: [{ user_id: user.id, amount: 50 }, { user_id: stranger.id, amount: 50 }],
+          tripId: trip.id,
+          name: 'Dinner',
+          total_price: 100,
+          members: [
+            { user_id: user.id, amount: 50 },
+            { user_id: stranger.id, amount: 50 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
@@ -493,9 +589,14 @@ describe('Tool: create_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Dinner', total_price: 100,
+          tripId: trip.id,
+          name: 'Dinner',
+          total_price: 100,
           member_ids: [user.id, other.id],
-          members: [{ user_id: user.id, amount: 50 }, { user_id: other.id, amount: 50 }],
+          members: [
+            { user_id: user.id, amount: 50 },
+            { user_id: other.id, amount: 50 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
@@ -508,7 +609,9 @@ describe('Tool: create_budget_item (uneven split)', () => {
 describe('Tool: update_budget_item (uneven split)', () => {
   function itemWithEqualSplit(tripId: number, userIds: number[]) {
     const item = createBudgetItem(testDb, tripId, { name: 'Dinner', total_price: 100 });
-    const insert = testDb.prepare('INSERT INTO budget_item_members (budget_item_id, user_id, paid, amount) VALUES (?, ?, 0, NULL)');
+    const insert = testDb.prepare(
+      'INSERT INTO budget_item_members (budget_item_id, user_id, paid, amount) VALUES (?, ?, 0, NULL)',
+    );
     for (const id of userIds) insert.run(item.id, id);
     testDb.prepare('UPDATE budget_items SET persons = ? WHERE id = ?').run(userIds.length, item.id);
     return item;
@@ -521,8 +624,12 @@ describe('Tool: update_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'update_budget_item',
         arguments: {
-          tripId: trip.id, itemId: item.id,
-          members: [{ user_id: user.id, amount: 40 }, { user_id: other.id, amount: 60 }],
+          tripId: trip.id,
+          itemId: item.id,
+          members: [
+            { user_id: user.id, amount: 40 },
+            { user_id: other.id, amount: 60 },
+          ],
         },
       });
       expect(result.isError).toBeFalsy();
@@ -541,8 +648,12 @@ describe('Tool: update_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'update_budget_item',
         arguments: {
-          tripId: trip.id, itemId: item.id,
-          members: [{ user_id: user.id, amount: 40 }, { user_id: other.id, amount: 50 }],
+          tripId: trip.id,
+          itemId: item.id,
+          members: [
+            { user_id: user.id, amount: 40 },
+            { user_id: other.id, amount: 50 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
@@ -561,13 +672,17 @@ describe('Tool: update_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'update_budget_item',
         arguments: {
-          tripId: trip.id, itemId: item.id,
-          members: [{ user_id: user.id, amount: 50 }, { user_id: user.id, amount: 50 }],
+          tripId: trip.id,
+          itemId: item.id,
+          members: [
+            { user_id: user.id, amount: 50 },
+            { user_id: user.id, amount: 50 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
       expect(errorText(result)).toContain('twice');
-      expect(memberRows(item.id).map(m => m.amount)).toEqual([null, null]);
+      expect(memberRows(item.id).map((m) => m.amount)).toEqual([null, null]);
     });
   });
 
@@ -578,7 +693,8 @@ describe('Tool: update_budget_item (uneven split)', () => {
       const result = await h.client.callTool({
         name: 'update_budget_item',
         arguments: {
-          tripId: trip.id, itemId: item.id,
+          tripId: trip.id,
+          itemId: item.id,
           member_ids: [user.id],
           members: [{ user_id: user.id, amount: 100 }],
         },
@@ -741,7 +857,13 @@ describe('Budget tools: place link', () => {
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
         name: 'create_budget_item_with_members',
-        arguments: { tripId: trip.id, name: 'Louvre tickets', total_price: 68, userIds: [user.id, other.id], place_id: place.id },
+        arguments: {
+          tripId: trip.id,
+          name: 'Louvre tickets',
+          total_price: 68,
+          userIds: [user.id, other.id],
+          place_id: place.id,
+        },
       });
       const data = parseToolResult(result) as any;
       expect(itemRow(data.item.id).place_id).toBe(place.id);
@@ -805,7 +927,13 @@ describe('Tool: create_settlement (currency)', () => {
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
         name: 'create_settlement',
-        arguments: { tripId: trip.id, from_user_id: other.id, to_user_id: user.id, amount: 20, currency: 'United States Dollars' },
+        arguments: {
+          tripId: trip.id,
+          from_user_id: other.id,
+          to_user_id: user.id,
+          amount: 20,
+          currency: 'United States Dollars',
+        },
       });
       expect(result.isError).toBe(true);
       expect(settlementCount(trip.id)).toBe(before);
@@ -817,14 +945,23 @@ describe('Tool: update_settlement (currency)', () => {
   it('changes the currency the payment was made in and freezes its rate', async () => {
     const { user, other, trip } = tripWithTwo();
     await withHarness(user.id, async (h) => {
-      const created = parseToolResult(await h.client.callTool({
-        name: 'create_settlement',
-        arguments: { tripId: trip.id, from_user_id: other.id, to_user_id: user.id, amount: 20 },
-      })) as any;
+      const created = parseToolResult(
+        await h.client.callTool({
+          name: 'create_settlement',
+          arguments: { tripId: trip.id, from_user_id: other.id, to_user_id: user.id, amount: 20 },
+        }),
+      ) as any;
       stubRates({ USD: 1.1 });
       const result = await h.client.callTool({
         name: 'update_settlement',
-        arguments: { tripId: trip.id, settlementId: created.settlement.id, from_user_id: other.id, to_user_id: user.id, amount: 20, currency: 'USD' },
+        arguments: {
+          tripId: trip.id,
+          settlementId: created.settlement.id,
+          from_user_id: other.id,
+          to_user_id: user.id,
+          amount: 20,
+          currency: 'USD',
+        },
       });
       expect(result.isError).toBeFalsy();
       const row = settlementRow(created.settlement.id);
@@ -837,13 +974,22 @@ describe('Tool: update_settlement (currency)', () => {
     const { user, other, trip } = tripWithTwo();
     stubRates({ USD: 1.1 });
     await withHarness(user.id, async (h) => {
-      const created = parseToolResult(await h.client.callTool({
-        name: 'create_settlement',
-        arguments: { tripId: trip.id, from_user_id: other.id, to_user_id: user.id, amount: 20, currency: 'USD' },
-      })) as any;
+      const created = parseToolResult(
+        await h.client.callTool({
+          name: 'create_settlement',
+          arguments: { tripId: trip.id, from_user_id: other.id, to_user_id: user.id, amount: 20, currency: 'USD' },
+        }),
+      ) as any;
       const result = await h.client.callTool({
         name: 'update_settlement',
-        arguments: { tripId: trip.id, settlementId: created.settlement.id, from_user_id: other.id, to_user_id: user.id, amount: 20, currency: null },
+        arguments: {
+          tripId: trip.id,
+          settlementId: created.settlement.id,
+          from_user_id: other.id,
+          to_user_id: user.id,
+          amount: 20,
+          currency: null,
+        },
       });
       expect(result.isError).toBeFalsy();
       expect(settlementRow(created.settlement.id).currency).toBeNull();
@@ -870,9 +1016,14 @@ describe('Budget tools: a custom split cannot be certified against a total the r
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Dinner', total_price: 100,
+          tripId: trip.id,
+          name: 'Dinner',
+          total_price: 100,
           members: [{ user_id: owner.id, amount: 100 }],
-          payers: [{ user_id: stranger.id, amount: 50 }, { user_id: owner.id, amount: 50 }],
+          payers: [
+            { user_id: stranger.id, amount: 50 },
+            { user_id: owner.id, amount: 50 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
@@ -896,9 +1047,13 @@ describe('Budget tools: a custom split cannot be certified against a total the r
       const result = await h.client.callTool({
         name: 'update_budget_item',
         arguments: {
-          tripId: trip.id, itemId: item.id,
+          tripId: trip.id,
+          itemId: item.id,
           payers: [],
-          members: [{ user_id: owner.id, amount: 60 }, { user_id: friend.id, amount: 40 }],
+          members: [
+            { user_id: owner.id, amount: 60 },
+            { user_id: friend.id, amount: 40 },
+          ],
         },
       });
       expect(result.isError).toBe(true);
@@ -938,9 +1093,17 @@ describe('Budget tools: a custom split cannot be certified against a total the r
       const result = await h.client.callTool({
         name: 'create_budget_item',
         arguments: {
-          tripId: trip.id, name: 'Hotel', total_price: 999,
-          payers: [{ user_id: owner.id, amount: 70 }, { user_id: friend.id, amount: 30 }],
-          members: [{ user_id: owner.id, amount: 60 }, { user_id: friend.id, amount: 40 }],
+          tripId: trip.id,
+          name: 'Hotel',
+          total_price: 999,
+          payers: [
+            { user_id: owner.id, amount: 70 },
+            { user_id: friend.id, amount: 30 },
+          ],
+          members: [
+            { user_id: owner.id, amount: 60 },
+            { user_id: friend.id, amount: 40 },
+          ],
         },
       });
       expect(result.isError).toBeFalsy();
@@ -948,8 +1111,10 @@ describe('Budget tools: a custom split cannot be certified against a total the r
       // total_price came from the payers, not from the stated 999.
       const row = testDb.prepare('SELECT total_price FROM budget_items WHERE id = ?').get(data.item.id) as any;
       expect(row.total_price).toBe(100);
-      const shares = testDb.prepare('SELECT user_id, amount FROM budget_item_members WHERE budget_item_id = ? ORDER BY user_id').all(data.item.id) as any[];
-      expect(shares.map(s => s.amount)).toEqual([60, 40]);
+      const shares = testDb
+        .prepare('SELECT user_id, amount FROM budget_item_members WHERE budget_item_id = ? ORDER BY user_id')
+        .all(data.item.id) as any[];
+      expect(shares.map((s) => s.amount)).toEqual([60, 40]);
     });
   });
 });

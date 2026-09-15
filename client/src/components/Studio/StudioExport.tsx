@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import { BookOpen, FileText, Printer, Scissors, X } from 'lucide-react'
-import type { BookDocument } from '@trek/shared'
-import { BookSheetsView } from './BookSheetsView'
-import { sheetBox, sheetsFor, type SheetMode } from './bookSheets'
-import { printSheets } from './printSheets'
+import type { BookDocument } from '@trek/shared';
+import { BookOpen, FileText, Printer, Scissors, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { BookSheetsView } from './BookSheetsView';
+import { sheetBox, sheetsFor, type SheetMode } from './bookSheets';
+import { printSheets } from './printSheets';
 
 /**
  * Getting the book out.
@@ -26,34 +26,37 @@ import { printSheets } from './printSheets'
  * from the DOM afterwards.
  */
 export function StudioExport({
-  doc, title, t, onClose,
+  doc,
+  title,
+  t,
+  onClose,
 }: {
-  doc: BookDocument
-  title: string
-  t: (key: string, params?: Record<string, string | number>) => string
-  onClose: () => void
+  doc: BookDocument;
+  title: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  onClose: () => void;
 }) {
-  const [mode, setMode] = useState<SheetMode>('pages')
-  const [marks, setMarks] = useState(true)
+  const [mode, setMode] = useState<SheetMode>('pages');
+  const [marks, setMarks] = useState(true);
   /** Set once the user has asked for it — this is what triggers the render. */
-  const [building, setBuilding] = useState(false)
-  const stage = useRef<HTMLDivElement>(null)
+  const [building, setBuilding] = useState(false);
+  const stage = useRef<HTMLDivElement>(null);
 
-  const sheets = sheetsFor(doc, mode)
+  const sheets = sheetsFor(doc, mode);
 
   /*
    * Two sizes, because spread mode mixes them: covers are one page and
    * everything between them is two. The wider one is the document's page box
    * and the narrower gets a named rule — see printSheets.
    */
-  const widest = Math.max(...sheets.map(s => s.width), doc.page.pageWidth)
-  const box = sheetBox(widest, doc.page.pageHeight, doc.page.bleed, marks)
-  const single = sheetBox(doc.page.pageWidth, doc.page.pageHeight, doc.page.bleed, marks)
+  const widest = Math.max(...sheets.map((s) => s.width), doc.page.pageWidth);
+  const box = sheetBox(widest, doc.page.pageHeight, doc.page.bleed, marks);
+  const single = sheetBox(doc.page.pageWidth, doc.page.pageHeight, doc.page.bleed, marks);
 
   useEffect(() => {
-    if (!building) return
-    const html = stage.current?.innerHTML
-    if (!html) return
+    if (!building) return;
+    const html = stage.current?.innerHTML;
+    if (!html) return;
 
     printSheets({
       html,
@@ -68,13 +71,13 @@ export function StudioExport({
         count: t('journey.studio.exportSheetCount', { count: sheets.length }),
         preparing: t('journey.studio.exportPreparing'),
       },
-    })
-    setBuilding(false)
-    onClose()
+    });
+    setBuilding(false);
+    onClose();
     // Runs once per build. Re-running on every render of the options would
     // open a second print view behind the first.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [building])
+  }, [building]);
 
   return (
     <div className="st-ex" role="dialog" aria-modal="true" aria-label={t('journey.studio.export')}>
@@ -109,7 +112,8 @@ export function StudioExport({
 
           <div className="st-ex-field">
             <span className="st-ex-label">{t('journey.studio.exportFinishing')}</span>
-            <button type="button"
+            <button
+              type="button"
               className={`st-ex-opt ${marks ? 'is-on' : ''}`}
               onClick={() => setMarks(!marks)}
               aria-pressed={marks}
@@ -117,9 +121,7 @@ export function StudioExport({
               <Scissors size={15} />
               <span className="st-ex-text">
                 <span className="st-ex-name">{t('journey.studio.exportMarks')}</span>
-                <span className="st-ex-hint">
-                  {t('journey.studio.exportMarksHint', { bleed: doc.page.bleed })}
-                </span>
+                <span className="st-ex-hint">{t('journey.studio.exportMarksHint', { bleed: doc.page.bleed })}</span>
               </span>
             </button>
           </div>
@@ -134,7 +136,9 @@ export function StudioExport({
         </div>
 
         <div className="st-ex-foot">
-          <button type="button" className="st-ex-btn" onClick={onClose}>{t('common.cancel')}</button>
+          <button type="button" className="st-ex-btn" onClick={onClose}>
+            {t('common.cancel')}
+          </button>
           <button type="button" className="st-ex-btn is-primary" onClick={() => setBuilding(true)} disabled={building}>
             <Printer size={14} />
             <span>{t('journey.studio.exportOpen')}</span>
@@ -159,24 +163,28 @@ export function StudioExport({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-const round1 = (n: number) => Math.round(n * 10) / 10
+const round1 = (n: number) => Math.round(n * 10) / 10;
 
 function Choice<T extends string>({
-  label, options, value, onPick,
+  label,
+  options,
+  value,
+  onPick,
 }: {
-  label: string
-  options: { id: T; icon: typeof FileText; name: string; hint: string }[]
-  value: T
-  onPick: (id: T) => void
+  label: string;
+  options: { id: T; icon: typeof FileText; name: string; hint: string }[];
+  value: T;
+  onPick: (id: T) => void;
 }) {
   return (
     <div className="st-ex-field">
       <span className="st-ex-label">{label}</span>
-      {options.map(opt => (
-        <button type="button"
+      {options.map((opt) => (
+        <button
+          type="button"
           key={opt.id}
           className={`st-ex-opt ${value === opt.id ? 'is-on' : ''}`}
           onClick={() => onPick(opt.id)}
@@ -190,5 +198,5 @@ function Choice<T extends string>({
         </button>
       ))}
     </div>
-  )
+  );
 }

@@ -100,7 +100,8 @@ const places: TranslationStrings = {
   'places.details.facts': 'Полезно знать',
   'places.details.nothing': 'Для этого места ничего не найдено.',
   'places.details.noKeyTitle': 'Доступно больше подробностей',
-  'places.details.noKeyHint': 'Без ключа Google API этот экземпляр использует только свободные источники. Попросите администратора TREK добавить ключ для оценок, часов работы и фотографий.',
+  'places.details.noKeyHint':
+    'Без ключа Google API этот экземпляр использует только свободные источники. Попросите администратора TREK добавить ключ для оценок, часов работы и фотографий.',
   'places.details.aboutBrand': 'О сети',
   'places.details.aboutBrandNote': 'Описывает сеть, а не это заведение.',
   'places.details.fact.rating': 'Рейтинг',
@@ -128,8 +129,8 @@ const places: TranslationStrings = {
   'places.removeImage': 'Удалить изображение',
   'places.imageUploadError': 'Не удалось загрузить изображение',
   'places.imageRemoveError': 'Не удалось удалить изображение',
-  "places.searchProvider": "Поиск:",
-  "places.searchProviderAmap": "AMap",
-  "places.searchProviderNative": "TREK",
+  'places.searchProvider': 'Поиск:',
+  'places.searchProviderAmap': 'AMap',
+  'places.searchProviderNative': 'TREK',
 };
 export default places;

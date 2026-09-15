@@ -441,7 +441,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'تغيير الإصدار…',
   'admin.plugins.noVersions': 'لم يتم العثور على إصدارات منشورة في السجل.',
   'admin.plugins.downgradeTitle': 'التراجع عن هذه الإضافة؟',
-  'admin.plugins.downgradeBody': 'التبديل من v{from} إلى v{to}: تبقى البيانات المكتوبة بواسطة الإصدار الأحدث في مكانها، وقد لا يفهمها الإصدار الأقدم.',
+  'admin.plugins.downgradeBody':
+    'التبديل من v{from} إلى v{to}: تبقى البيانات المكتوبة بواسطة الإصدار الأحدث في مكانها، وقد لا يفهمها الإصدار الأقدم.',
   'admin.plugins.downgradeConfirm': 'تراجع',
   'admin.plugins.updatesHeld': 'التحديثات متوقفة عند v{version}',
   'admin.plugins.resumeUpdates': 'استئناف التحديثات',
@@ -548,7 +549,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'مزامنة الرحلات من خادم AirTrail الخاص بك',
   'admin.addons.catalog.llm_parsing.name': 'التحليل بالذكاء الاصطناعي',
-  'admin.addons.catalog.llm_parsing.description': 'يقرأ الحجوزات التي يعجز المحلل المدمج عن فهمها، بنموذج ذكاء اصطناعي تختاره',
+  'admin.addons.catalog.llm_parsing.description':
+    'يقرأ الحجوزات التي يعجز المحلل المدمج عن فهمها، بنموذج ذكاء اصطناعي تختاره',
   'admin.addons.enabled': 'مفعّل',
   'admin.addons.disabled': 'معطّل',
   'admin.addons.type.trip': 'رحلة',
@@ -710,9 +712,12 @@ const admin: TranslationStrings = {
   'admin.invite.tripNone': 'بدون رحلة',
   'admin.invite.tripHint': 'تتم إضافة المستخدم الجديد تلقائيًا إلى هذه الرحلة عند تسجيله عبر الرابط.',
   'admin.invite.boundTo': 'يُضاف إلى {trip}',
-  "admin.amapKey": "مفتاح خدمة الويب من AMap",
-  "admin.amapKeyHint": "للبحث عن الأماكن في الصين والتوجيه المراعي لحركة المرور. احصل على مفتاح خدمة ويب من lbs.amap.com.",
-  "admin.amapSearch.title": "استخدام AMap للبحث عن الأماكن",
-  "admin.amapSearch.subtitle": "يستخدم AMap افتراضيًا؛ يمكن لكل نموذج بحث العودة إلى مصادر TREK الأصلية.",
+  'admin.amapKey': 'مفتاح خدمة الويب من AMap',
+  'admin.amapKeyHint':
+    'للبحث عن الأماكن في الصين والتوجيه المراعي لحركة المرور. احصل على مفتاح خدمة ويب من lbs.amap.com.',
+  'admin.amapSearch.title': 'استخدام AMap للبحث عن الأماكن',
+  'admin.amapSearch.subtitle': 'يستخدم AMap افتراضيًا؛ يمكن لكل نموذج بحث العودة إلى مصادر TREK الأصلية.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

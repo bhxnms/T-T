@@ -28,7 +28,7 @@ const i18nRoot = join(here, '..', 'src', 'i18n');
 // Match a top-level translation key declaration: leading whitespace, then a
 // quoted key (must start with a lowercase letter), then a colon. This is the
 // exact pattern every domain file uses.
-const TOP_LEVEL_KEY_RE = /^\s*'([a-z][a-zA-Z0-9.\-_]*)'\s*:/gm;
+const TOP_LEVEL_KEY_RE = /^\s*(['"])([a-z][a-zA-Z0-9.\-_]*)\1\s*:/gm;
 
 function listLocales() {
   return readdirSync(i18nRoot)
@@ -47,7 +47,7 @@ function extractKeys(locale, file) {
   const content = readFileSync(join(i18nRoot, locale, file), 'utf8');
   const keys = new Set();
   for (const match of content.matchAll(TOP_LEVEL_KEY_RE)) {
-    keys.add(match[1]);
+    keys.add(match[2]);
   }
   return keys;
 }

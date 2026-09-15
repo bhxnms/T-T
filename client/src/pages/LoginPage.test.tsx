@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { server } from '../../tests/helpers/msw/server';
+import { fireEvent, render, screen, waitFor } from '../../tests/helpers/render';
 import { resetAllStores } from '../../tests/helpers/store';
 import LoginPage from './LoginPage';
 
@@ -59,7 +59,7 @@ describe('LoginPage', () => {
       server.use(
         http.post('/api/auth/login', () => {
           return HttpResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -84,11 +84,11 @@ describe('LoginPage', () => {
     it('disables submit button and shows spinner during login', async () => {
       server.use(
         http.post('/api/auth/login', async () => {
-          await new Promise(resolve => setTimeout(resolve, 150));
+          await new Promise((resolve) => setTimeout(resolve, 150));
           return HttpResponse.json({
             user: { id: 1, username: 'test', email: 'test@example.com', role: 'user' },
           });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -117,7 +117,7 @@ describe('LoginPage', () => {
         http.post('/api/auth/login', async ({ request }) => {
           capturedBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json({ user: { id: 1, username: 'test', email: 'test@example.com', role: 'user' } });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -199,7 +199,7 @@ describe('LoginPage', () => {
             password_registration: true,
             setup_complete: true,
           });
-        }),
+        })
       );
 
       render(<LoginPage />);
@@ -222,7 +222,7 @@ describe('LoginPage', () => {
             oidc_only_mode: false,
             setup_complete: true,
           });
-        }),
+        })
       );
 
       render(<LoginPage />);
@@ -242,7 +242,7 @@ describe('LoginPage', () => {
             mfa_required: true,
             mfa_token: 'test-mfa-token-abc',
           });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -293,7 +293,7 @@ describe('LoginPage', () => {
           return HttpResponse.json({
             user: { id: 1, username: 'test', email: 'test@example.com', role: 'user', must_change_password: true },
           });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -321,7 +321,7 @@ describe('LoginPage', () => {
           return HttpResponse.json({
             user: { id: 1, username: 'test', email: 'test@example.com', role: 'user', must_change_password: true },
           });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -356,7 +356,7 @@ describe('LoginPage', () => {
           return HttpResponse.json({
             user: { id: 1, username: 'test', email: 'test@example.com', role: 'user', must_change_password: true },
           });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -394,7 +394,7 @@ describe('LoginPage', () => {
         }),
         http.put('/api/auth/me/password', () => {
           return HttpResponse.json({ success: true });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -434,7 +434,7 @@ describe('LoginPage', () => {
             oidc_only_mode: false,
             setup_complete: true,
           });
-        }),
+        })
       );
 
       render(<LoginPage />);
@@ -457,7 +457,7 @@ describe('LoginPage', () => {
             oidc_only_mode: false,
             setup_complete: true,
           });
-        }),
+        })
       );
 
       render(<LoginPage />);
@@ -484,7 +484,7 @@ describe('LoginPage', () => {
             oidc_login: true,
             setup_complete: true,
           });
-        }),
+        })
       );
 
       // Pass noRedirect via location.state to prevent window.location.href redirect
@@ -512,7 +512,7 @@ describe('LoginPage', () => {
           return HttpResponse.json({
             user: { id: 1, username: 'test', email: 'test@example.com', role: 'user' },
           });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -547,7 +547,7 @@ describe('LoginPage', () => {
             mfa_required: true,
             mfa_token: 'test-mfa-token-abc',
           });
-        }),
+        })
       );
 
       const user = userEvent.setup();
@@ -607,7 +607,7 @@ describe('LoginPage', () => {
       server.use(
         http.get('/api/auth/invite/:token', () => {
           return HttpResponse.json({ valid: true });
-        }),
+        })
       );
 
       // Simulate ?invite=abc123 by replacing window.location.search

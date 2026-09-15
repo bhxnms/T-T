@@ -1,9 +1,9 @@
 import { Calendar, ChevronLeft, ChevronRight, Keyboard } from 'lucide-react';
-import { localIsoDate } from '../../utils/localDate';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslation } from '../../i18n';
 import { useRemeasureSignal } from '../../hooks/useAnchoredPosition';
+import { useTranslation } from '../../i18n';
+import { localIsoDate } from '../../utils/localDate';
 
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
@@ -456,7 +456,15 @@ export function CustomDatePicker({
                   {headerLabel}
                 </button>
               ) : (
-                <span style={{ fontSize: 'calc(13px * var(--fs-scale-body, 1))', fontWeight: 600, color: 'var(--text-primary)' }}>{headerLabel}</span>
+                <span
+                  style={{
+                    fontSize: 'calc(13px * var(--fs-scale-body, 1))',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  {headerLabel}
+                </span>
               )}
 
               <button

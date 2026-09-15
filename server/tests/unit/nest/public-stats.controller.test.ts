@@ -11,14 +11,15 @@
  * (public-api-request.ts); they are exercised here too because this controller
  * lives in another module and could stop calling them without anything failing.
  */
-import { describe, it, expect, vi } from 'vitest';
-import { HttpException } from '@nestjs/common';
-import type { Request } from 'express';
-import { PublicStatsController } from '../../../src/nest/atlas/public-stats.controller';
 import type { AtlasService } from '../../../src/nest/atlas/atlas.service';
+import { PublicStatsController } from '../../../src/nest/atlas/public-stats.controller';
 import { RateLimitService } from '../../../src/nest/common/rate-limit.service';
 import { PUBLIC_API_RATE_MAX_PER_MINUTE } from '../../../src/nest/public-api/public-api-request';
 import type { User } from '../../../src/types';
+import { HttpException } from '@nestjs/common';
+
+import type { Request } from 'express';
+import { describe, it, expect, vi } from 'vitest';
 
 // `null` rather than `undefined` for "no user": passing undefined would trip the
 // default parameter and hand back a request that still has one.
@@ -44,7 +45,9 @@ function ctl(atlas: Partial<AtlasService> = {}, rl = new RateLimitService()) {
 }
 
 function thrown(fn: () => unknown): { status: number; body: unknown } {
-  try { fn(); } catch (err) {
+  try {
+    fn();
+  } catch (err) {
     expect(err).toBeInstanceOf(HttpException);
     const e = err as HttpException;
     return { status: e.getStatus(), body: e.getResponse() };
@@ -75,7 +78,10 @@ describe('PublicStatsController', () => {
 
   it('PUBSTATS-003: last_trip carries the dominant country as the head of the list', () => {
     const lastTrip = vi.fn(() => ({
-      title: 'Interrail', start_date: '2026-03-01', end_date: '2026-03-12', countries: ['CZ', 'AT'],
+      title: 'Interrail',
+      start_date: '2026-03-01',
+      end_date: '2026-03-12',
+      countries: ['CZ', 'AT'],
     }));
     const out = ctl({ lastTrip } as unknown as Partial<AtlasService>).stats(req());
     expect(out.last_trip).toEqual({

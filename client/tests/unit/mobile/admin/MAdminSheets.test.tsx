@@ -1,14 +1,14 @@
 // FE-MOB-ASHEET-001 to FE-MOB-ASHEET-024
-import React from 'react';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { fireEvent, render, screen, waitFor } from '../../../helpers/render';
-import { server } from '../../../helpers/msw/server';
-import { resetAllStores } from '../../../helpers/store';
-import { buildAdminHook, buildAdminUser, type AdminHook } from '../../../helpers/mobileAdmin';
+import React from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useTranslation } from '../../../../src/i18n';
 import MAdminSheets from '../../../../src/mobile/screens/admin/MAdminSheets';
+import { buildAdminHook, buildAdminUser, type AdminHook } from '../../../helpers/mobileAdmin';
+import { server } from '../../../helpers/msw/server';
+import { fireEvent, render, screen, waitFor } from '../../../helpers/render';
+import { resetAllStores } from '../../../helpers/store';
 
 function Harness({ admin }: { admin: AdminHook }) {
   const { t } = useTranslation();
@@ -36,13 +36,7 @@ interface UserForm {
  * can't be inspected afterwards — React has already restored the controlled
  * value by then. These sheets therefore get real state.
  */
-function StatefulSheets({
-  initialForm,
-  overrides,
-}: {
-  initialForm: UserForm;
-  overrides: Record<string, unknown>;
-}) {
+function StatefulSheets({ initialForm, overrides }: { initialForm: UserForm; overrides: Record<string, unknown> }) {
   const { t } = useTranslation();
   const [form, setForm] = React.useState<UserForm>(initialForm);
   const admin = buildAdminHook({
@@ -92,7 +86,7 @@ describe('MAdminSheets', () => {
       <StatefulSheets
         initialForm={{ username: '', email: '', role: 'user', password: '' }}
         overrides={{ showCreateUser: true }}
-      />,
+      />
     );
 
     await user.type(screen.getByPlaceholderText('Username'), 'newbie');
@@ -152,7 +146,7 @@ describe('MAdminSheets', () => {
       <StatefulSheets
         initialForm={{ username: 'alice', email: 'alice@example.com', role: 'user', password: '' }}
         overrides={{ editingUser: ALICE }}
-      />,
+      />
     );
 
     await user.type(screen.getByDisplayValue('alice'), 'x');
@@ -202,7 +196,7 @@ describe('MAdminSheets', () => {
       http.delete('/api/admin/users/:id/passkeys', ({ params }) => {
         hitId = String(params.id);
         return HttpResponse.json({ deleted: 3 });
-      }),
+      })
     );
     const admin = renderSheets({ editingUser: ALICE });
 
@@ -220,7 +214,7 @@ describe('MAdminSheets', () => {
   it('FE-MOB-ASHEET-012: a failing passkey reset toasts the error and keeps the sheet open', async () => {
     const user = userEvent.setup();
     server.use(
-      http.delete('/api/admin/users/:id/passkeys', () => HttpResponse.json({ error: 'boom' }, { status: 500 })),
+      http.delete('/api/admin/users/:id/passkeys', () => HttpResponse.json({ error: 'boom' }, { status: 500 }))
     );
     const admin = renderSheets({ editingUser: ALICE });
 
@@ -238,16 +232,14 @@ describe('MAdminSheets', () => {
       http.delete('/api/admin/users/:id/passkeys', () => {
         called = true;
         return HttpResponse.json({ deleted: 0 });
-      }),
+      })
     );
     renderSheets({ editingUser: ALICE });
 
     await user.click(screen.getByRole('button', { name: 'Reset passkeys' }));
     await user.click(screen.getAllByRole('button', { name: 'Cancel' })[1]);
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Reset passkeys' })).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Reset passkeys' })).not.toBeInTheDocument());
     expect(called).toBe(false);
   });
 
@@ -259,11 +251,11 @@ describe('MAdminSheets', () => {
 
     expect(screen.getByRole('dialog', { name: 'How to Update' })).toBeInTheDocument();
     expect(screen.getByText('v3.4.0 → v3.5.0')).toBeInTheDocument();
-    expect(screen.getByText(/docker pull mauriceboe\/trek:latest/)).toBeInTheDocument();
+    expect(screen.getByText(/docker pull ghcr\.io\/bhxnms\/tt-planner:latest/)).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Your TREK instance runs in Docker. To update to v3.5.0, run the following commands on your server:',
-      ),
+        'Your TREK instance runs in Docker. To update to v3.5.0, run the following commands on your server:'
+      )
     ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /update guide/ })).not.toBeInTheDocument();
   });
@@ -276,18 +268,18 @@ describe('MAdminSheets', () => {
         current: '3.4.0',
         latest: '3.5.0',
         is_docker: false,
-        release_url: 'https://github.com/liketrek/TREK/releases/v3.5.0',
+        release_url: 'https://github.com/bhxnms/T-T/releases/v3.5.0',
       },
     });
 
     expect(screen.getByRole('link', { name: 'Open the update guide' })).toHaveAttribute(
       'href',
-      'https://github.com/liketrek/TREK/wiki/Updating',
+      'https://github.com/bhxnms/T-T/wiki/Updating'
     );
     expect(screen.queryByText(/docker pull/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View on GitHub' })).toHaveAttribute(
       'href',
-      'https://github.com/liketrek/TREK/releases/v3.5.0',
+      'https://github.com/bhxnms/T-T/releases/v3.5.0'
     );
   });
 
@@ -315,7 +307,7 @@ describe('MAdminSheets', () => {
       http.post('/api/admin/rotate-jwt-secret', () => {
         rotated = true;
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     const admin = renderSheets({ showRotateJwtModal: true });
 
@@ -331,9 +323,7 @@ describe('MAdminSheets', () => {
 
   it('FE-MOB-ASHEET-018: a failing rotation toasts and leaves the session alone', async () => {
     const user = userEvent.setup();
-    server.use(
-      http.post('/api/admin/rotate-jwt-secret', () => HttpResponse.json({ error: 'boom' }, { status: 500 })),
-    );
+    server.use(http.post('/api/admin/rotate-jwt-secret', () => HttpResponse.json({ error: 'boom' }, { status: 500 })));
     const admin = renderSheets({ showRotateJwtModal: true });
 
     await user.click(screen.getByRole('button', { name: 'Rotate & Log out' }));
@@ -394,16 +384,12 @@ describe('MAdminSheets', () => {
 
     await user.click(screen.getByRole('button', { name: 'Reset passkeys' }));
     fireEvent.keyDown(document, { key: 'Escape' });
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Reset passkeys' })).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Reset passkeys' })).not.toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: 'Reset passkeys' }));
     // Second dialog in the DOM is the confirm on top of the edit sheet
     await user.click(screen.getAllByRole('button', { name: 'Close' })[1]);
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Reset passkeys' })).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Reset passkeys' })).not.toBeInTheDocument());
   });
 
   it('FE-MOB-ASHEET-024: confirming the passkey reset without an edited user does nothing', async () => {
@@ -413,7 +399,7 @@ describe('MAdminSheets', () => {
       http.delete('/api/admin/users/:id/passkeys', () => {
         called = true;
         return HttpResponse.json({ deleted: 0 });
-      }),
+      })
     );
     const admin = buildAdminHook({ editingUser: ALICE });
     const { rerender } = render(<Harness admin={admin} />);

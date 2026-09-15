@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Pokaż zaplanowane kraje',
   'atlas.plannedFor': 'Zaplanowano na',
   'atlas.antarctica': 'Antarktyda',
-  "atlas.checkinTab": "Check-iny",
-  "atlas.checkinTotal": "Check-iny",
-  "atlas.checkinLandmarks": "Atrakcje",
-  "atlas.checkinPlaces": "Miejsca podróży",
-  "atlas.checkinEmpty": "Nie ma jeszcze check-inów — oznacz atrakcję lub miejsce podróży jako odwiedzone",
+  'atlas.checkinTab': 'Check-iny',
+  'atlas.checkinTotal': 'Check-iny',
+  'atlas.checkinLandmarks': 'Atrakcje',
+  'atlas.checkinPlaces': 'Miejsca podróży',
+  'atlas.checkinEmpty': 'Nie ma jeszcze check-inów — oznacz atrakcję lub miejsce podróży jako odwiedzone',
 };
 export default atlas;

@@ -1,7 +1,8 @@
-import dns from 'node:dns/promises';
-import { Agent } from 'undici';
 import { readEnv } from '../app-config';
 import { embeddedTransitionIpv4, expandIpv6 } from './ipv6';
+
+import dns from 'node:dns/promises';
+import { Agent } from 'undici';
 
 // Frozen at import on purpose (legacy timing; tests reload the module to change it).
 const ALLOW_INTERNAL_NETWORK = readEnv().net.allowInternalNetwork;
@@ -45,7 +46,7 @@ function isAlwaysBlocked(ip: string): boolean {
     // reaches a local service without naming one, and it has enough spellings
     // (`::`, `::0`, `0:0:0:0:0:0:0:0`) that only the expanded hextets settle it.
     // The `0.` check above never saw any of them: they begin with a colon.
-    if (hextets.every(h => h === 0)) return true;
+    if (hextets.every((h) => h === 0)) return true;
     // fe80::/10 spans fe80: through febf:, not just the four characters 'fe80'.
     if ((hextets[0] & 0xffc0) === 0xfe80) return true;
     // A mapped address inherits the verdict of the IPv4 it carries.
@@ -301,8 +302,13 @@ export async function safeFetch(url: string, init?: RequestInit, options?: SafeF
  * a different page than the one its coordinates are parsed out of.
  */
 const CREDENTIAL_HEADERS = [
-  'authorization', 'proxy-authorization', 'cookie', 'cookie2',
-  'x-api-key', 'api-key', 'x-auth-token',
+  'authorization',
+  'proxy-authorization',
+  'cookie',
+  'cookie2',
+  'x-api-key',
+  'api-key',
+  'x-auth-token',
 ];
 
 /** Headers that describe the body, and go when the body does. */
@@ -316,7 +322,12 @@ const BODY_HEADERS = ['content-type', 'content-length', 'content-encoding', 'con
  */
 function isCrossOriginHop(from: string, to: string): boolean {
   let a: URL, b: URL;
-  try { a = new URL(from); b = new URL(to); } catch { return true; }
+  try {
+    a = new URL(from);
+    b = new URL(to);
+  } catch {
+    return true;
+  }
   if (a.origin === b.origin) return false;
   return !(a.hostname === b.hostname && a.protocol === 'http:' && b.protocol === 'https:');
 }
@@ -447,14 +458,16 @@ export async function safeFetchFollow(
  * IP. This prevents DNS rebinding (TOCTOU) by ensuring the outbound connection
  * goes to the IP we checked, not a re-resolved one.
  */
-export function createPinnedDispatcher(resolvedIp: string, rejectUnauthorized = true, responseTimeoutMs?: number): Agent {
+export function createPinnedDispatcher(
+  resolvedIp: string,
+  rejectUnauthorized = true,
+  responseTimeoutMs?: number,
+): Agent {
   return new Agent({
     // undici caps the wait for response headers at 5 minutes by default, and
     // that cap is invisible from the call site: an AbortController set to
     // fifteen still dies at five.
-    ...(responseTimeoutMs
-      ? { headersTimeout: responseTimeoutMs, bodyTimeout: responseTimeoutMs }
-      : {}),
+    ...(responseTimeoutMs ? { headersTimeout: responseTimeoutMs, bodyTimeout: responseTimeoutMs } : {}),
     connect: {
       rejectUnauthorized,
       lookup: (_hostname: string, opts: Record<string, unknown>, callback: Function) => {

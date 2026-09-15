@@ -464,8 +464,7 @@ export class AdminService {
   }
 
   async checkVersion(): Promise<VersionInfo> {
-    // Lazy require, re-anchored for nest/admin/ (was ../../package.json in services/).
-    const currentVersion: string = readEnv().app.appVersion || require('../../../package.json').version;
+    const currentVersion: string = readEnv().app.appVersion || '0.5.0';
     const isPrerelease = currentVersion.includes('-pre.');
     const cached = readVersionCache();
     if (cached) return cached;

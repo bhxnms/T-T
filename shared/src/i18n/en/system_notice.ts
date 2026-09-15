@@ -32,7 +32,8 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     'The 3.0.14 upgrade detected one or more username or email collisions caused by leading/trailing whitespace in stored accounts. Affected accounts were renamed automatically. Check the server logs for lines starting with **[migration] WHITESPACE COLLISION** to identify which accounts need review.',
   'system_notice.welcome_v1.title': 'Welcome to TT',
-  'system_notice.welcome_v1.body': 'TT is a travel planning and activity management tool maintained by the TT team. Plan itineraries, manage activities, and collaborate with travel partners. This project is developed from a TREK open-source branch.',
+  'system_notice.welcome_v1.body':
+    'TT is a travel planning and activity management tool maintained by the TT team. Plan itineraries, manage activities, and collaborate with travel partners. This project is developed from a TREK open-source branch.',
   'system_notice.welcome_v1.cta_label': 'Plan a trip',
   'system_notice.welcome_v1.hero_alt': 'A scenic travel destination with TREK planning UI overlay',
   'system_notice.welcome_v1.highlight_plan': 'Day-by-day itineraries for any trip',
@@ -41,8 +42,9 @@ const system_notice: TranslationStrings = {
   'system_notice.dev_test_modal.title': '[Dev] Test notice',
   'system_notice.dev_test_modal.body': 'This is a dev-only test notice.',
   // Thank-you + support the project (shown once per install and once per upgrade)
-'system_notice.thank_you_support.title': 'Thank you for using TT',
-  'system_notice.thank_you_support.body': 'Thank you for using TT. The TT team maintains and improves this travel planning and activity management project. TT is developed from a TREK open-source branch and remains open, transparent, and self-hostable.',
+  'system_notice.thank_you_support.title': 'Thank you for using TT',
+  'system_notice.thank_you_support.body':
+    'Thank you for using TT. The TT team maintains and improves this travel planning and activity management project. TT is developed from a TREK open-source branch and remains open, transparent, and self-hostable.',
   'system_notice.thank_you_support.highlight_opensource': '100% open source on GitHub',
   'system_notice.thank_you_support.highlight_free': 'Free forever — never any paid tiers',
   'system_notice.thank_you_support.highlight_community': 'Built together with the community',

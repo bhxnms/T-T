@@ -7,13 +7,13 @@ import Navbar from '../components/Layout/Navbar';
 import CustomSelect from '../components/shared/CustomSelect';
 import EmptyState from '../components/shared/EmptyState';
 import { useToast } from '../components/shared/Toast';
+import { getAllLandmarks } from '../data/chinaProvinces';
 import { useTranslation } from '../i18n';
 import type { TranslationFn } from '../types';
 import { getApiErrorMessage } from '../types';
-import { isLandmarkVisited, getLandmarkVisitedAt, getVisitedLandmarks } from '../utils/landmarkStorage';
 import { getCheckedPlaces } from '../utils/checkinStorage';
-import { getAllLandmarks } from '../data/chinaProvinces';
 import { getLandmarkColor } from '../utils/landmarkIcons';
+import { getLandmarkVisitedAt, getVisitedLandmarks, isLandmarkVisited } from '../utils/landmarkStorage';
 import AtlasCountrySearch from './atlas/AtlasCountrySearch';
 import AtlasLayerToggle from './atlas/AtlasLayerToggle';
 import {
@@ -27,8 +27,8 @@ import {
   type AtlasStats,
   type CountryDetail,
 } from './atlas/atlasModel';
-import LandmarkPopup from './atlas/LandmarkPopup';
 import CheckinPopup from './atlas/CheckinPopup';
+import LandmarkPopup from './atlas/LandmarkPopup';
 import { useAtlas } from './atlas/useAtlas';
 
 export default function AtlasPage(): React.ReactElement {
@@ -213,6 +213,8 @@ function AtlasPageDesktop(): React.ReactElement {
           showPlanned={showPlanned}
           onToggle={togglePlanned}
           plannedCount={stats.totalCountriesPlanned || 0}
+          showLandmarks={showLandmarks}
+          onToggleLandmarks={() => setShowLandmarks((v) => !v)}
         />
 
         {/* Mobile: Bottom bar */}
@@ -1473,10 +1475,7 @@ function SidebarContent({
 
       {visitedLandmarkList.length > 0 && (
         <>
-          <div
-            className="mb-1 mt-2 text-[10px] font-bold uppercase tracking-wide"
-            style={{ color: tm }}
-          >
+          <div className="mb-1 mt-2 text-[10px] font-bold uppercase tracking-wide" style={{ color: tm }}>
             {t('atlas.checkinLandmarks')} · {visitedLandmarkList.length}
           </div>
           {visitedLandmarkList.map((l) => (
@@ -1486,14 +1485,28 @@ function SidebarContent({
             >
               <span
                 style={{
-                  display: 'block', width: 8, height: 8, borderRadius: 999,
-                  background: getLandmarkColor(l.type), flexShrink: 0,
+                  display: 'block',
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  background: getLandmarkColor(l.type),
+                  flexShrink: 0,
                 }}
               />
-              <span className="text-content" style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500 }}>
+              <span
+                className="text-content"
+                style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500 }}
+              >
                 {l.name}
               </span>
-              <span style={{ fontSize: 'calc(10px * var(--fs-scale-caption, 1))', color: tf, marginLeft: 'auto', flexShrink: 0 }}>
+              <span
+                style={{
+                  fontSize: 'calc(10px * var(--fs-scale-caption, 1))',
+                  color: tf,
+                  marginLeft: 'auto',
+                  flexShrink: 0,
+                }}
+              >
                 {l.provinceName}
               </span>
             </div>
@@ -1503,28 +1516,36 @@ function SidebarContent({
 
       {checkedPlaceList.length > 0 && (
         <>
-          <div
-            className="mb-1 mt-3 text-[10px] font-bold uppercase tracking-wide"
-            style={{ color: tm }}
-          >
+          <div className="mb-1 mt-3 text-[10px] font-bold uppercase tracking-wide" style={{ color: tm }}>
             {t('atlas.checkinPlaces')} · {checkedPlaceList.length}
           </div>
           {checkedPlaceList.map((p) => (
-            <div
-              key={p.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}
-            >
+            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
               <span
                 style={{
-                  display: 'block', width: 8, height: 8, borderRadius: 999,
-                  background: '#10b981', flexShrink: 0,
+                  display: 'block',
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  background: '#10b981',
+                  flexShrink: 0,
                 }}
               />
-              <span className="text-content" style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500 }}>
+              <span
+                className="text-content"
+                style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500 }}
+              >
                 {p.name}
               </span>
               {p.checkedAt > 0 && (
-                <span style={{ fontSize: 'calc(10px * var(--fs-scale-caption, 1))', color: tf, marginLeft: 'auto', flexShrink: 0 }}>
+                <span
+                  style={{
+                    fontSize: 'calc(10px * var(--fs-scale-caption, 1))',
+                    color: tf,
+                    marginLeft: 'auto',
+                    flexShrink: 0,
+                  }}
+                >
                   {new Date(p.checkedAt).toLocaleDateString(language)}
                 </span>
               )}
@@ -1718,7 +1739,9 @@ function SidebarContent({
         <div style={bucketTab === 'bucket' ? { gridArea: '1/1' } : { visibility: 'hidden' as const, gridArea: '1/1' }}>
           {bucketContent}
         </div>
-        <div style={bucketTab === 'checkins' ? { gridArea: '1/1' } : { visibility: 'hidden' as const, gridArea: '1/1' }}>
+        <div
+          style={bucketTab === 'checkins' ? { gridArea: '1/1' } : { visibility: 'hidden' as const, gridArea: '1/1' }}
+        >
           {checkinContent}
         </div>
       </div>

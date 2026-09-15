@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSystemNoticeStore } from '../../store/systemNoticeStore.js';
-import { ModalRenderer } from './SystemNoticeModal.js';
 import { BannerRenderer, ToastRenderer } from './SystemNoticeBanner.js';
+import { ModalRenderer } from './SystemNoticeModal.js';
 
 // Mobile breakpoint matches the modal sheet's (max-width: 639px).
 function useIsMobile() {
@@ -29,22 +29,22 @@ export function SystemNoticeHost() {
     if (!loaded) {
       useSystemNoticeStore.getState().fetch();
     }
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!loaded) return null;
 
   // desktopOnly notices (e.g. the thank-you/support modal) are hidden on mobile.
-  const visible = isMobile ? notices.filter(n => !n.desktopOnly) : notices;
+  const visible = isMobile ? notices.filter((n) => !n.desktopOnly) : notices;
 
-  const modals  = visible.filter(n => n.display === 'modal');
-  const banners = visible.filter(n => n.display === 'banner');
-  const toasts  = visible.filter(n => n.display === 'toast');
+  const modals = visible.filter((n) => n.display === 'modal');
+  const banners = visible.filter((n) => n.display === 'banner');
+  const toasts = visible.filter((n) => n.display === 'toast');
 
   return (
     <>
       <BannerRenderer notices={banners} />
-      <ModalRenderer  notices={modals}  />
-      <ToastRenderer  notices={toasts}  />
+      <ModalRenderer notices={modals} />
+      <ToastRenderer notices={toasts} />
     </>
   );
 }

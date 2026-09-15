@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Tampilkan negara yang direncanakan',
   'atlas.plannedFor': 'Direncanakan untuk',
   'atlas.antarctica': 'Antarktika',
-  "atlas.checkinTab": "Check-in",
-  "atlas.checkinTotal": "Check-in",
-  "atlas.checkinLandmarks": "Landmark",
-  "atlas.checkinPlaces": "Tempat perjalanan",
-  "atlas.checkinEmpty": "Belum ada check-in — tandai landmark atau tempat perjalanan sebagai dikunjungi",
+  'atlas.checkinTab': 'Check-in',
+  'atlas.checkinTotal': 'Check-in',
+  'atlas.checkinLandmarks': 'Landmark',
+  'atlas.checkinPlaces': 'Tempat perjalanan',
+  'atlas.checkinEmpty': 'Belum ada check-in — tandai landmark atau tempat perjalanan sebagai dikunjungi',
 };
 export default atlas;

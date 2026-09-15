@@ -2,6 +2,15 @@
  * Unit tests for the MCP help and addons tools:
  * list_help_topics, get_help_page, list_addons.
  */
+import { ADDON_IDS } from '../../../src/addons';
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import { AddonsService } from '../../../src/nest/addons/addons.service';
+import { DatabaseService } from '../../../src/nest/database/database.service';
+import { createUser } from '../../helpers/factories';
+import { createMcpHarness, parseToolResult, type McpHarness } from '../../helpers/mcp-harness';
+import { resetTestDb, setAddonEnabled } from '../../helpers/test-db';
+
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 
 const { testDb, dbMock } = vi.hoisted(() => {
@@ -16,7 +25,11 @@ const { testDb, dbMock } = vi.hoisted(() => {
     reinitialize: () => {},
     getPlaceWithTags: () => null,
     canAccessTrip: (tripId: any, userId: number) =>
-      db.prepare(`SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`).get(userId, tripId, userId),
+      db
+        .prepare(
+          `SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`,
+        )
+        .get(userId, tripId, userId),
     isOwner: (tripId: any, userId: number) =>
       !!db.prepare('SELECT id FROM trips WHERE id = ? AND user_id = ?').get(tripId, userId),
   };
@@ -53,15 +66,6 @@ const { wiki } = vi.hoisted(() => {
   };
 });
 vi.mock('../../../src/nest/help/wiki', () => wiki);
-
-import { createTables } from '../../../src/db/schema';
-import { runMigrations } from '../../../src/db/migrations';
-import { resetTestDb, setAddonEnabled } from '../../helpers/test-db';
-import { createUser } from '../../helpers/factories';
-import { createMcpHarness, parseToolResult, type McpHarness } from '../../helpers/mcp-harness';
-import { AddonsService } from '../../../src/nest/addons/addons.service';
-import { DatabaseService } from '../../../src/nest/database/database.service';
-import { ADDON_IDS } from '../../../src/addons';
 
 const SECTIONS = [
   { title: 'Getting Started', pages: [{ title: 'Quick Start', slug: 'Quick-Start' }] },
@@ -141,13 +145,13 @@ afterAll(() => {
   testDb.close();
 });
 
-async function withHarness(
-  userId: number,
-  fn: (h: McpHarness) => Promise<void>,
-  scopes?: string[] | null,
-) {
+async function withHarness(userId: number, fn: (h: McpHarness) => Promise<void>, scopes?: string[] | null) {
   const h = await createMcpHarness({ userId, withResources: false, scopes: scopes ?? null });
-  try { await fn(h); } finally { await h.cleanup(); }
+  try {
+    await fn(h);
+  } finally {
+    await h.cleanup();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -178,13 +182,17 @@ describe('Tool: list_help_topics', () => {
 
   it('stays registered for a token holding an unrelated scope', async () => {
     const { user } = createUser(testDb);
-    await withHarness(user.id, async (h) => {
-      const names = (await h.client.listTools()).tools.map((t) => t.name);
-      expect(names).toContain('list_help_topics');
-      expect(names).toContain('get_help_page');
-      const result = await h.client.callTool({ name: 'list_help_topics', arguments: {} });
-      expect(result.isError).toBeFalsy();
-    }, ['weather:read']);
+    await withHarness(
+      user.id,
+      async (h) => {
+        const names = (await h.client.listTools()).tools.map((t) => t.name);
+        expect(names).toContain('list_help_topics');
+        expect(names).toContain('get_help_page');
+        const result = await h.client.callTool({ name: 'list_help_topics', arguments: {} });
+        expect(result.isError).toBeFalsy();
+      },
+      ['weather:read'],
+    );
   });
 });
 
@@ -364,24 +372,18 @@ describe('Tool: list_addons', () => {
     const { user } = createUser(testDb);
     await withHarness(user.id, async (h) => {
       addonsService.updateCollabFeatures({ polls: false });
-      const off = parseToolResult(
-        await h.client.callTool({ name: 'list_addons', arguments: {} }),
-      ) as AddonsPayload;
+      const off = parseToolResult(await h.client.callTool({ name: 'list_addons', arguments: {} })) as AddonsPayload;
       expect(off.collabFeatures.polls).toBe(false);
       expect(off.collabFeatures.chat).toBe(true);
 
       addonsService.updateCollabFeatures({ polls: true });
-      const on = parseToolResult(
-        await h.client.callTool({ name: 'list_addons', arguments: {} }),
-      ) as AddonsPayload;
+      const on = parseToolResult(await h.client.callTool({ name: 'list_addons', arguments: {} })) as AddonsPayload;
       expect(on.collabFeatures.polls).toBe(true);
     });
   });
 
   it('reports bag tracking once it is switched on', async () => {
-    testDb
-      .prepare("INSERT OR REPLACE INTO app_settings (key, value) VALUES ('bag_tracking_enabled', 'true')")
-      .run();
+    testDb.prepare("INSERT OR REPLACE INTO app_settings (key, value) VALUES ('bag_tracking_enabled', 'true')").run();
     const { user } = createUser(testDb);
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({ name: 'list_addons', arguments: {} });
@@ -392,12 +394,16 @@ describe('Tool: list_addons', () => {
 
   it('stays registered for a token holding an unrelated scope', async () => {
     const { user } = createUser(testDb);
-    await withHarness(user.id, async (h) => {
-      const names = (await h.client.listTools()).tools.map((t) => t.name);
-      expect(names).toContain('list_addons');
-      const result = await h.client.callTool({ name: 'list_addons', arguments: {} });
-      expect(result.isError).toBeFalsy();
-    }, ['weather:read']);
+    await withHarness(
+      user.id,
+      async (h) => {
+        const names = (await h.client.listTools()).tools.map((t) => t.name);
+        expect(names).toContain('list_addons');
+        const result = await h.client.callTool({ name: 'list_addons', arguments: {} });
+        expect(result.isError).toBeFalsy();
+      },
+      ['weather:read'],
+    );
   });
 
   it('serves a demo account, the way the authenticated REST route does', async () => {

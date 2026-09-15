@@ -1,10 +1,10 @@
-import { CalendarRange, Plus } from 'lucide-react'
-import MSheet from '../../../components/MSheet'
-import { ReorderStack } from '../plan/MPlanTimelineRows'
-import { INNER_CLS, TileHeader } from './MTripSheetUi'
-import { useTranslation } from '../../../../i18n'
-import type { MTripSheetsProps } from '../MTripShell'
-import type { Day } from '../../../../types'
+import { CalendarRange, Plus } from 'lucide-react';
+import { useTranslation } from '../../../../i18n';
+import type { Day } from '../../../../types';
+import MSheet from '../../../components/MSheet';
+import type { MTripSheetsProps } from '../MTripShell';
+import { ReorderStack } from '../plan/MPlanTimelineRows';
+import { INNER_CLS, TileHeader } from './MTripSheetUi';
 
 /**
  * Day management sheet ('days'): move whole days up/down and append a new day —
@@ -13,32 +13,38 @@ import type { Day } from '../../../../types'
  * move with it (store handles that optimistically).
  */
 export default function MDaysSheet({ planner, shell }: MTripSheetsProps) {
-  const { t, locale } = useTranslation()
-  const open = shell.sheet?.id === 'days'
-  const canEditDays = planner.can('day_edit', planner.trip)
-  const ordered = [...planner.days].sort((a, b) => (a.day_number ?? 0) - (b.day_number ?? 0))
+  const { t, locale } = useTranslation();
+  const open = shell.sheet?.id === 'days';
+  const canEditDays = planner.can('day_edit', planner.trip);
+  const ordered = [...planner.days].sort((a, b) => (a.day_number ?? 0) - (b.day_number ?? 0));
 
   const label = (day: Day, index: number): string => {
-    if (day.title) return day.title
+    if (day.title) return day.title;
     if (day.date) {
-      const d = new Date(`${day.date.slice(0, 10)}T00:00:00`)
+      const d = new Date(`${day.date.slice(0, 10)}T00:00:00`);
       if (!Number.isNaN(d.getTime())) {
-        return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
+        return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
       }
     }
-    return t('planner.dayN', { n: day.day_number ?? index + 1 })
-  }
+    return t('planner.dayN', { n: day.day_number ?? index + 1 });
+  };
 
   const move = (from: number, to: number) => {
-    if (to < 0 || to >= ordered.length || from === to) return
-    const ids = ordered.map(d => d.id)
-    const [moved] = ids.splice(from, 1)
-    ids.splice(to, 0, moved)
-    planner.handleReorderDays(ids)
-  }
+    if (to < 0 || to >= ordered.length || from === to) return;
+    const ids = ordered.map((d) => d.id);
+    const [moved] = ids.splice(from, 1);
+    ids.splice(to, 0, moved);
+    planner.handleReorderDays(ids);
+  };
 
   return (
-    <MSheet open={open} onClose={shell.closeSheet} variant="card" material="glass" ariaLabel={t('dayplan.reorderTitle')}>
+    <MSheet
+      open={open}
+      onClose={shell.closeSheet}
+      variant="card"
+      material="glass"
+      ariaLabel={t('dayplan.reorderTitle')}
+    >
       <div className="flex-none px-[18px] pt-4">
         <TileHeader
           icon={<CalendarRange size={19} strokeWidth={1.8} />}
@@ -82,5 +88,5 @@ export default function MDaysSheet({ planner, shell }: MTripSheetsProps) {
         )}
       </div>
     </MSheet>
-  )
+  );
 }

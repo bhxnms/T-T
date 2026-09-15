@@ -332,7 +332,8 @@ const admin: TranslationStrings = {
     'Tage im Tagesplan farblich markieren (z. B. zu welchem Reiseabschnitt ein Tag gehört)',
   'admin.plugins.cap.mcpTools': 'Veröffentlicht KI-Tools',
   'admin.plugins.mcpToolsTitle': 'Veröffentlichte KI-Tools',
-  'admin.plugins.mcpToolsHint': 'Ein Assistent kann sie im Namen eines Nutzers ausführen. Jedes handelt mit den oben erteilten Rechten.',
+  'admin.plugins.mcpToolsHint':
+    'Ein Assistent kann sie im Namen eines Nutzers ausführen. Jedes handelt mit den oben erteilten Rechten.',
   'admin.plugins.perm.mcp:tools':
     'Tools veröffentlichen, die ein KI-Assistent in deinem Namen ausführen kann (es handelt mit den Rechten, die du dem Plugin hier erteilst, nicht mit denen des Assistenten)',
   'admin.plugins.perm.geolocation:read':
@@ -437,7 +438,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Version wechseln…',
   'admin.plugins.noVersions': 'Keine veröffentlichten Versionen in der Registry gefunden.',
   'admin.plugins.downgradeTitle': 'Dieses Plugin zurücksetzen?',
-  'admin.plugins.downgradeBody': 'Wechsel von v{from} zu v{to}: Von der neueren Version geschriebene Daten bleiben erhalten, und die ältere Version versteht sie möglicherweise nicht.',
+  'admin.plugins.downgradeBody':
+    'Wechsel von v{from} zu v{to}: Von der neueren Version geschriebene Daten bleiben erhalten, und die ältere Version versteht sie möglicherweise nicht.',
   'admin.plugins.downgradeConfirm': 'Zurücksetzen',
   'admin.plugins.updatesHeld': 'Updates pausiert bei v{version}',
   'admin.plugins.resumeUpdates': 'Updates fortsetzen',
@@ -508,8 +510,7 @@ const admin: TranslationStrings = {
     '„{name}“ gibt Unterstützung für TREK {range} an, dieser Server läuft mit {host}. TREK lässt es nur durch, weil TREK_PLUGINS_IGNORE_TREK_RANGE gesetzt ist. Der Autor hat den Versionsbereich des Plugins für dieses TREK nicht aktualisiert, es gibt also keine Garantie, dass es funktioniert — und in seltenen Fällen kann ein unpassendes Plugin TREK-Daten beschädigen. Fahre nur fort, wenn du dieses Risiko akzeptierst.',
   'admin.plugins.rangeBypass.bodyUnknown':
     '„{name}“ gibt nicht an, welche TREK-Versionen es unterstützt; dieser Server läuft mit {host}. TREK lässt es nur durch, weil TREK_PLUGINS_IGNORE_TREK_RANGE gesetzt ist. Nichts belegt, dass der Autor es auf diesem TREK getestet hat, es gibt also keine Garantie, dass es funktioniert — und in seltenen Fällen kann ein unpassendes Plugin TREK-Daten beschädigen. Fahre nur fort, wenn du dieses Risiko akzeptierst.',
-  'admin.plugins.dep.trekBypassed':
-    'Außerhalb seines TREK-Bereichs ({range}) — Versionsprüfung aus',
+  'admin.plugins.dep.trekBypassed': 'Außerhalb seines TREK-Bereichs ({range}) — Versionsprüfung aus',
   'admin.plugins.dep.trekBypassedUnknown': 'Gibt keinen TREK-Bereich an — Versionsprüfung aus',
   'admin.plugins.incompatible': 'Nicht kompatibel',
   'admin.plugins.accessTitle': 'Worauf es zugreift',
@@ -546,7 +547,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'Flüge aus deiner AirTrail-Instanz synchronisieren',
   'admin.addons.catalog.llm_parsing.name': 'KI-Auswertung',
-  'admin.addons.catalog.llm_parsing.description': 'Liest Buchungen, an denen der eingebaute Parser scheitert, mit einem KI-Modell deiner Wahl',
+  'admin.addons.catalog.llm_parsing.description':
+    'Liest Buchungen, an denen der eingebaute Parser scheitert, mit einem KI-Modell deiner Wahl',
   'admin.addons.enabled': 'Aktiviert',
   'admin.addons.disabled': 'Deaktiviert',
   'admin.addons.type.trip': 'Reise',
@@ -692,7 +694,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.journey.name': 'Journey',
   'admin.addons.catalog.journey.description': 'Reise-Tracking & Tagebuch mit Check-ins, Fotos und Tagesberichten',
   'admin.addons.catalog.collections.name': 'Sammlungen',
-  'admin.addons.catalog.collections.description': 'Orte aus allen Reisen in benannten Listen sammeln und wiederverwenden',
+  'admin.addons.catalog.collections.description':
+    'Orte aus allen Reisen in benannten Listen sammeln und wiederverwenden',
   'admin.passkey.title': 'Passkey-Anmeldung',
   'admin.passkey.cardHint': 'Erlaube Benutzern die Anmeldung mit Passkeys (WebAuthn). Standardmäßig deaktiviert.',
   'admin.passkey.login': 'Passkey-Anmeldung aktivieren',
@@ -736,9 +739,13 @@ const admin: TranslationStrings = {
   'admin.invite.tripHint':
     'Der neue Nutzer wird automatisch zu diesem Trip hinzugefügt, wenn er sich über den Link registriert.',
   'admin.invite.boundTo': 'fügt zu {trip} hinzu',
-  "admin.amapKey": "AMap Web-Service-Schlüssel",
-  "admin.amapKeyHint": "Für die Ortssuche in China und routing mit Verkehrsdaten. Web-Service-Key über lbs.amap.com beziehen.",
-  "admin.amapSearch.title": "AMap für die Ortssuche verwenden",
-  "admin.amapSearch.subtitle": "AMap wird standardmäßig verwendet; jedes Ortssuchformular kann zurück zu den nativen TREK-Quellen wechseln.",
+  'admin.amapKey': 'AMap Web-Service-Schlüssel',
+  'admin.amapKeyHint':
+    'Für die Ortssuche in China und routing mit Verkehrsdaten. Web-Service-Key über lbs.amap.com beziehen.',
+  'admin.amapSearch.title': 'AMap für die Ortssuche verwenden',
+  'admin.amapSearch.subtitle':
+    'AMap wird standardmäßig verwendet; jedes Ortssuchformular kann zurück zu den nativen TREK-Quellen wechseln.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

@@ -509,7 +509,8 @@ const settings: TranslationStrings = {
   'settings.offline.notice.offline': 'Aucune connexion. Connectez-vous pour enregistrer des voyages hors ligne.',
   'settings.offline.notice.signedOut': 'Votre session a expiré. Reconnectez-vous pour synchroniser.',
   'settings.offline.notice.failed': 'Le téléchargement n’a pas pu se terminer. Vérifiez votre connexion et réessayez.',
-  'settings.offline.notice.loadFailed': 'Impossible de lire le stockage hors ligne de cet appareil. Vider le cache résout généralement le problème.',
+  'settings.offline.notice.loadFailed':
+    'Impossible de lire le stockage hors ligne de cet appareil. Vider le cache résout généralement le problème.',
   'settings.offline.clear': 'Vider le cache',
   'settings.offline.clearConfirm':
     'Vider toutes les données de voyage hors ligne ? Vous pourrez resynchroniser à tout moment lorsque vous serez en ligne.',
@@ -553,13 +554,15 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'Clés API',
-  'settings.apiKeys.description': 'Clés pour l\'API publique, afin que d\'autres logiciels puissent lire vos voyages. Lecture seule : une clé ne peut rien modifier ni supprimer.',
+  'settings.apiKeys.description':
+    "Clés pour l'API publique, afin que d'autres logiciels puissent lire vos voyages. Lecture seule : une clé ne peut rien modifier ni supprimer.",
   'settings.apiKeys.create': 'Créer une clé',
   'settings.apiKeys.empty': 'Aucune clé pour le moment. Créez-en une pour connecter un autre logiciel.',
   'settings.apiKeys.createdAt': 'créée',
   'settings.apiKeys.usedAt': 'dernière utilisation',
   'settings.apiKeys.deleteTitle': 'Supprimer la clé',
-  'settings.apiKeys.deleteMessage': 'Tout ce qui utilise cette clé cesse de fonctionner immédiatement. Cette action est irréversible.',
+  'settings.apiKeys.deleteMessage':
+    'Tout ce qui utilise cette clé cesse de fonctionner immédiatement. Cette action est irréversible.',
   'settings.apiKeys.deleted': 'Clé supprimée',
   'settings.apiKeys.deleteFailed': 'Impossible de supprimer la clé',
   'settings.apiKeys.createFailed': 'Impossible de créer la clé',
@@ -572,7 +575,8 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.creating': 'Création...',
   'settings.apiKeys.modal.create': 'Créer',
   'settings.apiKeys.modal.createdTitle': 'Clé API créée',
-  'settings.apiKeys.modal.createdWarning': 'Copiez la clé maintenant. Elle n\'est affichée qu\'une seule fois et ne peut pas être récupérée ensuite.',
+  'settings.apiKeys.modal.createdWarning':
+    "Copiez la clé maintenant. Elle n'est affichée qu'une seule fois et ne peut pas être récupérée ensuite.",
   'settings.apiKeys.modal.done': 'Terminé',
 };
 

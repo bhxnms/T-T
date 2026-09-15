@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { RealtimeModule } from '../realtime/realtime.module';
 import { TrekPhotosModule } from '../photos/trek-photos.module';
-import { JourneyDomainService } from './journey-domain.service';
 import { PluginGuardsModule } from '../plugins/host/plugin-guards.module';
-import { JourneyShareService } from './journey-share.service';
+import { RealtimeModule } from '../realtime/realtime.module';
 import { SettingsModule } from '../settings/settings.module';
+import { JourneyDomainService } from './journey-domain.service';
+import { JourneyShareService } from './journey-share.service';
+import { Module } from '@nestjs/common';
 
 /**
  * Leaf module holding the journey domain itself, without the controllers.

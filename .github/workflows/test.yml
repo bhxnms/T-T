@@ -482,4 +482,4 @@ jobs:
           # Everything else — sources, tests, exclusions, the documented
           # false-positive list — lives in sonar-project.properties so it stays
           # reviewable in a PR rather than buried in workflow YAML.
-          args: -Dsonar.projectVersion=4.0.0
+          args: -Dsonar.projectVersion=0.5.0

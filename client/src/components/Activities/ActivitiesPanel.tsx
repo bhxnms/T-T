@@ -1,8 +1,10 @@
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useCanDo } from '../../store/permissionsStore';
 import { useTripStore } from '../../store/tripStore';
 import type { ActivityWithDetails, Day } from '../../types';
 import Button from '../shared/Button';
+import ActivityCreateModal from './ActivityCreateModal';
 import DraggableActivityList from './DraggableActivityList';
 import { getIconProps } from './iconConfig';
 
@@ -14,15 +16,19 @@ interface ActivitiesPanelProps {
 }
 
 export default function ActivitiesPanel({ tripId, selectedDayId, days, onSelectDay }: ActivitiesPanelProps) {
-  const { activities, isLoadingActivities, loadActivitiesForTrip, loadActivitiesForDay } = useTripStore();
+  const { activities, places, reservations, trip, isLoadingActivities, loadActivitiesForTrip, loadActivitiesForDay } =
+    useTripStore();
+  const can = useCanDo();
+  const canEdit = can('day_edit', trip);
   const [localLoading, setLocalLoading] = useState(false);
+  const [addDayId, setAddDayId] = useState<number | null>(null);
 
   // Load activities when component mounts or trip changes
   useEffect(() => {
     const loadData = async () => {
       setLocalLoading(true);
       try {
-        if (selectedDayId) {
+        if (selectedDayId !== null) {
           await loadActivitiesForDay(selectedDayId);
         } else {
           await loadActivitiesForTrip(tripId);
@@ -66,7 +72,7 @@ export default function ActivitiesPanel({ tripId, selectedDayId, days, onSelectD
   }
 
   // If a specific day is selected, show only that day
-  if (selectedDayId) {
+  if (selectedDayId !== null) {
     const dayActivities = activitiesByDay[selectedDayId] || [];
     const selectedDay = days.find((d) => d.id === selectedDayId);
 
@@ -85,10 +91,8 @@ export default function ActivitiesPanel({ tripId, selectedDayId, days, onSelectD
               variant="primary"
               size="md"
               className="px-4 py-2.5 text-sm"
-              onClick={() => {
-                // TODO: Open add activity modal
-                console.log('Add activity to day', selectedDayId);
-              }}
+              onClick={() => setAddDayId(selectedDayId)}
+              disabled={!canEdit}
             >
               <Plus size={16} />
               添加活动
@@ -100,6 +104,14 @@ export default function ActivitiesPanel({ tripId, selectedDayId, days, onSelectD
         <div className="flex-1 overflow-y-auto p-4">
           <DraggableActivityList dayId={selectedDayId} activities={dayActivities} />
         </div>
+        <ActivityCreateModal
+          isOpen={addDayId !== null}
+          onClose={() => setAddDayId(null)}
+          tripId={tripId}
+          dayId={addDayId ?? 0}
+          places={places}
+          reservations={reservations}
+        />
       </div>
     );
   }
@@ -139,9 +151,9 @@ export default function ActivitiesPanel({ tripId, selectedDayId, days, onSelectD
                     className="rounded-lg p-2"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // TODO: Open add activity modal for this day
-                      console.log('Add activity to day', day.id);
+                      setAddDayId(day.id);
                     }}
+                    disabled={!canEdit}
                   >
                     <Plus {...getIconProps('action')} style={{ color: 'var(--color-gray-500)' }} />
                   </Button>
@@ -172,6 +184,14 @@ export default function ActivitiesPanel({ tripId, selectedDayId, days, onSelectD
 
         {days.length === 0 && <div className="py-12 text-center text-gray-500">还没有创建任何天数</div>}
       </div>
+      <ActivityCreateModal
+        isOpen={addDayId !== null}
+        onClose={() => setAddDayId(null)}
+        tripId={tripId}
+        dayId={addDayId ?? 0}
+        places={places}
+        reservations={reservations}
+      />
     </div>
   );
 }

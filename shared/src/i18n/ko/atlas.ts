@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': '예정된 국가 표시',
   'atlas.plannedFor': '예정일',
   'atlas.antarctica': '남극',
-  "atlas.checkinTab": "체크인",
-  "atlas.checkinTotal": "체크인",
-  "atlas.checkinLandmarks": "랜드마크",
-  "atlas.checkinPlaces": "여행지",
-  "atlas.checkinEmpty": "아직 체크인이 없습니다 — 방문한 랜드마크나 여행지를 기록해 보세요",
+  'atlas.checkinTab': '체크인',
+  'atlas.checkinTotal': '체크인',
+  'atlas.checkinLandmarks': '랜드마크',
+  'atlas.checkinPlaces': '여행지',
+  'atlas.checkinEmpty': '아직 체크인이 없습니다 — 방문한 랜드마크나 여행지를 기록해 보세요',
 };
 export default atlas;

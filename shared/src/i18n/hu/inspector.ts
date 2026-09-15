@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'Útvonal színe',
   'inspector.trackColorAuto': 'Automatikus szín',
   'inspector.trackColorCustom': 'Egyéni szín kiválasztása',
-  "inspector.checkin": "Check-in",
-  "inspector.checkinDone": "Bejelentve",
+  'inspector.checkin': 'Check-in',
+  'inspector.checkinDone': 'Bejelentve',
 };
 export default inspector;

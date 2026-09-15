@@ -21,7 +21,6 @@ Both providers can be active at the same time.
 
 Go to **Settings → Integrations**. Each enabled provider gets its own settings card there, titled with the provider's name — **Immich** and/or **Synology Photos**.
 
-<!-- TODO: screenshot: Photo Providers section in Settings > Integrations -->
 
 ### Immich
 

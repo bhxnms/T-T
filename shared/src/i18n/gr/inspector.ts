@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'Χρώμα διαδρομής',
   'inspector.trackColorAuto': 'Αυτόματο χρώμα',
   'inspector.trackColorCustom': 'Επιλογή προσαρμοσμένου χρώματος',
-  "inspector.checkin": "Check-in",
-  "inspector.checkinDone": "Έγινε check-in",
+  'inspector.checkin': 'Check-in',
+  'inspector.checkinDone': 'Έγινε check-in',
 };
 export default inspector;

@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Tervezett országok megjelenítése',
   'atlas.plannedFor': 'Tervezve erre',
   'atlas.antarctica': 'Antarktisz',
-  "atlas.checkinTab": "Check-inek",
-  "atlas.checkinTotal": "Check-inek",
-  "atlas.checkinLandmarks": "Látnivalók",
-  "atlas.checkinPlaces": "Utazási helyek",
-  "atlas.checkinEmpty": "Még nincsenek check-inek — jelöljön meg egy látnivalót vagy utazási helyet meglátogatottként",
+  'atlas.checkinTab': 'Check-inek',
+  'atlas.checkinTotal': 'Check-inek',
+  'atlas.checkinLandmarks': 'Látnivalók',
+  'atlas.checkinPlaces': 'Utazási helyek',
+  'atlas.checkinEmpty': 'Még nincsenek check-inek — jelöljön meg egy látnivalót vagy utazási helyet meglátogatottként',
 };
 export default atlas;

@@ -532,7 +532,8 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'API 키',
-  'settings.apiKeys.description': '공개 API용 키입니다. 다른 소프트웨어가 여행을 읽을 수 있습니다. 읽기 전용이라 무엇도 바꾸거나 지울 수 없습니다.',
+  'settings.apiKeys.description':
+    '공개 API용 키입니다. 다른 소프트웨어가 여행을 읽을 수 있습니다. 읽기 전용이라 무엇도 바꾸거나 지울 수 없습니다.',
   'settings.apiKeys.create': '키 만들기',
   'settings.apiKeys.empty': '아직 키가 없습니다. 다른 소프트웨어를 연결하려면 하나 만드세요.',
   'settings.apiKeys.createdAt': '생성일',

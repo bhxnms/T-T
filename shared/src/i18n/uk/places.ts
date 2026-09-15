@@ -100,7 +100,8 @@ const places: TranslationStrings = {
   'places.details.facts': 'Корисно знати',
   'places.details.nothing': 'Для цього місця нічого не знайдено.',
   'places.details.noKeyTitle': 'Доступно більше деталей',
-  'places.details.noKeyHint': 'Без ключа Google API цей екземпляр використовує лише вільні джерела. Попросіть адміністратора TREK додати ключ, щоб отримати оцінки, години роботи та фото.',
+  'places.details.noKeyHint':
+    'Без ключа Google API цей екземпляр використовує лише вільні джерела. Попросіть адміністратора TREK додати ключ, щоб отримати оцінки, години роботи та фото.',
   'places.details.aboutBrand': 'Про мережу',
   'places.details.aboutBrandNote': 'Описує мережу, а не цей заклад.',
   'places.details.fact.rating': 'Рейтинг',
@@ -128,8 +129,8 @@ const places: TranslationStrings = {
   'places.removeImage': 'Видалити зображення',
   'places.imageUploadError': 'Не вдалося завантажити зображення',
   'places.imageRemoveError': 'Не вдалося видалити зображення',
-  "places.searchProvider": "Пошук:",
-  "places.searchProviderAmap": "AMap",
-  "places.searchProviderNative": "TREK",
+  'places.searchProvider': 'Пошук:',
+  'places.searchProviderAmap': 'AMap',
+  'places.searchProviderNative': 'TREK',
 };
 export default places;

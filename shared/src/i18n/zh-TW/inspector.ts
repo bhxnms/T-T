@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': '軌跡顏色',
   'inspector.trackColorAuto': '自動顏色',
   'inspector.trackColorCustom': '選擇自定義顏色',
-  "inspector.checkin": "打卡",
-  "inspector.checkinDone": "已打卡",
+  'inspector.checkin': '打卡',
+  'inspector.checkinDone': '已打卡',
 };
 export default inspector;

@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': '顯示計劃中的國家',
   'atlas.plannedFor': '計劃於',
   'atlas.antarctica': '南極洲',
-  "atlas.checkinTab": "打卡點",
-  "atlas.checkinTotal": "打卡",
-  "atlas.checkinLandmarks": "地標",
-  "atlas.checkinPlaces": "行程地點",
-  "atlas.checkinEmpty": "還沒有打卡 — 在地圖或行程中標記去過的地方",
+  'atlas.checkinTab': '打卡點',
+  'atlas.checkinTotal': '打卡',
+  'atlas.checkinLandmarks': '地標',
+  'atlas.checkinPlaces': '行程地點',
+  'atlas.checkinEmpty': '還沒有打卡 — 在地圖或行程中標記去過的地方',
 };
 export default atlas;

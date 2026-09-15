@@ -34,21 +34,36 @@
 
 /* Roomy screens can carry a little more of the design's own scale. */
 @media (min-width: 1900px) and (min-height: 1150px) {
-  .rn-overlay { --rn-s: 0.86; }
+  .rn-overlay {
+    --rn-s: 0.86;
+  }
 }
 
 @media (max-width: 1280px), (max-height: 760px) {
-  .rn-overlay { --rn-s: 0.64; padding: 16px; }
+  .rn-overlay {
+    --rn-s: 0.64;
+    padding: 16px;
+  }
 }
 
 @keyframes rn-fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes rn-rise {
-  from { opacity: 0; transform: translateY(16px) scale(0.985); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .rn-panel {
@@ -59,7 +74,9 @@
   grid-template-columns: 1.3fr 1fr;
   border-radius: calc(34px * var(--rn-s));
   overflow: hidden;
-  box-shadow: 0 4px 12px oklch(0 0 0 / 0.2), 0 60px 130px -40px oklch(0 0 0 / 0.7);
+  box-shadow:
+    0 4px 12px oklch(0 0 0 / 0.2),
+    0 60px 130px -40px oklch(0 0 0 / 0.7);
   border: 1px solid oklch(1 0 0 / 0.1);
   animation: rn-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   font-family: var(--font-system);
@@ -67,7 +84,10 @@
 
 /* Below the two-column breakpoint the halves stack and the panel scrolls. */
 @media (max-width: 1080px) {
-  .rn-panel { grid-template-columns: 1fr; overflow-y: auto; }
+  .rn-panel {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
 }
 
 [data-reduce-motion='true'] .rn-overlay,
@@ -76,7 +96,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rn-overlay, .rn-panel { animation-duration: 0.01ms; }
+  .rn-overlay,
+  .rn-panel {
+    animation-duration: 0.01ms;
+  }
 }
 
 /* ── Left: the release ─────────────────────────────────────────────────── */
@@ -112,7 +135,11 @@
   overflow-y: auto;
 }
 
-.rn-eyebrow-row { display: flex; align-items: center; gap: calc(11px * var(--rn-s)); }
+.rn-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: calc(11px * var(--rn-s));
+}
 
 .rn-mark {
   width: calc(32px * var(--rn-s));
@@ -200,7 +227,9 @@
   border-top: 1px solid oklch(1 0 0 / 0.09);
 }
 
-.rn-feature:last-child { border-bottom: 1px solid oklch(1 0 0 / 0.09); }
+.rn-feature:last-child {
+  border-bottom: 1px solid oklch(1 0 0 / 0.09);
+}
 
 .rn-feature-icon {
   width: calc(38px * var(--rn-s));
@@ -215,7 +244,9 @@
   color: oklch(0.9 0.16 88);
 }
 
-.rn-feature-text { min-width: 0; }
+.rn-feature-text {
+  min-width: 0;
+}
 
 .rn-feature-title {
   font-size: calc(16.5px * var(--rn-s));
@@ -258,7 +289,10 @@
   flex-wrap: wrap;
 }
 
-.rn-stats { display: flex; gap: calc(34px * var(--rn-s)); }
+.rn-stats {
+  display: flex;
+  gap: calc(34px * var(--rn-s));
+}
 
 .rn-stat-value {
   font-family: var(--font-subtext);
@@ -295,7 +329,10 @@
   transition: background-color 0.15s ease;
 }
 
-.rn-notes:hover { background: oklch(1 0 0 / 0.12); color: #f5f5f7; }
+.rn-notes:hover {
+  background: oklch(1 0 0 / 0.12);
+  color: #f5f5f7;
+}
 
 .rn-notes-arrow {
   width: calc(30px * var(--rn-s));
@@ -353,10 +390,15 @@
   color: var(--text-secondary);
   z-index: 2;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.rn-close:hover { background: var(--bg-selected); color: var(--text-primary); }
+.rn-close:hover {
+  background: var(--bg-selected);
+  color: var(--text-primary);
+}
 
 .rn-note-body {
   flex: 1;
@@ -396,7 +438,9 @@
   text-wrap: pretty;
 }
 
-.rn-note p + p { margin-top: calc(15px * var(--rn-s)); }
+.rn-note p + p {
+  margin-top: calc(15px * var(--rn-s));
+}
 
 .rn-promise {
   margin-top: calc(24px * var(--rn-s));
@@ -418,7 +462,9 @@
   color: oklch(0.55 0.09 190);
 }
 
-.dark .rn-promise-label { color: oklch(0.78 0.1 190); }
+.dark .rn-promise-label {
+  color: oklch(0.78 0.1 190);
+}
 
 .rn-promise-text {
   margin-top: calc(10px * var(--rn-s));
@@ -429,7 +475,10 @@
   text-wrap: pretty;
 }
 
-.rn-signoff { margin-top: auto; padding-top: calc(26px * var(--rn-s)); }
+.rn-signoff {
+  margin-top: auto;
+  padding-top: calc(26px * var(--rn-s));
+}
 
 .rn-closing {
   font-size: calc(18px * var(--rn-s));
@@ -480,21 +529,52 @@
   transition: filter 0.15s ease;
 }
 
-.rn-support-btn:hover { filter: brightness(0.96); }
+.rn-support-btn:hover {
+  filter: brightness(0.96);
+}
 
 /* Brand colours — theme-lint-disable: Buy Me a Coffee and Ko-fi own these. */
-.rn-support-bmc  { background: #ffdd00; color: #101013; }
-.rn-support-kofi { background: #ff5e5b; color: #ffffff; }
+.rn-support-bmc {
+  background: #ffdd00;
+  color: #101013;
+}
+.rn-support-kofi {
+  background: #ff5e5b;
+  color: #ffffff;
+}
 
 /* Narrow viewports: keep the proportions, drop the outer padding. */
 @media (max-width: 900px) {
-  .rn-overlay { padding: 0; }
-  .rn-panel { border-radius: 0; border: 0; max-height: 100%; }
+  .rn-overlay {
+    padding: 0;
+  }
+  .rn-panel {
+    border-radius: 0;
+    border: 0;
+    max-height: 100%;
+  }
 }
 
 /* Icons carry fixed size attributes from lucide; scale them with the panel. */
-.rn-feature-icon svg  { width: calc(18px * var(--rn-s)); height: calc(18px * var(--rn-s)); }
-.rn-notes-arrow svg   { width: calc(16px * var(--rn-s)); height: calc(16px * var(--rn-s)); }
-.rn-promise-label svg { width: calc(14px * var(--rn-s)); height: calc(14px * var(--rn-s)); flex: none; }
-.rn-support-btn svg   { width: calc(18px * var(--rn-s)); height: calc(18px * var(--rn-s)); flex: none; }
-.rn-close svg         { width: calc(18px * var(--rn-s)); height: calc(18px * var(--rn-s)); }
+.rn-feature-icon svg {
+  width: calc(18px * var(--rn-s));
+  height: calc(18px * var(--rn-s));
+}
+.rn-notes-arrow svg {
+  width: calc(16px * var(--rn-s));
+  height: calc(16px * var(--rn-s));
+}
+.rn-promise-label svg {
+  width: calc(14px * var(--rn-s));
+  height: calc(14px * var(--rn-s));
+  flex: none;
+}
+.rn-support-btn svg {
+  width: calc(18px * var(--rn-s));
+  height: calc(18px * var(--rn-s));
+  flex: none;
+}
+.rn-close svg {
+  width: calc(18px * var(--rn-s));
+  height: calc(18px * var(--rn-s));
+}

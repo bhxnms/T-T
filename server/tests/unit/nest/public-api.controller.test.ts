@@ -6,13 +6,14 @@
  * trip they may not read (nothing that distinguishes it from one that does not
  * exist).
  */
-import { describe, it, expect, vi } from 'vitest';
-import { HttpException } from '@nestjs/common';
-import type { Request } from 'express';
-import { PUBLIC_API_INCLUDES } from '@trek/shared';
+import type { RateLimitService } from '../../../src/nest/common/rate-limit.service';
 import { PublicApiController } from '../../../src/nest/public-api/public-api.controller';
 import type { PublicApiService } from '../../../src/nest/public-api/public-api.service';
-import type { RateLimitService } from '../../../src/nest/common/rate-limit.service';
+import { HttpException } from '@nestjs/common';
+import { PUBLIC_API_INCLUDES } from '@trek/shared';
+
+import type { Request } from 'express';
+import { describe, it, expect, vi } from 'vitest';
 
 const TRIP = {
   id: 12,
@@ -142,7 +143,7 @@ describe('PublicApiController', () => {
       ['a float', '1.5'],
       ['an empty id', ''],
       ['whitespace', ' 12 '],
-      ['a sql fragment', "1 OR 1=1"],
+      ['a sql fragment', '1 OR 1=1'],
       ['an id past the safe integer range', '9007199254740993'],
     ])('400s on %s without touching the service', (_label, raw) => {
       const getTrip = vi.fn();

@@ -13,15 +13,16 @@ const trips: TranslationStrings = {
   'trips.reminderDaysBefore': 'dagen voor vertrek',
   'trips.reminderDisabledHint':
     'Reisherinneringen zijn uitgeschakeld. Schakel ze in via Admin > Instellingen > Meldingen.',
-  "trips.importTrekTab": "Importeren vanuit TREK",
-  "trips.importTrekIntro": "Upload een TREK-backup (.zip) en kies de reizen om naar TT te kopiëren — dagen, plaatsen, boekingen, budget en foto's komen mee.",
-  "trips.importTrekPick": "Kies een TREK-backup (.zip)",
-  "trips.importTrekScanning": "Backup lezen…",
-  "trips.importTrekImport": "Geselecteerde reizen importeren",
-  "trips.importTrekSuccess": "{count} reis/reizen geïmporteerd",
-  "trips.importTrekNone": "Geen reizen gevonden in deze backup",
-  "trips.importTrekFailed": "Import mislukt — is dit een TREK-backupbestand?",
-  "trips.importTrekStats": "{days} dagen · {places} plaatsen · {photos} foto's · {budget} posten",
-  "trips.importTrekUntitled": "Reis zonder titel",
+  'trips.importTrekTab': 'Importeren vanuit TREK',
+  'trips.importTrekIntro':
+    "Upload een TREK-backup (.zip) en kies de reizen om naar TT te kopiëren — dagen, plaatsen, boekingen, budget en foto's komen mee.",
+  'trips.importTrekPick': 'Kies een TREK-backup (.zip)',
+  'trips.importTrekScanning': 'Backup lezen…',
+  'trips.importTrekImport': 'Geselecteerde reizen importeren',
+  'trips.importTrekSuccess': '{count} reis/reizen geïmporteerd',
+  'trips.importTrekNone': 'Geen reizen gevonden in deze backup',
+  'trips.importTrekFailed': 'Import mislukt — is dit een TREK-backupbestand?',
+  'trips.importTrekStats': "{days} dagen · {places} plaatsen · {photos} foto's · {budget} posten",
+  'trips.importTrekUntitled': 'Reis zonder titel',
 };
 export default trips;

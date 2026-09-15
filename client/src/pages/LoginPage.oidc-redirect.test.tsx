@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '../../tests/helpers/render';
 import { http, HttpResponse } from 'msw';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { server } from '../../tests/helpers/msw/server';
+import { render, screen, waitFor } from '../../tests/helpers/render';
 import { resetAllStores } from '../../tests/helpers/store';
 import { START_DESTINATION_ROUTE } from '../utils/startDestination';
 import LoginPage from './LoginPage';
@@ -60,11 +60,7 @@ describe('LoginPage — OIDC redirect preservation', () => {
 
   describe('FE-PAGE-LOGIN-023: OIDC code exchange navigates to sessionStorage redirect', () => {
     beforeEach(() => {
-      server.use(
-          http.get('/api/auth/oidc/exchange', () =>
-              HttpResponse.json({ token: 'mock-oidc-token' })
-          ),
-      );
+      server.use(http.get('/api/auth/oidc/exchange', () => HttpResponse.json({ token: 'mock-oidc-token' })));
     });
 
     it('navigates to the saved sessionStorage redirect after successful OIDC exchange', async () => {
@@ -73,10 +69,7 @@ describe('LoginPage — OIDC redirect preservation', () => {
       render(<LoginPage />);
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith(
-            '/oauth/consent?client_id=foo&state=xyz',
-            { replace: true },
-        );
+        expect(mockNavigate).toHaveBeenCalledWith('/oauth/consent?client_id=foo&state=xyz', { replace: true });
       });
 
       expect(sessionStorage.getItem('oidc_redirect')).toBeNull();

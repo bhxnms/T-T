@@ -1,33 +1,34 @@
-import React, { useEffect, useRef, useState } from 'react'
-import Markdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkBreaks from 'remark-breaks'
-import { Search, MapPin, Plus, Loader2, Link2, Trash2, Check, X } from 'lucide-react'
-import Modal from '../shared/Modal'
-import { NumericInput } from '../shared/NumericInput'
-import MarkdownToolbar from '../Journey/MarkdownToolbar'
-import { mapsApi } from '../../api/client'
-import { collectionsApi } from '../../api/collections'
-import { getCategoryIcon } from '../shared/categoryIcons'
-import { useTranslation } from '../../i18n'
-import { useToast } from '../shared/Toast'
-import { getApiErrorMessage } from '../../types'
-import { normalizeLinkUrl, STATUS_META, STATUS_ORDER } from '../../pages/collections/collectionsModel'
-import type { Category, TranslationFn } from '../../types'
-import type { CollectionLink, CollectionStatus } from '@trek/shared'
+import type { CollectionLink, CollectionStatus } from '@trek/shared';
+import { Check, Link2, Loader2, MapPin, Plus, Search, Trash2, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import Markdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
+import { mapsApi } from '../../api/client';
+import { collectionsApi } from '../../api/collections';
+import { useTranslation } from '../../i18n';
+import { normalizeLinkUrl, STATUS_META, STATUS_ORDER } from '../../pages/collections/collectionsModel';
+import type { Category, TranslationFn } from '../../types';
+import { getApiErrorMessage } from '../../types';
+import MarkdownToolbar from '../Journey/MarkdownToolbar';
+import { getCategoryIcon } from '../shared/categoryIcons';
+import Modal from '../shared/Modal';
+import { NumericInput } from '../shared/NumericInput';
+import { useToast } from '../shared/Toast';
 
-type MapsPlace = Record<string, unknown>
-const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined)
-const num = (v: unknown): number | undefined => (typeof v === 'number' ? v : typeof v === 'string' && v !== '' ? Number(v) : undefined)
+type MapsPlace = Record<string, unknown>;
+const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
+const num = (v: unknown): number | undefined =>
+  typeof v === 'number' ? v : typeof v === 'string' && v !== '' ? Number(v) : undefined;
 
 interface AddPlaceToCollectionModalProps {
-  isOpen: boolean
-  collectionId: number
-  collectionName: string
-  categories: Category[]
-  onClose: () => void
-  onAdded: () => void
-  t: TranslationFn
+  isOpen: boolean;
+  collectionId: number;
+  collectionName: string;
+  categories: Category[];
+  onClose: () => void;
+  onAdded: () => void;
+  t: TranslationFn;
 }
 
 /**
@@ -36,70 +37,102 @@ interface AddPlaceToCollectionModalProps {
  * markdown description / links, all editable together before saving. Stays open
  * after each add so several places can be added in a row.
  */
-export default function AddPlaceToCollectionModal({ isOpen, collectionId, collectionName, categories, onClose, onAdded, t }: AddPlaceToCollectionModalProps): React.ReactElement {
-  const { language } = useTranslation()
-  const toast = useToast()
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<MapsPlace[]>([])
-  const [searching, setSearching] = useState(false)
+export default function AddPlaceToCollectionModal({
+  isOpen,
+  collectionId,
+  collectionName,
+  categories,
+  onClose,
+  onAdded,
+  t,
+}: AddPlaceToCollectionModalProps): React.ReactElement {
+  const { language } = useTranslation();
+  const toast = useToast();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<MapsPlace[]>([]);
+  const [searching, setSearching] = useState(false);
   // A search that came back empty used to render nothing at all, which reads as
   // "the dialog is dead". Say so instead (#1921).
-  const [noResults, setNoResults] = useState(false)
+  const [noResults, setNoResults] = useState(false);
   // The picked location (address/coords/ids) plus the editable fields.
-  const [picked, setPicked] = useState<MapsPlace | null>(null)
-  const [name, setName] = useState('')
+  const [picked, setPicked] = useState<MapsPlace | null>(null);
+  const [name, setName] = useState('');
   // Address + coordinates: prefilled from a picked result, but also directly
   // typeable so a place can be added by GPS without searching (#1435).
-  const [address, setAddress] = useState('')
-  const [lat, setLat] = useState('')
-  const [lng, setLng] = useState('')
-  const [categoryId, setCategoryId] = useState<number | null>(null)
-  const [description, setDescription] = useState('')
-  const [links, setLinks] = useState<CollectionLink[]>([])
-  const [status, setStatus] = useState<CollectionStatus>('idea')
-  const [saving, setSaving] = useState(false)
-  const descRef = useRef<HTMLTextAreaElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
+  const [address, setAddress] = useState('');
+  const [lat, setLat] = useState('');
+  const [lng, setLng] = useState('');
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [description, setDescription] = useState('');
+  const [links, setLinks] = useState<CollectionLink[]>([]);
+  const [status, setStatus] = useState<CollectionStatus>('idea');
+  const [saving, setSaving] = useState(false);
+  const descRef = useRef<HTMLTextAreaElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const reset = () => { setQuery(''); setResults([]); setNoResults(false); setPicked(null); setName(''); setAddress(''); setLat(''); setLng(''); setCategoryId(null); setDescription(''); setLinks([]); setStatus('idea') }
-  useEffect(() => { if (!isOpen) reset() }, [isOpen])
+  const reset = () => {
+    setQuery('');
+    setResults([]);
+    setNoResults(false);
+    setPicked(null);
+    setName('');
+    setAddress('');
+    setLat('');
+    setLng('');
+    setCategoryId(null);
+    setDescription('');
+    setLinks([]);
+    setStatus('idea');
+  };
+  useEffect(() => {
+    if (!isOpen) reset();
+  }, [isOpen]);
 
   const search = async () => {
-    if (!query.trim()) return
-    setSearching(true)
-    setNoResults(false)
+    if (!query.trim()) return;
+    setSearching(true);
+    setNoResults(false);
     try {
-      const res = await mapsApi.search(query, language)
-      const places = (res.places as MapsPlace[]) || []
-      setResults(places)
-      setNoResults(places.length === 0)
+      const res = await mapsApi.search(query, language);
+      const places = (res.places as MapsPlace[]) || [];
+      setResults(places);
+      setNoResults(places.length === 0);
     } catch (err) {
-      toast.error(getApiErrorMessage(err, t('places.mapsSearchError')))
+      toast.error(getApiErrorMessage(err, t('places.mapsSearchError')));
     } finally {
-      setSearching(false)
+      setSearching(false);
     }
-  }
+  };
 
-  const dismissResults = () => { setResults([]); setNoResults(false) }
+  const dismissResults = () => {
+    setResults([]);
+    setNoResults(false);
+  };
 
   const pick = (r: MapsPlace) => {
-    setPicked(r)
-    setName(str(r.name) ?? '')
-    setAddress(str(r.address) ?? '')
-    const la = num(r.lat); const lo = num(r.lng)
-    setLat(la != null ? String(la) : '')
-    setLng(lo != null ? String(lo) : '')
-    setResults([]); setNoResults(false); setQuery(str(r.name) ?? query)
-  }
-  const setLink = (i: number, patch: Partial<CollectionLink>) => setLinks(links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)))
+    setPicked(r);
+    setName(str(r.name) ?? '');
+    setAddress(str(r.address) ?? '');
+    const la = num(r.lat);
+    const lo = num(r.lng);
+    setLat(la != null ? String(la) : '');
+    setLng(lo != null ? String(lo) : '');
+    setResults([]);
+    setNoResults(false);
+    setQuery(str(r.name) ?? query);
+  };
+  const setLink = (i: number, patch: Partial<CollectionLink>) =>
+    setLinks(links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
 
   const save = async () => {
-    const cleanName = name.trim()
-    if (!cleanName) return
-    const cleanLinks = links.map(l => ({ label: l.label?.trim() || undefined, url: normalizeLinkUrl(l.url) })).filter(l => l.url)
-    const latNum = lat.trim() ? Number(lat) : Number.NaN
-    const lngNum = lng.trim() ? Number(lng) : Number.NaN
-    setSaving(true)
+    const cleanName = name.trim();
+    if (!cleanName) return;
+    const cleanLinks = links
+      .map((l) => ({ label: l.label?.trim() || undefined, url: normalizeLinkUrl(l.url) }))
+      .filter((l) => l.url);
+    const latNum = lat.trim() ? Number(lat) : Number.NaN;
+    const lngNum = lng.trim() ? Number(lng) : Number.NaN;
+    setSaving(true);
     try {
       const res = await collectionsApi.savePlace({
         collection_id: collectionId,
@@ -117,31 +150,39 @@ export default function AddPlaceToCollectionModal({ isOpen, collectionId, collec
         links: cleanLinks,
         status,
         force: true,
-      })
-      if (res.duplicate) toast.info(t('collections.duplicateWarning'))
-      else { toast.success(t('collections.addedToList', { name: collectionName })); onAdded() }
-      reset()
+      });
+      if (res.duplicate) toast.info(t('collections.duplicateWarning'));
+      else {
+        toast.success(t('collections.addedToList', { name: collectionName }));
+        onAdded();
+      }
+      reset();
       // The dialog stays open for the next place, so hand the caret back to the
       // search field. The add button the user just clicked goes disabled with the
       // cleared name, which drops the focus to <body> and leaves the dialog dead
       // to the keyboard (#1921).
-      searchRef.current?.focus()
+      searchRef.current?.focus();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, t('common.error')))
+      toast.error(getApiErrorMessage(err, t('common.error')));
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const coordPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const text = e.clipboardData.getData('text').trim()
+    const text = e.clipboardData.getData('text').trim();
     // Same pairs as before, written so no two quantifiers can claim the same
     // character. In the old form `\d+\.?\d*` and `\s*[,;\s]\s*` were both ambiguous,
     // which backtracks in O(n^4): a pasted 2 kB of digits and spaces froze the tab.
-    const match = text.match(/^(-?\d+(?:\.\d*)?)(?:\s*[,;]\s*|\s+)(-?\d+(?:\.\d*)?)$/)
-    if (match) { e.preventDefault(); setLat(match[1]); setLng(match[2]) }
-  }
-  const coordInputClass = 'w-full px-3 py-2 rounded-lg border border-edge bg-surface-input text-content text-[14px] outline-none focus:border-accent'
+    const match = text.match(/^(-?\d+(?:\.\d*)?)(?:\s*[,;]\s*|\s+)(-?\d+(?:\.\d*)?)$/);
+    if (match) {
+      e.preventDefault();
+      setLat(match[1]);
+      setLng(match[2]);
+    }
+  };
+  const coordInputClass =
+    'w-full px-3 py-2 rounded-lg border border-edge bg-surface-input text-content text-[14px] outline-none focus:border-accent';
 
   return (
     <Modal
@@ -151,8 +192,19 @@ export default function AddPlaceToCollectionModal({ isOpen, collectionId, collec
       size="md"
       footer={
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg border border-edge text-content-secondary text-[13px] hover:bg-surface-hover">{t('common.cancel')}</button>
-          <button type="button" onClick={save} disabled={saving || !name.trim()} className="px-3 py-1.5 rounded-lg bg-accent text-accent-text text-[13px] font-semibold disabled:opacity-50 inline-flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-edge px-3 py-1.5 text-[13px] text-content-secondary hover:bg-surface-hover"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving || !name.trim()}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-[13px] font-semibold text-accent-text disabled:opacity-50"
+          >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} {t('common.add')}
           </button>
         </div>
@@ -164,7 +216,7 @@ export default function AddPlaceToCollectionModal({ isOpen, collectionId, collec
             search row used to sit above the viewport once the form was scrolled,
             so it looked like the button had vanished (#1921). The negative margins
             let its background cover the body padding while it is stuck. */}
-        <div className="sticky top-0 z-20 -mx-6 -mt-6 -mb-4 px-6 pt-6 pb-4 bg-surface-card">
+        <div className="sticky top-0 z-20 -mx-6 -mb-4 -mt-6 bg-surface-card px-6 pb-4 pt-6">
           <div className="relative">
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -173,34 +225,69 @@ export default function AddPlaceToCollectionModal({ isOpen, collectionId, collec
                   autoFocus
                   ref={searchRef}
                   value={query}
-                  onChange={e => { setQuery(e.target.value); setNoResults(false) }}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); search() } }}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setNoResults(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      search();
+                    }
+                  }}
                   placeholder={t('collections.addPlaceSearch')}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-edge bg-surface-input text-content text-[14px] outline-none focus:border-accent"
+                  className="w-full rounded-lg border border-edge bg-surface-input py-2 pl-9 pr-3 text-[14px] text-content outline-none focus:border-accent"
                 />
               </div>
-              <button type="button" onClick={search} disabled={!query.trim() || searching} className="px-4 py-2 rounded-lg bg-accent text-accent-text text-[13px] font-semibold disabled:opacity-50 inline-flex items-center gap-2">
+              <button
+                type="button"
+                onClick={search}
+                disabled={!query.trim() || searching}
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-[13px] font-semibold text-accent-text disabled:opacity-50"
+              >
                 {searching ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
                 {t('common.search')}
               </button>
             </div>
             {(results.length > 0 || noResults) && (
-              <div className="absolute z-20 left-0 right-0 mt-1.5 max-h-[280px] overflow-y-auto rounded-xl border border-edge bg-surface-card shadow-lg p-1.5 flex flex-col gap-1">
+              <div className="absolute left-0 right-0 z-20 mt-1.5 flex max-h-[280px] flex-col gap-1 overflow-y-auto rounded-xl border border-edge bg-surface-card p-1.5 shadow-lg">
                 <div className="flex items-center justify-between px-2 py-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-content-faint">{t('common.search')}</span>
-                  <button type="button" onClick={dismissResults} className="p-1 rounded-md text-content-faint hover:text-content hover:bg-surface-hover" aria-label={t('common.close')}><X size={13} /></button>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-content-faint">
+                    {t('common.search')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={dismissResults}
+                    className="rounded-md p-1 text-content-faint hover:bg-surface-hover hover:text-content"
+                    aria-label={t('common.close')}
+                  >
+                    <X size={13} />
+                  </button>
                 </div>
                 {noResults ? (
-                  <div className="px-2.5 py-3 text-center text-[12.5px] text-content-faint">{t('planner.noPlacesFound')}</div>
-                ) : results.map((r, i) => (
-                  <button key={i} type="button" onClick={() => pick(r)} className="flex items-center gap-3 px-2.5 py-2 rounded-lg text-left hover:bg-surface-hover transition-colors">
-                    <div className="w-8 h-8 min-w-[32px] rounded-lg bg-surface-secondary flex items-center justify-center text-content-faint shrink-0"><MapPin size={15} /></div>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-[13px] font-semibold text-content truncate">{str(r.name)}</span>
-                      {str(r.address) && <span className="text-[11.5px] text-content-faint truncate">{str(r.address)}</span>}
-                    </div>
-                  </button>
-                ))}
+                  <div className="px-2.5 py-3 text-center text-[12.5px] text-content-faint">
+                    {t('planner.noPlacesFound')}
+                  </div>
+                ) : (
+                  results.map((r, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => pick(r)}
+                      className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-surface-hover"
+                    >
+                      <div className="flex h-8 w-8 min-w-[32px] shrink-0 items-center justify-center rounded-lg bg-surface-secondary text-content-faint">
+                        <MapPin size={15} />
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-[13px] font-semibold text-content">{str(r.name)}</span>
+                        {str(r.address) && (
+                          <span className="truncate text-[11.5px] text-content-faint">{str(r.address)}</span>
+                        )}
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -208,31 +295,63 @@ export default function AddPlaceToCollectionModal({ isOpen, collectionId, collec
 
         {/* Name */}
         <div>
-          <label className="block text-[12px] font-medium text-content-secondary mb-1.5">{t('common.name')}</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={t('common.name')} className="w-full px-3 py-2 rounded-lg border border-edge bg-surface-input text-content text-[14px] outline-none focus:border-accent" />
+          <label className="mb-1.5 block text-[12px] font-medium text-content-secondary">{t('common.name')}</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('common.name')}
+            className="w-full rounded-lg border border-edge bg-surface-input px-3 py-2 text-[14px] text-content outline-none focus:border-accent"
+          />
         </div>
 
         {/* Address + coordinates — editable so a place can be added by GPS alone */}
         <div>
-          <label className="block text-[12px] font-medium text-content-secondary mb-1.5">{t('places.formAddress')}</label>
-          <input value={address} onChange={e => setAddress(e.target.value)} placeholder={t('places.formAddressPlaceholder')} className={coordInputClass} />
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            <NumericInput mode="signed" value={lat} onValueChange={setLat} onPaste={coordPaste} placeholder={t('places.formLat')} className={coordInputClass} />
-            <NumericInput mode="signed" value={lng} onValueChange={setLng} onPaste={coordPaste} placeholder={t('places.formLng')} className={coordInputClass} />
+          <label className="mb-1.5 block text-[12px] font-medium text-content-secondary">
+            {t('places.formAddress')}
+          </label>
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder={t('places.formAddressPlaceholder')}
+            className={coordInputClass}
+          />
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <NumericInput
+              mode="signed"
+              value={lat}
+              onValueChange={setLat}
+              onPaste={coordPaste}
+              placeholder={t('places.formLat')}
+              className={coordInputClass}
+            />
+            <NumericInput
+              mode="signed"
+              value={lng}
+              onValueChange={setLng}
+              onPaste={coordPaste}
+              placeholder={t('places.formLng')}
+              className={coordInputClass}
+            />
           </div>
         </div>
 
         {/* Status */}
         <div>
           <div className="flex flex-wrap gap-1.5">
-            {STATUS_ORDER.map(s => {
-              const Icon = STATUS_META[s].icon
-              const on = status === s
+            {STATUS_ORDER.map((s) => {
+              const Icon = STATUS_META[s].icon;
+              const on = status === s;
               return (
-                <button key={s} type="button" onClick={() => setStatus(s)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors ${on ? 'bg-inverse text-inverse-text border-transparent' : 'bg-surface-card text-content-secondary border-edge hover:bg-surface-hover'}`}>
-                  <Icon size={13} style={{ color: on ? undefined : STATUS_META[s].color }} /> {t(STATUS_META[s].labelKey)}
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatus(s)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${on ? 'border-transparent bg-inverse text-inverse-text' : 'border-edge bg-surface-card text-content-secondary hover:bg-surface-hover'}`}
+                >
+                  <Icon size={13} style={{ color: on ? undefined : STATUS_META[s].color }} />{' '}
+                  {t(STATUS_META[s].labelKey)}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -240,26 +359,40 @@ export default function AddPlaceToCollectionModal({ isOpen, collectionId, collec
         {/* Category */}
         {categories.length > 0 && (
           <div>
-            <label className="block text-[12px] font-medium text-content-secondary mb-1.5">{t('collections.category')}</label>
+            <label className="mb-1.5 block text-[12px] font-medium text-content-secondary">
+              {t('collections.category')}
+            </label>
             <div className="flex flex-wrap gap-1.5">
-              <button type="button" onClick={() => setCategoryId(null)} className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${categoryId == null ? 'bg-inverse text-inverse-text border-transparent' : 'bg-surface-card text-content-secondary border-edge hover:bg-surface-hover'}`}>
+              <button
+                type="button"
+                onClick={() => setCategoryId(null)}
+                className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors ${categoryId == null ? 'border-transparent bg-inverse text-inverse-text' : 'border-edge bg-surface-card text-content-secondary hover:bg-surface-hover'}`}
+              >
                 {t('collections.noCategory')}
               </button>
-              {categories.map(cat => {
-                const Icon = getCategoryIcon(cat.icon ?? undefined)
-                const on = categoryId === cat.id
-                const col = cat.color || '#6366f1'
+              {categories.map((cat) => {
+                const Icon = getCategoryIcon(cat.icon ?? undefined);
+                const on = categoryId === cat.id;
+                const col = cat.color || '#6366f1';
                 return (
                   <button
                     key={cat.id}
                     type="button"
                     onClick={() => setCategoryId(cat.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors bg-surface-card border-edge hover:bg-surface-hover"
-                    style={on ? { color: col, background: `color-mix(in oklch, ${col} 15%, transparent)`, borderColor: `color-mix(in oklch, ${col} 40%, transparent)` } : undefined}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface-card px-3 py-1.5 text-[12px] font-medium transition-colors hover:bg-surface-hover"
+                    style={
+                      on
+                        ? {
+                            color: col,
+                            background: `color-mix(in oklch, ${col} 15%, transparent)`,
+                            borderColor: `color-mix(in oklch, ${col} 40%, transparent)`,
+                          }
+                        : undefined
+                    }
                   >
                     <Icon size={13} /> {cat.name}
                   </button>
-                )
+                );
               })}
             </div>
           </div>
@@ -267,31 +400,65 @@ export default function AddPlaceToCollectionModal({ isOpen, collectionId, collec
 
         {/* Description */}
         <div>
-          <label className="block text-[12px] font-medium text-content-secondary mb-1.5">{t('collections.description')}</label>
+          <label className="mb-1.5 block text-[12px] font-medium text-content-secondary">
+            {t('collections.description')}
+          </label>
           <MarkdownToolbar textareaRef={descRef} onUpdate={setDescription} />
-          <textarea ref={descRef} value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder={t('collections.descriptionPlaceholder')} className="w-full px-3 py-2 rounded-lg border border-edge bg-surface-input text-content text-[13px] outline-none focus:border-accent resize-y" />
+          <textarea
+            ref={descRef}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            placeholder={t('collections.descriptionPlaceholder')}
+            className="w-full resize-y rounded-lg border border-edge bg-surface-input px-3 py-2 text-[13px] text-content outline-none focus:border-accent"
+          />
           {description.trim() && (
-            <div className="collab-note-md mt-2 text-[13px] text-content-secondary"><Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{description}</Markdown></div>
+            <div className="collab-note-md mt-2 text-[13px] text-content-secondary">
+              <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{description}</Markdown>
+            </div>
           )}
         </div>
 
         {/* Links */}
         <div>
-          <label className="block text-[12px] font-medium text-content-secondary mb-1.5">{t('collections.links')}</label>
+          <label className="mb-1.5 block text-[12px] font-medium text-content-secondary">
+            {t('collections.links')}
+          </label>
           <div className="flex flex-col gap-2">
             {links.map((l, i) => (
               <div key={i} className="flex items-center gap-2">
-                <input value={l.label ?? ''} onChange={e => setLink(i, { label: e.target.value })} placeholder={t('collections.linkLabel')} className="w-28 shrink-0 px-2.5 py-1.5 rounded-lg border border-edge bg-surface-input text-content text-[12.5px] outline-none focus:border-accent" />
-                <input value={l.url} onChange={e => setLink(i, { url: e.target.value })} placeholder="https://…" className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-edge bg-surface-input text-content text-[12.5px] outline-none focus:border-accent" />
-                <button type="button" onClick={() => setLinks(links.filter((_, idx) => idx !== i))} className="p-1.5 rounded-md text-content-faint hover:text-danger hover:bg-danger-soft" aria-label={t('common.delete')}><Trash2 size={14} /></button>
+                <input
+                  value={l.label ?? ''}
+                  onChange={(e) => setLink(i, { label: e.target.value })}
+                  placeholder={t('collections.linkLabel')}
+                  className="w-28 shrink-0 rounded-lg border border-edge bg-surface-input px-2.5 py-1.5 text-[12.5px] text-content outline-none focus:border-accent"
+                />
+                <input
+                  value={l.url}
+                  onChange={(e) => setLink(i, { url: e.target.value })}
+                  placeholder="https://…"
+                  className="min-w-0 flex-1 rounded-lg border border-edge bg-surface-input px-2.5 py-1.5 text-[12.5px] text-content outline-none focus:border-accent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setLinks(links.filter((_, idx) => idx !== i))}
+                  className="rounded-md p-1.5 text-content-faint hover:bg-danger-soft hover:text-danger"
+                  aria-label={t('common.delete')}
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             ))}
-            <button type="button" onClick={() => setLinks([...links, { url: '' }])} className="inline-flex items-center gap-1.5 self-start px-2.5 py-1.5 rounded-lg border border-dashed border-edge text-content-secondary text-[12.5px] font-medium hover:bg-surface-hover">
+            <button
+              type="button"
+              onClick={() => setLinks([...links, { url: '' }])}
+              className="inline-flex items-center gap-1.5 self-start rounded-lg border border-dashed border-edge px-2.5 py-1.5 text-[12.5px] font-medium text-content-secondary hover:bg-surface-hover"
+            >
               <Plus size={14} /> <Link2 size={13} /> {t('collections.addLink')}
             </button>
           </div>
         </div>
       </div>
     </Modal>
-  )
+  );
 }

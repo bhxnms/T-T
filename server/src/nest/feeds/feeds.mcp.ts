@@ -1,16 +1,23 @@
-import {
-  McpController, Tool, type McpContext,
-  TOOL_ANNOTATIONS_READONLY, TOOL_ANNOTATIONS_WRITE, TOOL_ANNOTATIONS_DELETE, TOOL_ANNOTATIONS_NON_IDEMPOTENT,
-  demoDenied, ok,
-} from '../../nest-mcp';
-import { z } from 'zod';
 import { getAppUrl } from '../../app-config';
-import { DatabaseService } from '../database/database.service';
+import { noAccess, permissionDenied } from '../../mcp/tools/_shared';
+import {
+  McpController,
+  Tool,
+  type McpContext,
+  TOOL_ANNOTATIONS_READONLY,
+  TOOL_ANNOTATIONS_WRITE,
+  TOOL_ANNOTATIONS_DELETE,
+  TOOL_ANNOTATIONS_NON_IDEMPOTENT,
+  demoDenied,
+  ok,
+} from '../../nest-mcp';
 import { RuntimeEnvService } from '../app-config/runtime-env.service';
 import { isDemoUserId } from '../common/demo-write';
+import { DatabaseService } from '../database/database.service';
 import { McpToolGuardsService } from '../mcp-shared/mcp-tool-guards.service';
-import { noAccess, permissionDenied } from '../../mcp/tools/_shared';
 import { FeedsService } from './feeds.service';
+
+import { z } from 'zod';
 
 /**
  * Calendar-feed MCP surface, mirroring the two authenticated token controllers
@@ -67,7 +74,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'get_trip_calendar_feed',
-    description: 'Get the subscribable calendar feed URL of one trip, or null when the feed is switched off. This is a live subscription a calendar app re-reads hourly, so it keeps up with the itinerary. Prefer export_trip_ics when the user wants a one-off .ics file to import once and be done.',
+    description:
+      'Get the subscribable calendar feed URL of one trip, or null when the feed is switched off. This is a live subscription a calendar app re-reads hourly, so it keeps up with the itinerary. Prefer export_trip_ics when the user wants a one-off .ics file to import once and be done.',
     inputSchema: {
       tripId: z.number().int().positive(),
     },
@@ -82,7 +90,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'enable_trip_calendar_feed',
-    description: 'Switch on the subscribable calendar feed of one trip and return its URL. Safe to repeat: a trip that already has a feed keeps the URL it has, so subscriptions somebody already set up survive. The URL carries a secret token and asks for no login, so whoever holds it can read the trip\'s dates.',
+    description:
+      "Switch on the subscribable calendar feed of one trip and return its URL. Safe to repeat: a trip that already has a feed keeps the URL it has, so subscriptions somebody already set up survive. The URL carries a secret token and asks for no login, so whoever holds it can read the trip's dates.",
     inputSchema: {
       tripId: z.number().int().positive(),
     },
@@ -98,7 +107,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'rotate_trip_calendar_feed',
-    description: 'Issue a fresh URL for one trip\'s calendar feed. Every calendar subscribed to the old URL silently stops updating, so use this when the old link leaked or the user asked to cut it off, not to switch the feed on: enable_trip_calendar_feed does that without breaking anything.',
+    description:
+      "Issue a fresh URL for one trip's calendar feed. Every calendar subscribed to the old URL silently stops updating, so use this when the old link leaked or the user asked to cut it off, not to switch the feed on: enable_trip_calendar_feed does that without breaking anything.",
     inputSchema: {
       tripId: z.number().int().positive(),
     },
@@ -114,7 +124,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'disable_trip_calendar_feed',
-    description: 'Switch off one trip\'s calendar feed. The URL stops resolving and every subscription to it breaks. Calling enable_trip_calendar_feed afterwards hands out a different URL, so everybody has to subscribe again.',
+    description:
+      "Switch off one trip's calendar feed. The URL stops resolving and every subscription to it breaks. Calling enable_trip_calendar_feed afterwards hands out a different URL, so everybody has to subscribe again.",
     inputSchema: {
       tripId: z.number().int().positive(),
     },
@@ -136,7 +147,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'get_all_trips_calendar_feed',
-    description: 'Get the subscribable calendar feed URL covering every trip the user can open, or null when it is switched off. One feed for the whole travel calendar; get_trip_calendar_feed is the per-trip one.',
+    description:
+      'Get the subscribable calendar feed URL covering every trip the user can open, or null when it is switched off. One feed for the whole travel calendar; get_trip_calendar_feed is the per-trip one.',
     inputSchema: {},
     annotations: TOOL_ANNOTATIONS_READONLY,
     access: { group: 'trips', mode: 'share' },
@@ -147,7 +159,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'enable_all_trips_calendar_feed',
-    description: 'Switch on the calendar feed covering every trip the user can open and return its URL. Safe to repeat: an existing feed keeps its URL. The URL needs no login and follows the user\'s trips as they change, so a trip added later shows up in it without anyone re-subscribing.',
+    description:
+      "Switch on the calendar feed covering every trip the user can open and return its URL. Safe to repeat: an existing feed keeps its URL. The URL needs no login and follows the user's trips as they change, so a trip added later shows up in it without anyone re-subscribing.",
     inputSchema: {},
     annotations: TOOL_ANNOTATIONS_WRITE,
     access: { group: 'trips', mode: 'share' },
@@ -159,7 +172,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'rotate_all_trips_calendar_feed',
-    description: 'Issue a fresh URL for the all-trips calendar feed. Every calendar subscribed to the old URL stops updating. Use it when that link leaked; enable_all_trips_calendar_feed is the way to switch the feed on without breaking existing subscriptions.',
+    description:
+      'Issue a fresh URL for the all-trips calendar feed. Every calendar subscribed to the old URL stops updating. Use it when that link leaked; enable_all_trips_calendar_feed is the way to switch the feed on without breaking existing subscriptions.',
     inputSchema: {},
     annotations: TOOL_ANNOTATIONS_NON_IDEMPOTENT,
     access: { group: 'trips', mode: 'share' },
@@ -171,7 +185,8 @@ export class FeedsMcp {
 
   @Tool({
     name: 'disable_all_trips_calendar_feed',
-    description: 'Switch off the all-trips calendar feed. The URL stops resolving and every subscription to it breaks. Per-trip feeds are unaffected: disable_trip_calendar_feed switches those off one at a time.',
+    description:
+      'Switch off the all-trips calendar feed. The URL stops resolving and every subscription to it breaks. Per-trip feeds are unaffected: disable_trip_calendar_feed switches those off one at a time.',
     inputSchema: {},
     annotations: TOOL_ANNOTATIONS_DELETE,
     access: { group: 'trips', mode: 'share' },

@@ -9,6 +9,21 @@
  * touch: a stored mapbox_access_token must not appear in a read, and neither
  * that key nor llm_api_key nor an unknown name may be written.
  */
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import { encrypt_api_key } from '../../../src/nest/common/crypto/apiKeyCrypto';
+import { MANAGED_LOCKED_SETTING_KEYS } from '../../../src/nest/common/managed';
+import { DISPLAY_PREFERENCE_KEYS } from '../../../src/nest/settings/settings.mcp';
+import {
+  isAdminOnlyLlmSetting,
+  ENCRYPTED_SETTING_KEYS,
+  MASKED_SETTING_KEYS,
+} from '../../../src/nest/settings/settings.service';
+import { createUser } from '../../helpers/factories';
+import { createMcpHarness, parseToolResult, type McpHarness } from '../../helpers/mcp-harness';
+import { resetTestDb } from '../../helpers/test-db';
+import { MASKED_SETTING_VALUE } from '@trek/shared';
+
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 
 const { testDb, dbMock } = vi.hoisted(() => {
@@ -23,7 +38,11 @@ const { testDb, dbMock } = vi.hoisted(() => {
     reinitialize: () => {},
     getPlaceWithTags: () => null,
     canAccessTrip: (tripId: any, userId: number) =>
-      db.prepare(`SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`).get(userId, tripId, userId),
+      db
+        .prepare(
+          `SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`,
+        )
+        .get(userId, tripId, userId),
     isOwner: (tripId: any, userId: number) =>
       !!db.prepare('SELECT id FROM trips WHERE id = ? AND user_id = ?').get(tripId, userId),
   };
@@ -38,17 +57,6 @@ vi.mock('../../../src/config', () => ({
 }));
 
 vi.mock('../../../src/websocket', () => ({ broadcast: vi.fn() }));
-
-import { createTables } from '../../../src/db/schema';
-import { runMigrations } from '../../../src/db/migrations';
-import { resetTestDb } from '../../helpers/test-db';
-import { createUser } from '../../helpers/factories';
-import { createMcpHarness, parseToolResult, type McpHarness } from '../../helpers/mcp-harness';
-import { encrypt_api_key } from '../../../src/nest/common/crypto/apiKeyCrypto';
-import { MASKED_SETTING_VALUE } from '@trek/shared';
-import { DISPLAY_PREFERENCE_KEYS } from '../../../src/nest/settings/settings.mcp';
-import { MANAGED_LOCKED_SETTING_KEYS } from '../../../src/nest/common/managed';
-import { isAdminOnlyLlmSetting, ENCRYPTED_SETTING_KEYS, MASKED_SETTING_KEYS } from '../../../src/nest/settings/settings.service';
 
 beforeAll(() => {
   createTables(testDb);
@@ -69,10 +77,12 @@ afterAll(() => {
 // ---------------------------------------------------------------------------
 
 function setSetting(userId: number, key: string, value: string): void {
-  testDb.prepare(
-    'INSERT INTO settings (user_id, key, value) VALUES (?, ?, ?) ' +
-      'ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value',
-  ).run(userId, key, value);
+  testDb
+    .prepare(
+      'INSERT INTO settings (user_id, key, value) VALUES (?, ?, ?) ' +
+        'ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value',
+    )
+    .run(userId, key, value);
 }
 
 function readSetting(userId: number, key: string): string | undefined {
@@ -88,12 +98,20 @@ function countSettings(userId: number): number {
 
 async function withHarness(userId: number, fn: (h: McpHarness) => Promise<void>) {
   const h = await createMcpHarness({ userId, withResources: false });
-  try { await fn(h); } finally { await h.cleanup(); }
+  try {
+    await fn(h);
+  } finally {
+    await h.cleanup();
+  }
 }
 
 async function withScopedHarness(userId: number, scopes: string[] | null, fn: (h: McpHarness) => Promise<void>) {
   const h = await createMcpHarness({ userId, withResources: false, scopes });
-  try { await fn(h); } finally { await h.cleanup(); }
+  try {
+    await fn(h);
+  } finally {
+    await h.cleanup();
+  }
 }
 
 async function update(h: McpHarness, settings: Record<string, unknown>) {
@@ -146,7 +164,8 @@ describe('Tool: get_display_settings', () => {
 
   it('falls back to the admin-set instance default for a key the user has not set', async () => {
     const { user } = createUser(testDb);
-    testDb.prepare('INSERT INTO app_settings (key, value) VALUES (?, ?)')
+    testDb
+      .prepare('INSERT INTO app_settings (key, value) VALUES (?, ?)')
       .run('default_user_setting_temperature_unit', '"fahrenheit"');
 
     await withHarness(user.id, async (h) => {
@@ -198,7 +217,7 @@ describe('Tool: get_display_settings', () => {
     });
   });
 
-  it('does not leak another user\'s preferences', async () => {
+  it("does not leak another user's preferences", async () => {
     const { user: mine } = createUser(testDb);
     const { user: theirs } = createUser(testDb);
     setSetting(theirs.id, 'temperature_unit', '"fahrenheit"');
@@ -291,7 +310,7 @@ describe('Tool: update_display_settings', () => {
     });
   });
 
-  it('accepts an empty default_currency, which falls back to each trip\'s own', async () => {
+  it("accepts an empty default_currency, which falls back to each trip's own", async () => {
     const { user } = createUser(testDb);
     setSetting(user.id, 'default_currency', '"USD"');
     await withHarness(user.id, async (h) => {
@@ -304,7 +323,8 @@ describe('Tool: update_display_settings', () => {
 
   it('reads back the admin default rather than echoing the input', async () => {
     const { user } = createUser(testDb);
-    testDb.prepare('INSERT INTO app_settings (key, value) VALUES (?, ?)')
+    testDb
+      .prepare('INSERT INTO app_settings (key, value) VALUES (?, ?)')
       .run('default_user_setting_distance_unit', '"imperial"');
     await withHarness(user.id, async (h) => {
       const result = await update(h, { temperature_unit: 'celsius' });
@@ -489,27 +509,33 @@ describe('Display-preference allow-list', () => {
     // Here the two lists must simply not overlap, which is what makes the
     // managed lock unreachable rather than merely duplicated.
     const overlap = DISPLAY_PREFERENCE_KEYS.filter((key) =>
-      (MANAGED_LOCKED_SETTING_KEYS as readonly string[]).includes(key));
+      (MANAGED_LOCKED_SETTING_KEYS as readonly string[]).includes(key),
+    );
     expect(overlap).toEqual([]);
   });
 
   it('holds no key assertMayWriteLlmEndpoint would have to refuse', () => {
     // isAdminOnlyLlmSetting is value-dependent, so probe it with the values
     // that trip it rather than matching on the key name.
-    const offenders = DISPLAY_PREFERENCE_KEYS.filter((key) =>
-      isAdminOnlyLlmSetting(key, 'http://127.0.0.1:11434') || isAdminOnlyLlmSetting(key, 'local'));
+    const offenders = DISPLAY_PREFERENCE_KEYS.filter(
+      (key) => isAdminOnlyLlmSetting(key, 'http://127.0.0.1:11434') || isAdminOnlyLlmSetting(key, 'local'),
+    );
     expect(offenders).toEqual([]);
   });
 
   // Against the live sets, not a copy of them: a sixth encrypted key added to
   // the service has to fail here, which is the whole point of the allow-list.
   it('holds no key that is encrypted at rest', () => {
-    const overlap = [...ENCRYPTED_SETTING_KEYS].filter(key => (DISPLAY_PREFERENCE_KEYS as readonly string[]).includes(key));
+    const overlap = [...ENCRYPTED_SETTING_KEYS].filter((key) =>
+      (DISPLAY_PREFERENCE_KEYS as readonly string[]).includes(key),
+    );
     expect(overlap).toEqual([]);
   });
 
   it('holds no key that is masked on the way out', () => {
-    const overlap = [...MASKED_SETTING_KEYS].filter(key => (DISPLAY_PREFERENCE_KEYS as readonly string[]).includes(key));
+    const overlap = [...MASKED_SETTING_KEYS].filter((key) =>
+      (DISPLAY_PREFERENCE_KEYS as readonly string[]).includes(key),
+    );
     expect(overlap).toEqual([]);
   });
 });

@@ -302,7 +302,8 @@ const admin: TranslationStrings = {
   'admin.plugins.mcpToolsHint': '助手可以代用户运行这些工具。每个工具都以上方授予的权限运行。',
   'admin.plugins.perm.mcp:tools':
     '发布 AI 助手可以代你运行的工具（它以你在此处授予插件的权限运行，而非助手自身的权限）',
-  'admin.plugins.perm.geolocation:read': '在其某个视图打开时请求你的实时位置（由 TREK 使用本站点已有的位置权限读取，不会单独为插件询问）',
+  'admin.plugins.perm.geolocation:read':
+    '在其某个视图打开时请求你的实时位置（由 TREK 使用本站点已有的位置权限读取，不会单独为插件询问）',
   'admin.plugins.perm.hook:pdf-section-provider': '向行程 PDF 导出追加文本段落',
   'admin.plugins.perm.hook:atlas-layer-provider': '在 Atlas 世界地图上高亮国家（例如愿望清单或旅行提醒）',
   'admin.plugins.perm.hook:journal-entry-provider': '向日志条目添加额外行（链接、统计）',

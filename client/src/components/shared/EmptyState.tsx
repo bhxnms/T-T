@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react'
-import MDancingTT, { type TTScene, type TTMood } from '../../mobile/components/MDancingTT'
+import type { CSSProperties, ReactNode } from 'react';
+import MDancingTT, { type TTMood, type TTScene } from '../../mobile/components/MDancingTT';
 
 /**
  * TT 项目的空状态组件 - 使用 TT 吉祥物展示各种场景
@@ -19,19 +19,20 @@ export default function EmptyState({
   className = '',
   action,
 }: {
-  scene?: TTScene
-  mood?: TTMood
-  title: string
-  size?: number
-  surface?: string
-  layout?: 'stack' | 'row'
-  className?: string
+  scene?: TTScene;
+  mood?: TTMood;
+  title: string;
+  size?: number;
+  surface?: string;
+  layout?: 'stack' | 'row';
+  className?: string;
   /** Optional call to action under the title, for states that have an obvious next step. */
-  action?: ReactNode
+  action?: ReactNode;
 }) {
-  const layoutClasses = layout === 'row'
-    ? 'flex flex-row items-center justify-center gap-3 px-6 py-3'
-    : 'flex flex-col items-center justify-center gap-3 px-6 py-12 text-center'
+  const layoutClasses =
+    layout === 'row'
+      ? 'flex flex-row items-center justify-center gap-3 px-6 py-3'
+      : 'flex flex-col items-center justify-center gap-3 px-6 py-12 text-center';
   return (
     <div
       className={`${layoutClasses} ${className}`}
@@ -41,5 +42,5 @@ export default function EmptyState({
       <p className="text-[15px] font-semibold text-content-secondary">{title}</p>
       {action}
     </div>
-  )
+  );
 }

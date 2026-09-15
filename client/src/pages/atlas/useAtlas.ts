@@ -12,8 +12,8 @@ import { getIntlLanguage, getLocaleForLanguage, useTranslation } from '../../i18
 import { useSettingsStore } from '../../store/settingsStore';
 import type { GeoJsonFeatureCollection } from '../../types';
 import { getApiErrorMessage } from '../../types';
-import { CHINA_CENTER, getLastLocation, getUserLocation, saveLastLocation } from '../../utils/geolocation';
 import { getCheckedPlaces } from '../../utils/checkinStorage';
+import { CHINA_CENTER, getLastLocation, getUserLocation, saveLastLocation } from '../../utils/geolocation';
 import { getLandmarkColor } from '../../utils/landmarkIcons';
 import { getVisitedLandmarks, toggleLandmarkVisit } from '../../utils/landmarkStorage';
 import { isVectorStyle } from '../../utils/tileUrl';
@@ -125,6 +125,13 @@ function useCountryNames(language: string): (code: string) => string {
  * the returned state via its presentational SidebarContent helper.
  * Behaviour is identical to the previous in-component logic.
  */
+/** Escapes text interpolated into Leaflet tooltip HTML. */
+const escapeTooltipHtml = (value: unknown) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char
+  );
+
 export function useAtlas() {
   const { t, language } = useTranslation();
   const { settings } = useSettingsStore();
@@ -201,7 +208,20 @@ export function useAtlas() {
   // the map, and it only comes back once this fires (see the zoom handlers).
   const landmarkShowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedLandmark, setSelectedLandmark] = useState<any>(null);
-  const [showLandmarks, setShowLandmarks] = useState<boolean>(true);
+  const [showLandmarks, setShowLandmarks] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('tt_atlas_show_landmarks') !== '0';
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('tt_atlas_show_landmarks', showLandmarks ? '1' : '0');
+    } catch {
+      /* storage may be unavailable */
+    }
+  }, [showLandmarks]);
   // The zoom handlers are registered once per map; they read the toggle through
   // this ref so a layer toggle after mount isn't lost to the stale closure.
   const showLandmarksRef = useRef(showLandmarks);
@@ -310,15 +330,32 @@ export function useAtlas() {
     return opts;
   }, [geoData, resolveName]);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const atlasRequestActive = useRef(true);
+
+  useEffect(
+    () => () => {
+      atlasRequestActive.current = false;
+    },
+    []
+  );
+
   // Load atlas data + bucket list
   useEffect(() => {
+    atlasRequestActive.current = true;
     Promise.all([apiClient.get('/addons/atlas/stats'), apiClient.get('/addons/atlas/bucket-list')])
       .then(([statsRes, bucketRes]) => {
+        if (!atlasRequestActive.current) return;
         setData(statsRes.data);
         setBucketList(bucketRes.data.items || []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        if (!atlasRequestActive.current) return;
+        setLoadError(getApiErrorMessage(err, t('common.error')));
+        setLoading(false);
+        toast.error(getApiErrorMessage(err, t('common.error')));
+      });
   }, []);
 
   // Load country-border GeoJSON from our API (geoBoundaries, served server-side —
@@ -344,24 +381,46 @@ export function useAtlas() {
         }
         setGeoData(geo);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!atlasRequestActive.current) return;
+        toast.error(getApiErrorMessage(err, t('common.error')));
+      });
   }, []);
 
   // Load visited regions (geocoded from places/trips) — once on mount
   useEffect(() => {
+    let cancelled = false;
     apiClient
       .get(`/addons/atlas/regions?_t=${Date.now()}`)
-      .then((r) => setVisitedRegions(r.data?.regions || {}))
-      .catch(() => {});
+      .then((r) => {
+        if (!cancelled) setVisitedRegions(r.data?.regions || {});
+      })
+      .catch((err) => {
+        if (!cancelled) console.error('Failed to load Atlas regions:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Load plugin tint layers (atlasLayerProvider hook) — once on mount. Fail-safe:
   // an error just means no plugin overlay, the core map is untouched.
   useEffect(() => {
+    let cancelled = false;
     pluginsApi
       .atlasLayers()
-      .then((r) => setPluginLayers(r.layers || []))
-      .catch(() => setPluginLayers([]));
+      .then((r) => {
+        if (!cancelled) setPluginLayers(r.layers || []);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error('Failed to load Atlas plugin layers:', err);
+          setPluginLayers([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /** The view the map currently shows, or null while there is no map to ask. */
@@ -428,7 +487,9 @@ export function useAtlas() {
       if (pendingRegionCodes.current.has(code)) continue;
       try {
         if (bounds.intersects((layer as any).getBounds())) toLoad.push(code);
-      } catch {}
+      } catch (err) {
+        console.error('Failed to inspect Atlas region bounds:', err);
+      }
     }
     if (!toLoad.length) return;
     for (const code of toLoad) pendingRegionCodes.current.add(code);
@@ -451,7 +512,9 @@ export function useAtlas() {
           setRegionGeoLoaded((v) => v + 1);
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error('Failed to load Atlas viewport regions:', err);
+      })
       .finally(() => {
         for (const code of toLoad) pendingRegionCodes.current.delete(code);
       });
@@ -467,8 +530,8 @@ export function useAtlas() {
     }
 
     // Determine initial map center based on user location
-    let initialCenter: [number, number] = [25, 0]; // Default global view
-    let initialZoom = 3;
+    const initialCenter: [number, number] = [25, 0]; // Default global view
+    const initialZoom = 3;
 
     // Try to get user's location for better initial view
     (async () => {
@@ -915,12 +978,18 @@ export function useAtlas() {
                   <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.4">${t('atlas.lastVisitLabel')}</span>
                   <span style="font-size:12px;font-weight:700">${formatDate(c.lastVisit)}</span>
                 </div>`;
+          const escapeTooltip = (value: unknown) =>
+            String(value).replace(
+              /[&<>"']/g,
+              (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char
+            );
+          const safeName = escapeTooltipHtml(name);
           const tooltipHtml = `
             <div style="display:flex;flex-direction:column;gap:8px;min-width:160px">
-              <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;padding-bottom:6px;border-bottom:1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}">${name}${planned ? ` <span style="font-size:9px;font-weight:700;opacity:0.55;letter-spacing:0.06em">· ${t('atlas.planned')}</span>` : ''}</div>
+              <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;padding-bottom:6px;border-bottom:1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}">${safeName}${planned ? ` <span style="font-size:9px;font-weight:700;opacity:0.55;letter-spacing:0.06em">· ${escapeTooltipHtml(t('atlas.planned'))}</span>` : ''}</div>
               <div style="display:flex;gap:14px">
-                <div><span style="font-size:16px;font-weight:800">${c.tripCount}</span> <span style="font-size:10px;opacity:0.5;text-transform:uppercase;letter-spacing:0.05em">${c.tripCount === 1 ? t('atlas.tripSingular') : t('atlas.tripPlural')}</span></div>
-                <div><span style="font-size:16px;font-weight:800">${c.placeCount}</span> <span style="font-size:10px;opacity:0.5;text-transform:uppercase;letter-spacing:0.05em">${c.placeCount === 1 ? t('atlas.placeVisited') : t('atlas.placesVisited')}</span></div>
+                <div><span style="font-size:16px;font-weight:800">${c.tripCount}</span> <span style="font-size:10px;opacity:0.5;text-transform:uppercase;letter-spacing:0.05em">${escapeTooltipHtml(c.tripCount === 1 ? t('atlas.tripSingular') : t('atlas.tripPlural'))}</span></div>
+                <div><span style="font-size:16px;font-weight:800">${c.placeCount}</span> <span style="font-size:10px;opacity:0.5;text-transform:uppercase;letter-spacing:0.05em">${escapeTooltipHtml(c.placeCount === 1 ? t('atlas.placeVisited') : t('atlas.placesVisited'))}</span></div>
               </div>
               <div style="display:flex;gap:2px;border-top:1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'};padding-top:8px">
                 ${datesHtml}
@@ -958,7 +1027,7 @@ export function useAtlas() {
             country_layer_by_a2_ref.current[countryCode] = layer;
             const name =
               resolveName(countryCode) || feature.properties?.NAME || feature.properties?.ADMIN || countryCode;
-            layer.bindTooltip(`<div style="font-size:12px;font-weight:600">${name}</div>`, {
+            layer.bindTooltip(`<div style="font-size:12px;font-weight:600">${escapeTooltipHtml(name)}</div>`, {
               sticky: true,
               className: 'atlas-tooltip',
               direction: 'top',
@@ -1219,9 +1288,16 @@ export function useAtlas() {
               tt.style.display = 'block';
               tt.style.left = e.originalEvent.clientX + 12 + 'px';
               tt.style.top = e.originalEvent.clientY - 10 + 'px';
+              const escapeHtml = (value: unknown) =>
+                String(value).replace(
+                  /[&<>"']/g,
+                  (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char
+                );
+              const safeDisplayName = escapeHtml(displayName);
+              const safeCountryName = escapeHtml(countryName);
               tt.innerHTML = visited
-                ? `<div style="font-weight:600;margin-bottom:3px">${displayName}</div><div style="opacity:0.5;font-size:10px">${countryName}</div><div style="margin-top:5px;font-size:11px"><b>${count}</b> ${count === 1 ? 'place' : 'places'}</div>`
-                : `<div style="font-weight:600;margin-bottom:3px">${displayName}</div><div style="opacity:0.5;font-size:10px">${countryName}</div>`;
+                ? `<div style="font-weight:600;margin-bottom:3px">${safeDisplayName}</div><div style="opacity:0.5;font-size:10px">${safeCountryName}</div><div style="margin-top:5px;font-size:11px"><b>${count}</b> ${count === 1 ? 'place' : 'places'}</div>`
+                : `<div style="font-weight:600;margin-bottom:3px">${safeDisplayName}</div><div style="opacity:0.5;font-size:10px">${safeCountryName}</div>`;
             }
           });
           layer.on('mousemove', (e: any) => {
@@ -1330,7 +1406,9 @@ export function useAtlas() {
 
     let info: { country_code: string | null; region_code: string | null; region_name: string | null };
     try {
+      const requestId = ++placeLocateRequest.current;
       info = (await apiClient.get('/addons/atlas/locate', { params: { lat: hit.lat, lng: hit.lng } })).data;
+      if (requestId !== placeLocateRequest.current) return;
     } catch {
       return; // The map already moved; a failed lookup just means no dialog.
     }
@@ -1464,8 +1542,8 @@ export function useAtlas() {
     try {
       await apiClient.delete(`/addons/atlas/bucket-list/${id}`);
       setBucketList((prev) => prev.filter((i) => i.id !== id));
-    } catch {
-      /* */
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, t('common.error')));
     }
   };
 
@@ -1574,13 +1652,17 @@ export function useAtlas() {
     bucketMarkersRef.current = L.layerGroup(markers).addTo(mapInstance.current);
   }, [bucketList]);
 
+  const countryDetailRequest = useRef(0);
+  const placeLocateRequest = useRef(0);
+
   const loadCountryDetail = async (code: string): Promise<void> => {
+    const requestId = ++countryDetailRequest.current;
     setSelectedCountry(code);
     try {
       const r = await apiClient.get(`/addons/atlas/country/${code}`);
-      setCountryDetail(r.data);
+      if (requestId === countryDetailRequest.current) setCountryDetail(r.data);
     } catch {
-      /* */
+      if (requestId === countryDetailRequest.current) setCountryDetail(null);
     }
   };
   loadCountryDetailRef.current = loadCountryDetail;

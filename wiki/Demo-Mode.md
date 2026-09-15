@@ -2,7 +2,6 @@
 
 Demo mode lets you run a public "try before you install" instance of TREK. A shared demo account is available for visitors, write operations are blocked for that account, and the database resets automatically every hour so the instance stays in a known state.
 
-<!-- TODO: screenshot: demo mode banner or try-demo button on login page -->
 
 ## Enabling demo mode
 

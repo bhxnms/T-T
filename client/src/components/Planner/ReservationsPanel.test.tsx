@@ -1,15 +1,15 @@
 // FE-COMP-RES-001 to FE-COMP-RES-040, FE-PLANNER-RESP-016 to FE-PLANNER-RESP-080
-import { render, screen, fireEvent, waitFor, act } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { buildDay, buildPlace, buildReservation, buildTrip, buildUser } from '../../../tests/helpers/factories';
 import { server } from '../../../tests/helpers/msw/server';
+import { act, fireEvent, render, screen, waitFor } from '../../../tests/helpers/render';
+import { resetAllStores, seedStore } from '../../../tests/helpers/store';
 import { useAuthStore } from '../../store/authStore';
-import { useTripStore } from '../../store/tripStore';
-import { useSettingsStore } from '../../store/settingsStore';
 import { usePermissionsStore } from '../../store/permissionsStore';
 import { usePluginStore } from '../../store/pluginStore';
-import { resetAllStores, seedStore } from '../../../tests/helpers/store';
-import { buildUser, buildTrip, buildReservation, buildDay, buildPlace } from '../../../tests/helpers/factories';
+import { useSettingsStore } from '../../store/settingsStore';
+import { useTripStore } from '../../store/tripStore';
 import { openFile } from '../../utils/fileDownload';
 import ReservationsPanel from './ReservationsPanel';
 
@@ -32,10 +32,19 @@ beforeEach(() => {
   resetAllStores();
   seedStore(useAuthStore, { user: buildUser(), isAuthenticated: true });
   seedStore(useTripStore, { trip: buildTrip({ id: 1 }) });
-  seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: false, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
-  server.use(
-    http.get('/api/view-contributions/:view/:tripId', () => HttpResponse.json({ contributions: [] })),
-  );
+  seedStore(useSettingsStore, {
+    settings: {
+      time_format: '24h',
+      blur_booking_codes: false,
+      temperature_unit: 'celsius',
+      language: 'en',
+      dark_mode: false,
+      default_currency: 'USD',
+      map_tile_url: '',
+      show_place_description: false,
+    },
+  });
+  server.use(http.get('/api/view-contributions/:view/:tripId', () => HttpResponse.json({ contributions: [] })));
 });
 
 describe('ReservationsPanel', () => {
@@ -165,7 +174,7 @@ describe('ReservationsPanel', () => {
     // Click the "Pending" section header button (the one with count badge)
     const pendingButtons = screen.getAllByText('Pending');
     // The section header button contains "Pending" text
-    const sectionHeaderBtn = pendingButtons.find(el => el.closest('button'));
+    const sectionHeaderBtn = pendingButtons.find((el) => el.closest('button'));
     await user.click(sectionHeaderBtn!.closest('button')!);
     // Card should no longer be visible
     expect(screen.queryByText('Pending Hotel')).not.toBeInTheDocument();
@@ -176,13 +185,13 @@ describe('ReservationsPanel', () => {
     const res = buildReservation({ title: 'Pending Train', type: 'train', status: 'pending' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const pendingButtons = screen.getAllByText('Pending');
-    const sectionHeaderBtn = pendingButtons.find(el => el.closest('button'));
+    const sectionHeaderBtn = pendingButtons.find((el) => el.closest('button'));
     // Collapse
     await user.click(sectionHeaderBtn!.closest('button')!);
     expect(screen.queryByText('Pending Train')).not.toBeInTheDocument();
     // Re-query after collapse
     const pendingButtons2 = screen.getAllByText('Pending');
-    const sectionHeaderBtn2 = pendingButtons2.find(el => el.closest('button'));
+    const sectionHeaderBtn2 = pendingButtons2.find((el) => el.closest('button'));
     // Expand
     await user.click(sectionHeaderBtn2!.closest('button')!);
     expect(screen.getByText('Pending Train')).toBeInTheDocument();
@@ -222,7 +231,18 @@ describe('ReservationsPanel', () => {
   });
 
   it('FE-PLANNER-RESP-022: confirmation number is blurred when blur_booking_codes=true', () => {
-    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    seedStore(useSettingsStore, {
+      settings: {
+        time_format: '24h',
+        blur_booking_codes: true,
+        temperature_unit: 'celsius',
+        language: 'en',
+        dark_mode: false,
+        default_currency: 'USD',
+        map_tile_url: '',
+        show_place_description: false,
+      },
+    });
     const res = buildReservation({ confirmation_number: 'ABC123', status: 'confirmed' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const codeEl = screen.getByText('ABC123');
@@ -231,7 +251,18 @@ describe('ReservationsPanel', () => {
 
   it('FE-PLANNER-RESP-023: confirmation code revealed on hover when blurred', async () => {
     const user = userEvent.setup();
-    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    seedStore(useSettingsStore, {
+      settings: {
+        time_format: '24h',
+        blur_booking_codes: true,
+        temperature_unit: 'celsius',
+        language: 'en',
+        dark_mode: false,
+        default_currency: 'USD',
+        map_tile_url: '',
+        show_place_description: false,
+      },
+    });
     const res = buildReservation({ confirmation_number: 'ABC123', status: 'confirmed' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const codeEl = screen.getByText('ABC123');
@@ -240,16 +271,21 @@ describe('ReservationsPanel', () => {
     expect(codeEl.style.filter).toBe('none');
   });
 
-  const layoverFlight = () => buildReservation({
-    id: 7, type: 'flight', status: 'confirmed', confirmation_number: 'BOOK1',
-    metadata: JSON.stringify({
-      departure_airport: 'FRA', arrival_airport: 'HND',
-      legs: [
-        { from: 'FRA', to: 'BER', confirmation_number: 'ABC123' },
-        { from: 'BER', to: 'HND' },
-      ],
-    }),
-  });
+  const layoverFlight = () =>
+    buildReservation({
+      id: 7,
+      type: 'flight',
+      status: 'confirmed',
+      confirmation_number: 'BOOK1',
+      metadata: JSON.stringify({
+        departure_airport: 'FRA',
+        arrival_airport: 'HND',
+        legs: [
+          { from: 'FRA', to: 'BER', confirmation_number: 'ABC123' },
+          { from: 'BER', to: 'HND' },
+        ],
+      }),
+    });
 
   it('FE-PLANNER-RESP-077: a segment with its own booking code shows it under its route (#1943)', () => {
     render(<ReservationsPanel {...defaultProps} reservations={[layoverFlight()]} />);
@@ -263,7 +299,18 @@ describe('ReservationsPanel', () => {
 
   it('FE-PLANNER-RESP-078: a segment code obeys blur_booking_codes and reveals with the card', async () => {
     const user = userEvent.setup();
-    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    seedStore(useSettingsStore, {
+      settings: {
+        time_format: '24h',
+        blur_booking_codes: true,
+        temperature_unit: 'celsius',
+        language: 'en',
+        dark_mode: false,
+        default_currency: 'USD',
+        map_tile_url: '',
+        show_place_description: false,
+      },
+    });
     render(<ReservationsPanel {...defaultProps} reservations={[layoverFlight()]} />);
     const legCode = screen.getByText('ABC123');
     expect(legCode.style.filter).toContain('blur');
@@ -289,7 +336,12 @@ describe('ReservationsPanel', () => {
     const res = buildReservation({
       type: 'flight',
       status: 'confirmed',
-      metadata: JSON.stringify({ airline: 'Air France', flight_number: 'AF001', departure_airport: 'CDG', arrival_airport: 'JFK' }),
+      metadata: JSON.stringify({
+        airline: 'Air France',
+        flight_number: 'AF001',
+        departure_airport: 'CDG',
+        arrival_airport: 'JFK',
+      }),
     });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     expect(screen.getByText('Air France')).toBeInTheDocument();
@@ -323,7 +375,9 @@ describe('ReservationsPanel', () => {
     const place = buildPlace({ name: 'Eiffel Tower', place_time: '10:00' });
     const assignmentId = 55;
     const day = { ...buildDay({ id: 1, title: 'Day 1', date: '2025-06-01' }), day_number: 1 } as any;
-    const assignments = { '1': [{ id: assignmentId, order_index: 0, day_id: 1, place_id: place.id, notes: null, place }] };
+    const assignments = {
+      '1': [{ id: assignmentId, order_index: 0, day_id: 1, place_id: place.id, notes: null, place }],
+    };
     const res = buildReservation({ assignment_id: assignmentId, status: 'confirmed' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} days={[day]} assignments={assignments} />);
     expect(screen.getByText(/Day 1/)).toBeInTheDocument();
@@ -336,9 +390,9 @@ describe('ReservationsPanel', () => {
     const res = buildReservation({ title: 'My Booking', status: 'pending' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const pendingEls = screen.getAllByText('Pending');
-    const statusSpan = pendingEls.find(el => el.tagName === 'SPAN');
+    const statusSpan = pendingEls.find((el) => el.tagName === 'SPAN');
     expect(statusSpan).toBeDefined();
-    const statusBtn = pendingEls.find(el => el.tagName === 'BUTTON');
+    const statusBtn = pendingEls.find((el) => el.tagName === 'BUTTON');
     expect(statusBtn).toBeUndefined();
   });
 
@@ -349,9 +403,9 @@ describe('ReservationsPanel', () => {
     const res = buildReservation({ title: 'Read Only', status: 'pending' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const pendingEls = screen.getAllByText('Pending');
-    const statusSpan = pendingEls.find(el => el.tagName === 'SPAN');
+    const statusSpan = pendingEls.find((el) => el.tagName === 'SPAN');
     expect(statusSpan).toBeDefined();
-    const statusBtn = pendingEls.find(el => el.tagName === 'BUTTON');
+    const statusBtn = pendingEls.find((el) => el.tagName === 'BUTTON');
     expect(statusBtn).toBeUndefined();
   });
 
@@ -404,14 +458,37 @@ describe('ReservationsPanel', () => {
 
   it('FE-PLANNER-RESP-037: attached files section appears for reservation with files', () => {
     const res = buildReservation({ id: 77, status: 'confirmed' });
-    const files = [{ id: 1, trip_id: 1, reservation_id: 77, original_name: 'boarding_pass.pdf', url: '/uploads/bp.pdf', filename: 'bp.pdf', mime_type: 'application/pdf', created_at: '2025-01-01T00:00:00.000Z' }];
+    const files = [
+      {
+        id: 1,
+        trip_id: 1,
+        reservation_id: 77,
+        original_name: 'boarding_pass.pdf',
+        url: '/uploads/bp.pdf',
+        filename: 'bp.pdf',
+        mime_type: 'application/pdf',
+        created_at: '2025-01-01T00:00:00.000Z',
+      },
+    ];
     render(<ReservationsPanel {...defaultProps} reservations={[res]} files={files} />);
     expect(screen.getByText('boarding_pass.pdf')).toBeInTheDocument();
   });
 
   it('FE-PLANNER-RESP-038: linked file (via linked_reservation_ids) also appears', () => {
     const res = buildReservation({ id: 77, status: 'confirmed' });
-    const files = [{ id: 2, trip_id: 1, reservation_id: null, linked_reservation_ids: [77], original_name: 'voucher.pdf', url: '/uploads/v.pdf', filename: 'v.pdf', mime_type: 'application/pdf', created_at: '2025-01-01T00:00:00.000Z' }];
+    const files = [
+      {
+        id: 2,
+        trip_id: 1,
+        reservation_id: null,
+        linked_reservation_ids: [77],
+        original_name: 'voucher.pdf',
+        url: '/uploads/v.pdf',
+        filename: 'v.pdf',
+        mime_type: 'application/pdf',
+        created_at: '2025-01-01T00:00:00.000Z',
+      },
+    ];
     render(<ReservationsPanel {...defaultProps} reservations={[res]} files={files as any} />);
     expect(screen.getByText('voucher.pdf')).toBeInTheDocument();
   });
@@ -486,22 +563,58 @@ describe('ReservationsPanel', () => {
   it('FE-PLANNER-RESP-044: cards are ordered chronologically, day-linked entries by their day date', () => {
     const day1 = buildDay({ id: 201, date: '2025-06-02', day_number: 2 } as any);
     const day2 = buildDay({ id: 202, date: '2025-06-04', day_number: 4 } as any);
-    const dated = buildReservation({ title: 'Dated flight', type: 'flight', status: 'pending', reservation_time: '2025-06-03T09:00', created_at: '2025-05-01T00:00:00.000Z' });
-    const dayOnly = buildReservation({ title: 'Day-only train', type: 'train', status: 'pending', reservation_time: 'T10:00', day_id: 201, created_at: '2025-05-02T00:00:00.000Z' } as any);
-    const late = buildReservation({ title: 'Late bus', type: 'bus', status: 'pending', reservation_time: null, day_id: 202, created_at: '2025-05-03T00:00:00.000Z' } as any);
-    const undated = buildReservation({ title: 'Undated taxi', type: 'taxi', status: 'pending', created_at: '2025-04-01T00:00:00.000Z' });
+    const dated = buildReservation({
+      title: 'Dated flight',
+      type: 'flight',
+      status: 'pending',
+      reservation_time: '2025-06-03T09:00',
+      created_at: '2025-05-01T00:00:00.000Z',
+    });
+    const dayOnly = buildReservation({
+      title: 'Day-only train',
+      type: 'train',
+      status: 'pending',
+      reservation_time: 'T10:00',
+      day_id: 201,
+      created_at: '2025-05-02T00:00:00.000Z',
+    } as any);
+    const late = buildReservation({
+      title: 'Late bus',
+      type: 'bus',
+      status: 'pending',
+      reservation_time: null,
+      day_id: 202,
+      created_at: '2025-05-03T00:00:00.000Z',
+    } as any);
+    const undated = buildReservation({
+      title: 'Undated taxi',
+      type: 'taxi',
+      status: 'pending',
+      created_at: '2025-04-01T00:00:00.000Z',
+    });
     render(<ReservationsPanel {...defaultProps} reservations={[undated, late, dayOnly, dated]} days={[day1, day2]} />);
     const text = document.body.textContent || '';
-    const order = ['Day-only train', 'Dated flight', 'Late bus', 'Undated taxi'].map(t => text.indexOf(t));
-    expect(order.every(i => i >= 0)).toBe(true);
+    const order = ['Day-only train', 'Dated flight', 'Late bus', 'Undated taxi'].map((t) => text.indexOf(t));
+    expect(order.every((i) => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
   it('FE-PLANNER-RESP-045: hotel sorts by its accommodation start day, not a stale day_id', () => {
     const day1 = buildDay({ id: 301, date: '2025-06-01', day_number: 1 } as any);
     const day2 = buildDay({ id: 302, date: '2025-06-05', day_number: 5 } as any);
-    const hotel = buildReservation({ title: 'Hotel stay', type: 'hotel', status: 'pending', day_id: 301, accommodation_start_day_id: 302 } as any);
-    const flight = buildReservation({ title: 'Mid flight', type: 'flight', status: 'pending', reservation_time: '2025-06-03T12:00' });
+    const hotel = buildReservation({
+      title: 'Hotel stay',
+      type: 'hotel',
+      status: 'pending',
+      day_id: 301,
+      accommodation_start_day_id: 302,
+    } as any);
+    const flight = buildReservation({
+      title: 'Mid flight',
+      type: 'flight',
+      status: 'pending',
+      reservation_time: '2025-06-03T12:00',
+    });
     render(<ReservationsPanel {...defaultProps} reservations={[hotel, flight]} days={[day1, day2]} />);
     const text = document.body.textContent || '';
     expect(text.indexOf('Mid flight')).toBeLessThan(text.indexOf('Hotel stay'));
@@ -509,7 +622,12 @@ describe('ReservationsPanel', () => {
 
   // AirTrail sync badge — three states (#1646)
   it('FE-PLANNER-RESP-046: a synced AirTrail flight shows the AirTrail badge', () => {
-    const res = buildReservation({ title: 'Synced flight', type: 'flight', external_source: 'airtrail', sync_enabled: 1 } as any);
+    const res = buildReservation({
+      title: 'Synced flight',
+      type: 'flight',
+      external_source: 'airtrail',
+      sync_enabled: 1,
+    } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     expect(screen.getByTitle('Synced from AirTrail — edits stay in sync both ways.')).toBeInTheDocument();
     expect(screen.queryByText('Not synced')).not.toBeInTheDocument();
@@ -517,7 +635,10 @@ describe('ReservationsPanel', () => {
 
   it('FE-PLANNER-RESP-047: a multi-leg import shows the layover hint, not the "removed" message', () => {
     const res = buildReservation({
-      title: 'Layover flight', type: 'flight', external_source: 'airtrail', sync_enabled: 0,
+      title: 'Layover flight',
+      type: 'flight',
+      external_source: 'airtrail',
+      sync_enabled: 0,
       metadata: JSON.stringify({ legs: [{ from: 'AMS' }, { from: 'IST' }] }),
     } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
@@ -525,12 +646,19 @@ describe('ReservationsPanel', () => {
     expect(screen.queryByText('Not synced')).not.toBeInTheDocument();
     // …and carries the truthful layover explanation.
     expect(
-      screen.getByTitle('Imported from AirTrail. A multi-leg flight with a layover has no single AirTrail flight to sync back to, so it stays as a one-time import.'),
+      screen.getByTitle(
+        'Imported from AirTrail. A multi-leg flight with a layover has no single AirTrail flight to sync back to, so it stays as a one-time import.'
+      )
     ).toBeInTheDocument();
   });
 
   it('FE-PLANNER-RESP-048: a single-leg flight removed upstream still shows "Not synced"', () => {
-    const res = buildReservation({ title: 'Removed flight', type: 'flight', external_source: 'airtrail', sync_enabled: 0 } as any);
+    const res = buildReservation({
+      title: 'Removed flight',
+      type: 'flight',
+      external_source: 'airtrail',
+      sync_enabled: 0,
+    } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     expect(screen.getByText('Not synced')).toBeInTheDocument();
     expect(screen.getByTitle('This flight was removed in AirTrail and no longer syncs.')).toBeInTheDocument();
@@ -539,13 +667,18 @@ describe('ReservationsPanel', () => {
   it('FE-PLANNER-RESP-049: a flight grown into multiple legs locally (endpoints > 2, no legs array) shows the layover hint, not "Not synced"', () => {
     // Matches the server's second hasLocalMultiLegShape criterion (endpoint count > 2).
     const res = buildReservation({
-      title: 'Grown multi-leg', type: 'flight', external_source: 'airtrail', sync_enabled: 0,
+      title: 'Grown multi-leg',
+      type: 'flight',
+      external_source: 'airtrail',
+      sync_enabled: 0,
       endpoints: [{ sequence: 0 }, { sequence: 1 }, { sequence: 2 }],
     } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     expect(screen.queryByText('Not synced')).not.toBeInTheDocument();
     expect(
-      screen.getByTitle('Imported from AirTrail. A multi-leg flight with a layover has no single AirTrail flight to sync back to, so it stays as a one-time import.'),
+      screen.getByTitle(
+        'Imported from AirTrail. A multi-leg flight with a layover has no single AirTrail flight to sync back to, so it stays as a one-time import.'
+      )
     ).toBeInTheDocument();
   });
 
@@ -606,11 +739,26 @@ describe('ReservationsPanel', () => {
     expect(screen.queryByText('Flight out')).not.toBeInTheDocument();
   });
 
-  it('FE-PLANNER-RESP-055: the traveler filter keeps only that traveler\'s bookings and persists', async () => {
+  it("FE-PLANNER-RESP-055: the traveler filter keeps only that traveler's bookings and persists", async () => {
     const user = userEvent.setup();
-    const members = [{ id: 1, username: 'ada' }, { id: 2, username: 'bob' }];
-    const adas = buildReservation({ id: 1, title: 'Ada flight', type: 'flight', status: 'confirmed', travelers: [{ user_id: 1, username: 'ada', avatar_url: null }] } as any);
-    const bobs = buildReservation({ id: 2, title: 'Bob hotel', type: 'hotel', status: 'confirmed', travelers: [{ user_id: 2, username: 'bob', avatar_url: null }] } as any);
+    const members = [
+      { id: 1, username: 'ada' },
+      { id: 2, username: 'bob' },
+    ];
+    const adas = buildReservation({
+      id: 1,
+      title: 'Ada flight',
+      type: 'flight',
+      status: 'confirmed',
+      travelers: [{ user_id: 1, username: 'ada', avatar_url: null }],
+    } as any);
+    const bobs = buildReservation({
+      id: 2,
+      title: 'Bob hotel',
+      type: 'hotel',
+      status: 'confirmed',
+      travelers: [{ user_id: 2, username: 'bob', avatar_url: null }],
+    } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[adas, bobs]} tripMembers={members} />);
     await user.click(screen.getByTitle('ada'));
     expect(screen.getByText('Ada flight')).toBeInTheDocument();
@@ -622,7 +770,13 @@ describe('ReservationsPanel', () => {
   });
 
   it('FE-PLANNER-RESP-056: assigned travelers are shown on the card', () => {
-    const res = buildReservation({ id: 1, title: 'Shared flight', type: 'flight', status: 'confirmed', travelers: [{ user_id: 1, username: 'ada', avatar_url: null }] } as any);
+    const res = buildReservation({
+      id: 1,
+      title: 'Shared flight',
+      type: 'flight',
+      status: 'confirmed',
+      travelers: [{ user_id: 1, username: 'ada', avatar_url: null }],
+    } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     expect(screen.getByText('Travelers')).toBeInTheDocument();
   });
@@ -633,18 +787,32 @@ describe('ReservationsPanel', () => {
     const user = userEvent.setup();
     const onImport = vi.fn();
     const onAirTrailImport = vi.fn();
-    const { rerender } = render(<ReservationsPanel {...defaultProps} onImport={onImport} onAirTrailImport={onAirTrailImport} />);
+    const { rerender } = render(
+      <ReservationsPanel {...defaultProps} onImport={onImport} onAirTrailImport={onAirTrailImport} />
+    );
     // Both handlers given but the server features are off — nothing rendered.
     expect(screen.queryByTitle('Import booking confirmations')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Import from AirTrail')).not.toBeInTheDocument();
 
-    rerender(<ReservationsPanel {...defaultProps} onImport={onImport} bookingImportAvailable onAirTrailImport={onAirTrailImport} airTrailAvailable />);
+    rerender(
+      <ReservationsPanel
+        {...defaultProps}
+        onImport={onImport}
+        bookingImportAvailable
+        onAirTrailImport={onAirTrailImport}
+        airTrailAvailable
+      />
+    );
     const importBtn = screen.getByTitle('Import booking confirmations');
     const airtrailBtn = screen.getByTitle('Import from AirTrail');
     for (const btn of [importBtn, airtrailBtn]) {
-      act(() => { btn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+      act(() => {
+        btn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      });
       expect(btn.style.opacity).toBe('0.75');
-      act(() => { btn.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+      act(() => {
+        btn.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+      });
       expect(btn.style.opacity).toBe('1');
     }
     await user.click(importBtn);
@@ -656,9 +824,13 @@ describe('ReservationsPanel', () => {
   it('FE-PLANNER-RESP-058: the add button dims on hover and restores on leave', () => {
     render(<ReservationsPanel {...defaultProps} />);
     const add = screen.getAllByText('Manual Booking')[0].closest('button') as HTMLButtonElement;
-    act(() => { add.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    act(() => {
+      add.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
     expect(add.style.opacity).toBe('0.88');
-    act(() => { add.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    act(() => {
+      add.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    });
     expect(add.style.opacity).toBe('1');
   });
 
@@ -668,8 +840,12 @@ describe('ReservationsPanel', () => {
     const day1 = buildDay({ id: 401, date: '2025-07-01', day_number: 1, title: null } as any);
     const day3 = buildDay({ id: 403, date: '2025-07-03', day_number: 3, title: null } as any);
     const hotel = buildReservation({
-      id: 1, title: 'Hotel Adlon', type: 'hotel', status: 'confirmed',
-      accommodation_start_day_id: 401, accommodation_end_day_id: 403,
+      id: 1,
+      title: 'Hotel Adlon',
+      type: 'hotel',
+      status: 'confirmed',
+      accommodation_start_day_id: 401,
+      accommodation_end_day_id: 403,
       reservation_time: '2025-07-01T15:00',
     } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[hotel]} days={[day1, day3]} />);
@@ -680,7 +856,18 @@ describe('ReservationsPanel', () => {
   });
 
   it('FE-PLANNER-RESP-060: clicking a blurred booking code toggles it open and closed', () => {
-    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    seedStore(useSettingsStore, {
+      settings: {
+        time_format: '24h',
+        blur_booking_codes: true,
+        temperature_unit: 'celsius',
+        language: 'en',
+        dark_mode: false,
+        default_currency: 'USD',
+        map_tile_url: '',
+        show_place_description: false,
+      },
+    });
     const res = buildReservation({ id: 1, confirmation_number: 'TOGGLE1', status: 'confirmed' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const code = screen.getByText('TOGGLE1');
@@ -696,9 +883,13 @@ describe('ReservationsPanel', () => {
     const res = buildReservation({ id: 1, title: 'Hover me', status: 'confirmed' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const edit = screen.getByTitle('Edit');
-    act(() => { edit.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    act(() => {
+      edit.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
     expect(edit.style.color).toBe('var(--text-primary)');
-    act(() => { edit.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    act(() => {
+      edit.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    });
     expect(edit.style.color).toBe('var(--text-faint)');
   });
 
@@ -717,8 +908,17 @@ describe('ReservationsPanel', () => {
 
   it('FE-PLANNER-RESP-063: an endpoint route replaces the airport metadata cells', () => {
     const res = buildReservation({
-      id: 1, title: 'Routed flight', type: 'flight', status: 'confirmed',
-      metadata: JSON.stringify({ airline: 'KLM', departure_airport: 'AMS', arrival_airport: 'JFK', price: 320, priceCurrency: 'EUR' }),
+      id: 1,
+      title: 'Routed flight',
+      type: 'flight',
+      status: 'confirmed',
+      metadata: JSON.stringify({
+        airline: 'KLM',
+        departure_airport: 'AMS',
+        arrival_airport: 'JFK',
+        price: 320,
+        priceCurrency: 'EUR',
+      }),
       endpoints: [
         { role: 'from', sequence: 0, name: 'Amsterdam Schiphol' },
         { role: 'stop', sequence: 1, name: 'Reykjavik' },
@@ -737,7 +937,18 @@ describe('ReservationsPanel', () => {
   it('FE-PLANNER-RESP-064: an attached file opens through the download helper', async () => {
     const user = userEvent.setup();
     const res = buildReservation({ id: 7, status: 'confirmed' });
-    const files = [{ id: 1, trip_id: 1, reservation_id: 7, original_name: 'ticket.pdf', url: '/uploads/ticket.pdf', filename: 'ticket.pdf', mime_type: 'application/pdf', created_at: '2025-01-01T00:00:00.000Z' }];
+    const files = [
+      {
+        id: 1,
+        trip_id: 1,
+        reservation_id: 7,
+        original_name: 'ticket.pdf',
+        url: '/uploads/ticket.pdf',
+        filename: 'ticket.pdf',
+        mime_type: 'application/pdf',
+        created_at: '2025-01-01T00:00:00.000Z',
+      },
+    ];
     render(<ReservationsPanel {...defaultProps} reservations={[res]} files={files} />);
     await user.click(screen.getByText('ticket.pdf'));
     expect(vi.mocked(openFile)).toHaveBeenCalledWith('/uploads/ticket.pdf');
@@ -753,7 +964,14 @@ describe('ReservationsPanel', () => {
     };
     const withPlace = buildReservation({ id: 1, title: 'Linked', assignment_id: 10, status: 'confirmed' });
     const withoutPlace = buildReservation({ id: 2, title: 'Orphan', assignment_id: 11, status: 'confirmed' });
-    render(<ReservationsPanel {...defaultProps} reservations={[withPlace, withoutPlace]} days={[day]} assignments={assignments as any} />);
+    render(
+      <ReservationsPanel
+        {...defaultProps}
+        reservations={[withPlace, withoutPlace]}
+        days={[day]}
+        assignments={assignments as any}
+      />
+    );
     expect(screen.getByText(/Louvre/)).toBeInTheDocument();
     expect(screen.getByText('Orphan')).toBeInTheDocument();
   });
@@ -769,26 +987,30 @@ describe('ReservationsPanel', () => {
 
   // ── Transit journeys (#1065) ────────────────────────────────────────────────
 
-  const transitJourney = (over: Record<string, unknown> = {}) => buildReservation({
-    id: 900,
-    title: 'Berlin Hbf → Hamburg Hbf',
-    type: 'transit',
-    status: 'confirmed',
-    day_id: 501,
-    reservation_time: '2025-06-01T08:00',
-    reservation_end_time: '2025-06-01T09:45',
-    metadata: JSON.stringify({
-      transit: {
-        provider: 'transitous', duration: 6300, transfers: 1, walk_seconds: 300,
-        legs: [
-          { mode: 'WALK', duration: 300, line: null },
-          { mode: 'SUBWAY', duration: 900, line: 'U2', line_color: '#FF3300' },
-          { mode: 'HIGHSPEED_RAIL', duration: 5100, line: 'ICE 599', line_color: null },
-        ],
-      },
-    }),
-    ...over,
-  } as any);
+  const transitJourney = (over: Record<string, unknown> = {}) =>
+    buildReservation({
+      id: 900,
+      title: 'Berlin Hbf → Hamburg Hbf',
+      type: 'transit',
+      status: 'confirmed',
+      day_id: 501,
+      reservation_time: '2025-06-01T08:00',
+      reservation_end_time: '2025-06-01T09:45',
+      metadata: JSON.stringify({
+        transit: {
+          provider: 'transitous',
+          duration: 6300,
+          transfers: 1,
+          walk_seconds: 300,
+          legs: [
+            { mode: 'WALK', duration: 300, line: null },
+            { mode: 'SUBWAY', duration: 900, line: 'U2', line_color: '#FF3300' },
+            { mode: 'HIGHSPEED_RAIL', duration: 5100, line: 'ICE 599', line_color: null },
+          ],
+        },
+      }),
+      ...over,
+    } as any);
 
   it('FE-PLANNER-RESP-067: a transit journey renders its own section with legs, day and duration', () => {
     const day = buildDay({ id: 501, date: '2025-06-01', day_number: 2, title: 'Travel day' } as any);
@@ -812,7 +1034,9 @@ describe('ReservationsPanel', () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
     const onEdit = vi.fn();
-    render(<ReservationsPanel {...defaultProps} reservations={[transitJourney()]} onDelete={onDelete} onEdit={onEdit} />);
+    render(
+      <ReservationsPanel {...defaultProps} reservations={[transitJourney()]} onDelete={onDelete} onEdit={onEdit} />
+    );
     await user.click(screen.getByTitle('Delete'));
     expect(onEdit).not.toHaveBeenCalled();
 
@@ -857,7 +1081,7 @@ describe('ReservationsPanel', () => {
     expect(document.querySelector('iframe[src*="dash-widget"]')).toBeNull();
   });
 
-  it('FE-PLANNER-RESP-073: interacting with a transit card\'s travelers or plugin frame does not open the journey', async () => {
+  it("FE-PLANNER-RESP-073: interacting with a transit card's travelers or plugin frame does not open the journey", async () => {
     seedStore(usePluginStore, {
       plugins: [{ id: 'seat-map', name: 'Seat Map', type: 'widget', icon: null, slot: 'reservation-detail' }],
     });
@@ -882,7 +1106,18 @@ describe('ReservationsPanel', () => {
   });
 
   it('FE-PLANNER-RESP-075: hovering a blurred code reveals it and leaving hides it again', () => {
-    seedStore(useSettingsStore, { settings: { time_format: '24h', blur_booking_codes: true, temperature_unit: 'celsius', language: 'en', dark_mode: false, default_currency: 'USD', map_tile_url: '', show_place_description: false } });
+    seedStore(useSettingsStore, {
+      settings: {
+        time_format: '24h',
+        blur_booking_codes: true,
+        temperature_unit: 'celsius',
+        language: 'en',
+        dark_mode: false,
+        default_currency: 'USD',
+        map_tile_url: '',
+        show_place_description: false,
+      },
+    });
     const res = buildReservation({ id: 1, confirmation_number: 'HOVER1', status: 'confirmed' });
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const code = screen.getByText('HOVER1');
@@ -894,15 +1129,33 @@ describe('ReservationsPanel', () => {
 
   it('FE-PLANNER-RESP-076: entries with no resolvable date sink below the dated ones', () => {
     const day = buildDay({ id: 601, date: '2025-08-02', day_number: 2 } as any);
-    const undated = buildReservation({ id: 1, title: 'Undated taxi', type: 'taxi', status: 'pending', created_at: '2025-01-01T00:00:00.000Z' });
-    const dated = buildReservation({ id: 2, title: 'Dated train', type: 'train', status: 'pending', day_id: 601, created_at: '2025-02-01T00:00:00.000Z' } as any);
+    const undated = buildReservation({
+      id: 1,
+      title: 'Undated taxi',
+      type: 'taxi',
+      status: 'pending',
+      created_at: '2025-01-01T00:00:00.000Z',
+    });
+    const dated = buildReservation({
+      id: 2,
+      title: 'Dated train',
+      type: 'train',
+      status: 'pending',
+      day_id: 601,
+      created_at: '2025-02-01T00:00:00.000Z',
+    } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[undated, dated]} days={[day]} />);
     const text = document.body.textContent || '';
     expect(text.indexOf('Dated train')).toBeLessThan(text.indexOf('Undated taxi'));
   });
 
   it('FE-PLANNER-RESP-079: an http booking link is rendered as an anchor', () => {
-    const res = buildReservation({ id: 1, title: 'Hotel', status: 'confirmed', url: 'https://hotel.example/booking' } as any);
+    const res = buildReservation({
+      id: 1,
+      title: 'Hotel',
+      status: 'confirmed',
+      url: 'https://hotel.example/booking',
+    } as any);
     render(<ReservationsPanel {...defaultProps} reservations={[res]} />);
     const link = screen.getByText('https://hotel.example/booking');
     expect(link.tagName).toBe('A');

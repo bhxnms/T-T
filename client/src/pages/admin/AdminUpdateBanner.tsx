@@ -1,60 +1,70 @@
-import React from 'react'
-import { ArrowUpCircle, ExternalLink, Download, RefreshCw } from 'lucide-react'
-import type { TranslationFn } from '../../types'
-import type { UpdateInfo } from './adminModel'
+import { ArrowUpCircle, Download, ExternalLink, RefreshCw } from 'lucide-react';
+import React from 'react';
+import type { TranslationFn } from '../../types';
+import type { UpdateInfo } from './adminModel';
 
 interface AdminUpdateBannerProps {
-  updateInfo: UpdateInfo
-  t: TranslationFn
-  onHowTo: () => void
-  onCheck?: () => void
-  checking?: boolean
+  updateInfo: UpdateInfo;
+  t: TranslationFn;
+  onHowTo: () => void;
+  onCheck?: () => void;
+  checking?: boolean;
 }
 
 // The "new version available" banner shown at the top of the admin page.
 // Purely presentational — extracted from AdminPage with identical markup.
-export default function AdminUpdateBanner({ updateInfo, t, onHowTo, onCheck = () => {}, checking = false }: AdminUpdateBannerProps): React.ReactElement {
+export default function AdminUpdateBanner({
+  updateInfo,
+  t,
+  onHowTo,
+  onCheck = () => {},
+  checking = false,
+}: AdminUpdateBannerProps): React.ReactElement {
   return (
-    <div className="mb-6 p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-amber-500 dark:bg-amber-600">
-          <ArrowUpCircle className="w-5 h-5 text-white" />
+    <div className="mb-6 flex flex-col items-start gap-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/40 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-1 items-center gap-4">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 dark:bg-amber-600">
+          <ArrowUpCircle className="h-5 w-5 text-white" />
         </div>
         <div>
           <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">{t('admin.update.available')}</p>
-          <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-            {t('admin.update.text').replace('{version}', `v${updateInfo.latest}`).replace('{current}', `v${updateInfo.current}`)}
+          <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
+            {t('admin.update.text')
+              .replace('{version}', `v${updateInfo.latest}`)
+              .replace('{current}', `v${updateInfo.current}`)}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex flex-shrink-0 items-center gap-2">
         {updateInfo.release_url && (
           <a
             href={updateInfo.release_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+            className="flex items-center gap-1.5 rounded-lg border border-amber-300 px-3 py-2 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="h-3.5 w-3.5" />
             {t('admin.update.button')}
           </a>
         )}
-        <button type="button"
+        <button
+          type="button"
           onClick={onCheck}
           disabled={checking}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-amber-300 px-3 py-2 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${checking ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3.5 w-3.5 ${checking ? 'animate-spin' : ''}`} />
           {t('admin.update.checkNow')}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={onHowTo}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-gray-200"
+          className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-gray-200"
         >
-          <Download className="w-4 h-4" />
+          <Download className="h-4 w-4" />
           {t('admin.update.howTo')}
         </button>
       </div>
     </div>
-  )
+  );
 }

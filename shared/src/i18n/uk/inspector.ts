@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'Колір маршруту',
   'inspector.trackColorAuto': 'Автоматичний колір',
   'inspector.trackColorCustom': 'Вибрати свій колір',
-  "inspector.checkin": "Чек-ін",
-  "inspector.checkinDone": "Чек-ін виконано",
+  'inspector.checkin': 'Чек-ін',
+  'inspector.checkinDone': 'Чек-ін виконано',
 };
 export default inspector;

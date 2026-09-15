@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { MapViewAuto } from '../../../../components/Map/MapViewAuto'
-import { MapCompassPill, type CompassMap } from '../../../../components/Map/MapCompassPill'
-import PoiCategoryPill from '../../../../components/Map/PoiCategoryPill'
-import { usePoiExplore } from '../../../../components/Map/usePoiExplore'
-import { useSettingsStore } from '../../../../store/settingsStore'
-import type { MMapAreaProps } from '../MTripShell'
+import { useState } from 'react';
+import { MapCompassPill, type CompassMap } from '../../../../components/Map/MapCompassPill';
+import { MapViewAuto } from '../../../../components/Map/MapViewAuto';
+import PoiCategoryPill from '../../../../components/Map/PoiCategoryPill';
+import { usePoiExplore } from '../../../../components/Map/usePoiExplore';
+import { useSettingsStore } from '../../../../store/settingsStore';
+import type { MMapAreaProps } from '../MTripShell';
 
 /**
  * Fullscreen map layer of the mobile trip screen (plan tab). Stays mounted for
@@ -26,11 +26,11 @@ import type { MMapAreaProps } from '../MTripShell'
  * same set the places browser renders, so the two can't desync.
  */
 export default function MMapArea({ planner, shell }: MMapAreaProps) {
-  const poi = usePoiExplore()
-  const [glMap, setGlMap] = useState<CompassMap | null>(null)
-  const poiPillEnabled = useSettingsStore(s => s.settings.map_poi_pill_enabled) !== false
+  const poi = usePoiExplore();
+  const [glMap, setGlMap] = useState<CompassMap | null>(null);
+  const poiPillEnabled = useSettingsStore((s) => s.settings.map_poi_pill_enabled) !== false;
 
-  const mapActive = shell.view === 'map'
+  const mapActive = shell.view === 'map';
 
   return (
     // `isolate` keeps the map's internal z-indexes (Leaflet panes, the z-1000
@@ -59,7 +59,7 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
         // The chip rail names a day at all times on mobile, so a place dropped on
         // the map belongs to it — the desktop map has no such context and passes
         // nothing, which keeps its pool behaviour (#1998).
-        onMapContextMenu={e => planner.handleMapContextMenu(e, planner.selectedDayId)}
+        onMapContextMenu={(e) => planner.handleMapContextMenu(e, planner.selectedDayId)}
         // No center/zoom: the map frames itself on the trip's places at mount.
         tileUrl={planner.mapTileUrl}
         fitKey={planner.fitKey}
@@ -71,7 +71,7 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
         // routes this through mapTransportDetail into the day sidebar instead).
         onReservationClick={(rid: number) => shell.openSheet('transport', { reservationId: rid })}
         pois={poi.pois}
-        onPoiClick={marker => planner.openAddPlaceFromPoi(marker, planner.selectedDayId)}
+        onPoiClick={(marker) => planner.openAddPlaceFromPoi(marker, planner.selectedDayId)}
         onViewportChange={poi.onViewportChange}
         onMapReady={setGlMap}
       />
@@ -81,7 +81,7 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
           takes the full width between the screen margins, so its segments are
           the same size as everything else the thumb aims at on this screen. */}
       {mapActive && poiPillEnabled && (
-        <div className="pointer-events-none absolute left-4 right-4 z-[25] flex flex-col items-center gap-2 top-[calc(var(--m-safe-top,12px)+96px)]">
+        <div className="pointer-events-none absolute left-4 right-4 top-[calc(var(--m-safe-top,12px)+96px)] z-[25] flex flex-col items-center gap-2">
           <PoiCategoryPill
             fullWidth
             active={poi.active}
@@ -100,10 +100,13 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
           puts its base-layer switcher in the same corner, so the band reads the
           same either way. */}
       {mapActive && glMap && (
-        <div className="pointer-events-none absolute left-3 z-[25]" style={{ bottom: 'calc(var(--bottom-nav-h, 84px) + 12px)' }}>
+        <div
+          className="pointer-events-none absolute left-3 z-[25]"
+          style={{ bottom: 'calc(var(--bottom-nav-h, 84px) + 12px)' }}
+        >
           <MapCompassPill map={glMap} />
         </div>
       )}
     </div>
-  )
+  );
 }

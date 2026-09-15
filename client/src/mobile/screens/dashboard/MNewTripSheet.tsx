@@ -1,46 +1,44 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Archive, ArchiveRestore, Camera, FileUp, Search, X } from 'lucide-react'
-import { useTranslation } from '../../../i18n'
-import { tripsApi, type TrekImportTripSummary } from '../../../api/client'
-import { useCanDo } from '../../../store/permissionsStore'
-import { useSettingsStore } from '../../../store/settingsStore'
-import { useToast } from '../../../components/shared/Toast'
-import { normalizeImageFile } from '../../../utils/convertHeic'
-import { getApiErrorMessage } from '../../../types'
-import { CustomDatePicker } from '../../../components/shared/CustomDateTimePicker'
-import CustomSelect from '../../../components/shared/CustomSelect'
-import { currenciesWith, SYMBOLS } from '../../../components/Budget/BudgetPanel.constants'
-import type { DashboardTrip } from '../../../pages/dashboard/dashboardModel'
-import type { Trip, TripCreateRequest } from '@trek/shared'
-import MSheet from '../../components/MSheet'
-import MIconBtn from '../../components/MIconBtn'
-import MListRow from '../../components/MListRow'
+import type { Trip, TripCreateRequest } from '@trek/shared';
+import { Archive, ArchiveRestore, Camera, FileUp, Search, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { tripsApi, type TrekImportTripSummary } from '../../../api/client';
+import { currenciesWith, SYMBOLS } from '../../../components/Budget/BudgetPanel.constants';
+import { CustomDatePicker } from '../../../components/shared/CustomDateTimePicker';
+import CustomSelect from '../../../components/shared/CustomSelect';
+import { useToast } from '../../../components/shared/Toast';
+import { useTranslation } from '../../../i18n';
+import type { DashboardTrip } from '../../../pages/dashboard/dashboardModel';
+import { useCanDo } from '../../../store/permissionsStore';
+import { useSettingsStore } from '../../../store/settingsStore';
+import { getApiErrorMessage } from '../../../types';
+import { normalizeImageFile } from '../../../utils/convertHeic';
+import MIconBtn from '../../components/MIconBtn';
+import MListRow from '../../components/MListRow';
+import MSheet from '../../components/MSheet';
 
 interface CoverSearchPhoto {
-  id: string
-  url: string
-  thumb: string
-  description?: string | null
-  photographer?: string | null
+  id: string;
+  url: string;
+  thumb: string;
+  description?: string | null;
+  photographer?: string | null;
 }
 
 interface MNewTripSheetProps {
-  open: boolean
+  open: boolean;
   /** null = create, otherwise edit */
-  trip: DashboardTrip | null
-  onClose: () => void
-  onSave: (data: TripCreateRequest) => Promise<{ trip?: Trip } | void> | void
-  onCoverUpdate?: (tripId: number, coverUrl: string | null) => void
+  trip: DashboardTrip | null;
+  onClose: () => void;
+  onSave: (data: TripCreateRequest) => Promise<{ trip?: Trip } | void> | void;
+  onCoverUpdate?: (tripId: number, coverUrl: string | null) => void;
   /** Edit mode only: archives (or restores) the trip — the grid cards have no archive button. */
-  onArchive?: () => void
+  onArchive?: () => void;
   /** Fired after trips were imported from a TREK backup, so the grid refreshes. */
-  onImported?: () => void
+  onImported?: () => void;
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }): React.ReactElement {
-  return (
-    <div className="font-geist text-[0.5625rem] font-bold uppercase tracking-[.1em] text-m-faint">{children}</div>
-  )
+  return <div className="font-geist text-[0.5625rem] font-bold uppercase tracking-[.1em] text-m-faint">{children}</div>;
 }
 
 /**
@@ -48,120 +46,145 @@ function FieldLabel({ children }: { children: React.ReactNode }): React.ReactEle
  * title, date range and Unsplash cover search (plus device upload). Archiving
  * lives here in edit mode, as decided for the grid cards.
  */
-export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpdate, onArchive, onImported }: MNewTripSheetProps): React.ReactElement {
-  const isEditing = !!trip
-  const { t } = useTranslation()
-  const toast = useToast()
-  const can = useCanDo()
-  const defaultCurrency = useSettingsStore(s => s.settings.default_currency) || 'EUR'
-  const fileRef = useRef<HTMLInputElement>(null)
-  const coverSearchSeq = useRef(0)
-  const canEditTrip = !isEditing || can('trip_edit', trip)
-  const canUploadCover = !isEditing || can('trip_cover_upload', trip)
+export default function MNewTripSheet({
+  open,
+  trip,
+  onClose,
+  onSave,
+  onCoverUpdate,
+  onArchive,
+  onImported,
+}: MNewTripSheetProps): React.ReactElement {
+  const isEditing = !!trip;
+  const { t } = useTranslation();
+  const toast = useToast();
+  const can = useCanDo();
+  const defaultCurrency = useSettingsStore((s) => s.settings.default_currency) || 'EUR';
+  const fileRef = useRef<HTMLInputElement>(null);
+  const coverSearchSeq = useRef(0);
+  const canEditTrip = !isEditing || can('trip_edit', trip);
+  const canUploadCover = !isEditing || can('trip_cover_upload', trip);
 
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [currency, setCurrency] = useState('EUR')
-  const [error, setError] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [coverPreview, setCoverPreview] = useState<string | null>(null)
-  const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null)
-  const [pendingUnsplashUrl, setPendingUnsplashUrl] = useState<string | null>(null)
-  const [uploadingCover, setUploadingCover] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<CoverSearchPhoto[]>([])
-  const [searchError, setSearchError] = useState('')
-  const [searching, setSearching] = useState(false)
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [currency, setCurrency] = useState('EUR');
+  const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null);
+  const [pendingUnsplashUrl, setPendingUnsplashUrl] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<CoverSearchPhoto[]>([]);
+  const [searchError, setSearchError] = useState('');
+  const [searching, setSearching] = useState(false);
 
   // ── 从TREK导入 mode (create only) ──
-  const [createMode, setCreateMode] = useState<'form' | 'trek'>('form')
-  const [trekToken, setTrekToken] = useState<string | null>(null)
-  const [trekTrips, setTrekTrips] = useState<TrekImportTripSummary[]>([])
-  const [trekSelected, setTrekSelected] = useState<Set<number>>(new Set())
-  const [trekBusy, setTrekBusy] = useState(false)
-  const trekFileRef = useRef<HTMLInputElement>(null)
+  const [createMode, setCreateMode] = useState<'form' | 'trek'>('form');
+  const [trekToken, setTrekToken] = useState<string | null>(null);
+  const [trekTrips, setTrekTrips] = useState<TrekImportTripSummary[]>([]);
+  const [trekSelected, setTrekSelected] = useState<Set<number>>(new Set());
+  const [trekBusy, setTrekBusy] = useState(false);
+  const trekFileRef = useRef<HTMLInputElement>(null);
 
   const handleTrekFile = async (file: File | null) => {
-    if (!file) return
-    setTrekBusy(true); setError(''); setTrekTrips([]); setTrekToken(null)
+    if (!file) return;
+    setTrekBusy(true);
+    setError('');
+    setTrekTrips([]);
+    setTrekToken(null);
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await tripsApi.previewTrekImport(fd)
-      setTrekToken(res.token)
-      setTrekTrips(res.trips ?? [])
-      setTrekSelected(new Set((res.trips ?? []).map(tr => tr.id)))
-      if (!res.trips?.length) setError(t('trips.importTrekNone'))
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await tripsApi.previewTrekImport(fd);
+      setTrekToken(res.token);
+      setTrekTrips(res.trips ?? []);
+      setTrekSelected(new Set((res.trips ?? []).map((tr) => tr.id)));
+      if (!res.trips?.length) setError(t('trips.importTrekNone'));
     } catch {
-      setError(t('trips.importTrekFailed'))
+      setError(t('trips.importTrekFailed'));
     } finally {
-      setTrekBusy(false)
+      setTrekBusy(false);
     }
-  }
+  };
 
   const handleTrekImport = async () => {
-    if (!trekToken || trekSelected.size === 0) return
-    setTrekBusy(true); setError('')
+    if (!trekToken || trekSelected.size === 0) return;
+    setTrekBusy(true);
+    setError('');
     try {
-      const res = await tripsApi.importTrek(trekToken, [...trekSelected])
-      toast.success(t('trips.importTrekSuccess', { count: res.imported?.length ?? 0 }))
-      setTrekToken(null); setTrekTrips([]); setTrekSelected(new Set()); setCreateMode('form')
-      onImported?.()
-      onClose()
+      const res = await tripsApi.importTrek(trekToken, [...trekSelected]);
+      toast.success(t('trips.importTrekSuccess', { count: res.imported?.length ?? 0 }));
+      setTrekToken(null);
+      setTrekTrips([]);
+      setTrekSelected(new Set());
+      setCreateMode('form');
+      onImported?.();
+      onClose();
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, t('trips.importTrekFailed')))
+      setError(getApiErrorMessage(err, t('trips.importTrekFailed')));
     } finally {
-      setTrekBusy(false)
+      setTrekBusy(false);
     }
-  }
+  };
 
   useEffect(() => {
-    if (!open) return
-    setTitle(trip?.title || '')
-    setDescription(trip?.description || '')
-    setStartDate(trip?.start_date || '')
-    setEndDate(trip?.end_date || '')
-    setCurrency(trip?.currency || defaultCurrency)
-    setCoverPreview(trip?.cover_image || null)
-    setPendingCoverFile(null)
-    setPendingUnsplashUrl(null)
-    setSearchQuery('')
-    setSearchResults([])
-    setSearchError('')
-    setError('')
-    setCreateMode('form')
-    setTrekToken(null); setTrekTrips([]); setTrekSelected(new Set())
-  }, [trip, open])
+    if (!open) return;
+    setTitle(trip?.title || '');
+    setDescription(trip?.description || '');
+    setStartDate(trip?.start_date || '');
+    setEndDate(trip?.end_date || '');
+    setCurrency(trip?.currency || defaultCurrency);
+    setCoverPreview(trip?.cover_image || null);
+    setPendingCoverFile(null);
+    setPendingUnsplashUrl(null);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchError('');
+    setError('');
+    setCreateMode('form');
+    setTrekToken(null);
+    setTrekTrips([]);
+    setTrekSelected(new Set());
+  }, [trip, open]);
 
   // The local file preview is a blob url; release it once a new cover replaces it
   // or the sheet goes away. Server and Unsplash urls are left alone.
   useEffect(() => {
-    if (!coverPreview?.startsWith('blob:')) return
-    return () => { URL.revokeObjectURL(coverPreview) }
-  }, [coverPreview])
+    if (!coverPreview?.startsWith('blob:')) return;
+    return () => {
+      URL.revokeObjectURL(coverPreview);
+    };
+  }, [coverPreview]);
 
   // Moving the start keeps the trip length (same rule as TripFormModal).
   const changeStart = (value: string) => {
     if (value && endDate && startDate && endDate >= startDate) {
-      const duration = Math.round((new Date(endDate + 'T00:00:00Z').getTime() - new Date(startDate + 'T00:00:00Z').getTime()) / 86400000)
-      const newEnd = new Date(value + 'T00:00:00Z')
-      newEnd.setDate(newEnd.getDate() + duration)
-      setEndDate(newEnd.toISOString().split('T')[0])
+      const duration = Math.round(
+        (new Date(endDate + 'T00:00:00Z').getTime() - new Date(startDate + 'T00:00:00Z').getTime()) / 86400000
+      );
+      const newEnd = new Date(value + 'T00:00:00Z');
+      newEnd.setDate(newEnd.getDate() + duration);
+      setEndDate(newEnd.toISOString().split('T')[0]);
     } else if (value && (!endDate || endDate < value)) {
-      setEndDate(value)
+      setEndDate(value);
     }
-    setStartDate(value)
-  }
+    setStartDate(value);
+  };
 
   const handleSave = async () => {
-    setError('')
-    if (!title.trim()) { setError(t('dashboard.titleRequired')); return }
-    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-      setError(t('dashboard.endDateError')); return
+    setError('');
+    if (!title.trim()) {
+      setError(t('dashboard.titleRequired'));
+      return;
     }
-    setIsSaving(true)
+    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+      setError(t('dashboard.endDateError'));
+      return;
+    }
+    setIsSaving(true);
     try {
       const result = await onSave({
         title: title.trim(),
@@ -170,122 +193,132 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
         end_date: endDate || null,
         currency,
         ...(!startDate && !endDate && !isEditing ? { day_count: 7 } : {}),
-      })
-      const created = result ? result.trip : undefined
+      });
+      const created = result ? result.trip : undefined;
       if (pendingCoverFile && created?.id) {
         try {
-          const fd = new FormData()
-          fd.append('cover', pendingCoverFile)
-          const data = await tripsApi.uploadCover(created.id, fd)
-          onCoverUpdate?.(created.id, data.cover_image)
+          const fd = new FormData();
+          fd.append('cover', pendingCoverFile);
+          const data = await tripsApi.uploadCover(created.id, fd);
+          onCoverUpdate?.(created.id, data.cover_image);
         } catch {
-          toast.error(t('dashboard.coverUploadError'))
+          toast.error(t('dashboard.coverUploadError'));
         }
       } else if (pendingUnsplashUrl && created?.id) {
         try {
-          await tripsApi.update(created.id, { cover_image: pendingUnsplashUrl })
-          onCoverUpdate?.(created.id, pendingUnsplashUrl)
+          await tripsApi.update(created.id, { cover_image: pendingUnsplashUrl });
+          onCoverUpdate?.(created.id, pendingUnsplashUrl);
         } catch {
-          toast.error(t('dashboard.coverSaveError'))
+          toast.error(t('dashboard.coverSaveError'));
         }
       }
-      onClose()
+      onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('places.saveError'))
+      setError(err instanceof Error ? err.message : t('places.saveError'));
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleCoverFile = async (file: File | undefined | null) => {
-    if (!file) return
-    const normalized = await normalizeImageFile(file)
-    setPendingUnsplashUrl(null)
+    if (!file) return;
+    const normalized = await normalizeImageFile(file);
+    setPendingUnsplashUrl(null);
     if (isEditing && trip?.id) {
-      setUploadingCover(true)
+      setUploadingCover(true);
       try {
-        const fd = new FormData()
-        fd.append('cover', normalized)
-        const data = await tripsApi.uploadCover(trip.id, fd)
-        setCoverPreview(data.cover_image)
-        onCoverUpdate?.(trip.id, data.cover_image)
-        toast.success(t('dashboard.coverSaved'))
+        const fd = new FormData();
+        fd.append('cover', normalized);
+        const data = await tripsApi.uploadCover(trip.id, fd);
+        setCoverPreview(data.cover_image);
+        onCoverUpdate?.(trip.id, data.cover_image);
+        toast.success(t('dashboard.coverSaved'));
       } catch {
-        toast.error(t('dashboard.coverUploadError'))
+        toast.error(t('dashboard.coverUploadError'));
       } finally {
-        setUploadingCover(false)
+        setUploadingCover(false);
       }
     } else {
-      setPendingCoverFile(normalized)
-      setCoverPreview(URL.createObjectURL(normalized))
+      setPendingCoverFile(normalized);
+      setCoverPreview(URL.createObjectURL(normalized));
     }
-  }
+  };
 
   const handleSearch = async () => {
-    const query = searchQuery.trim() || title.trim()
-    if (!query) { setSearchError(t('dashboard.unsplashQueryRequired')); return }
-    // Only the latest search may apply its results (out-of-order guard).
-    const seq = ++coverSearchSeq.current
-    setSearching(true)
-    setSearchError('')
-    try {
-      const data = await tripsApi.searchCoverImages(query)
-      if (seq !== coverSearchSeq.current) return
-      const photos: CoverSearchPhoto[] = data.photos || []
-      setSearchResults(photos)
-      if (photos.length === 0) setSearchError(t('dashboard.unsplashNoResults'))
-    } catch (err: unknown) {
-      if (seq !== coverSearchSeq.current) return
-      setSearchError(getApiErrorMessage(err, t('dashboard.coverSearchError')))
-    } finally {
-      if (seq === coverSearchSeq.current) setSearching(false)
+    const query = searchQuery.trim() || title.trim();
+    if (!query) {
+      setSearchError(t('dashboard.unsplashQueryRequired'));
+      return;
     }
-  }
+    // Only the latest search may apply its results (out-of-order guard).
+    const seq = ++coverSearchSeq.current;
+    setSearching(true);
+    setSearchError('');
+    try {
+      const data = await tripsApi.searchCoverImages(query);
+      if (seq !== coverSearchSeq.current) return;
+      const photos: CoverSearchPhoto[] = data.photos || [];
+      setSearchResults(photos);
+      if (photos.length === 0) setSearchError(t('dashboard.unsplashNoResults'));
+    } catch (err: unknown) {
+      if (seq !== coverSearchSeq.current) return;
+      setSearchError(getApiErrorMessage(err, t('dashboard.coverSearchError')));
+    } finally {
+      if (seq === coverSearchSeq.current) setSearching(false);
+    }
+  };
 
   const selectUnsplash = async (photo: CoverSearchPhoto) => {
-    if (!photo.url) return
-    setPendingCoverFile(null)
+    if (!photo.url) return;
+    setPendingCoverFile(null);
     if (isEditing && trip?.id) {
-      setUploadingCover(true)
+      setUploadingCover(true);
       try {
-        await tripsApi.update(trip.id, { cover_image: photo.url })
-        setCoverPreview(photo.url)
-        onCoverUpdate?.(trip.id, photo.url)
-        toast.success(t('dashboard.coverSaved'))
+        await tripsApi.update(trip.id, { cover_image: photo.url });
+        setCoverPreview(photo.url);
+        onCoverUpdate?.(trip.id, photo.url);
+        toast.success(t('dashboard.coverSaved'));
       } catch (err: unknown) {
-        toast.error(getApiErrorMessage(err, t('dashboard.coverSaveError')))
+        toast.error(getApiErrorMessage(err, t('dashboard.coverSaveError')));
       } finally {
-        setUploadingCover(false)
+        setUploadingCover(false);
       }
     } else {
-      setPendingUnsplashUrl(photo.url)
-      setCoverPreview(photo.url)
+      setPendingUnsplashUrl(photo.url);
+      setCoverPreview(photo.url);
     }
-  }
+  };
 
   const removeCover = async () => {
     if (pendingCoverFile || pendingUnsplashUrl) {
-      setPendingCoverFile(null)
-      setPendingUnsplashUrl(null)
-      setCoverPreview(null)
-      return
+      setPendingCoverFile(null);
+      setPendingUnsplashUrl(null);
+      setCoverPreview(null);
+      return;
     }
     // Anything else is a cover stored on the trip, so this is the edit sheet.
-    const id = trip!.id
+    const id = trip!.id;
     try {
-      await tripsApi.update(id, { cover_image: null })
-      setCoverPreview(null)
-      onCoverUpdate?.(id, null)
+      await tripsApi.update(id, { cover_image: null });
+      setCoverPreview(null);
+      onCoverUpdate?.(id, null);
     } catch {
-      toast.error(t('dashboard.coverRemoveError'))
+      toast.error(t('dashboard.coverRemoveError'));
     }
-  }
+  };
 
-  const boxCls = 'rounded-[14px] border border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)] p-[11px_12px]'
-  const inputCls = 'w-full border-none bg-transparent pt-[2px] font-[inherit] text-[0.9375rem] font-semibold text-m-ink outline-none placeholder:text-m-faint'
+  const boxCls = 'rounded-[14px] border border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)] p-[11px_12px]';
+  const inputCls =
+    'w-full border-none bg-transparent pt-[2px] font-[inherit] text-[0.9375rem] font-semibold text-m-ink outline-none placeholder:text-m-faint';
 
   return (
-    <MSheet open={open} onClose={onClose} variant="card" material="opaque" ariaLabel={isEditing ? t('dashboard.editTrip') : t('dashboard.createTrip')}>
+    <MSheet
+      open={open}
+      onClose={onClose}
+      variant="card"
+      material="opaque"
+      ariaLabel={isEditing ? t('dashboard.editTrip') : t('dashboard.createTrip')}
+    >
       <div className="flex items-center gap-[11px] p-[16px_16px_0]">
         <div className="min-w-0 flex-1 truncate text-[1.0625rem] font-bold">
           {isEditing ? t('dashboard.editTrip') : t('dashboard.createTrip')}
@@ -304,12 +337,22 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
 
         {!isEditing && (
           <div className="mb-3 flex gap-1 rounded-full bg-[color:var(--m-ic)] p-[3px]" role="tablist">
-            {([['form', t('dashboard.createTrip')], ['trek', t('trips.importTrekTab')]] as const).map(([id, label]) => (
-              <button key={id} type="button" role="tab" aria-selected={createMode === id}
+            {(
+              [
+                ['form', t('dashboard.createTrip')],
+                ['trek', t('trips.importTrekTab')],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={createMode === id}
                 onClick={() => setCreateMode(id)}
                 className={`flex flex-1 items-center justify-center gap-[5px] rounded-full py-[7px] text-[0.75rem] font-bold transition-colors ${
                   createMode === id ? 'bg-m-act text-m-actfg' : 'text-m-muted'
-                }`}>
+                }`}
+              >
                 {id === 'trek' && <FileUp size={12} strokeWidth={2.2} />}
                 {label}
               </button>
@@ -320,42 +363,71 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
         {!isEditing && createMode === 'trek' && (
           <div className="space-y-2">
             <p className="px-1 text-[0.75rem] leading-[1.5] text-m-muted">{t('trips.importTrekIntro')}</p>
-            <input ref={trekFileRef} type="file" accept=".zip" className="hidden"
-              onChange={e => { void handleTrekFile(e.target.files?.[0] ?? null); e.target.value = '' }} />
-            <button type="button" onClick={() => trekFileRef.current?.click()} disabled={trekBusy}
-              className="flex w-full items-center justify-center gap-[6px] rounded-[14px] border border-dashed border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)] p-[18px] text-[0.8125rem] font-medium text-m-muted disabled:opacity-50">
-              {trekBusy
-                ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[color:var(--m-rowbr)] border-t-m-ink" />
-                : <FileUp size={15} strokeWidth={2} />}
+            <input
+              ref={trekFileRef}
+              type="file"
+              accept=".zip"
+              className="hidden"
+              onChange={(e) => {
+                void handleTrekFile(e.target.files?.[0] ?? null);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => trekFileRef.current?.click()}
+              disabled={trekBusy}
+              className="flex w-full items-center justify-center gap-[6px] rounded-[14px] border border-dashed border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)] p-[18px] text-[0.8125rem] font-medium text-m-muted disabled:opacity-50"
+            >
+              {trekBusy ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-[color:var(--m-rowbr)] border-t-m-ink" />
+              ) : (
+                <FileUp size={15} strokeWidth={2} />
+              )}
               {trekBusy ? t('trips.importTrekScanning') : t('trips.importTrekPick')}
             </button>
-            {trekTrips.map(tr => {
-              const checked = trekSelected.has(tr.id)
+            {trekTrips.map((tr) => {
+              const checked = trekSelected.has(tr.id);
               return (
-                <button key={tr.id} type="button"
-                  onClick={() => setTrekSelected(prev => {
-                    const next = new Set(prev)
-                    if (next.has(tr.id)) next.delete(tr.id)
-                    else next.add(tr.id)
-                    return next
-                  })}
+                <button
+                  key={tr.id}
+                  type="button"
+                  onClick={() =>
+                    setTrekSelected((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(tr.id)) next.delete(tr.id);
+                      else next.add(tr.id);
+                      return next;
+                    })
+                  }
                   className={`flex w-full items-center gap-[10px] rounded-[18px] px-[14px] py-[11px] text-left ${
                     checked ? 'bg-m-act/[.14] ring-1 ring-inset ring-[color:var(--m-act)]' : 'bg-[color:var(--m-ic)]'
-                  }`}>
-                  <span className={`flex h-[18px] w-[18px] flex-none items-center justify-center rounded-[5px] ${
-                    checked ? 'bg-m-act text-m-actfg' : 'border-[1.5px] border-[color:var(--m-rowbr)]'
-                  }`}>
+                  }`}
+                >
+                  <span
+                    className={`flex h-[18px] w-[18px] flex-none items-center justify-center rounded-[5px] ${
+                      checked ? 'bg-m-act text-m-actfg' : 'border-[1.5px] border-[color:var(--m-rowbr)]'
+                    }`}
+                  >
                     {checked && <FileUp size={10} strokeWidth={3} />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[0.84375rem] font-semibold text-m-ink">{tr.title || t('trips.importTrekUntitled')}</span>
+                    <span className="block truncate text-[0.84375rem] font-semibold text-m-ink">
+                      {tr.title || t('trips.importTrekUntitled')}
+                    </span>
                     <span className="block truncate font-geist text-[0.6875rem] text-m-muted">
                       {[tr.start_date, tr.end_date].filter(Boolean).join(' ~ ')}
-                      {' · '}{t('trips.importTrekStats', { days: tr.day_count, places: tr.place_count, photos: tr.photo_count, budget: tr.budget_count })}
+                      {' · '}
+                      {t('trips.importTrekStats', {
+                        days: tr.day_count,
+                        places: tr.place_count,
+                        photos: tr.photo_count,
+                        budget: tr.budget_count,
+                      })}
                     </span>
                   </span>
                 </button>
-              )
+              );
             })}
           </div>
         )}
@@ -364,7 +436,7 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
           <FieldLabel>{t('dashboard.tripTitle')}</FieldLabel>
           <input
             value={title}
-            onChange={e => canEditTrip && setTitle(e.target.value)}
+            onChange={(e) => canEditTrip && setTitle(e.target.value)}
             readOnly={!canEditTrip}
             placeholder={t('dashboard.tripTitlePlaceholder')}
             className={inputCls}
@@ -375,7 +447,7 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
           <FieldLabel>{t('dashboard.tripDescription')}</FieldLabel>
           <textarea
             value={description}
-            onChange={e => canEditTrip && setDescription(e.target.value)}
+            onChange={(e) => canEditTrip && setDescription(e.target.value)}
             readOnly={!canEditTrip}
             placeholder={t('dashboard.tripDescriptionPlaceholder')}
             rows={2}
@@ -388,7 +460,9 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
             <FieldLabel>{t('dashboard.startDate')}</FieldLabel>
             <CustomDatePicker
               value={startDate}
-              onChange={v => { if (canEditTrip) changeStart(v) }}
+              onChange={(v) => {
+                if (canEditTrip) changeStart(v);
+              }}
               placeholder={t('dashboard.startDate')}
               borderless
               style={{ marginTop: 3 }}
@@ -398,7 +472,9 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
             <FieldLabel>{t('dashboard.endDate')}</FieldLabel>
             <CustomDatePicker
               value={endDate}
-              onChange={v => { if (canEditTrip) setEndDate(v) }}
+              onChange={(v) => {
+                if (canEditTrip) setEndDate(v);
+              }}
               placeholder={t('dashboard.endDate')}
               borderless
               style={{ marginTop: 3 }}
@@ -413,11 +489,13 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
           <FieldLabel>{t('dashboard.currency')}</FieldLabel>
           <CustomSelect
             value={currency}
-            onChange={v => { if (canEditTrip) setCurrency(String(v)) }}
+            onChange={(v) => {
+              if (canEditTrip) setCurrency(String(v));
+            }}
             disabled={!canEditTrip}
             searchable
             size="sm"
-            options={currenciesWith(currency).map(c => ({ value: c, label: `${c} (${SYMBOLS[c] || c})` }))}
+            options={currenciesWith(currency).map((c) => ({ value: c, label: `${c} (${SYMBOLS[c] || c})` }))}
             style={{ width: '100%', marginTop: 5 }}
           />
         </div>
@@ -429,7 +507,10 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={e => { handleCoverFile(e.target.files?.[0]); e.target.value = '' }}
+              onChange={(e) => {
+                handleCoverFile(e.target.files?.[0]);
+                e.target.value = '';
+              }}
             />
             {coverPreview ? (
               <div className="relative h-[130px] overflow-hidden rounded-[16px]">
@@ -470,8 +551,13 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
               <div className={`${boxCls} min-w-0 flex-1 py-[9px]`}>
                 <input
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSearch() } }}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
                   placeholder={t('dashboard.unsplashSearchPlaceholder')}
                   className={`${inputCls} pt-0 text-[0.8125rem] font-medium`}
                 />
@@ -486,10 +572,14 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
                 <Search size={15} strokeWidth={2.2} />
               </button>
             </div>
-            {searchError && <p className="mt-[6px] px-1 text-[0.6875rem] font-medium text-[color:var(--m-st-danger)]">{searchError}</p>}
+            {searchError && (
+              <p className="mt-[6px] px-1 text-[0.6875rem] font-medium text-[color:var(--m-st-danger)]">
+                {searchError}
+              </p>
+            )}
             {searchResults.length > 0 && (
               <div className="mt-2 grid grid-cols-3 gap-2">
-                {searchResults.map(photo => (
+                {searchResults.map((photo) => (
                   <button
                     key={photo.id}
                     type="button"
@@ -499,7 +589,12 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
                       coverPreview === photo.url ? 'border-[color:var(--m-act)]' : 'border-[color:var(--m-rowbr)]'
                     }`}
                   >
-                    <img src={photo.thumb} alt={photo.description || ''} loading="lazy" className="h-full w-full object-cover" />
+                    <img
+                      src={photo.thumb}
+                      alt={photo.description || ''}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
                     {photo.photographer && (
                       <span className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-[6px] py-1 text-left font-geist text-[0.625rem] text-white">
                         {photo.photographer}
@@ -517,7 +612,10 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
             <MListRow
               icon={trip?.is_archived ? ArchiveRestore : Archive}
               label={trip?.is_archived ? t('dashboard.restore') : t('dashboard.archive')}
-              onClick={() => { onArchive(); onClose() }}
+              onClick={() => {
+                onArchive();
+                onClose();
+              }}
             />
           </div>
         )}
@@ -552,5 +650,5 @@ export default function MNewTripSheet({ open, trip, onClose, onSave, onCoverUpda
         )}
       </div>
     </MSheet>
-  )
+  );
 }

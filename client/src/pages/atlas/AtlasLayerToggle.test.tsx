@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '../../../tests/helpers/render';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '../../../tests/helpers/render';
 import type { TranslationFn } from '../../types';
 import AtlasLayerToggle from './AtlasLayerToggle';
 
@@ -9,11 +9,10 @@ const t = ((key: string) => key) as TranslationFn;
 
 describe('AtlasLayerToggle', () => {
   it('FE-ATLAS-TOGGLE-001: stays out of the way while nothing is planned', () => {
-    const { container } = render(
-      <AtlasLayerToggle t={t} showPlanned={false} onToggle={vi.fn()} plannedCount={0} />,
-    );
+    const { container } = render(<AtlasLayerToggle t={t} showPlanned={false} onToggle={vi.fn()} plannedCount={0} />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByText('atlas.showPlanned')).not.toBeInTheDocument();
+    expect(screen.getByText('atlas.showLandmarks')).toBeInTheDocument();
   });
 
   it('FE-ATLAS-TOGGLE-002: shows the label and how many countries the layer would add', () => {
@@ -26,9 +25,7 @@ describe('AtlasLayerToggle', () => {
 
   it('FE-ATLAS-TOGGLE-003: reports the flip and reflects the current state', () => {
     const onToggle = vi.fn();
-    const { rerender } = render(
-      <AtlasLayerToggle t={t} showPlanned={false} onToggle={onToggle} plannedCount={4} />,
-    );
+    const { rerender } = render(<AtlasLayerToggle t={t} showPlanned={false} onToggle={onToggle} plannedCount={4} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'atlas.showPlanned' }));
     expect(onToggle).toHaveBeenCalledTimes(1);

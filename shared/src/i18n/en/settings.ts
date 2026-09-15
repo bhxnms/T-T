@@ -502,7 +502,8 @@ const settings: TranslationStrings = {
   'settings.offline.notice.offline': 'No connection. Connect to store trips for offline use.',
   'settings.offline.notice.signedOut': 'Your session has ended. Sign in again to sync.',
   'settings.offline.notice.failed': 'The download could not finish. Check your connection and try again.',
-  'settings.offline.notice.loadFailed': 'Could not read this device’s offline storage. Clearing the cache usually fixes it.',
+  'settings.offline.notice.loadFailed':
+    'Could not read this device’s offline storage. Clearing the cache usually fixes it.',
   'settings.offline.clear': 'Clear cache',
   'settings.offline.clearConfirm': 'Clear all offline trip data? You can re-sync anytime while online.',
   'settings.offline.stats.trips': 'Cached trips',
@@ -535,7 +536,8 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'API Keys',
-  'settings.apiKeys.description': 'Keys for the public API, so other software can read your trips. Read-only: a key cannot change or delete anything.',
+  'settings.apiKeys.description':
+    'Keys for the public API, so other software can read your trips. Read-only: a key cannot change or delete anything.',
   'settings.apiKeys.create': 'Create key',
   'settings.apiKeys.empty': 'No keys yet. Create one to connect other software.',
   'settings.apiKeys.createdAt': 'created',

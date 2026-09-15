@@ -63,7 +63,6 @@ Paste a `maps.app.goo.gl/…`, `goo.gl/maps/…`, or `maps.google.*/…` URL dir
 
 ## Place fields
 
-<!-- TODO: screenshot: Place form with all fields visible -->
 
 | Field | Notes |
 |---|---|

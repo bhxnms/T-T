@@ -1,7 +1,7 @@
 {
   "name": "@trek/root",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.5.0",
   "workspaces": [
     "client",
     "server",
@@ -22,7 +22,8 @@
     "test:e2e": "npm run test:e2e --workspace=server",
     "lint": "npm run lint --workspace=shared && npm run lint --workspace=server && npm run lint --workspace=client",
     "format": "npm run format --workspace=shared && npm run format --workspace=server && npm run format --workspace=client",
-    "format:check": "npm run format:check --workspace=shared && npm run format:check --workspace=server && npm run format:check --workspace=client"
+    "format:check": "npm run format:check --workspace=shared && npm run format:check --workspace=server && npm run format:check --workspace=client",
+    "lint:check": "npm run lint:check --workspace=shared && npm run lint:check --workspace=server && npm run lint:check --workspace=client"
   },
   "devDependencies": {
     "concurrently": "^10.0.4",

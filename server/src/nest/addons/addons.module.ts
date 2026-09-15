@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { AddonsController } from './addons.controller';
-import { AddonsService } from './addons.service';
 import { AddonGuard } from './addon.guard';
+import { AddonsController } from './addons.controller';
 import { AddonsMcp } from './addons.mcp';
+import { AddonsService } from './addons.service';
+import { Module } from '@nestjs/common';
 
 /**
  * GET /api/addons — enabled add-ons + photo providers (was an inline handler in

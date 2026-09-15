@@ -428,7 +428,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Změnit verzi…',
   'admin.plugins.noVersions': 'V registru nebyly nalezeny žádné publikované verze.',
   'admin.plugins.downgradeTitle': 'Vrátit tento plugin na starší verzi?',
-  'admin.plugins.downgradeBody': 'Přechod z v{from} na v{to}: data zapsaná novější verzí zůstanou na místě a starší verze jim nemusí rozumět.',
+  'admin.plugins.downgradeBody':
+    'Přechod z v{from} na v{to}: data zapsaná novější verzí zůstanou na místě a starší verze jim nemusí rozumět.',
   'admin.plugins.downgradeConfirm': 'Vrátit zpět',
   'admin.plugins.updatesHeld': 'Aktualizace pozastaveny na v{version}',
   'admin.plugins.resumeUpdates': 'Obnovit aktualizace',
@@ -532,7 +533,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'Synchronizujte lety ze své instance AirTrail',
   'admin.addons.catalog.llm_parsing.name': 'Analýza pomocí AI',
-  'admin.addons.catalog.llm_parsing.description': 'Přečte rezervace, které vestavěný analyzátor nezvládne, pomocí zvoleného modelu AI',
+  'admin.addons.catalog.llm_parsing.description':
+    'Přečte rezervace, které vestavěný analyzátor nezvládne, pomocí zvoleného modelu AI',
   'admin.addons.enabled': 'Povoleno',
   'admin.addons.disabled': 'Zakázáno',
   'admin.addons.type.trip': 'Cesta',
@@ -678,7 +680,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.journey.name': 'Cestovní deník',
   'admin.addons.catalog.journey.description': 'Sledování cest a cestovní deník s odbaveními, fotkami a denními příběhy',
   'admin.addons.catalog.collections.name': 'Sbírky',
-  'admin.addons.catalog.collections.description': 'Sbírejte místa ze všech cest do pojmenovaných seznamů a znovu je používejte',
+  'admin.addons.catalog.collections.description':
+    'Sbírejte místa ze všech cest do pojmenovaných seznamů a znovu je používejte',
   'admin.passkey.title': 'Přihlášení přístupovým klíčem',
   'admin.passkey.cardHint':
     'Umožněte uživatelům přihlašovat se pomocí přístupových klíčů (WebAuthn). Ve výchozím nastavení vypnuto.',
@@ -722,9 +725,13 @@ const admin: TranslationStrings = {
   'admin.invite.tripNone': 'Žádná cesta',
   'admin.invite.tripHint': 'Nový uživatel bude po registraci přes odkaz automaticky přidán k této cestě.',
   'admin.invite.boundTo': 'přidá k {trip}',
-  "admin.amapKey": "Klíč webové služby AMap",
-  "admin.amapKeyHint": "Pro vyhledávání míst v Číně a trasy s ohledem na provoz. Získejte klíč webové služby na lbs.amap.com.",
-  "admin.amapSearch.title": "Použít AMap pro vyhledávání míst",
-  "admin.amapSearch.subtitle": "Ve výchozím nastavení používá AMap; každý vyhledávací formulář se může vrátit k nativním zdrojům TREK.",
+  'admin.amapKey': 'Klíč webové služby AMap',
+  'admin.amapKeyHint':
+    'Pro vyhledávání míst v Číně a trasy s ohledem na provoz. Získejte klíč webové služby na lbs.amap.com.',
+  'admin.amapSearch.title': 'Použít AMap pro vyhledávání míst',
+  'admin.amapSearch.subtitle':
+    'Ve výchozím nastavení používá AMap; každý vyhledávací formulář se může vrátit k nativním zdrojům TREK.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

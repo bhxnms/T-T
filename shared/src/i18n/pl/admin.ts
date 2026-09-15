@@ -329,7 +329,8 @@ const admin: TranslationStrings = {
     'Oznaczanie dni w planie dnia kolorami (na przykład do którego etapu podróży należy dany dzień)',
   'admin.plugins.cap.mcpTools': 'Publikuje narzędzia AI',
   'admin.plugins.mcpToolsTitle': 'Publikowane narzędzia AI',
-  'admin.plugins.mcpToolsHint': 'Asystent może je uruchomić w imieniu użytkownika. Każde działa z uprawnieniami nadanymi powyżej.',
+  'admin.plugins.mcpToolsHint':
+    'Asystent może je uruchomić w imieniu użytkownika. Każde działa z uprawnieniami nadanymi powyżej.',
   'admin.plugins.perm.mcp:tools':
     'Publikowanie narzędzi, które asystent AI może uruchomić w Twoim imieniu (działa z uprawnieniami nadanymi tutaj wtyczce, nie z własnymi)',
   'admin.plugins.perm.geolocation:read':
@@ -434,7 +435,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Zmień wersję…',
   'admin.plugins.noVersions': 'Nie znaleziono opublikowanych wersji w rejestrze.',
   'admin.plugins.downgradeTitle': 'Przywrócić starszą wersję tej wtyczki?',
-  'admin.plugins.downgradeBody': 'Przejście z v{from} na v{to}: dane zapisane przez nowszą wersję pozostają, a starsza wersja może ich nie rozumieć.',
+  'admin.plugins.downgradeBody':
+    'Przejście z v{from} na v{to}: dane zapisane przez nowszą wersję pozostają, a starsza wersja może ich nie rozumieć.',
   'admin.plugins.downgradeConfirm': 'Przywróć',
   'admin.plugins.updatesHeld': 'Aktualizacje wstrzymane na v{version}',
   'admin.plugins.resumeUpdates': 'Wznów aktualizacje',
@@ -505,8 +507,7 @@ const admin: TranslationStrings = {
     '„{name}” deklaruje obsługę TREK {range}, a ten serwer działa na {host}. TREK przepuszcza ją tylko dlatego, że ustawiono TREK_PLUGINS_IGNORE_TREK_RANGE. Autor nie zaktualizował zakresu wersji wtyczki dla tego TREK, więc nie ma gwarancji, że zadziała — a w rzadkich przypadkach niedopasowana wtyczka może uszkodzić dane TREK. Kontynuuj tylko, jeśli akceptujesz to ryzyko.',
   'admin.plugins.rangeBypass.bodyUnknown':
     '„{name}” nie deklaruje, które wersje TREK obsługuje; ten serwer działa na {host}. TREK przepuszcza ją tylko dlatego, że ustawiono TREK_PLUGINS_IGNORE_TREK_RANGE. Nic nie wskazuje, że autor testował ją na tym TREK, więc nie ma gwarancji, że zadziała — a w rzadkich przypadkach niedopasowana wtyczka może uszkodzić dane TREK. Kontynuuj tylko, jeśli akceptujesz to ryzyko.',
-  'admin.plugins.dep.trekBypassed':
-    'Poza swoim zakresem TREK ({range}) — kontrola wersji wyłączona',
+  'admin.plugins.dep.trekBypassed': 'Poza swoim zakresem TREK ({range}) — kontrola wersji wyłączona',
   'admin.plugins.dep.trekBypassedUnknown': 'Nie deklaruje zakresu TREK — kontrola wersji wyłączona',
   'admin.plugins.incompatible': 'Niezgodny',
   'admin.plugins.accessTitle': 'Do czego ma dostęp',
@@ -543,7 +544,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'Synchronizuj loty ze swojej instancji AirTrail',
   'admin.addons.catalog.llm_parsing.name': 'Analiza AI',
-  'admin.addons.catalog.llm_parsing.description': 'Odczytuje rezerwacje, których nie rozumie wbudowany parser, przy użyciu wybranego modelu AI',
+  'admin.addons.catalog.llm_parsing.description':
+    'Odczytuje rezerwacje, których nie rozumie wbudowany parser, przy użyciu wybranego modelu AI',
   'admin.addons.enabled': 'Włączone',
   'admin.addons.disabled': 'Wyłączone',
   'admin.addons.type.trip': 'Podróż',
@@ -701,7 +703,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.journey.description':
     'Śledzenie podróży i dziennik z zameldowaniami, zdjęciami i codziennymi historiami',
   'admin.addons.catalog.collections.name': 'Kolekcje',
-  'admin.addons.catalog.collections.description': 'Zbieraj miejsca ze wszystkich podróży na nazwane listy i używaj ich ponownie',
+  'admin.addons.catalog.collections.description':
+    'Zbieraj miejsca ze wszystkich podróży na nazwane listy i używaj ich ponownie',
   'admin.passkey.title': 'Logowanie kluczem dostępu',
   'admin.passkey.cardHint': 'Pozwól użytkownikom logować się kluczami dostępu (WebAuthn). Domyślnie wyłączone.',
   'admin.passkey.login': 'Włącz logowanie kluczem dostępu',
@@ -744,9 +747,12 @@ const admin: TranslationStrings = {
   'admin.invite.tripNone': 'Brak podróży',
   'admin.invite.tripHint': 'Nowy użytkownik zostanie automatycznie dodany do tej podróży po rejestracji przez link.',
   'admin.invite.boundTo': 'dodaje do {trip}',
-  "admin.amapKey": "Klucz usługi internetowej AMap",
-  "admin.amapKeyHint": "Do wyszukiwania miejsc w Chinach i tras z uwzględnieniem ruchu. Uzyskaj klucz usługi na lbs.amap.com.",
-  "admin.amapSearch.title": "Użyj AMap do wyszukiwania miejsc",
-  "admin.amapSearch.subtitle": "Domyślnie używa AMap; każde pole wyszukiwania może wrócić do natywnych źródeł TREK.",
+  'admin.amapKey': 'Klucz usługi internetowej AMap',
+  'admin.amapKeyHint':
+    'Do wyszukiwania miejsc w Chinach i tras z uwzględnieniem ruchu. Uzyskaj klucz usługi na lbs.amap.com.',
+  'admin.amapSearch.title': 'Użyj AMap do wyszukiwania miejsc',
+  'admin.amapSearch.subtitle': 'Domyślnie używa AMap; każde pole wyszukiwania może wrócić do natywnych źródeł TREK.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

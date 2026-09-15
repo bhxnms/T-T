@@ -1,16 +1,4 @@
-import {
-  BookOpen,
-  Bug,
-  Calendar,
-  ChevronDown,
-  ChevronUp,
-  Coffee,
-  ExternalLink,
-  Heart,
-  Lightbulb,
-  Loader2,
-  Tag,
-} from 'lucide-react';
+import { BookOpen, Bug, Calendar, ChevronDown, ChevronUp, ExternalLink, Lightbulb, Loader2, Tag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import apiClient from '../../api/client';
 import { getLocaleForLanguage, useTranslation } from '../../i18n';
@@ -40,12 +28,25 @@ export default function GitHubPanel({ isPrerelease = false }: { isPrerelease?: b
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const fetchReleases = async (pageNum = 1, append = false) => {
+  const MAX_PAGES_PER_LOAD = 5;
+  const fetchReleases = async (startPage = 1, append = false) => {
     try {
-      const res = await apiClient.get(`/admin/github-releases`, { params: { per_page: PER_PAGE, page: pageNum } });
-      const data = Array.isArray(res.data) ? res.data : [];
-      setReleases((prev) => (append ? [...prev, ...data] : data));
-      setHasMore(data.length === PER_PAGE);
+      const collected: GithubRelease[] = [];
+      let pageNum = startPage;
+      let hasMorePages = true;
+      for (let i = 0; i < MAX_PAGES_PER_LOAD; i += 1) {
+        const res = await apiClient.get(`/admin/github-releases`, { params: { per_page: PER_PAGE, page: pageNum } });
+        const data = Array.isArray(res.data) ? res.data : [];
+        const visible = data.filter((release: GithubRelease) => isPrerelease || !release.prerelease);
+        collected.push(...visible);
+        hasMorePages = data.length === PER_PAGE;
+        if (!hasMorePages || isPrerelease || visible.length > 0) break;
+        pageNum += 1;
+      }
+      setReleases((prev) => (append ? [...prev, ...collected] : collected));
+      setHasMore(hasMorePages);
+      setPage(pageNum);
+      setError(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     }
@@ -53,14 +54,15 @@ export default function GitHubPanel({ isPrerelease = false }: { isPrerelease?: b
 
   useEffect(() => {
     setLoading(true);
-    fetchReleases(1).finally(() => setLoading(false));
-  }, []);
+    void fetchReleases(1).finally(() => setLoading(false));
+    // Release filtering is selected when the panel mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPrerelease]);
 
   const handleLoadMore = async () => {
     const next = page + 1;
     setLoadingMore(true);
     await fetchReleases(next, true);
-    setPage(next);
     setLoadingMore(false);
   };
 
@@ -160,114 +162,6 @@ export default function GitHubPanel({ isPrerelease = false }: { isPrerelease?: b
         <p className="mt-1 text-xs text-content-muted">
           TT 是基于 TREK 开源项目分支开发的旅行规划与活动管理工具，由 TT 团队持续维护。
         </p>
-      </div>
-
-      {/* Community links */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <a
-          href="https://ko-fi.com/mauriceboe"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#ff5e5b';
-            e.currentTarget.style.boxShadow = '0 0 0 1px #ff5e5b22';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-primary)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <div
-            className="bg-[#ff5e5b15]"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Coffee size={20} className="text-[#ff5e5b]" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-content">Ko-fi</div>
-            <div className="text-xs text-content-faint">{t('admin.github.support')}</div>
-          </div>
-          <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
-        </a>
-        <a
-          href="https://buymeacoffee.com/mauriceboe"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#ffdd00';
-            e.currentTarget.style.boxShadow = '0 0 0 1px #ffdd0022';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-primary)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <div
-            className="bg-[#ffdd0015]"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Heart size={20} className="text-[#ffdd00]" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-content">Buy Me a Coffee</div>
-            <div className="text-xs text-content-faint">{t('admin.github.support')}</div>
-          </div>
-          <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
-        </a>
-        <a
-          href="https://discord.gg/NhZBDSd4qW"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#5865F2';
-            e.currentTarget.style.boxShadow = '0 0 0 1px #5865F222';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-primary)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <div
-            className="bg-[#5865F215]"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5865F2">
-              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-            </svg>
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-content">Discord</div>
-            <div className="text-xs text-content-faint">Join the community</div>
-          </div>
-          <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
-        </a>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

@@ -1,3 +1,8 @@
+import { WebauthnConfigService, originWithinRpScope } from '../../../src/nest/auth/webauthn-config.service';
+import { DatabaseService } from '../../../src/nest/database/database.service';
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
 /**
  * webauthn-config.service.test.ts
  *
@@ -20,10 +25,6 @@ vi.mock('../../../src/app-config', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../src/app-config')>();
   return { ...actual, getAppUrl: () => appUrlRef.value };
 });
-
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DatabaseService } from '../../../src/nest/database/database.service';
-import { WebauthnConfigService, originWithinRpScope } from '../../../src/nest/auth/webauthn-config.service';
 
 // Injected instead of vi.mocking src/db/database: the service reads exactly one
 // row shape (app_settings.value), so a stub connection keeps the suite free of

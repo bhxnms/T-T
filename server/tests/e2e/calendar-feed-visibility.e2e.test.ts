@@ -8,10 +8,16 @@
  * real migrated SQLite instead, and asserts on the bytes a calendar client
  * would receive.
  */
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import request from 'supertest';
-import type { Server } from 'http';
+import { runMigrations } from '../../src/db/migrations';
+import { createTables } from '../../src/db/schema';
+import { TrekExceptionFilter } from '../../src/nest/common/trek-exception.filter';
+import { DatabaseModule } from '../../src/nest/database/database.module';
+import { FeedsModule } from '../../src/nest/feeds/feeds.module';
 import { Test } from '@nestjs/testing';
+
+import type { Server } from 'http';
+import request from 'supertest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 
 const { db } = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -30,12 +36,6 @@ vi.mock('../../src/db/database', () => ({
   closeDb: () => {},
   reinitialize: () => {},
 }));
-
-import { createTables } from '../../src/db/schema';
-import { runMigrations } from '../../src/db/migrations';
-import { DatabaseModule } from '../../src/nest/database/database.module';
-import { FeedsModule } from '../../src/nest/feeds/feeds.module';
-import { TrekExceptionFilter } from '../../src/nest/common/trek-exception.filter';
 
 describe('Calendar feed visibility e2e (real CalendarService over temp SQLite)', () => {
   let server: Server;
@@ -61,10 +61,14 @@ describe('Calendar feed visibility e2e (real CalendarService over temp SQLite)',
       "INSERT INTO trips (id, user_id, title, start_date, end_date, feed_token) VALUES (1, 1, 'Kyoto', '2026-09-01', '2026-09-05', ?)",
     ).run(feedToken);
     db.prepare("INSERT INTO days (id, trip_id, day_number, date) VALUES (1, 1, 1, '2026-09-01')").run();
-    db.prepare(`INSERT INTO reservations (trip_id, day_id, title, type, status, reservation_time, confirmation_number, ingest_state)
-      VALUES (1, 1, 'Parked Flight', 'flight', 'confirmed', '2026-09-01T08:00', 'SECRET1', 'staged')`).run();
-    db.prepare(`INSERT INTO reservations (trip_id, day_id, title, type, status, reservation_time, confirmation_number)
-      VALUES (1, 1, 'Booked Flight', 'flight', 'confirmed', '2026-09-01T12:00', 'OPEN1')`).run();
+    db.prepare(
+      `INSERT INTO reservations (trip_id, day_id, title, type, status, reservation_time, confirmation_number, ingest_state)
+      VALUES (1, 1, 'Parked Flight', 'flight', 'confirmed', '2026-09-01T08:00', 'SECRET1', 'staged')`,
+    ).run();
+    db.prepare(
+      `INSERT INTO reservations (trip_id, day_id, title, type, status, reservation_time, confirmation_number)
+      VALUES (1, 1, 'Booked Flight', 'flight', 'confirmed', '2026-09-01T12:00', 'OPEN1')`,
+    ).run();
 
     app = await build();
     server = app.getHttpServer();

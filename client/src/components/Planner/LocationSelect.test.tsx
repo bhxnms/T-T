@@ -1,9 +1,9 @@
 // FE-PLANNER-LOCSEL-001 to FE-PLANNER-LOCSEL-019
-import { useState } from 'react';
-import { delay, http, HttpResponse } from 'msw';
 import userEvent from '@testing-library/user-event';
-import { render, screen, fireEvent, waitFor, act } from '../../../tests/helpers/render';
+import { delay, http, HttpResponse } from 'msw';
+import { useState } from 'react';
 import { server } from '../../../tests/helpers/msw/server';
+import { act, fireEvent, render, screen, waitFor } from '../../../tests/helpers/render';
 import LocationSelect, { type LocationPoint } from './LocationSelect';
 
 interface SearchHit {
@@ -20,7 +20,9 @@ const LYON = { name: 'Gare de Lyon', address: 'Place Louis-Armand, Paris', lat: 
 
 /** Let the debounce fire and any in-flight request settle. */
 async function settle(ms = 450) {
-  await act(async () => { await new Promise((r) => setTimeout(r, ms)); });
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, ms));
+  });
 }
 
 function searchRoute(places: SearchHit[] | (() => Response | Promise<Response>)) {
@@ -29,9 +31,23 @@ function searchRoute(places: SearchHit[] | (() => Response | Promise<Response>))
 
 // Controlled host — `value` drives the input text and mutes the search for the
 // already-picked name, exactly like ReservationModal wires it up.
-function Host({ initial = null, onPick }: { initial?: LocationPoint | null; onPick?: (l: LocationPoint | null) => void }) {
+function Host({
+  initial = null,
+  onPick,
+}: {
+  initial?: LocationPoint | null;
+  onPick?: (l: LocationPoint | null) => void;
+}) {
   const [value, setValue] = useState<LocationPoint | null>(initial);
-  return <LocationSelect value={value} onChange={(l) => { setValue(l); onPick?.(l); }} />;
+  return (
+    <LocationSelect
+      value={value}
+      onChange={(l) => {
+        setValue(l);
+        onPick?.(l);
+      }}
+    />
+  );
 }
 
 describe('LocationSelect', () => {
@@ -59,7 +75,12 @@ describe('LocationSelect', () => {
   it('FE-PLANNER-LOCSEL-005: fewer than three characters never reach the API', async () => {
     const user = userEvent.setup();
     let calls = 0;
-    server.use(searchRoute(() => { calls++; return HttpResponse.json({ places: [GARE] }); }));
+    server.use(
+      searchRoute(() => {
+        calls++;
+        return HttpResponse.json({ places: [GARE] });
+      })
+    );
 
     render(<Host />);
     await user.type(screen.getByRole('textbox'), 'Ga');
@@ -84,11 +105,13 @@ describe('LocationSelect', () => {
     const user = userEvent.setup();
     let body: { query?: string } = {};
     let lang: string | null = null;
-    server.use(http.post('/api/maps/search', async ({ request }) => {
-      lang = new URL(request.url).searchParams.get('lang');
-      body = await request.json() as { query?: string };
-      return HttpResponse.json({ places: [GARE] });
-    }));
+    server.use(
+      http.post('/api/maps/search', async ({ request }) => {
+        lang = new URL(request.url).searchParams.get('lang');
+        body = (await request.json()) as { query?: string };
+        return HttpResponse.json({ places: [GARE] });
+      })
+    );
 
     render(<Host />);
     await user.type(screen.getByRole('textbox'), '  Gare du Nord  ');
@@ -127,7 +150,12 @@ describe('LocationSelect', () => {
 
   it('FE-PLANNER-LOCSEL-010: shows the loading row while the request is in flight', async () => {
     const user = userEvent.setup();
-    server.use(searchRoute(async () => { await delay(200); return HttpResponse.json({ places: [GARE] }); }));
+    server.use(
+      searchRoute(async () => {
+        await delay(200);
+        return HttpResponse.json({ places: [GARE] });
+      })
+    );
 
     render(<Host />);
     await user.type(screen.getByRole('textbox'), 'Gare');
@@ -158,7 +186,9 @@ describe('LocationSelect', () => {
   it('FE-PLANNER-LOCSEL-012: string coordinates are coerced to numbers', async () => {
     const user = userEvent.setup();
     const onPick = vi.fn();
-    server.use(searchRoute([{ name: 'Porto Cruise Terminal', address: null, lat: '41.1496', lng: '-8.6109', osm_id: 'n3' }]));
+    server.use(
+      searchRoute([{ name: 'Porto Cruise Terminal', address: null, lat: '41.1496', lng: '-8.6109', osm_id: 'n3' }])
+    );
 
     render(<Host onPick={onPick} />);
     await user.type(screen.getByRole('textbox'), 'Porto');
@@ -247,12 +277,14 @@ describe('LocationSelect', () => {
 
   it('FE-PLANNER-LOCSEL-019: a failing search drops the previous suggestions', async () => {
     const user = userEvent.setup();
-    server.use(http.post('/api/maps/search', async ({ request }) => {
-      const { query } = await request.json() as { query: string };
-      return query === 'Gare'
-        ? HttpResponse.json({ places: [GARE] })
-        : HttpResponse.json({ error: 'Places API is disabled' }, { status: 502 });
-    }));
+    server.use(
+      http.post('/api/maps/search', async ({ request }) => {
+        const { query } = (await request.json()) as { query: string };
+        return query === 'Gare'
+          ? HttpResponse.json({ places: [GARE] })
+          : HttpResponse.json({ error: 'Places API is disabled' }, { status: 502 });
+      })
+    );
 
     render(<Host />);
     const input = screen.getByRole('textbox');

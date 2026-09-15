@@ -113,13 +113,20 @@ export default function DraggableActivityList({ dayId, activities, onReorder }: 
             onDragEnd={handleDragEnd}
             className={`relative cursor-move rounded-lg border-[1.5px] bg-white p-3 transition-all ${isDragging ? 'scale-[0.98] opacity-60' : 'hover:shadow-md'} ${isDropTarget ? 'border-2' : ''}`}
             style={{
-              borderColor: isDropTarget ? 'var(--color-primary)' : isPlace ? 'var(--color-primary-light)' : 'var(--color-secondary)',
+              borderColor: isDropTarget
+                ? 'var(--color-primary)'
+                : isPlace
+                  ? 'var(--color-primary-light)'
+                  : 'var(--color-secondary)',
               borderRadius: 'var(--radius-lg)',
               boxShadow: isDragging ? 'none' : 'var(--shadow-sm)',
             }}
           >
             {/* Drag handle */}
-            <div className="absolute left-2 top-3 cursor-grab active:cursor-grabbing" style={{ color: 'var(--color-gray-500)' }}>
+            <div
+              className="absolute left-2 top-3 cursor-grab active:cursor-grabbing"
+              style={{ color: 'var(--color-gray-500)' }}
+            >
               <GripVertical {...getIconProps('action')} />
             </div>
 
@@ -130,7 +137,7 @@ export default function DraggableActivityList({ dayId, activities, onReorder }: 
                 className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
                 style={{
                   background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)',
-                  boxShadow: 'var(--shadow-sm)'
+                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
                 {index + 1}

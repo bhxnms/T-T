@@ -1,21 +1,17 @@
 // FE-COMP-CAT-001 to FE-COMP-CAT-020
-import { render, screen, waitFor, fireEvent, within } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { buildCategory, buildUser } from '../../../tests/helpers/factories';
 import { server } from '../../../tests/helpers/msw/server';
-import { useAuthStore } from '../../store/authStore';
+import { fireEvent, render, screen, waitFor, within } from '../../../tests/helpers/render';
 import { resetAllStores, seedStore } from '../../../tests/helpers/store';
-import { buildUser, buildCategory } from '../../../tests/helpers/factories';
-import CategoryManager from './CategoryManager';
+import { useAuthStore } from '../../store/authStore';
 import { ToastContainer } from '../shared/Toast';
+import CategoryManager from './CategoryManager';
 
 beforeEach(() => {
   resetAllStores();
-  server.use(
-    http.get('/api/categories', () =>
-      HttpResponse.json({ categories: [] })
-    ),
-  );
+  server.use(http.get('/api/categories', () => HttpResponse.json({ categories: [] })));
   seedStore(useAuthStore, { user: buildUser({ role: 'admin' }), isAuthenticated: true });
 });
 
@@ -52,10 +48,7 @@ describe('CategoryManager', () => {
     server.use(
       http.get('/api/categories', () =>
         HttpResponse.json({
-          categories: [
-            buildCategory({ name: 'Museum' }),
-            buildCategory({ name: 'Restaurant' }),
-          ],
+          categories: [buildCategory({ name: 'Museum' }), buildCategory({ name: 'Restaurant' })],
         })
       )
     );
@@ -70,13 +63,18 @@ describe('CategoryManager', () => {
     server.use(
       http.post('/api/categories', async ({ request }) => {
         postCalled = true;
-        const body = await request.json() as Record<string, unknown>;
+        const body = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json({
           category: buildCategory({ name: String(body.name) }),
         });
       })
     );
-    render(<><ToastContainer /><CategoryManager /></>);
+    render(
+      <>
+        <ToastContainer />
+        <CategoryManager />
+      </>
+    );
     await screen.findByText('New Category');
     await user.click(screen.getByText('New Category'));
     const nameInput = screen.getByPlaceholderText('Category name');
@@ -88,9 +86,7 @@ describe('CategoryManager', () => {
   it('FE-COMP-CAT-008: edit button shows form for existing category', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get('/api/categories', () =>
-        HttpResponse.json({ categories: [buildCategory({ id: 5, name: 'Hotels' })] })
-      )
+      http.get('/api/categories', () => HttpResponse.json({ categories: [buildCategory({ id: 5, name: 'Hotels' })] }))
     );
     render(<CategoryManager />);
     await screen.findByText('Hotels');
@@ -98,7 +94,7 @@ describe('CategoryManager', () => {
     const buttons = screen.getAllByRole('button');
     // Buttons: [New Category, ...action buttons for the category]
     // The edit button is the first action button in the category row (Edit2 icon)
-    const actionBtns = buttons.filter(b => !b.textContent?.includes('New Category'));
+    const actionBtns = buttons.filter((b) => !b.textContent?.includes('New Category'));
     await user.click(actionBtns[0]);
     // Name input pre-filled with category name
     expect(screen.getByDisplayValue('Hotels')).toBeInTheDocument();
@@ -108,20 +104,23 @@ describe('CategoryManager', () => {
     const user = userEvent.setup();
     let deleteCalled = false;
     server.use(
-      http.get('/api/categories', () =>
-        HttpResponse.json({ categories: [buildCategory({ id: 9, name: 'Parks' })] })
-      ),
+      http.get('/api/categories', () => HttpResponse.json({ categories: [buildCategory({ id: 9, name: 'Parks' })] })),
       http.delete('/api/categories/9', () => {
         deleteCalled = true;
         return HttpResponse.json({ success: true });
       })
     );
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    render(<><ToastContainer /><CategoryManager /></>);
+    render(
+      <>
+        <ToastContainer />
+        <CategoryManager />
+      </>
+    );
     await screen.findByText('Parks');
     // Delete button is icon-only (Trash2, no title) — find the second action button
     const buttons = screen.getAllByRole('button');
-    const actionBtns = buttons.filter(b => !b.textContent?.includes('New Category'));
+    const actionBtns = buttons.filter((b) => !b.textContent?.includes('New Category'));
     await user.click(actionBtns[1]);
     await waitFor(() => expect(deleteCalled).toBe(true));
     vi.restoreAllMocks();
@@ -159,7 +158,12 @@ describe('CategoryManager', () => {
 
   it('FE-COMP-CAT-013: a failing list request toasts and falls back to the empty state', async () => {
     server.use(http.get('/api/categories', () => HttpResponse.error()));
-    render(<><ToastContainer /><CategoryManager /></>);
+    render(
+      <>
+        <ToastContainer />
+        <CategoryManager />
+      </>
+    );
 
     expect(await screen.findByText('Failed to load categories')).toBeInTheDocument();
     expect(screen.getByText('No categories yet')).toBeInTheDocument();
@@ -173,14 +177,21 @@ describe('CategoryManager', () => {
         HttpResponse.json({ categories: [buildCategory({ id: 5, name: 'Hotels', color: '#6366f1', icon: 'MapPin' })] })
       ),
       http.put('/api/categories/5', async ({ request }) => {
-        body = await request.json() as Record<string, unknown>;
-        return HttpResponse.json({ category: buildCategory({ id: 5, name: 'Lodging', color: '#ef4444', icon: 'BedDouble' }) });
-      }),
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          category: buildCategory({ id: 5, name: 'Lodging', color: '#ef4444', icon: 'BedDouble' }),
+        });
+      })
     );
-    render(<><ToastContainer /><CategoryManager /></>);
+    render(
+      <>
+        <ToastContainer />
+        <CategoryManager />
+      </>
+    );
     await screen.findByText('Hotels');
 
-    await user.click(screen.getAllByRole('button').filter(b => !b.textContent?.includes('New Category'))[0]);
+    await user.click(screen.getAllByRole('button').filter((b) => !b.textContent?.includes('New Category'))[0]);
     const nameInput = screen.getByDisplayValue('Hotels');
     await user.clear(nameInput);
     await user.type(nameInput, 'Lodging');
@@ -194,10 +205,13 @@ describe('CategoryManager', () => {
 
   it('FE-COMP-CAT-015: a failing save surfaces the server message', async () => {
     const user = userEvent.setup();
-    server.use(
-      http.post('/api/categories', () => HttpResponse.json({ error: 'name already taken' }, { status: 409 })),
+    server.use(http.post('/api/categories', () => HttpResponse.json({ error: 'name already taken' }, { status: 409 })));
+    render(
+      <>
+        <ToastContainer />
+        <CategoryManager />
+      </>
     );
-    render(<><ToastContainer /><CategoryManager /></>);
     await screen.findByText('New Category');
 
     await user.click(screen.getByText('New Category'));
@@ -214,13 +228,16 @@ describe('CategoryManager', () => {
     let deleteCalled = false;
     server.use(
       http.get('/api/categories', () => HttpResponse.json({ categories: [buildCategory({ id: 9, name: 'Parks' })] })),
-      http.delete('/api/categories/9', () => { deleteCalled = true; return HttpResponse.json({ success: true }); }),
+      http.delete('/api/categories/9', () => {
+        deleteCalled = true;
+        return HttpResponse.json({ success: true });
+      })
     );
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     render(<CategoryManager />);
     await screen.findByText('Parks');
 
-    const actionBtns = screen.getAllByRole('button').filter(b => !b.textContent?.includes('New Category'));
+    const actionBtns = screen.getAllByRole('button').filter((b) => !b.textContent?.includes('New Category'));
     await user.click(actionBtns[1]);
 
     expect(deleteCalled).toBe(false);
@@ -232,13 +249,18 @@ describe('CategoryManager', () => {
     const user = userEvent.setup();
     server.use(
       http.get('/api/categories', () => HttpResponse.json({ categories: [buildCategory({ id: 9, name: 'Parks' })] })),
-      http.delete('/api/categories/9', () => HttpResponse.json({ error: 'category in use' }, { status: 409 })),
+      http.delete('/api/categories/9', () => HttpResponse.json({ error: 'category in use' }, { status: 409 }))
     );
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    render(<><ToastContainer /><CategoryManager /></>);
+    render(
+      <>
+        <ToastContainer />
+        <CategoryManager />
+      </>
+    );
     await screen.findByText('Parks');
 
-    const actionBtns = screen.getAllByRole('button').filter(b => !b.textContent?.includes('New Category'));
+    const actionBtns = screen.getAllByRole('button').filter((b) => !b.textContent?.includes('New Category'));
     await user.click(actionBtns[1]);
 
     expect(await screen.findByText('category in use')).toBeInTheDocument();
@@ -285,7 +307,7 @@ describe('CategoryManager', () => {
   it('FE-COMP-CAT-020: starting an edit closes the create form', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get('/api/categories', () => HttpResponse.json({ categories: [buildCategory({ id: 3, name: 'Hotels' })] })),
+      http.get('/api/categories', () => HttpResponse.json({ categories: [buildCategory({ id: 3, name: 'Hotels' })] }))
     );
     render(<CategoryManager />);
     await screen.findByText('Hotels');

@@ -1,21 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { CheckCircle2, X } from 'lucide-react'
-import { useAtlas } from '../../../pages/atlas/useAtlas'
-import MIconBtn from '../../components/MIconBtn'
-import MSheet from '../../components/MSheet'
-import MChip from '../../components/MChip'
-import MAtlasStatsCard from './MAtlasStatsCard'
-import MAtlasSearch from './MAtlasSearch'
-import MAtlasCountryPopup from './MAtlasCountryPopup'
-import MAtlasBucketSheet from './MAtlasBucketSheet'
-import MAtlasCheckinSheet from './MAtlasCheckinSheet'
-import MToggle from '../../components/MToggle'
-import LandmarkPopup from '../../../pages/atlas/LandmarkPopup'
-import { isLandmarkVisited, getLandmarkVisitedAt } from '../../../utils/landmarkStorage'
-import { countryStatus } from '../../../pages/atlas/atlasModel'
+import { CheckCircle2, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
+import { countryStatus } from '../../../pages/atlas/atlasModel';
+import LandmarkPopup from '../../../pages/atlas/LandmarkPopup';
+import { useAtlas } from '../../../pages/atlas/useAtlas';
+import { getLandmarkVisitedAt, isLandmarkVisited } from '../../../utils/landmarkStorage';
+import MChip from '../../components/MChip';
+import MIconBtn from '../../components/MIconBtn';
+import MSheet from '../../components/MSheet';
+import MToggle from '../../components/MToggle';
+import MAtlasBucketSheet from './MAtlasBucketSheet';
+import MAtlasCheckinSheet from './MAtlasCheckinSheet';
+import MAtlasCountryPopup from './MAtlasCountryPopup';
+import MAtlasSearch from './MAtlasSearch';
+import MAtlasStatsCard from './MAtlasStatsCard';
 
-const removeBtnCls = 'mt-4 w-full rounded-full bg-[rgba(214,39,59,.12)] py-[11px] text-center text-[0.8125rem] font-bold text-[color:var(--m-st-danger)]' // theme-lint-disable — fixed status-danger tint
+const removeBtnCls =
+  'mt-4 w-full rounded-full bg-[rgba(214,39,59,.12)] py-[11px] text-center text-[0.8125rem] font-bold text-[color:var(--m-st-danger)]'; // theme-lint-disable — fixed status-danger tint
 
 /**
  * Mobile atlas screen: the interactive world map fills the viewport, the
@@ -24,7 +25,7 @@ const removeBtnCls = 'mt-4 w-full rounded-full bg-[rgba(214,39,59,.12)] py-[11px
  * useAtlas hook — this file is presentation and wiring only.
  */
 export default function MAtlas() {
-  const atlas = useAtlas()
+  const atlas = useAtlas();
   const {
     t,
     navigate,
@@ -46,53 +47,53 @@ export default function MAtlas() {
     selectedLandmark,
     setSelectedLandmark,
     toggleLandmarkVisit,
-  } = atlas
-  const plannedCount = stats.totalCountriesPlanned || 0
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [bucketOpen, setBucketOpen] = useState(false)
-  const [checkinOpen, setCheckinOpen] = useState(false)
-  const [detailOpen, setDetailOpen] = useState(false)
+  } = atlas;
+  const plannedCount = stats.totalCountriesPlanned || 0;
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [bucketOpen, setBucketOpen] = useState(false);
+  const [checkinOpen, setCheckinOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // The dock FAB is the search button on this screen (demo Z. 1099) and hands
   // off via ?search=1, mirroring the ?create= contract of the other pages.
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
-    if (searchParams.get('search') == null) return
-    const next = new URLSearchParams(searchParams)
-    next.delete('search')
-    setSearchParams(next, { replace: true })
-    setSearchOpen(true)
-  }, [searchParams, setSearchParams])
+    if (searchParams.get('search') == null) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('search');
+    setSearchParams(next, { replace: true });
+    setSearchOpen(true);
+  }, [searchParams, setSearchParams]);
 
   // A search fly-to on a visited country loads its detail — surface it as a sheet.
   useEffect(() => {
-    if (selectedCountry && countryDetail) setDetailOpen(true)
-  }, [selectedCountry, countryDetail])
+    if (selectedCountry && countryDetail) setDetailOpen(true);
+  }, [selectedCountry, countryDetail]);
 
   // Suggestions for the empty search field: recently visited countries first,
   // then countries already on the bucket list.
   const suggestions = useMemo(() => {
-    const seen = new Set<string>()
-    const list: { code: string; label: string }[] = []
+    const seen = new Set<string>();
+    const list: { code: string; label: string }[] = [];
     // Visited first, planned after — this list answers "where have I been", so a country
     // you only booked a flight to shouldn't outrank one you actually saw.
     const visited = [...countries].sort((a, b) => {
-      const rank = (c: typeof a) => (countryStatus(c) === 'visited' ? 0 : 1)
-      return rank(a) - rank(b) || (b.lastVisit || '').localeCompare(a.lastVisit || '')
-    })
+      const rank = (c: typeof a) => (countryStatus(c) === 'visited' ? 0 : 1);
+      return rank(a) - rank(b) || (b.lastVisit || '').localeCompare(a.lastVisit || '');
+    });
     for (const c of visited) {
-      if (seen.has(c.code)) continue
-      seen.add(c.code)
-      list.push({ code: c.code, label: resolveName(c.code) })
+      if (seen.has(c.code)) continue;
+      seen.add(c.code);
+      list.push({ code: c.code, label: resolveName(c.code) });
     }
     for (const item of bucketList) {
-      const code = item.country_code
-      if (!code || code.length !== 2 || seen.has(code)) continue
-      seen.add(code)
-      list.push({ code, label: resolveName(code) })
+      const code = item.country_code;
+      if (!code || code.length !== 2 || seen.has(code)) continue;
+      seen.add(code);
+      list.push({ code, label: resolveName(code) });
     }
-    return list.slice(0, 5)
-  }, [countries, bucketList, resolveName])
+    return list.slice(0, 5);
+  }, [countries, bucketList, resolveName]);
 
   if (loading) {
     return (
@@ -101,7 +102,7 @@ export default function MAtlas() {
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--m-rowbr)] border-t-m-ink" />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -154,8 +155,8 @@ export default function MAtlas() {
         isPlanned={(code) => countries.some((c) => c.code === code && countryStatus(c) !== 'visited')}
         isOnBucketList={(code) => bucketList.some((b) => b.country_code === code)}
         onSelect={(code) => {
-          setSearchOpen(false)
-          select_country_from_search(code)
+          setSearchOpen(false);
+          select_country_from_search(code);
         }}
       />
 
@@ -175,7 +176,9 @@ export default function MAtlas() {
                 className="h-[30px] w-[42px] flex-none rounded-[6px] object-cover shadow-[0_1px_3px_rgba(0,0,0,.25)]"
               />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[1.0625rem] font-extrabold text-m-ink">{resolveName(selectedCountry)}</div>
+                <div className="truncate text-[1.0625rem] font-extrabold text-m-ink">
+                  {resolveName(selectedCountry)}
+                </div>
                 <div className="mt-[2px] font-geist text-[0.6875rem] text-m-muted">
                   {countryDetail.places.length} {t('atlas.places')} · {countryDetail.trips.length} {t('atlas.trips')}
                 </div>
@@ -197,8 +200,8 @@ export default function MAtlas() {
               <button
                 type="button"
                 onClick={() => {
-                  setDetailOpen(false)
-                  handleUnmarkCountry(selectedCountry)
+                  setDetailOpen(false);
+                  handleUnmarkCountry(selectedCountry);
                 }}
                 className={removeBtnCls}
               >
@@ -228,5 +231,5 @@ export default function MAtlas() {
         />
       )}
     </div>
-  )
+  );
 }

@@ -1,83 +1,33 @@
-import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
-import { ZodValidationPipe } from './common/zod-validation.pipe';
-import { AppConfigModule } from './app-config/app-config.module';
-import { DatabaseModule } from './database/database.module';
-import { RealtimeModule } from './realtime/realtime.module';
-import { HealthModule } from './health/health.module';
-import { PlatformModule } from './platform/platform.module';
-import { McpTransportModule } from './mcp-transport/mcp-transport.module';
+import { trekMcpAccessPolicy, trekMcpValidateAccess } from '../mcp/nest-mcp-policy';
+import { McpModule } from '../nest-mcp';
+import { AppDomainModules } from './app-domain-modules.module';
+import { AppFoundationModule } from './app-foundation.module';
+import { AuthModule } from './auth/auth.module';
 import { GlobalAuthGuard } from './auth/global-auth.guard';
 import { MfaPolicyGuard } from './auth/mfa-policy.guard';
-import { ManagedGuard } from './common/managed.guard';
-import { WeatherModule } from './weather/weather.module';
-import { PublicApiModule } from './public-api/public-api.module';
-import { HelpModule } from './help/help.module';
-import { AirportsModule } from './airports/airports.module';
-import { ConfigModule } from './config/config.module';
-import { SystemNoticesModule } from './system-notices/system-notices.module';
-import { ManagedExtModule } from './managed/managed-ext.module';
-import { MapsModule } from './maps/maps.module';
-import { GeoModule } from './geo/geo.module';
-import { PlaceEnrichmentModule } from './place-enrichment/place-enrichment.module';
-import { CategoriesModule } from './categories/categories.module';
-import { TagsModule } from './tags/tags.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { AtlasModule } from './atlas/atlas.module';
-import { VacayModule } from './vacay/vacay.module';
-import { PackingModule } from './packing/packing.module';
-import { BudgetModule } from './budget/budget.module';
-import { ReservationsModule } from './reservations/reservations.module';
-import { DaysModule } from './days/days.module';
-import { DayNotesModule } from './day-notes/day-notes.module';
-import { AccommodationsModule } from './accommodations/accommodations.module';
-import { AssignmentsModule } from './assignments/assignments.module';
-import { PlacesModule } from './places/places.module';
-import { TripsModule } from './trips/trips.module';
-import { TodoModule } from './todo/todo.module';
-import { CollabModule } from './collab/collab.module';
-import { FilesModule } from './files/files.module';
-import { PhotosModule } from './photos/photos.module';
-import { MemoriesModule } from './memories/memories.module';
-import { AirtrailModule } from './integrations/airtrail.module';
-import { JourneyModule } from './journey/journey.module';
-import { CollectionsModule } from './collections/collections.module';
-import { ShareModule } from './share/share.module';
-import { TripInviteModule } from './trip-invite/trip-invite.module';
-import { TransitModule } from './transit/transit.module';
-import { FeedsModule } from './feeds/feeds.module';
-import { SettingsModule } from './settings/settings.module';
-import { StorageModule } from './storage/storage.module';
-import { BackupModule } from './backup/backup.module';
-import { BookingImportModule } from './booking-import/booking-import.module';
-import { ReservationImportModule } from './reservation-import/reservation-import.module';
-import { LlmParseModule } from './llm-parse/llm-parse.module';
-import { AuthModule } from './auth/auth.module';
-import { OidcModule } from './oidc/oidc.module';
-import { OauthModule } from './oauth/oauth.module';
-import { AdminModule } from './admin/admin.module';
-import { AddonsModule } from './addons/addons.module';
-import { AuditModule } from './audit/audit.module';
-import { PermissionsModule } from './permissions/permissions.module';
-import { PluginsModule } from './plugins/plugins.module';
-import { SchedulingModule } from './scheduling/scheduling.module';
-import { ActivitiesModule } from './activities/activities.module';
-import { McpModule } from '../nest-mcp';
-import { trekMcpAccessPolicy, trekMcpValidateAccess } from '../mcp/nest-mcp-policy';
-import { TrekExceptionFilter } from './common/trek-exception.filter';
-import { SpaFallbackFilter } from './platform/spa-fallback.filter';
-import { IdempotencyInterceptor } from './common/idempotency.interceptor';
 import { SessionRenewalInterceptor } from './auth/session-renewal.interceptor';
 import { IdempotencyCleanupJob } from './common/idempotency-cleanup.job';
-import { RealtimeGatewayModule } from './realtime/realtime-gateway.module';
+import { IdempotencyInterceptor } from './common/idempotency.interceptor';
+import { ManagedGuard } from './common/managed.guard';
+import { TrekExceptionFilter } from './common/trek-exception.filter';
+import { ZodValidationPipe } from './common/zod-validation.pipe';
+import { SpaFallbackFilter } from './platform/spa-fallback.filter';
+import { SchedulingModule } from './scheduling/scheduling.module';
+import { Module } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
 /**
- * Root NestJS module for the incremental migration. Domain modules
- * (weather, notifications, integrations, ...) get registered here as they are
- * migrated.
+ * Root NestJS module. Composition modules group platform and domain imports;
+ * global guards, filters, interceptors, and pipes remain registered here.
  */
 @Module({
-  imports: [AppConfigModule, DatabaseModule, RealtimeModule, RealtimeGatewayModule, SchedulingModule, McpModule.forRoot({ accessPolicy: trekMcpAccessPolicy, validateAccess: trekMcpValidateAccess }), HealthModule, PlatformModule, McpTransportModule, WeatherModule, PublicApiModule, HelpModule, AirportsModule, ConfigModule, SystemNoticesModule, GeoModule, MapsModule, PlaceEnrichmentModule, CategoriesModule, TagsModule, NotificationsModule, AtlasModule, VacayModule, PackingModule, TodoModule, BudgetModule, ReservationsModule, DaysModule, DayNotesModule, AccommodationsModule, AssignmentsModule, PlacesModule, TripsModule, CollabModule, FilesModule, PhotosModule, MemoriesModule, AirtrailModule, JourneyModule, CollectionsModule, ShareModule, TripInviteModule, TransitModule, FeedsModule, SettingsModule, StorageModule, BackupModule, AuthModule, OidcModule, OauthModule, AdminModule, AddonsModule, AuditModule, PermissionsModule, PluginsModule, BookingImportModule, ReservationImportModule, LlmParseModule, ActivitiesModule, ManagedExtModule],
+  imports: [
+    AppFoundationModule,
+    AppDomainModules,
+    AuthModule,
+    SchedulingModule,
+    McpModule.forRoot({ accessPolicy: trekMcpAccessPolicy, validateAccess: trekMcpValidateAccess }),
+  ],
   providers: [
     // Default-deny: a route is authenticated unless it carries @Public() or
     // @OptionalAuth(), or declares its own @UseGuards chain. Protection used to

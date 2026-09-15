@@ -494,7 +494,8 @@ const settings: TranslationStrings = {
   'settings.offline.notice.offline': 'Bez připojení. Připojte se, abyste mohli ukládat cesty offline.',
   'settings.offline.notice.signedOut': 'Vaše relace vypršela. Pro synchronizaci se znovu přihlaste.',
   'settings.offline.notice.failed': 'Stahování se nepodařilo dokončit. Zkontrolujte připojení a zkuste to znovu.',
-  'settings.offline.notice.loadFailed': 'Offline úložiště tohoto zařízení se nepodařilo načíst. Obvykle pomůže vymazání mezipaměti.',
+  'settings.offline.notice.loadFailed':
+    'Offline úložiště tohoto zařízení se nepodařilo načíst. Obvykle pomůže vymazání mezipaměti.',
   'settings.offline.clear': 'Vymazat mezipaměť',
   'settings.offline.clearConfirm': 'Vymazat všechna offline data cest? Kdykoli online je můžete znovu synchronizovat.',
   'settings.offline.stats.trips': 'Cesty v mezipaměti',
@@ -536,7 +537,8 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'Klíče API',
-  'settings.apiKeys.description': 'Klíče pro veřejné API, aby jiný software mohl číst tvoje cesty. Jen pro čtení: klíč nemůže nic měnit ani mazat.',
+  'settings.apiKeys.description':
+    'Klíče pro veřejné API, aby jiný software mohl číst tvoje cesty. Jen pro čtení: klíč nemůže nic měnit ani mazat.',
   'settings.apiKeys.create': 'Vytvořit klíč',
   'settings.apiKeys.empty': 'Zatím žádné klíče. Vytvoř jeden a připoj další software.',
   'settings.apiKeys.createdAt': 'vytvořen',
@@ -555,7 +557,8 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.creating': 'Vytváří se...',
   'settings.apiKeys.modal.create': 'Vytvořit',
   'settings.apiKeys.modal.createdTitle': 'Klíč API vytvořen',
-  'settings.apiKeys.modal.createdWarning': 'Zkopíruj klíč hned teď. Zobrazí se jen jednou a později ho už nelze získat.',
+  'settings.apiKeys.modal.createdWarning':
+    'Zkopíruj klíč hned teď. Zobrazí se jen jednou a později ho už nelze získat.',
   'settings.apiKeys.modal.done': 'Hotovo',
 };
 

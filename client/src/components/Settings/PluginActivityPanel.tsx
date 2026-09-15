@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
-import { History, RefreshCw } from 'lucide-react'
-import { pluginsApi } from '../../api/client'
-import { useTranslation } from '../../i18n'
+import { History, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { pluginsApi } from '../../api/client';
+import { useTranslation } from '../../i18n';
 
 interface ActivityRow {
-  ts: string
-  plugin_id: string
-  plugin_name: string | null
-  method: string
-  resource: string | null
-  code: string
+  ts: string;
+  plugin_id: string;
+  plugin_name: string | null;
+  method: string;
+  resource: string | null;
+  code: string;
 }
 
 /**
@@ -18,9 +18,9 @@ interface ActivityRow {
  * is meant to be a quiet log, not an alert wall.
  */
 function codeTone(code: string): string {
-  if (code === 'ok') return 'bg-surface-hover text-content-secondary'
-  if (/FORBIDDEN|DENIED|UNAUTHORIZED/i.test(code)) return 'bg-danger-soft text-danger'
-  return 'bg-warning-soft text-warning'
+  if (code === 'ok') return 'bg-surface-hover text-content-secondary';
+  if (/FORBIDDEN|DENIED|UNAUTHORIZED/i.test(code)) return 'bg-danger-soft text-danger';
+  return 'bg-warning-soft text-warning';
 }
 
 /**
@@ -31,32 +31,35 @@ function codeTone(code: string): string {
  * shows the empty state, never a crash.
  */
 export default function PluginActivityPanel() {
-  const { t, locale } = useTranslation()
-  const [rows, setRows] = useState<ActivityRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const { t, locale } = useTranslation();
+  const [rows, setRows] = useState<ActivityRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const load = () => {
-    setLoading(true)
-    pluginsApi.myActivity()
-      .then(r => setRows(r.activity))
+    setLoading(true);
+    pluginsApi
+      .myActivity()
+      .then((r) => setRows(r.activity))
       .catch(() => setRows([]))
-      .finally(() => setLoading(false))
-  }
+      .finally(() => setLoading(false));
+  };
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load();
+  }, []);
 
   const fmtWhen = (ts: string): string => {
-    const d = new Date(ts)
-    return Number.isNaN(d.getTime()) ? ts : d.toLocaleString(locale)
-  }
+    const d = new Date(ts);
+    return Number.isNaN(d.getTime()) ? ts : d.toLocaleString(locale);
+  };
 
   return (
-    <div className="rounded-xl border border-edge bg-surface-card overflow-hidden">
-      <div className="px-5 py-4 border-b border-edge-secondary flex items-center gap-3">
-        <History className="w-4 h-4 flex-shrink-0 text-content-secondary" />
-        <div className="flex-1 min-w-0">
+    <div className="overflow-hidden rounded-xl border border-edge bg-surface-card">
+      <div className="flex items-center gap-3 border-b border-edge-secondary px-5 py-4">
+        <History className="h-4 w-4 flex-shrink-0 text-content-secondary" />
+        <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-content">{t('settings.pluginActivity.title')}</h3>
-          <p className="text-xs text-content-muted mt-0.5">{t('settings.pluginActivity.description')}</p>
+          <p className="mt-0.5 text-xs text-content-muted">{t('settings.pluginActivity.description')}</p>
         </div>
         <button
           type="button"
@@ -64,7 +67,7 @@ export default function PluginActivityPanel() {
           disabled={loading}
           className="inline-flex items-center gap-1.5 rounded-lg border border-edge px-2.5 py-1.5 text-xs font-medium text-content-secondary hover:text-content disabled:opacity-60"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           {t('settings.pluginActivity.refresh')}
         </button>
       </div>
@@ -75,29 +78,31 @@ export default function PluginActivityPanel() {
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-content-faint border-b border-edge-secondary">
-                <th className="font-medium px-5 py-2">{t('settings.pluginActivity.columns.plugin')}</th>
-                <th className="font-medium px-3 py-2">{t('settings.pluginActivity.columns.action')}</th>
-                <th className="font-medium px-3 py-2">{t('settings.pluginActivity.columns.resource')}</th>
-                <th className="font-medium px-3 py-2 whitespace-nowrap">{t('settings.pluginActivity.columns.when')}</th>
-                <th className="font-medium px-5 py-2 text-right">{t('settings.pluginActivity.columns.status')}</th>
+              <tr className="border-b border-edge-secondary text-left text-xs uppercase tracking-wide text-content-faint">
+                <th className="px-5 py-2 font-medium">{t('settings.pluginActivity.columns.plugin')}</th>
+                <th className="px-3 py-2 font-medium">{t('settings.pluginActivity.columns.action')}</th>
+                <th className="px-3 py-2 font-medium">{t('settings.pluginActivity.columns.resource')}</th>
+                <th className="whitespace-nowrap px-3 py-2 font-medium">{t('settings.pluginActivity.columns.when')}</th>
+                <th className="px-5 py-2 text-right font-medium">{t('settings.pluginActivity.columns.status')}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i} className="border-b border-edge-secondary last:border-b-0">
-                  <td className="px-5 py-2.5 text-content align-top">{r.plugin_name || r.plugin_id}</td>
+                  <td className="px-5 py-2.5 align-top text-content">{r.plugin_name || r.plugin_id}</td>
                   <td className="px-3 py-2.5 align-top">
                     <span className="font-mono text-xs text-content-secondary">{r.method}</span>
                   </td>
                   <td className="px-3 py-2.5 align-top">
                     <span className="font-mono text-xs text-content-muted">{r.resource || '—'}</span>
                   </td>
-                  <td className="px-3 py-2.5 align-top whitespace-nowrap text-content-muted">{fmtWhen(r.ts)}</td>
-                  <td className="px-5 py-2.5 align-top text-right">
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${codeTone(r.code)}`}>
+                  <td className="whitespace-nowrap px-3 py-2.5 align-top text-content-muted">{fmtWhen(r.ts)}</td>
+                  <td className="px-5 py-2.5 text-right align-top">
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${codeTone(r.code)}`}
+                    >
                       {r.code}
                     </span>
                   </td>
@@ -108,5 +113,5 @@ export default function PluginActivityPanel() {
         </div>
       )}
     </div>
-  )
+  );
 }

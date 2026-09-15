@@ -5,14 +5,22 @@
  * real SQL. Only the db singleton (trip access) and the WebSocket broadcast are
  * mocked; the permission check is a spy on the container's PermissionsService.
  */
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi, type MockInstance } from 'vitest';
-import request from 'supertest';
+import { runMigrations } from '../../src/db/migrations';
+import { createTables } from '../../src/db/schema';
+import { BudgetModule } from '../../src/nest/budget/budget.module';
+import { ExchangeRatesService } from '../../src/nest/budget/exchange-rates.service';
+import { TrekExceptionFilter } from '../../src/nest/common/trek-exception.filter';
+import { ZodValidationPipe } from '../../src/nest/common/zod-validation.pipe';
+import { DatabaseModule } from '../../src/nest/database/database.module';
+import { PermissionsService } from '../../src/nest/permissions/permissions.service';
+import { RealtimeModule } from '../../src/nest/realtime/realtime.module';
+import { sessionCookie } from './harness';
+import { Test } from '@nestjs/testing';
+
 import cookieParser from 'cookie-parser';
 import type { Server } from 'http';
-import { DatabaseModule } from '../../src/nest/database/database.module';
-import { RealtimeModule } from '../../src/nest/realtime/realtime.module';
-import { Test } from '@nestjs/testing';
-import { sessionCookie } from './harness';
+import request from 'supertest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi, type MockInstance } from 'vitest';
 
 const { db } = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -34,18 +42,9 @@ vi.mock('../../src/db/database', () => ({
 }));
 vi.mock('../../src/websocket', () => ({ broadcast: vi.fn() }));
 
-import { PermissionsService } from '../../src/nest/permissions/permissions.service';
-
 // Since the permissions DI migration, the check is a spy on the container's
 // PermissionsService singleton (created in beforeAll, after build()).
 let checkPermission: MockInstance;
-
-import { createTables } from '../../src/db/schema';
-import { runMigrations } from '../../src/db/migrations';
-import { BudgetModule } from '../../src/nest/budget/budget.module';
-import { ExchangeRatesService } from '../../src/nest/budget/exchange-rates.service';
-import { TrekExceptionFilter } from '../../src/nest/common/trek-exception.filter';
-import { ZodValidationPipe } from '../../src/nest/common/zod-validation.pipe';
 
 describe('Budget e2e (real auth guard + temp SQLite, real budget SQL)', () => {
   let server: Server;
@@ -78,7 +77,9 @@ describe('Budget e2e (real auth guard + temp SQLite, real budget SQL)', () => {
     db.prepare(
       "INSERT INTO users (id, username, email, password_hash, role, password_version) VALUES (2, 'e2e-peer', 'peer@example.test', 'x', 'user', 0)",
     ).run();
-    tripId = Number(db.prepare("INSERT INTO trips (user_id, title, currency) VALUES (1, 'E2E Trip', 'EUR')").run().lastInsertRowid);
+    tripId = Number(
+      db.prepare("INSERT INTO trips (user_id, title, currency) VALUES (1, 'E2E Trip', 'EUR')").run().lastInsertRowid,
+    );
     // The peer settles up with the owner below, so they have to be on the trip:
     // a settlement between people who do not share one is refused.
     db.prepare('INSERT INTO trip_members (trip_id, user_id) VALUES (?, 2)').run(tripId);
@@ -114,7 +115,13 @@ describe('Budget e2e (real auth guard + temp SQLite, real budget SQL)', () => {
       .set('Cookie', sessionCookie(1))
       .send({ name: 'Hotel', total_price: 200 });
     expect(created.status).toBe(201);
-    expect(created.body.item).toMatchObject({ name: 'Hotel', total_price: 200, category: 'other', members: [], payers: [] });
+    expect(created.body.item).toMatchObject({
+      name: 'Hotel',
+      total_price: 200,
+      category: 'other',
+      members: [],
+      payers: [],
+    });
 
     const row = db.prepare('SELECT name, total_price FROM budget_items WHERE id = ?').get(created.body.item.id);
     expect(row).toEqual({ name: 'Hotel', total_price: 200 });
@@ -165,11 +172,18 @@ describe('Budget e2e (real auth guard + temp SQLite, real budget SQL)', () => {
     const refund = await request(server)
       .post(`/api/trips/${tripId}/budget`)
       .set('Cookie', sessionCookie(1))
-      .send({ name: 'Hotel partial refund', total_price: -30, payers: [{ user_id: 1, amount: -30 }], member_ids: [1, 2] });
+      .send({
+        name: 'Hotel partial refund',
+        total_price: -30,
+        payers: [{ user_id: 1, amount: -30 }],
+        member_ids: [1, 2],
+      });
     expect(refund.status).toBe(201);
     expect(refund.body.item).toMatchObject({ total_price: -30 });
     expect(refund.body.item.payers).toEqual([expect.objectContaining({ user_id: 1, amount: -30 })]);
-    const row = db.prepare('SELECT total_price FROM budget_items WHERE id = ?').get(refund.body.item.id) as { total_price: number };
+    const row = db.prepare('SELECT total_price FROM budget_items WHERE id = ?').get(refund.body.item.id) as {
+      total_price: number;
+    };
     expect(row.total_price).toBe(-30);
 
     const settlement = await request(server)
@@ -177,7 +191,7 @@ describe('Budget e2e (real auth guard + temp SQLite, real budget SQL)', () => {
       .set('Cookie', sessionCookie(1));
     expect(settlement.status).toBe(200);
     const balances = settlement.body.balances as { user_id: number; balance: number }[];
-    const balance = (uid: number) => balances.find(b => b.user_id === uid)!.balance;
+    const balance = (uid: number) => balances.find((b) => b.user_id === uid)!.balance;
     // 45 owed from the dinner minus the 15 refund share = 30, and Σ balances = 0.
     expect(balance(2)).toBe(-30);
     expect(balance(1)).toBe(30);
@@ -212,13 +226,17 @@ describe('Budget e2e (real auth guard + temp SQLite, real budget SQL)', () => {
       .set('Cookie', sessionCookie(1));
     expect(settlement.status).toBe(200);
     const balances = settlement.body.balances as { user_id: number; balance: number }[];
-    const balance = (uid: number) => balances.find(b => b.user_id === uid)!.balance;
+    const balance = (uid: number) => balances.find((b) => b.user_id === uid)!.balance;
     // Only the dinner settles: user 2 owes half of it and not a cent of the taxi.
     expect(balance(1)).toBe(50);
     expect(balance(2)).toBe(-50);
     expect(balances.reduce((a, b) => a + Math.round(b.balance * 100), 0)).toBe(0);
     expect(settlement.body.flows).toEqual([
-      expect.objectContaining({ amount: 50, from: expect.objectContaining({ user_id: 2 }), to: expect.objectContaining({ user_id: 1 }) }),
+      expect.objectContaining({
+        amount: 50,
+        from: expect.objectContaining({ user_id: 2 }),
+        to: expect.objectContaining({ user_id: 1 }),
+      }),
     ]);
 
     // Clean up so the ledger tests below start from an empty trip.
@@ -240,7 +258,12 @@ describe('Budget e2e (real auth guard + temp SQLite, real budget SQL)', () => {
       .set('Cookie', sessionCookie(1))
       .send({ from_user_id: 2, to_user_id: 1, amount: 15 });
     expect(res.status).toBe(200);
-    expect(res.body.settlement).toMatchObject({ id: created.body.settlement.id, from_user_id: 2, to_user_id: 1, amount: 15 });
+    expect(res.body.settlement).toMatchObject({
+      id: created.body.settlement.id,
+      from_user_id: 2,
+      to_user_id: 1,
+      amount: 15,
+    });
 
     const row = db.prepare('SELECT amount FROM budget_settlements WHERE id = ?').get(created.body.settlement.id);
     expect(row).toEqual({ amount: 15 });

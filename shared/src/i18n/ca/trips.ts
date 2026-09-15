@@ -13,5 +13,15 @@ const trips: TranslationStrings = {
   'trips.reminderDaysBefore': 'dies abans de la sortida',
   'trips.reminderDisabledHint':
     "Els recordatoris de viatge estan desactivats. Activa'ls a Admin > Configuració > Notificacions.",
+  'trips.importTrekTab': '',
+  'trips.importTrekIntro': '',
+  'trips.importTrekPick': '',
+  'trips.importTrekScanning': '',
+  'trips.importTrekImport': '',
+  'trips.importTrekSuccess': 'Imported {count} trip(s)',
+  'trips.importTrekNone': '',
+  'trips.importTrekFailed': '',
+  'trips.importTrekStats': '{days} days · {places} places · {photos} photos · {budget} budget items',
+  'trips.importTrekUntitled': '',
 };
 export default trips;

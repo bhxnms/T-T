@@ -1,19 +1,19 @@
-import { ReactNode } from 'react'
-import MSheet from '../../components/MSheet'
-import { MSetButton } from './MSettingsUi'
+import { ReactNode } from 'react';
+import MSheet from '../../components/MSheet';
+import { MSetButton } from './MSettingsUi';
 
 interface MConfirmSheetProps {
-  open: boolean
-  onClose: () => void
-  title: string
-  message: ReactNode
-  confirmLabel?: string
-  cancelLabel: string
-  danger?: boolean
-  busy?: boolean
-  onConfirm?: () => void
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  message: ReactNode;
+  confirmLabel?: string;
+  cancelLabel: string;
+  danger?: boolean;
+  busy?: boolean;
+  onConfirm?: () => void;
   /** Extra content between message and buttons (e.g. a password field). */
-  children?: ReactNode
+  children?: ReactNode;
 }
 
 /** Small confirm dialog as a centred floating card. Without onConfirm it is a plain notice. */
@@ -47,5 +47,5 @@ export default function MConfirmSheet({
         </div>
       </div>
     </MSheet>
-  )
+  );
 }

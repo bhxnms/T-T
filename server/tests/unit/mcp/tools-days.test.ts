@@ -4,6 +4,19 @@
  * resource (moved from resources.test.ts when the legacy registrar was ported).
  * create_day's plain append is covered in tools-days-accommodations.test.ts.
  */
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import {
+  createUser,
+  createTrip,
+  createDay,
+  createPlace,
+  createDayAssignment,
+  createDayAccommodation,
+} from '../../helpers/factories';
+import { createMcpHarness, parseToolResult, parseResourceResult, type McpHarness } from '../../helpers/mcp-harness';
+import { resetTestDb } from '../../helpers/test-db';
+
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 
 const { testDb, dbMock } = vi.hoisted(() => {
@@ -18,7 +31,11 @@ const { testDb, dbMock } = vi.hoisted(() => {
     reinitialize: () => {},
     getPlaceWithTags: () => null,
     canAccessTrip: (tripId: any, userId: number) =>
-      db.prepare(`SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`).get(userId, tripId, userId),
+      db
+        .prepare(
+          `SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`,
+        )
+        .get(userId, tripId, userId),
     isOwner: (tripId: any, userId: number) =>
       !!db.prepare('SELECT id FROM trips WHERE id = ? AND user_id = ?').get(tripId, userId),
   };
@@ -34,14 +51,6 @@ vi.mock('../../../src/config', () => ({
 
 const { broadcastMock } = vi.hoisted(() => ({ broadcastMock: vi.fn() }));
 vi.mock('../../../src/websocket', () => ({ broadcast: broadcastMock }));
-
-import { createTables } from '../../../src/db/schema';
-import { runMigrations } from '../../../src/db/migrations';
-import { resetTestDb } from '../../helpers/test-db';
-import {
-  createUser, createTrip, createDay, createPlace, createDayAssignment, createDayAccommodation,
-} from '../../helpers/factories';
-import { createMcpHarness, parseToolResult, parseResourceResult, type McpHarness } from '../../helpers/mcp-harness';
 
 beforeAll(() => {
   createTables(testDb);
@@ -60,24 +69,36 @@ afterAll(() => {
 
 async function withHarness(userId: number, fn: (h: McpHarness) => Promise<void>) {
   const h = await createMcpHarness({ userId, withResources: false });
-  try { await fn(h); } finally { await h.cleanup(); }
+  try {
+    await fn(h);
+  } finally {
+    await h.cleanup();
+  }
 }
 
 /** The stored day row, which is what a tool's echo can disagree with. */
 function dayRow(dayId: number) {
-  return testDb.prepare('SELECT title, notes, day_number, date FROM days WHERE id = ?').get(dayId) as
-    { title: string | null; notes: string | null; day_number: number; date: string | null };
+  return testDb.prepare('SELECT title, notes, day_number, date FROM days WHERE id = ?').get(dayId) as {
+    title: string | null;
+    notes: string | null;
+    day_number: number;
+    date: string | null;
+  };
 }
 
 /** Day ids of a trip in stored order, so a reorder can be read back positionally. */
 function dayIdsInOrder(tripId: number): number[] {
-  return (testDb.prepare('SELECT id FROM days WHERE trip_id = ? ORDER BY day_number').all(tripId) as { id: number }[])
-    .map(r => r.id);
+  return (
+    testDb.prepare('SELECT id FROM days WHERE trip_id = ? ORDER BY day_number').all(tripId) as { id: number }[]
+  ).map((r) => r.id);
 }
 
 function dayDatesInOrder(tripId: number): (string | null)[] {
-  return (testDb.prepare('SELECT date FROM days WHERE trip_id = ? ORDER BY day_number').all(tripId) as { date: string | null }[])
-    .map(r => r.date);
+  return (
+    testDb.prepare('SELECT date FROM days WHERE trip_id = ? ORDER BY day_number').all(tripId) as {
+      date: string | null;
+    }[]
+  ).map((r) => r.date);
 }
 
 // ---------------------------------------------------------------------------
@@ -227,7 +248,10 @@ describe('Tool: update_day', () => {
     const trip = createTrip(testDb, other.id);
     const day = createDay(testDb, trip.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'update_day', arguments: { tripId: trip.id, dayId: day.id, title: 'X' } });
+      const result = await h.client.callTool({
+        name: 'update_day',
+        arguments: { tripId: trip.id, dayId: day.id, title: 'X' },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -238,7 +262,10 @@ describe('Tool: update_day', () => {
     const trip = createTrip(testDb, user.id);
     const day = createDay(testDb, trip.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'update_day', arguments: { tripId: trip.id, dayId: day.id, title: 'X' } });
+      const result = await h.client.callTool({
+        name: 'update_day',
+        arguments: { tripId: trip.id, dayId: day.id, title: 'X' },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -400,8 +427,9 @@ describe('Tool: reorder_days', () => {
 
     expect(dayIdsInOrder(trip.id)).toEqual([d3.id, d1.id, d2.id]);
     expect(dayRow(d3.id)).toMatchObject({ day_number: 1, title: 'Third' });
-    expect(testDb.prepare('SELECT day_id FROM day_assignments WHERE id = ?').get(assignment.id))
-      .toEqual({ day_id: d3.id });
+    expect(testDb.prepare('SELECT day_id FROM day_assignments WHERE id = ?').get(assignment.id)).toEqual({
+      day_id: d3.id,
+    });
   });
 
   it('keeps the dates pinned to their slots so the content moves across them', async () => {

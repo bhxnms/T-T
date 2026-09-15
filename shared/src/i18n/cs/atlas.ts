@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Zobrazit plánované země',
   'atlas.plannedFor': 'Plánováno na',
   'atlas.antarctica': 'Antarktida',
-  "atlas.checkinTab": "Check-iny",
-  "atlas.checkinTotal": "Check-iny",
-  "atlas.checkinLandmarks": "Památky",
-  "atlas.checkinPlaces": "Místa cesty",
-  "atlas.checkinEmpty": "Zatím žádné check-iny — označte památku nebo místo cesty jako navštívené",
+  'atlas.checkinTab': 'Check-iny',
+  'atlas.checkinTotal': 'Check-iny',
+  'atlas.checkinLandmarks': 'Památky',
+  'atlas.checkinPlaces': 'Místa cesty',
+  'atlas.checkinEmpty': 'Zatím žádné check-iny — označte památku nebo místo cesty jako navštívené',
 };
 export default atlas;

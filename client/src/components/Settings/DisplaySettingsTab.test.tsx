@@ -1,20 +1,18 @@
 // FE-COMP-DISPLAY-001 to FE-COMP-DISPLAY-052
-import { render, screen, within, fireEvent } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { buildSettings, buildUser } from '../../../tests/helpers/factories';
 import { server } from '../../../tests/helpers/msw/server';
+import { fireEvent, render, screen, within } from '../../../tests/helpers/render';
+import { resetAllStores, seedStore } from '../../../tests/helpers/store';
 import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
-import { resetAllStores, seedStore } from '../../../tests/helpers/store';
-import { buildUser, buildSettings } from '../../../tests/helpers/factories';
-import DisplaySettingsTab from './DisplaySettingsTab';
 import { ToastContainer } from '../shared/Toast';
+import DisplaySettingsTab from './DisplaySettingsTab';
 
 beforeEach(() => {
   resetAllStores();
-  server.use(
-    http.put('/api/settings', async () => HttpResponse.json({ success: true })),
-  );
+  server.use(http.put('/api/settings', async () => HttpResponse.json({ success: true })));
   seedStore(useAuthStore, { user: buildUser(), isAuthenticated: true });
   seedStore(useSettingsStore, { settings: buildSettings({ dark_mode: 'light', language: 'en' }) });
 });
@@ -66,8 +64,11 @@ describe('DisplaySettingsTab', () => {
     render(<DisplaySettingsTab />);
     // Multiple elements contain "English" (desktop grid button + mobile dropdown trigger).
     // The desktop grid button is the one with the active border style.
-    const englishMatches = screen.getAllByText('English').map(el => el.closest('button')!).filter(Boolean);
-    const activeBtn = englishMatches.find(btn => (btn.style.border || '').includes('var(--text-primary)'));
+    const englishMatches = screen
+      .getAllByText('English')
+      .map((el) => el.closest('button')!)
+      .filter(Boolean);
+    const activeBtn = englishMatches.find((btn) => (btn.style.border || '').includes('var(--text-primary)'));
     expect(activeBtn).toBeDefined();
   });
 
@@ -163,7 +164,12 @@ describe('DisplaySettingsTab', () => {
     const user = userEvent.setup();
     const updateSetting = vi.fn().mockRejectedValue(new Error('Server error'));
     seedStore(useSettingsStore, { settings: buildSettings({ temperature_unit: 'celsius' }), updateSetting });
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
     await user.click(screen.getByText('°F Fahrenheit'));
     expect(await screen.findByText('Server error')).toBeInTheDocument();
   });
@@ -209,7 +215,12 @@ describe('DisplaySettingsTab – Display currency', () => {
     const user = userEvent.setup();
     const updateSetting = vi.fn().mockRejectedValue(new Error('Currency locked'));
     seedStore(useSettingsStore, { settings: buildSettings({ default_currency: 'USD' }), updateSetting });
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
 
     await user.click(screen.getByRole('button', { name: /USD/ }));
     await user.click(await screen.findByText('Trip currency'));
@@ -255,7 +266,12 @@ describe('DisplaySettingsTab – Compact language picker', () => {
   it('FE-COMP-DISPLAY-037: a rejected pick from the list surfaces the error', async () => {
     const user = userEvent.setup();
     seedFailing('Language locked');
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
     const wrap = mobileLangWrap();
 
     await user.click(within(wrap).getByRole('button'));
@@ -267,7 +283,12 @@ describe('DisplaySettingsTab – Compact language picker', () => {
   it('FE-COMP-DISPLAY-048: a rejected pick from the desktop grid surfaces the error', async () => {
     const user = userEvent.setup();
     seedFailing('Language locked');
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
 
     await user.click(screen.getByText('Deutsch'));
 
@@ -316,7 +337,12 @@ describe('DisplaySettingsTab – Map and privacy toggles', () => {
   it('FE-COMP-DISPLAY-041: a rejected booking-labels change surfaces the error', async () => {
     const user = userEvent.setup();
     seedFailing('Labels locked');
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
 
     await user.click(within(optionBlock(/booking route labels/i)).getByText(/^On$/));
 
@@ -326,7 +352,12 @@ describe('DisplaySettingsTab – Map and privacy toggles', () => {
   it('FE-COMP-DISPLAY-042: a rejected always-show-routes change surfaces the error', async () => {
     const user = userEvent.setup();
     seedFailing('Routes locked');
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
 
     await user.click(within(optionBlock(/always show booking routes/i)).getByText(/^On$/));
 
@@ -349,7 +380,12 @@ describe('DisplaySettingsTab – Map and privacy toggles', () => {
   it('FE-COMP-DISPLAY-044: a rejected POI pill change surfaces the error', async () => {
     const user = userEvent.setup();
     seedFailing('POI locked');
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
 
     await user.click(within(optionBlock(/explore places on the map/i)).getByText(/^Off$/));
 
@@ -383,7 +419,12 @@ describe('DisplaySettingsTab – Map and privacy toggles', () => {
   it('FE-COMP-DISPLAY-047: rejected blur, optimisation, distance and time-format changes all toast', async () => {
     const user = userEvent.setup();
     seedFailing('Nope');
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
 
     await user.click(within(optionBlock(/blur booking codes/i)).getByText(/^On$/));
     await screen.findByText('Nope');
@@ -437,7 +478,12 @@ describe('DisplaySettingsTab – startup destination', () => {
   it('FE-COMP-DISPLAY-052: a rejected start-page change surfaces the error', async () => {
     const user = userEvent.setup();
     seedFailing('Start locked');
-    render(<><ToastContainer /><DisplaySettingsTab /></>);
+    render(
+      <>
+        <ToastContainer />
+        <DisplaySettingsTab />
+      </>
+    );
 
     await user.click(within(optionBlock(/^Start page$/)).getByText('Active trip'));
 

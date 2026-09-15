@@ -1,8 +1,7 @@
 // FE-ADMUSR-001 to FE-ADMUSR-024
-import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '../../../tests/helpers/render';
 import { buildAdminHook, buildAdminUser, type AdminHook } from '../../../tests/helpers/mobileAdmin';
+import { fireEvent, render, screen, within } from '../../../tests/helpers/render';
 import { resetAllStores } from '../../../tests/helpers/store';
 import { useTranslation } from '../../i18n';
 import AdminUsersTab from './AdminUsersTab';

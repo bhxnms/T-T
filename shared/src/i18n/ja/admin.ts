@@ -349,7 +349,8 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:day-tint-provider': '日程プランの日付を色分け（例：その日が旅程のどの区間に属するか）',
   'admin.plugins.cap.mcpTools': 'AI ツールを公開',
   'admin.plugins.mcpToolsTitle': '公開する AI ツール',
-  'admin.plugins.mcpToolsHint': 'アシスタントがユーザーの代わりに実行できます。各ツールは上記で付与した権限で動作します。',
+  'admin.plugins.mcpToolsHint':
+    'アシスタントがユーザーの代わりに実行できます。各ツールは上記で付与した権限で動作します。',
   'admin.plugins.perm.mcp:tools':
     'AI アシスタントがあなたの代わりに実行できるツールを公開する（ここでプラグインに付与した権限で動作し、アシスタント自身の権限ではありません）',
   'admin.plugins.perm.geolocation:read':
@@ -449,7 +450,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'バージョン変更…',
   'admin.plugins.noVersions': 'レジストリに公開バージョンが見つかりません。',
   'admin.plugins.downgradeTitle': 'このプラグインをロールバックしますか？',
-  'admin.plugins.downgradeBody': 'v{from} から v{to} への切り替え：新しいバージョンが書き込んだデータはそのまま残り、古いバージョンはそれを認識できない可能性があります。',
+  'admin.plugins.downgradeBody':
+    'v{from} から v{to} への切り替え：新しいバージョンが書き込んだデータはそのまま残り、古いバージョンはそれを認識できない可能性があります。',
   'admin.plugins.downgradeConfirm': 'ロールバック',
   'admin.plugins.updatesHeld': 'v{version} で更新を一時停止中',
   'admin.plugins.resumeUpdates': '更新を再開',
@@ -701,9 +703,13 @@ const admin: TranslationStrings = {
   'admin.invite.tripNone': '旅行なし',
   'admin.invite.tripHint': '新しいユーザーがリンク経由で登録すると、自動的にこの旅行に追加されます。',
   'admin.invite.boundTo': '{trip}に追加',
-  "admin.amapKey": "AMap Webサービスキー",
-  "admin.amapKeyHint": "中国国内の地点検索と交通状況を考慮したルート検索に使用します。lbs.amap.com でWebサービスキーを取得してください。",
-  "admin.amapSearch.title": "地点検索に AMap を使用",
-  "admin.amapSearch.subtitle": "デフォルトで AMap を使用します。各地点検索フォームでは TREK のネイティブデータソースへ切り替えられます。",
+  'admin.amapKey': 'AMap Webサービスキー',
+  'admin.amapKeyHint':
+    '中国国内の地点検索と交通状況を考慮したルート検索に使用します。lbs.amap.com でWebサービスキーを取得してください。',
+  'admin.amapSearch.title': '地点検索に AMap を使用',
+  'admin.amapSearch.subtitle':
+    'デフォルトで AMap を使用します。各地点検索フォームでは TREK のネイティブデータソースへ切り替えられます。',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

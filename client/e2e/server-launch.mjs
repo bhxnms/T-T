@@ -6,21 +6,23 @@
 // watch-mode `npm run dev`, which spawns tsc -w + node --watch grandchildren
 // that survive Playwright's teardown and then linger on :3001 with stale DB
 // state). A single child is killed cleanly when Playwright tears the run down.
-import { rmSync } from 'node:fs'
-import { spawn, execSync } from 'node:child_process'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { execSync, spawn } from 'node:child_process';
+import { rmSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const here = path.dirname(fileURLToPath(import.meta.url))
-const dbFile = path.join(here, '.tmp', 'e2e.db')
-const serverDir = path.join(here, '..', '..', 'server')
+const here = path.dirname(fileURLToPath(import.meta.url));
+const dbFile = path.join(here, '.tmp', 'e2e.db');
+const serverDir = path.join(here, '..', '..', 'server');
 
 for (const f of [dbFile, `${dbFile}-wal`, `${dbFile}-shm`]) {
-  try { rmSync(f, { force: true }) } catch {}
+  try {
+    rmSync(f, { force: true });
+  } catch {}
 }
 
 // Build once (no watcher) — the resulting process is a single killable node.
-execSync('node scripts/build.mjs', { cwd: serverDir, stdio: 'inherit' })
+execSync('node scripts/build.mjs', { cwd: serverDir, stdio: 'inherit' });
 
 const env = {
   ...process.env,
@@ -29,15 +31,30 @@ const env = {
   ADMIN_PASSWORD: 'E2eTest12345!',
   PORT: '3001',
   NODE_ENV: 'development',
-}
+};
 
 const child = spawn(process.execPath, ['--require', 'tsconfig-paths/register', 'dist/index.js'], {
   cwd: serverDir,
   env,
   stdio: 'inherit',
-})
-const stop = () => { try { child.kill() } catch {} }
-process.on('SIGINT', stop)
-process.on('SIGTERM', stop)
-process.on('exit', stop)
-child.on('exit', code => process.exit(code ?? 0))
+});
+let stopping = false;
+let forceTimer;
+const stop = () => {
+  if (stopping) return;
+  stopping = true;
+  child.kill('SIGTERM');
+  forceTimer = setTimeout(() => {
+    if (!child.killed) child.kill('SIGKILL');
+  }, 5000);
+  forceTimer.unref();
+};
+process.on('SIGINT', stop);
+process.on('SIGTERM', stop);
+process.on('exit', () => {
+  if (!stopping) child.kill('SIGTERM');
+});
+child.on('exit', (code) => {
+  if (forceTimer) clearTimeout(forceTimer);
+  process.exit(code ?? 0);
+});

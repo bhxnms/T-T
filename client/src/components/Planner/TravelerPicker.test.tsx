@@ -1,9 +1,9 @@
 // FE-COMP-TRAVELERS-001 to FE-COMP-TRAVELERS-017
-import { render, screen, fireEvent } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
 import type { ReservationTraveler } from '@trek/shared';
+import { fireEvent, render, screen } from '../../../tests/helpers/render';
 import type { TripMember } from '../Budget/BudgetPanelMemberChips';
-import { TravelerPicker, TravelerAvatarRow, TravelerFilterAvatars } from './TravelerPicker';
+import { TravelerAvatarRow, TravelerFilterAvatars, TravelerPicker } from './TravelerPicker';
 
 const tripMembers: TripMember[] = [
   { id: 1, username: 'alice', avatar_url: null },
@@ -118,8 +118,7 @@ describe('TravelerAvatarRow', () => {
 
 describe('TravelerFilterAvatars', () => {
   // The avatars carry no visible label, so they are addressed by their title attribute.
-  const avatarFor = (username: string) =>
-    document.querySelector(`button[title="${username}"]`) as HTMLButtonElement;
+  const avatarFor = (username: string) => document.querySelector(`button[title="${username}"]`) as HTMLButtonElement;
 
   it('FE-COMP-TRAVELERS-014: one avatar button per member, titled with the username', () => {
     render(<TravelerFilterAvatars members={tripMembers} active={new Set()} onToggle={vi.fn()} label="Travelers" />);

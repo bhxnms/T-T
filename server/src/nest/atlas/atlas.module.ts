@@ -1,16 +1,16 @@
-import { Module } from '@nestjs/common';
-import { AtlasController } from './atlas.controller';
-import { TravelStatsController } from './travel-stats.controller';
-import { AtlasService } from './atlas.service';
-import { AtlasRpc } from './atlas.rpc';
-import { PluginGuardsModule } from '../plugins/host/plugin-guards.module';
-import { AtlasMcp } from './atlas.mcp';
 import { AddonsModule } from '../addons/addons.module';
 import { AuthModule } from '../auth/auth.module';
-import { PublicStatsController } from './public-stats.controller';
+import { RateLimitModule } from '../common/rate-limit.module';
+import { PluginGuardsModule } from '../plugins/host/plugin-guards.module';
 import { ApiTokenGuard } from '../public-api/api-token.guard';
 import { TokensModule } from '../tokens/tokens.module';
-import { RateLimitModule } from '../common/rate-limit.module';
+import { AtlasController } from './atlas.controller';
+import { AtlasMcp } from './atlas.mcp';
+import { AtlasRpc } from './atlas.rpc';
+import { AtlasService } from './atlas.service';
+import { PublicStatsController } from './public-stats.controller';
+import { TravelStatsController } from './travel-stats.controller';
+import { Module } from '@nestjs/common';
 
 /**
  * Atlas addon domain (L7 leaf module). Registered in AppModule. Exports

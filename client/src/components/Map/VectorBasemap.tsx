@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react'
-import { useMap } from 'react-leaflet'
-import type * as L from 'leaflet'
-import type { MaplibreGL } from '@maplibre/maplibre-gl-leaflet'
-import { attributionForTile } from '../../constants/mapDefaults'
+import type { MaplibreGL } from '@maplibre/maplibre-gl-leaflet';
+import type * as L from 'leaflet';
+import { useEffect, useRef } from 'react';
+import { useMap } from 'react-leaflet';
+import { attributionForTile } from '../../constants/mapDefaults';
 
 /** The Leaflet layer maplibre-gl-leaflet hands back. */
-export type GlLeafletLayer = InstanceType<typeof MaplibreGL>
+export type GlLeafletLayer = InstanceType<typeof MaplibreGL>;
 
 /**
  * Load the layer factory.
@@ -21,16 +21,13 @@ export type GlLeafletLayer = InstanceType<typeof MaplibreGL>
  * sealed namespace object.
  */
 async function loadLayerFactory() {
-  const [, bridge] = await Promise.all([
-    import('./engines/maplibre'),
-    import('@maplibre/maplibre-gl-leaflet'),
-  ])
-  return bridge.maplibreGL
+  const [, bridge] = await Promise.all([import('./engines/maplibre'), import('@maplibre/maplibre-gl-leaflet')]);
+  return bridge.maplibreGL;
 }
 
 /** Credit the basemap on a map that has an attribution control; a no-op on one that does not. */
 function creditBasemap(map: L.Map, style: string): void {
-  map.attributionControl?.addAttribution(attributionForTile(style))
+  map.attributionControl?.addAttribution(attributionForTile(style));
 }
 
 /**
@@ -45,16 +42,16 @@ function creditBasemap(map: L.Map, style: string): void {
  * `pointer-events: none` on the layer's canvas, so clicks fall through to them.
  */
 export function VectorBasemap({ style }: { style: string }): null {
-  const map = useMap()
-  const layerRef = useRef<GlLeafletLayer | null>(null)
-  const styleRef = useRef(style)
-  styleRef.current = style
+  const map = useMap();
+  const layerRef = useRef<GlLeafletLayer | null>(null);
+  const styleRef = useRef(style);
+  styleRef.current = style;
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     void (async () => {
-      const maplibreGL = await loadLayerFactory()
-      if (cancelled) return
+      const maplibreGL = await loadLayerFactory();
+      if (cancelled) return;
 
       // The style is read through a ref, never from the dependency list: a style
       // change must retile in place rather than tear the layer down, the same
@@ -63,29 +60,29 @@ export function VectorBasemap({ style }: { style: string }): null {
         style: styleRef.current,
         interactive: false,
         attributionControl: false,
-      })
-      layerRef.current = layer
-      layer.addTo(map)
-      creditBasemap(map, styleRef.current)
-    })()
+      });
+      layerRef.current = layer;
+      layer.addTo(map);
+      creditBasemap(map, styleRef.current);
+    })();
 
     return () => {
-      cancelled = true
-      layerRef.current?.remove()
-      layerRef.current = null
-    }
-  }, [map])
+      cancelled = true;
+      layerRef.current?.remove();
+      layerRef.current = null;
+    };
+  }, [map]);
 
   // Restyle in place. Swapping the layer would drop a WebGL context per theme
   // toggle, and browsers cap those in the low teens.
   useEffect(() => {
-    layerRef.current?.getMaplibreMap()?.setStyle(style)
-  }, [style])
+    layerRef.current?.getMaplibreMap()?.setStyle(style);
+  }, [style]);
 
-  return null
+  return null;
 }
 
-export default VectorBasemap
+export default VectorBasemap;
 
 /**
  * The same layer for the maps that build Leaflet imperatively rather than
@@ -100,18 +97,18 @@ export async function attachVectorBasemap(
   style: string,
   ref: { current: GlLeafletLayer | null },
   cancelled: () => boolean,
-  opts: { hideLabels?: boolean } = {},
+  opts: { hideLabels?: boolean } = {}
 ): Promise<void> {
-  const maplibreGL = await loadLayerFactory()
-  if (cancelled()) return
+  const maplibreGL = await loadLayerFactory();
+  if (cancelled()) return;
 
-  const layer = maplibreGL({ style, interactive: false, attributionControl: false })
-  ref.current = layer
-  layer.addTo(map)
+  const layer = maplibreGL({ style, interactive: false, attributionControl: false });
+  ref.current = layer;
+  layer.addTo(map);
   // The raster layer this replaces carried the credit, and OpenFreeMap asks for
   // one of its own.
-  creditBasemap(map, style)
-  if (opts.hideLabels) hideLabelLayers(layer)
+  creditBasemap(map, style);
+  if (opts.hideLabels) hideLabelLayers(layer);
 }
 
 /**
@@ -126,14 +123,14 @@ export async function attachVectorBasemap(
  * setStyle, so a theme switch keeps the labels off without a second call site.
  */
 export function hideLabelLayers(layer: GlLeafletLayer): void {
-  const gl = layer.getMaplibreMap()
-  if (!gl) return
+  const gl = layer.getMaplibreMap();
+  if (!gl) return;
   const apply = () => {
     for (const l of gl.getStyle()?.layers ?? []) {
-      if (l.type === 'symbol') gl.setLayoutProperty(l.id, 'visibility', 'none')
+      if (l.type === 'symbol') gl.setLayoutProperty(l.id, 'visibility', 'none');
     }
-  }
-  gl.on('style.load', apply)
+  };
+  gl.on('style.load', apply);
   // The first style may already be in when we get here.
-  if (gl.isStyleLoaded()) apply()
+  if (gl.isStyleLoaded()) apply();
 }

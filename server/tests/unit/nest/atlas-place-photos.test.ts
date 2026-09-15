@@ -4,8 +4,14 @@
  * imported from the trip skeleton, plus legacy trip-photo uploads. Ownership
  * is enforced per source (journey owner / trip owner-or-member).
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import { AtlasService } from '../../../src/nest/atlas/atlas.service';
+import { DatabaseService } from '../../../src/nest/database/database.service';
+import { resetTestDb } from '../../helpers/test-db';
+
 import Database from 'better-sqlite3';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { testDb, dbMock } = vi.hoisted(() => {
   const Database = require('better-sqlite3');
@@ -31,12 +37,6 @@ vi.mock('../../../src/config', () => ({
   updateJwtSecret: () => {},
 }));
 
-import { runMigrations } from '../../../src/db/migrations';
-import { createTables } from '../../../src/db/schema';
-import { resetTestDb } from '../../helpers/test-db';
-import { DatabaseService } from '../../../src/nest/database/database.service';
-import { AtlasService } from '../../../src/nest/atlas/atlas.service';
-
 const dbs = new DatabaseService(testDb);
 const svc = new AtlasService(dbs);
 
@@ -59,51 +59,89 @@ function seed(): number {
   testDb.prepare('INSERT INTO trip_members (trip_id, user_id) VALUES (?, ?)').run(ownerTripId, MEMBER);
 
   const placeId = Number(
-    testDb.prepare('INSERT INTO places (trip_id, name, lat, lng) VALUES (?, ?, 50, 8)').run(ownerTripId, 'Eiffel').lastInsertRowid,
+    testDb.prepare('INSERT INTO places (trip_id, name, lat, lng) VALUES (?, ?, 50, 8)').run(ownerTripId, 'Eiffel')
+      .lastInsertRowid,
   );
 
   const insTrek = testDb.prepare("INSERT INTO trek_photos (provider, owner_id) VALUES ('local', ?)");
-  const photoCheckin = Number(insTrek.run(OWNER).lastInsertRowid);   // via entry photos
-  const photoOther = Number(insTrek.run(OTHER).lastInsertRowid);     // someone else's journey
-  const photoLegacy = Number(insTrek.run(OWNER).lastInsertRowid);    // legacy upload source
+  const photoCheckin = Number(insTrek.run(OWNER).lastInsertRowid); // via entry photos
+  const photoOther = Number(insTrek.run(OTHER).lastInsertRowid); // someone else's journey
+  const photoLegacy = Number(insTrek.run(OWNER).lastInsertRowid); // legacy upload source
 
   const journeyId = Number(
-    testDb.prepare(
-      "INSERT INTO journeys (user_id, title, created_at, updated_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
-    ).run(OWNER, 'Owner Journey').lastInsertRowid,
+    testDb
+      .prepare(
+        "INSERT INTO journeys (user_id, title, created_at, updated_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
+      )
+      .run(OWNER, 'Owner Journey').lastInsertRowid,
   );
 
   const entryId = Number(
-    testDb.prepare('INSERT INTO journey_entries (journey_id, author_id, type, entry_date, source_trip_id, source_place_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, strftime(?, ?), strftime(?, ?))')
-      .run(journeyId, OWNER, 'story', '2026-09-02', ownerTripId, placeId, '%Y-%m-%dT%H:%M:%SZ', 'now', '%Y-%m-%dT%H:%M:%SZ', 'now').lastInsertRowid,
+    testDb
+      .prepare(
+        'INSERT INTO journey_entries (journey_id, author_id, type, entry_date, source_trip_id, source_place_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, strftime(?, ?), strftime(?, ?))',
+      )
+      .run(
+        journeyId,
+        OWNER,
+        'story',
+        '2026-09-02',
+        ownerTripId,
+        placeId,
+        '%Y-%m-%dT%H:%M:%SZ',
+        'now',
+        '%Y-%m-%dT%H:%M:%SZ',
+        'now',
+      ).lastInsertRowid,
   );
   const gpEntry = Number(
-    testDb.prepare('INSERT INTO journey_photos (journey_id, photo_id, created_at) VALUES (?, ?, ?)')
+    testDb
+      .prepare('INSERT INTO journey_photos (journey_id, photo_id, created_at) VALUES (?, ?, ?)')
       .run(journeyId, photoCheckin, Date.now()).lastInsertRowid,
   );
-  testDb.prepare('INSERT INTO journey_entry_photos (entry_id, journey_photo_id, created_at) VALUES (?, ?, ?)')
+  testDb
+    .prepare('INSERT INTO journey_entry_photos (entry_id, journey_photo_id, created_at) VALUES (?, ?, ?)')
     .run(entryId, gpEntry, Date.now());
 
   // Someone else's journey over the same place — must stay invisible to OWNER.
   const otherJourneyId = Number(
-    testDb.prepare(
-      "INSERT INTO journeys (user_id, title, created_at, updated_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
-    ).run(OTHER, 'Other Journey').lastInsertRowid,
+    testDb
+      .prepare(
+        "INSERT INTO journeys (user_id, title, created_at, updated_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
+      )
+      .run(OTHER, 'Other Journey').lastInsertRowid,
   );
   const otherEntryId = Number(
-    testDb.prepare('INSERT INTO journey_entries (journey_id, author_id, type, entry_date, source_trip_id, source_place_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, strftime(?, ?), strftime(?, ?))')
-      .run(otherJourneyId, OTHER, 'story', '2026-09-03', ownerTripId, placeId, '%Y-%m-%dT%H:%M:%SZ', 'now', '%Y-%m-%dT%H:%M:%SZ', 'now').lastInsertRowid,
+    testDb
+      .prepare(
+        'INSERT INTO journey_entries (journey_id, author_id, type, entry_date, source_trip_id, source_place_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, strftime(?, ?), strftime(?, ?))',
+      )
+      .run(
+        otherJourneyId,
+        OTHER,
+        'story',
+        '2026-09-03',
+        ownerTripId,
+        placeId,
+        '%Y-%m-%dT%H:%M:%SZ',
+        'now',
+        '%Y-%m-%dT%H:%M:%SZ',
+        'now',
+      ).lastInsertRowid,
   );
   const gpOther = Number(
-    testDb.prepare('INSERT INTO journey_photos (journey_id, photo_id, created_at) VALUES (?, ?, ?)')
+    testDb
+      .prepare('INSERT INTO journey_photos (journey_id, photo_id, created_at) VALUES (?, ?, ?)')
       .run(otherJourneyId, photoOther, Date.now()).lastInsertRowid,
   );
-  testDb.prepare('INSERT INTO journey_entry_photos (entry_id, journey_photo_id, created_at) VALUES (?, ?, ?)')
+  testDb
+    .prepare('INSERT INTO journey_entry_photos (entry_id, journey_photo_id, created_at) VALUES (?, ?, ?)')
     .run(otherEntryId, gpOther, Date.now());
 
   // Legacy trip-photo upload on the owner trip.
   IDS.photoLegacy = Number(
-    testDb.prepare('INSERT INTO photos (trip_id, place_id, filename, original_name) VALUES (?, ?, ?, ?)')
+    testDb
+      .prepare('INSERT INTO photos (trip_id, place_id, filename, original_name) VALUES (?, ?, ?, ?)')
       .run(ownerTripId, placeId, 'a.jpg', 'a.jpg').lastInsertRowid,
   );
 

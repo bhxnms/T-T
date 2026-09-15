@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from 'react';
 
 /**
  * TT 吉祥物 - 一个简约的旅行图标，采用扁平化设计风格。
@@ -23,18 +23,18 @@ export type TTScene =
   | 'notifications'
   | 'costs'
   | 'search'
-  | 'tasks'
+  | 'tasks';
 
-export type TTMood = 'default' | 'happy' | 'sleepy' | 'confused' | 'error'
+export type TTMood = 'default' | 'happy' | 'sleepy' | 'confused' | 'error';
 
 // TT 简化 logo - 两个字母 T 的几何形状
 const TT_SHAPE =
-  'M20,15 L30,15 L30,20 L26,20 L26,35 L24,35 L24,20 L20,20 Z M35,15 L45,15 L45,20 L41,20 L41,35 L39,35 L39,20 L35,20 Z'
+  'M20,15 L30,15 L30,20 L26,20 L26,35 L24,35 L24,20 L20,20 Z M35,15 L45,15 L45,20 L41,20 L41,35 L39,35 L39,20 L35,20 Z';
 
 const SCENE_MOOD: Partial<Record<TTScene, TTMood>> = {
   notifications: 'sleepy',
   search: 'confused',
-}
+};
 
 export default function MDancingTT({
   size = 96,
@@ -42,19 +42,19 @@ export default function MDancingTT({
   mood,
   className = '',
 }: {
-  size?: number
-  scene?: TTScene
-  mood?: TTMood
-  className?: string
+  size?: number;
+  scene?: TTScene;
+  mood?: TTMood;
+  className?: string;
 }) {
-  const face = mood ?? SCENE_MOOD[scene] ?? 'default'
-  const shadowCy = scene === 'transport' ? 86 : 73
-  const [poke, setPoke] = useState(0)
+  const face = mood ?? SCENE_MOOD[scene] ?? 'default';
+  const shadowCy = scene === 'transport' ? 86 : 73;
+  const [poke, setPoke] = useState(0);
 
   return (
     <svg
       key={poke}
-      onClick={() => setPoke(p => p + 1)}
+      onClick={() => setPoke((p) => p + 1)}
       width={size}
       height={(size * 96) / 88}
       viewBox="0 0 88 96"
@@ -81,7 +81,9 @@ export default function MDancingTT({
               {/* 背包口袋 */}
               <rect x="11" y="14" width="18" height="12" rx="2" fill="var(--m-bg)" opacity="0.3" />
               {/* TT 标记 */}
-              <text x="20" y="22" fontSize="8" fontWeight="bold" fill="var(--m-bg)" textAnchor="middle">TT</text>
+              <text x="20" y="22" fontSize="8" fontWeight="bold" fill="var(--m-bg)" textAnchor="middle">
+                TT
+              </text>
             </g>
 
             {/* 眼睛 */}
@@ -93,7 +95,7 @@ export default function MDancingTT({
         <SceneFront scene={scene} />
       </g>
     </svg>
-  )
+  );
 }
 
 /* ── 眼睛 ──────────────────────────────────────────────────────────────── */
@@ -104,7 +106,7 @@ function Eyes({ mood }: { mood: TTMood }) {
         <line x1="30" y1="42" x2="36" y2="42" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         <line x1="52" y1="42" x2="58" y2="42" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       </g>
-    )
+    );
   }
 
   if (mood === 'happy') {
@@ -113,7 +115,7 @@ function Eyes({ mood }: { mood: TTMood }) {
         <path d="M30,40 Q33,38 36,40" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
         <path d="M52,40 Q55,38 58,40" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
       </g>
-    )
+    );
   }
 
   if (mood === 'confused') {
@@ -122,7 +124,7 @@ function Eyes({ mood }: { mood: TTMood }) {
         <circle cx="33" cy="42" r="2" fill="currentColor" />
         <circle cx="55" cy="40" r="2" fill="currentColor" />
       </g>
-    )
+    );
   }
 
   if (mood === 'error') {
@@ -133,7 +135,7 @@ function Eyes({ mood }: { mood: TTMood }) {
         <line x1="52" y1="40" x2="58" y2="44" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         <line x1="58" y1="40" x2="52" y2="44" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       </g>
-    )
+    );
   }
 
   // default mood - 正常的圆形眼睛
@@ -142,7 +144,7 @@ function Eyes({ mood }: { mood: TTMood }) {
       <circle cx="33" cy="42" r="2.5" fill="currentColor" />
       <circle cx="55" cy="42" r="2.5" fill="currentColor" />
     </g>
-  )
+  );
 }
 
 /* ── 场景道具 - 背景 ──────────────────────────────────────────────────── */
@@ -154,9 +156,9 @@ function SceneBack({ scene }: { scene: TTScene }) {
           {/* 简单的道路线条 */}
           <line x1="10" y1="70" x2="78" y2="70" stroke="currentColor" strokeWidth="1" opacity="0.3" />
         </g>
-      )
+      );
     default:
-      return null
+      return null;
   }
 }
 
@@ -170,7 +172,7 @@ function SceneFront({ scene }: { scene: TTScene }) {
           <circle cx="65" cy="35" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
           <line x1="69" y1="39" x2="73" y2="43" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </g>
-      )
+      );
     case 'packing':
       return (
         <g className="tt-prop-front">
@@ -179,7 +181,7 @@ function SceneFront({ scene }: { scene: TTScene }) {
           <line x1="65" y1="52" x2="65" y2="48" stroke="currentColor" strokeWidth="1.5" />
           <line x1="71" y1="52" x2="71" y2="48" stroke="currentColor" strokeWidth="1.5" />
         </g>
-      )
+      );
     case 'files':
       return (
         <g className="tt-prop-front">
@@ -189,7 +191,7 @@ function SceneFront({ scene }: { scene: TTScene }) {
           <line x1="63" y1="54" x2="71" y2="54" stroke="currentColor" strokeWidth="1" />
           <line x1="63" y1="58" x2="68" y2="58" stroke="currentColor" strokeWidth="1" />
         </g>
-      )
+      );
     case 'notes':
       return (
         <g className="tt-prop-front">
@@ -198,8 +200,8 @@ function SceneFront({ scene }: { scene: TTScene }) {
           <line x1="62" y1="53" x2="70" y2="53" stroke="currentColor" strokeWidth="0.8" />
           <line x1="62" y1="57" x2="70" y2="57" stroke="currentColor" strokeWidth="0.8" />
         </g>
-      )
+      );
     default:
-      return null
+      return null;
   }
 }

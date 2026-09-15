@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'Warna jalur',
   'inspector.trackColorAuto': 'Warna otomatis',
   'inspector.trackColorCustom': 'Pilih warna kustom',
-  "inspector.checkin": "Check in",
-  "inspector.checkinDone": "Sudah check-in",
+  'inspector.checkin': 'Check in',
+  'inspector.checkinDone': 'Sudah check-in',
 };
 export default inspector;

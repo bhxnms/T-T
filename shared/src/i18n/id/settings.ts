@@ -499,7 +499,8 @@ const settings: TranslationStrings = {
   'settings.offline.notice.offline': 'Tidak ada koneksi. Hubungkan untuk menyimpan perjalanan secara offline.',
   'settings.offline.notice.signedOut': 'Sesimu telah berakhir. Masuk lagi untuk menyinkronkan.',
   'settings.offline.notice.failed': 'Unduhan tidak dapat diselesaikan. Periksa koneksimu dan coba lagi.',
-  'settings.offline.notice.loadFailed': 'Tidak dapat membaca penyimpanan offline perangkat ini. Membersihkan cache biasanya memperbaikinya.',
+  'settings.offline.notice.loadFailed':
+    'Tidak dapat membaca penyimpanan offline perangkat ini. Membersihkan cache biasanya memperbaikinya.',
   'settings.offline.clear': 'Hapus cache',
   'settings.offline.clearConfirm':
     'Hapus semua data perjalanan offline? Kamu bisa menyinkronkan ulang kapan saja saat online.',
@@ -542,13 +543,15 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'Kunci API',
-  'settings.apiKeys.description': 'Kunci untuk API publik, agar perangkat lunak lain dapat membaca perjalananmu. Hanya baca: kunci tidak dapat mengubah atau menghapus apa pun.',
+  'settings.apiKeys.description':
+    'Kunci untuk API publik, agar perangkat lunak lain dapat membaca perjalananmu. Hanya baca: kunci tidak dapat mengubah atau menghapus apa pun.',
   'settings.apiKeys.create': 'Buat kunci',
   'settings.apiKeys.empty': 'Belum ada kunci. Buat satu untuk menghubungkan perangkat lunak lain.',
   'settings.apiKeys.createdAt': 'dibuat',
   'settings.apiKeys.usedAt': 'terakhir dipakai',
   'settings.apiKeys.deleteTitle': 'Hapus kunci',
-  'settings.apiKeys.deleteMessage': 'Semua yang memakai kunci ini langsung berhenti bekerja. Tindakan ini tidak bisa dibatalkan.',
+  'settings.apiKeys.deleteMessage':
+    'Semua yang memakai kunci ini langsung berhenti bekerja. Tindakan ini tidak bisa dibatalkan.',
   'settings.apiKeys.deleted': 'Kunci dihapus',
   'settings.apiKeys.deleteFailed': 'Kunci tidak dapat dihapus',
   'settings.apiKeys.createFailed': 'Kunci tidak dapat dibuat',
@@ -561,7 +564,8 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.creating': 'Membuat...',
   'settings.apiKeys.modal.create': 'Buat',
   'settings.apiKeys.modal.createdTitle': 'Kunci API dibuat',
-  'settings.apiKeys.modal.createdWarning': 'Salin kunci sekarang. Kunci hanya ditampilkan sekali dan tidak bisa diambil lagi.',
+  'settings.apiKeys.modal.createdWarning':
+    'Salin kunci sekarang. Kunci hanya ditampilkan sekali dan tidak bisa diambil lagi.',
   'settings.apiKeys.modal.done': 'Selesai',
 };
 

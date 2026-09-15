@@ -334,7 +334,8 @@ const admin: TranslationStrings = {
     'Отмечать дни в плане цветом (например, к какому этапу поездки относится день)',
   'admin.plugins.cap.mcpTools': 'Публикует ИИ-инструменты',
   'admin.plugins.mcpToolsTitle': 'Публикуемые ИИ-инструменты',
-  'admin.plugins.mcpToolsHint': 'Ассистент может запускать их от имени пользователя. Каждый действует с правами, выданными выше.',
+  'admin.plugins.mcpToolsHint':
+    'Ассистент может запускать их от имени пользователя. Каждый действует с правами, выданными выше.',
   'admin.plugins.perm.mcp:tools':
     'Публиковать инструменты, которые ИИ-ассистент может запускать от вашего имени (он действует с правами, выданными плагину здесь, а не со своими)',
   'admin.plugins.perm.geolocation:read':
@@ -438,7 +439,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Сменить версию…',
   'admin.plugins.noVersions': 'В реестре не найдено опубликованных версий.',
   'admin.plugins.downgradeTitle': 'Откатить этот плагин?',
-  'admin.plugins.downgradeBody': 'Переход с v{from} на v{to}: данные, записанные более новой версией, остаются на месте, и старая версия может их не понять.',
+  'admin.plugins.downgradeBody':
+    'Переход с v{from} на v{to}: данные, записанные более новой версией, остаются на месте, и старая версия может их не понять.',
   'admin.plugins.downgradeConfirm': 'Откатить',
   'admin.plugins.updatesHeld': 'Обновления приостановлены на v{version}',
   'admin.plugins.resumeUpdates': 'Возобновить обновления',
@@ -509,8 +511,7 @@ const admin: TranslationStrings = {
     '«{name}» заявляет поддержку TREK {range}, а этот сервер работает на {host}. TREK пропускает его только потому, что задано TREK_PLUGINS_IGNORE_TREK_RANGE. Автор не обновил диапазон версий плагина для этого TREK, так что работоспособность не гарантируется — а в редких случаях несовместимый плагин может повредить данные TREK. Продолжайте, только если принимаете этот риск.',
   'admin.plugins.rangeBypass.bodyUnknown':
     '«{name}» не указывает, какие версии TREK он поддерживает; этот сервер работает на {host}. TREK пропускает его только потому, что задано TREK_PLUGINS_IGNORE_TREK_RANGE. Ничто не говорит о том, что автор тестировал его на этом TREK, так что работоспособность не гарантируется — а в редких случаях несовместимый плагин может повредить данные TREK. Продолжайте, только если принимаете этот риск.',
-  'admin.plugins.dep.trekBypassed':
-    'Вне своего диапазона TREK ({range}) — проверки версии отключены',
+  'admin.plugins.dep.trekBypassed': 'Вне своего диапазона TREK ({range}) — проверки версии отключены',
   'admin.plugins.dep.trekBypassedUnknown': 'Диапазон TREK не указан — проверки версии отключены',
   'admin.plugins.incompatible': 'Несовместимо',
   'admin.plugins.accessTitle': 'К чему есть доступ',
@@ -547,7 +548,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'Синхронизация рейсов с вашего сервера AirTrail',
   'admin.addons.catalog.llm_parsing.name': 'Разбор с помощью ИИ',
-  'admin.addons.catalog.llm_parsing.description': 'Читает брони, которые не понимает встроенный анализатор, с помощью выбранной вами модели ИИ',
+  'admin.addons.catalog.llm_parsing.description':
+    'Читает брони, которые не понимает встроенный анализатор, с помощью выбранной вами модели ИИ',
   'admin.addons.enabled': 'Включено',
   'admin.addons.disabled': 'Отключено',
   'admin.addons.type.trip': 'Поездка',
@@ -693,7 +695,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.journey.description':
     'Отслеживание поездок и дневник путешествий с отметками, фото и ежедневными историями',
   'admin.addons.catalog.collections.name': 'Коллекции',
-  'admin.addons.catalog.collections.description': 'Собирайте места из любых поездок в именованные списки и используйте их снова',
+  'admin.addons.catalog.collections.description':
+    'Собирайте места из любых поездок в именованные списки и используйте их снова',
   'admin.passkey.title': 'Вход по passkey',
   'admin.passkey.cardHint': 'Разрешите пользователям входить с помощью passkeys (WebAuthn). По умолчанию выключено.',
   'admin.passkey.login': 'Включить вход по passkey',
@@ -736,9 +739,13 @@ const admin: TranslationStrings = {
   'admin.invite.tripNone': 'Без поездки',
   'admin.invite.tripHint': 'Новый пользователь автоматически добавляется в эту поездку при регистрации по ссылке.',
   'admin.invite.boundTo': 'добавляет в {trip}',
-  "admin.amapKey": "Ключ веб-сервиса AMap",
-  "admin.amapKeyHint": "Для поиска мест в Китае и маршрутов с учётом пробок. Получите ключ веб-сервиса на lbs.amap.com.",
-  "admin.amapSearch.title": "Использовать AMap для поиска мест",
-  "admin.amapSearch.subtitle": "По умолчанию используется AMap; в каждой форме поиска можно вернуться к нативным источникам TREK.",
+  'admin.amapKey': 'Ключ веб-сервиса AMap',
+  'admin.amapKeyHint':
+    'Для поиска мест в Китае и маршрутов с учётом пробок. Получите ключ веб-сервиса на lbs.amap.com.',
+  'admin.amapSearch.title': 'Использовать AMap для поиска мест',
+  'admin.amapSearch.subtitle':
+    'По умолчанию используется AMap; в каждой форме поиска можно вернуться к нативным источникам TREK.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

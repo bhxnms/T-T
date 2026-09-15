@@ -1,6 +1,7 @@
-import { CanActivate, ExecutionContext, HttpException, Injectable } from '@nestjs/common';
-import type { Request } from 'express';
 import { TokenService } from '../tokens/token.service';
+import { CanActivate, ExecutionContext, HttpException, Injectable } from '@nestjs/common';
+
+import type { Request } from 'express';
 
 /**
  * Authenticates a caller of the public API with a long-lived `trek_…` token.
@@ -37,17 +38,11 @@ export class ApiTokenGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
     const token = extractApiToken(req);
     if (!token) {
-      throw new HttpException(
-        { error: 'API token required', code: 'API_TOKEN_REQUIRED' },
-        401,
-      );
+      throw new HttpException({ error: 'API token required', code: 'API_TOKEN_REQUIRED' }, 401);
     }
     const user = this.tokens.verifyApiToken(token);
     if (!user) {
-      throw new HttpException(
-        { error: 'Invalid API token', code: 'API_TOKEN_INVALID' },
-        401,
-      );
+      throw new HttpException({ error: 'Invalid API token', code: 'API_TOKEN_INVALID' }, 401);
     }
     req.user = user;
     return true;

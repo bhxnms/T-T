@@ -333,7 +333,8 @@ const admin: TranslationStrings = {
     'Dagen in het dagplan een kleur geven (bijvoorbeeld bij welk deel van de reis een dag hoort)',
   'admin.plugins.cap.mcpTools': 'Publiceert AI-tools',
   'admin.plugins.mcpToolsTitle': 'Gepubliceerde AI-tools',
-  'admin.plugins.mcpToolsHint': 'Een assistent kan deze namens een gebruiker uitvoeren. Elke tool handelt met de hierboven verleende rechten.',
+  'admin.plugins.mcpToolsHint':
+    'Een assistent kan deze namens een gebruiker uitvoeren. Elke tool handelt met de hierboven verleende rechten.',
   'admin.plugins.perm.mcp:tools':
     'Tools publiceren die een AI-assistent namens jou kan uitvoeren (die handelt met de rechten die je de plug-in hier geeft, niet met die van de assistent)',
   'admin.plugins.perm.geolocation:read':
@@ -436,7 +437,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Versie wijzigen…',
   'admin.plugins.noVersions': 'Geen gepubliceerde versies gevonden in het register.',
   'admin.plugins.downgradeTitle': 'Deze plugin terugdraaien?',
-  'admin.plugins.downgradeBody': 'Overschakelen van v{from} naar v{to}: gegevens die door de nieuwere versie zijn geschreven blijven staan, en de oudere versie begrijpt ze mogelijk niet.',
+  'admin.plugins.downgradeBody':
+    'Overschakelen van v{from} naar v{to}: gegevens die door de nieuwere versie zijn geschreven blijven staan, en de oudere versie begrijpt ze mogelijk niet.',
   'admin.plugins.downgradeConfirm': 'Terugdraaien',
   'admin.plugins.updatesHeld': 'Updates gepauzeerd op v{version}',
   'admin.plugins.resumeUpdates': 'Updates hervatten',
@@ -544,7 +546,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'Synchroniseer vluchten vanuit je AirTrail-instantie',
   'admin.addons.catalog.llm_parsing.name': 'AI-analyse',
-  'admin.addons.catalog.llm_parsing.description': 'Leest boekingen die de ingebouwde parser niet begrijpt, met een AI-model naar keuze',
+  'admin.addons.catalog.llm_parsing.description':
+    'Leest boekingen die de ingebouwde parser niet begrijpt, met een AI-model naar keuze',
   'admin.addons.enabled': 'Ingeschakeld',
   'admin.addons.disabled': 'Uitgeschakeld',
   'admin.addons.type.trip': 'Reis',
@@ -691,7 +694,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.journey.name': 'Reisverslag',
   'admin.addons.catalog.journey.description': "Reistracking & reisdagboek met check-ins, foto's en dagelijkse verhalen",
   'admin.addons.catalog.collections.name': 'Collecties',
-  'admin.addons.catalog.collections.description': 'Verzamel plaatsen uit al je reizen in benoemde lijsten en gebruik ze opnieuw',
+  'admin.addons.catalog.collections.description':
+    'Verzamel plaatsen uit al je reizen in benoemde lijsten en gebruik ze opnieuw',
   'admin.passkey.title': 'Inloggen met passkey',
   'admin.passkey.cardHint': 'Laat gebruikers inloggen met passkeys (WebAuthn). Standaard uit.',
   'admin.passkey.login': 'Inloggen met passkey inschakelen',
@@ -735,9 +739,12 @@ const admin: TranslationStrings = {
   'admin.invite.tripHint':
     'De nieuwe gebruiker wordt automatisch aan deze reis toegevoegd wanneer hij zich via de link registreert.',
   'admin.invite.boundTo': 'voegt toe aan {trip}',
-  "admin.amapKey": "AMap Web-Service-sleutel",
-  "admin.amapKeyHint": "Voor het zoeken van plaatsen in China en verkeersbewuste routes. Vraag een web-service-sleutel aan op lbs.amap.com.",
-  "admin.amapSearch.title": "AMap gebruiken voor plaatszoeken",
-  "admin.amapSearch.subtitle": "Gebruikt standaard AMap; elk zoekformulier kan terug naar de native TREK-bronnen.",
+  'admin.amapKey': 'AMap Web-Service-sleutel',
+  'admin.amapKeyHint':
+    'Voor het zoeken van plaatsen in China en verkeersbewuste routes. Vraag een web-service-sleutel aan op lbs.amap.com.',
+  'admin.amapSearch.title': 'AMap gebruiken voor plaatszoeken',
+  'admin.amapSearch.subtitle': 'Gebruikt standaard AMap; elk zoekformulier kan terug naar de native TREK-bronnen.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

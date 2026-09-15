@@ -100,7 +100,8 @@ const places: TranslationStrings = {
   'places.details.facts': 'Gut zu wissen',
   'places.details.nothing': 'Zu diesem Ort wurde nichts gefunden.',
   'places.details.noKeyTitle': 'Mehr Details möglich',
-  'places.details.noKeyHint': 'Ohne Google-API-Key nutzt diese Instanz nur freie Quellen. Wende dich an deine TREK-Administration, um Bewertungen, Öffnungszeiten und Fotos freizuschalten.',
+  'places.details.noKeyHint':
+    'Ohne Google-API-Key nutzt diese Instanz nur freie Quellen. Wende dich an deine TREK-Administration, um Bewertungen, Öffnungszeiten und Fotos freizuschalten.',
   'places.details.aboutBrand': 'Über die Kette',
   'places.details.aboutBrandNote': 'Beschreibt die Kette, nicht diese Filiale.',
   'places.details.fact.rating': 'Bewertung',
@@ -128,8 +129,8 @@ const places: TranslationStrings = {
   'places.enrichOnImport': 'Orte über Google anreichern',
   'places.enrichOnImportHint':
     'Sucht jeden importierten Ort nach, um Fotos, Adresse und Kontaktdaten zu ergänzen. Nutzt deinen Google-Maps-Key.',
-  "places.searchProvider": "Suche:",
-  "places.searchProviderAmap": "AMap",
-  "places.searchProviderNative": "TREK",
+  'places.searchProvider': 'Suche:',
+  'places.searchProviderAmap': 'AMap',
+  'places.searchProviderNative': 'TREK',
 };
 export default places;

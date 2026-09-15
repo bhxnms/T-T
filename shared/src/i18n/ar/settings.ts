@@ -486,7 +486,8 @@ const settings: TranslationStrings = {
   'settings.offline.notice.offline': 'لا يوجد اتصال. اتصل بالإنترنت لحفظ الرحلات للاستخدام دون اتصال.',
   'settings.offline.notice.signedOut': 'انتهت جلستك. سجّل الدخول مرة أخرى للمزامنة.',
   'settings.offline.notice.failed': 'تعذّر إكمال التنزيل. تحقّق من اتصالك ثم حاول مرة أخرى.',
-  'settings.offline.notice.loadFailed': 'تعذّرت قراءة التخزين غير المتصل على هذا الجهاز. عادةً ما يُصلِح مسح الذاكرة المؤقتة المشكلة.',
+  'settings.offline.notice.loadFailed':
+    'تعذّرت قراءة التخزين غير المتصل على هذا الجهاز. عادةً ما يُصلِح مسح الذاكرة المؤقتة المشكلة.',
   'settings.offline.clear': 'مسح ذاكرة التخزين المؤقت',
   'settings.offline.clearConfirm':
     'هل تريد مسح جميع بيانات الرحلة المخزّنة دون اتصال؟ يمكنك إعادة المزامنة في أي وقت أثناء الاتصال.',
@@ -529,7 +530,8 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'مفاتيح API',
-  'settings.apiKeys.description': 'مفاتيح لواجهة API العامة، حتى تتمكن برامج أخرى من قراءة رحلاتك. للقراءة فقط: لا يمكن للمفتاح تغيير أي شيء أو حذفه.',
+  'settings.apiKeys.description':
+    'مفاتيح لواجهة API العامة، حتى تتمكن برامج أخرى من قراءة رحلاتك. للقراءة فقط: لا يمكن للمفتاح تغيير أي شيء أو حذفه.',
   'settings.apiKeys.create': 'إنشاء مفتاح',
   'settings.apiKeys.empty': 'لا توجد مفاتيح بعد. أنشئ مفتاحًا لربط برامج أخرى.',
   'settings.apiKeys.createdAt': 'أُنشئ',

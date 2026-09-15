@@ -4,7 +4,7 @@ Production-ready setup using Docker Compose with security hardening enabled.
 
 ## Compose File
 
-See https://github.com/liketrek/TREK/blob/main/docker-compose.yml
+See https://github.com/bhxnms/T-T/blob/main/docker-compose.yml
 
 ## Security Hardening Explained
 
@@ -18,7 +18,7 @@ The compose file ships with several hardening options enabled by default:
 | `cap_add: [CHOWN, SETUID, SETGID]` | Adds back only the capabilities needed for the entrypoint to drop privileges to the `node` user |
 | `tmpfs: /tmp:noexec,nosuid,size=128m` | Mounts a 128 MB in-memory `/tmp`; required because the container root is read-only |
 
-> **Note (Docker from snap):** If you installed Docker via `snap` (config under `/var/snap/docker/...`), `no-new-privileges:true` will prevent the container from starting with `exec /usr/bin/dumb-init: operation not permitted`. This is a [snap/AppArmor limitation](https://bugs.launchpad.net/snapd/+bug/1908448), not a TREK issue — install Docker from the [official apt repository](https://docs.docker.com/engine/install/ubuntu/) instead, or remove `no-new-privileges`. See [Troubleshooting](Troubleshooting#container-wont-start-exec-usrbindumb-init-operation-not-permitted).
+> **Note (Docker from snap):** If you installed Docker via `snap` (config under `/var/snap/docker/...`), `no-new-privileges:true` will prevent the container from starting with `exec /usr/bin/dumb-init: operation not permitted`. This is a [snap/AppArmor limitation](https://bugs.launchpad.net/snapd/+bug/1908448), not a TT Travel Planner issue — install Docker from the [official apt repository](https://docs.docker.com/engine/install/ubuntu/) instead, or remove `no-new-privileges`. See [Troubleshooting](Troubleshooting#container-wont-start-exec-usrbindumb-init-operation-not-permitted).
 
 ## Volumes
 
@@ -62,7 +62,7 @@ The commented `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` lines are interpolated a
 
 Every other variable — `APP_URL`, the OIDC block, `FORCE_HTTPS`, `TRUST_PROXY`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`, the MCP limits — ships as a commented literal. Uncomment the line in `docker-compose.yml` and put the value there; setting it in `.env` alone has no effect.
 
-`APP_URL` is usually not needed. TREK resolves its public base URL as `APP_URL` → first `ALLOWED_ORIGINS` entry → `http://localhost:<PORT>`, so the `ALLOWED_ORIGINS` value above already gives OIDC redirect URIs, passkey origin checks and the links in email notifications the correct origin. Uncomment `APP_URL` only when the public base URL has to differ from the first allowed origin.
+`APP_URL` is usually not needed. TT Travel Planner resolves its public base URL as `APP_URL` → first `ALLOWED_ORIGINS` entry → `http://localhost:<PORT>`, so the `ALLOWED_ORIGINS` value above already gives OIDC redirect URIs, passkey origin checks and the links in email notifications the correct origin. Uncomment `APP_URL` only when the public base URL has to differ from the first allowed origin.
 
 For a full description of every variable, see [Environment-Variables](Environment-Variables).
 
@@ -72,15 +72,15 @@ Three tag strategies are available:
 
 | Tag | Example                  | Behavior |
 |---|--------------------------|---|
-| `latest` | `mauriceboe/trek:latest` | Always the newest release across all major versions |
-| Major version | `mauriceboe/trek:4`      | Latest release pinned to that major version |
-| Full version | `mauriceboe/trek:4.0.0`  | Exact release; never changes |
+| `latest` | `ghcr.io/bhxnms/tt-planner:latest` | Always the newest release across all major versions |
+| Major version | `ghcr.io/bhxnms/tt-planner:4`      | Latest release pinned to that major version |
+| Full version | `ghcr.io/bhxnms/tt-planner:4.0.0`  | Exact release; never changes |
 
 The compose file above uses `latest`. To pin, change the `image:` line:
 
 ```yaml
-image: mauriceboe/trek:4        # track major version 4
-image: mauriceboe/trek:4.0.0   # pin to exact release
+image: ghcr.io/bhxnms/tt-planner:4        # track major version 4
+image: ghcr.io/bhxnms/tt-planner:4.0.0   # pin to exact release
 ```
 
 ## Start TREK

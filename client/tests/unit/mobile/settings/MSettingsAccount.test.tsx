@@ -1,17 +1,17 @@
 // FE-MOB-SETACC-001 to FE-MOB-SETACC-070
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { startRegistration } from '@simplewebauthn/browser';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { startRegistration } from '@simplewebauthn/browser';
-import { render, screen, fireEvent, waitFor, within } from '../../../helpers/render';
-import { server } from '../../../helpers/msw/server';
-import { resetAllStores, seedStore } from '../../../helpers/store';
-import { buildUser, buildAppConfig } from '../../../helpers/factories';
-import { useAuthStore } from '../../../../src/store/authStore';
-import { ToastContainer } from '../../../../src/components/shared/Toast';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PasskeyCredential } from '../../../../src/api/client';
-import type { UserWithOidc } from '../../../../src/types';
+import { ToastContainer } from '../../../../src/components/shared/Toast';
 import MSettingsAccount from '../../../../src/mobile/screens/settings/MSettingsAccount';
+import { useAuthStore } from '../../../../src/store/authStore';
+import type { UserWithOidc } from '../../../../src/types';
+import { buildAppConfig, buildUser } from '../../../helpers/factories';
+import { server } from '../../../helpers/msw/server';
+import { fireEvent, render, screen, waitFor, within } from '../../../helpers/render';
+import { resetAllStores, seedStore } from '../../../helpers/store';
 
 const navigateMock = vi.fn();
 
@@ -52,7 +52,7 @@ function renderAccount(initialEntries: string[] = ['/settings']) {
       <ToastContainer />
       <MSettingsAccount />
     </>,
-    { initialEntries },
+    { initialEntries }
   );
 }
 
@@ -335,7 +335,7 @@ describe('MSettingsAccount – password', () => {
       http.put('/api/auth/me/password', async ({ request }) => {
         payload = (await request.json()) as { current_password?: string; new_password?: string };
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -352,7 +352,7 @@ describe('MSettingsAccount – password', () => {
   it('FE-MOB-SETACC-022: a rejected change shows the server message', async () => {
     const user = userEvent.setup();
     server.use(
-      http.put('/api/auth/me/password', () => HttpResponse.json({ error: 'Wrong password' }, { status: 400 })),
+      http.put('/api/auth/me/password', () => HttpResponse.json({ error: 'Wrong password' }, { status: 400 }))
     );
     renderAccount();
 
@@ -369,7 +369,7 @@ describe('MSettingsAccount – password', () => {
 
 describe('MSettingsAccount – MFA', () => {
   const mfaSetupHandler = http.post('/api/auth/mfa/setup', () =>
-    HttpResponse.json({ qr_svg: '<svg data-qr="1"></svg>', secret: 'JBSWY3DPEHPK3PXP' }),
+    HttpResponse.json({ qr_svg: '<svg data-qr="1"></svg>', secret: 'JBSWY3DPEHPK3PXP' })
   );
 
   async function openSetup(user: ReturnType<typeof userEvent.setup>) {
@@ -412,7 +412,7 @@ describe('MSettingsAccount – MFA', () => {
     const user = userEvent.setup();
     await openSetup(user);
 
-    expect(document.querySelector('svg[data-qr="1"]')).not.toBeNull();
+    expect(document.querySelector('img[data-qr="1"]')).not.toBeNull();
     expect(screen.getByPlaceholderText('6-digit code')).toBeInTheDocument();
   });
 
@@ -460,7 +460,7 @@ describe('MSettingsAccount – MFA', () => {
     const user = userEvent.setup();
     server.use(
       http.post('/api/auth/mfa/enable', () => HttpResponse.json({ backup_codes: ['AAAA-1111', 'BBBB-2222'] })),
-      http.get('/api/auth/me', () => HttpResponse.json({ user: buildUser({ username: 'maurice', mfa_enabled: true }) })),
+      http.get('/api/auth/me', () => HttpResponse.json({ user: buildUser({ username: 'maurice', mfa_enabled: true }) }))
     );
     await openSetup(user);
 
@@ -521,7 +521,7 @@ describe('MSettingsAccount – MFA', () => {
       http.post('/api/auth/mfa/disable', async ({ request }) => {
         payload = (await request.json()) as { password?: string; code?: string };
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -538,9 +538,7 @@ describe('MSettingsAccount – MFA', () => {
   it('FE-MOB-SETACC-037: a rejected disable shows the server message', async () => {
     const user = userEvent.setup();
     seedStore(useAuthStore, { user: buildUser({ username: 'maurice', mfa_enabled: true }) });
-    server.use(
-      http.post('/api/auth/mfa/disable', () => HttpResponse.json({ error: 'Code expired' }, { status: 400 })),
-    );
+    server.use(http.post('/api/auth/mfa/disable', () => HttpResponse.json({ error: 'Code expired' }, { status: 400 })));
     renderAccount();
 
     await user.type(passwordInputs()[passwordInputs().length - 1], 'my-password');
@@ -622,11 +620,11 @@ describe('MSettingsAccount – backup codes', () => {
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:codes');
     const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     let downloadName = '';
-    const anchorClick = vi
-      .spyOn(HTMLAnchorElement.prototype, 'click')
-      .mockImplementation(function (this: HTMLAnchorElement) {
-        downloadName = this.download;
-      });
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      downloadName = this.download;
+    });
     sessionStorage.setItem(BACKUP_KEY, JSON.stringify(['AAAA-1111']));
     renderAccount();
 
@@ -742,7 +740,7 @@ describe('MSettingsAccount – deletion', () => {
       http.delete('/api/auth/me', () => {
         deleted = true;
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -796,8 +794,8 @@ describe('MSettingsAccount – deletion', () => {
     seedStore(useAuthStore, { user: buildUser({ username: 'root', role: 'admin' }) });
     server.use(
       http.get('/api/admin/users', () =>
-        HttpResponse.json({ users: [buildUser({ role: 'admin' }), buildUser({ role: 'admin' })] }),
-      ),
+        HttpResponse.json({ users: [buildUser({ role: 'admin' }), buildUser({ role: 'admin' })] })
+      )
     );
     renderAccount();
 
@@ -838,9 +836,7 @@ describe('MSettingsAccount – passkeys', () => {
   });
 
   it('FE-MOB-SETACC-058: a failing credential list still settles the card', async () => {
-    server.use(
-      http.get('/api/auth/passkey/credentials', () => HttpResponse.json({ error: 'boom' }, { status: 500 })),
-    );
+    server.use(http.get('/api/auth/passkey/credentials', () => HttpResponse.json({ error: 'boom' }, { status: 500 })));
     renderAccount();
 
     await waitFor(() => expect(screen.queryByText('Passkeys')).not.toBeInTheDocument());
@@ -870,7 +866,7 @@ describe('MSettingsAccount – passkeys', () => {
         buildCredential({ id: 2, name: null, backed_up: false, created_at: 'not-a-date', last_used_at: null }),
         buildCredential({ id: 3, name: 'Yubikey', created_at: '', last_used_at: null }),
         buildCredential({ id: 4, name: 'Tablet', created_at: '2025-05-06T09:00:00Z', last_used_at: null }),
-      ]),
+      ])
     );
     renderAccount();
 
@@ -911,7 +907,7 @@ describe('MSettingsAccount – passkeys', () => {
         renamedId = String(params.id);
         server.use(passkeyList([buildCredential({ name: 'Work key' })]));
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -936,7 +932,7 @@ describe('MSettingsAccount – passkeys', () => {
       http.patch('/api/auth/passkey/credentials/:id', () => {
         patched = true;
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -956,7 +952,7 @@ describe('MSettingsAccount – passkeys', () => {
       http.patch('/api/auth/passkey/credentials/:id', () => {
         patched = true;
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -991,7 +987,7 @@ describe('MSettingsAccount – passkeys', () => {
       http.patch('/api/auth/passkey/credentials/:id', () => {
         patched = true;
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -1009,9 +1005,7 @@ describe('MSettingsAccount – passkeys', () => {
     server.use(
       onCard(),
       passkeyList([buildCredential({ name: 'iPhone' })]),
-      http.patch('/api/auth/passkey/credentials/:id', () =>
-        HttpResponse.json({ error: 'Name taken' }, { status: 400 }),
-      ),
+      http.patch('/api/auth/passkey/credentials/:id', () => HttpResponse.json({ error: 'Name taken' }, { status: 400 }))
     );
     renderAccount();
 
@@ -1033,7 +1027,7 @@ describe('MSettingsAccount – passkeys', () => {
         payload = (await request.json()) as { password?: string };
         server.use(passkeyList([]));
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -1056,8 +1050,8 @@ describe('MSettingsAccount – passkeys', () => {
       onCard(),
       passkeyList([buildCredential({ name: 'iPhone' })]),
       http.delete('/api/auth/passkey/credentials/:id', () =>
-        HttpResponse.json({ error: 'Wrong password' }, { status: 403 }),
-      ),
+        HttpResponse.json({ error: 'Wrong password' }, { status: 403 })
+      )
     );
     renderAccount();
 
@@ -1096,7 +1090,7 @@ describe('MSettingsAccount – passkeys', () => {
         verifyPayload = (await request.json()) as { name?: string };
         server.use(passkeyList([buildCredential({ name: 'Work Laptop' })]));
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -1123,7 +1117,7 @@ describe('MSettingsAccount – passkeys', () => {
       http.post('/api/auth/passkey/register/verify', async ({ request }) => {
         verifyPayload = (await request.json()) as { name?: string };
         return HttpResponse.json({ success: true });
-      }),
+      })
     );
     renderAccount();
 
@@ -1142,7 +1136,7 @@ describe('MSettingsAccount – passkeys', () => {
     webauthn.mockRejectedValue(Object.assign(new Error('aborted'), { name: 'NotAllowedError' }));
     server.use(
       onCard(),
-      http.post('/api/auth/passkey/register/options', () => HttpResponse.json({ challenge: 'abc' })),
+      http.post('/api/auth/passkey/register/options', () => HttpResponse.json({ challenge: 'abc' }))
     );
     renderAccount();
 
@@ -1159,8 +1153,8 @@ describe('MSettingsAccount – passkeys', () => {
     server.use(
       onCard(),
       http.post('/api/auth/passkey/register/options', () =>
-        HttpResponse.json({ error: 'Invalid password' }, { status: 401 }),
-      ),
+        HttpResponse.json({ error: 'Invalid password' }, { status: 401 })
+      )
     );
     renderAccount();
 

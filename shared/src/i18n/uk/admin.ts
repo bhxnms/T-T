@@ -435,7 +435,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Змінити версію…',
   'admin.plugins.noVersions': 'У реєстрі не знайдено опублікованих версій.',
   'admin.plugins.downgradeTitle': 'Відкотити цей плагін?',
-  'admin.plugins.downgradeBody': 'Перехід з v{from} на v{to}: дані, записані новішою версією, залишаються, і старіша версія може їх не розуміти.',
+  'admin.plugins.downgradeBody':
+    'Перехід з v{from} на v{to}: дані, записані новішою версією, залишаються, і старіша версія може їх не розуміти.',
   'admin.plugins.downgradeConfirm': 'Відкотити',
   'admin.plugins.updatesHeld': 'Оновлення призупинено на v{version}',
   'admin.plugins.resumeUpdates': 'Відновити оновлення',
@@ -506,8 +507,7 @@ const admin: TranslationStrings = {
     '«{name}» заявляє підтримку TREK {range}, а цей сервер працює на {host}. TREK пропускає його лише тому, що задано TREK_PLUGINS_IGNORE_TREK_RANGE. Автор не оновив діапазон версій плагіна для цього TREK, тож працездатність не гарантується — а в рідкісних випадках несумісний плагін може пошкодити дані TREK. Продовжуйте, лише якщо приймаєте цей ризик.',
   'admin.plugins.rangeBypass.bodyUnknown':
     '«{name}» не вказує, які версії TREK він підтримує; цей сервер працює на {host}. TREK пропускає його лише тому, що задано TREK_PLUGINS_IGNORE_TREK_RANGE. Ніщо не свідчить, що автор тестував його на цьому TREK, тож працездатність не гарантується — а в рідкісних випадках несумісний плагін може пошкодити дані TREK. Продовжуйте, лише якщо приймаєте цей ризик.',
-  'admin.plugins.dep.trekBypassed':
-    'Поза своїм діапазоном TREK ({range}) — перевірки версії вимкнено',
+  'admin.plugins.dep.trekBypassed': 'Поза своїм діапазоном TREK ({range}) — перевірки версії вимкнено',
   'admin.plugins.dep.trekBypassedUnknown': 'Діапазон TREK не вказано — перевірки версії вимкнено',
   'admin.plugins.incompatible': 'Несумісно',
   'admin.plugins.accessTitle': 'До чого має доступ',
@@ -544,7 +544,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'Синхронізація рейсів із вашого сервера AirTrail',
   'admin.addons.catalog.llm_parsing.name': 'Розбір за допомогою ШІ',
-  'admin.addons.catalog.llm_parsing.description': 'Читає бронювання, які не розпізнає вбудований аналізатор, за допомогою обраної вами моделі ШІ',
+  'admin.addons.catalog.llm_parsing.description':
+    'Читає бронювання, які не розпізнає вбудований аналізатор, за допомогою обраної вами моделі ШІ',
   'admin.addons.enabled': 'Увімкнено',
   'admin.addons.disabled': 'Вимкнено',
   'admin.addons.type.trip': 'Поїздка',
@@ -689,7 +690,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.journey.description':
     'Відстеження поїздок і щоденник подорожей з позначками, фото та щоденними історіями',
   'admin.addons.catalog.collections.name': 'Колекції',
-  'admin.addons.catalog.collections.description': 'Збирайте місця з будь-яких подорожей у іменовані списки та використовуйте їх знову',
+  'admin.addons.catalog.collections.description':
+    'Збирайте місця з будь-яких подорожей у іменовані списки та використовуйте їх знову',
   'admin.passkey.title': 'Вхід за допомогою passkey',
   'admin.passkey.cardHint':
     'Дозволити користувачам входити за допомогою passkey (WebAuthn). За замовчуванням вимкнено.',
@@ -733,9 +735,13 @@ const admin: TranslationStrings = {
   'admin.invite.tripNone': 'Без подорожі',
   'admin.invite.tripHint': 'Новий користувач автоматично додається до цієї подорожі, коли реєструється за посиланням.',
   'admin.invite.boundTo': 'додає до {trip}',
-  "admin.amapKey": "Ключ веб-сервісу AMap",
-  "admin.amapKeyHint": "Для пошуку місць у Китаї та маршрутів з урахуванням трафіку. Отримайте ключ веб-сервісу на lbs.amap.com.",
-  "admin.amapSearch.title": "Використовувати AMap для пошуку місць",
-  "admin.amapSearch.subtitle": "Типово використовується AMap; кожна форма пошуку може повернутися до нативних джерел TREK.",
+  'admin.amapKey': 'Ключ веб-сервісу AMap',
+  'admin.amapKeyHint':
+    'Для пошуку місць у Китаї та маршрутів з урахуванням трафіку. Отримайте ключ веб-сервісу на lbs.amap.com.',
+  'admin.amapSearch.title': 'Використовувати AMap для пошуку місць',
+  'admin.amapSearch.subtitle':
+    'Типово використовується AMap; кожна форма пошуку може повернутися до нативних джерел TREK.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

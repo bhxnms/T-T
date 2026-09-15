@@ -7,6 +7,25 @@
  * notice riding the attach ctx, and the scope gating (declarative
  * trips:write markers + the canReadTrips/canDeleteTrips predicates).
  */
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import {
+  createUser,
+  createTrip,
+  createDay,
+  createPlace,
+  addTripMember,
+  createBudgetItem,
+  createPackingItem,
+  createReservation,
+  createDayNote,
+  createCollabNote,
+  createDayAssignment,
+  createDayAccommodation,
+} from '../../helpers/factories';
+import { createMcpHarness, parseToolResult, parseResourceResult, type McpHarness } from '../../helpers/mcp-harness';
+import { resetTestDb } from '../../helpers/test-db';
+
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 
 const { testDb, dbMock } = vi.hoisted(() => {
@@ -21,7 +40,11 @@ const { testDb, dbMock } = vi.hoisted(() => {
     reinitialize: () => {},
     getPlaceWithTags: () => null,
     canAccessTrip: (tripId: any, userId: number) =>
-      db.prepare(`SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`).get(userId, tripId, userId),
+      db
+        .prepare(
+          `SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`,
+        )
+        .get(userId, tripId, userId),
     isOwner: (tripId: any, userId: number) =>
       !!db.prepare('SELECT id FROM trips WHERE id = ? AND user_id = ?').get(tripId, userId),
   };
@@ -37,12 +60,6 @@ vi.mock('../../../src/config', () => ({
 
 const { broadcastMock } = vi.hoisted(() => ({ broadcastMock: vi.fn() }));
 vi.mock('../../../src/websocket', () => ({ broadcast: broadcastMock }));
-
-import { createTables } from '../../../src/db/schema';
-import { runMigrations } from '../../../src/db/migrations';
-import { resetTestDb } from '../../helpers/test-db';
-import { createUser, createTrip, createDay, createPlace, addTripMember, createBudgetItem, createPackingItem, createReservation, createDayNote, createCollabNote, createDayAssignment, createDayAccommodation } from '../../helpers/factories';
-import { createMcpHarness, parseToolResult, parseResourceResult, type McpHarness } from '../../helpers/mcp-harness';
 
 beforeAll(() => {
   createTables(testDb);
@@ -66,7 +83,11 @@ afterAll(() => {
 
 async function withHarness(userId: number, fn: (h: McpHarness) => Promise<void>) {
   const h = await createMcpHarness({ userId, withResources: false });
-  try { await fn(h); } finally { await h.cleanup(); }
+  try {
+    await fn(h);
+  } finally {
+    await h.cleanup();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -81,7 +102,9 @@ describe('Tool: create_trip', () => {
       const data = parseToolResult(result) as any;
       expect(data.trip).toBeTruthy();
       expect(data.trip.title).toBe('Summer Escape');
-      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as { c: number };
+      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as {
+        c: number;
+      };
       expect(days.c).toBe(7);
     });
   });
@@ -94,7 +117,9 @@ describe('Tool: create_trip', () => {
         arguments: { title: 'Paris Trip', start_date: '2026-07-01', end_date: '2026-07-05' },
       });
       const data = parseToolResult(result) as any;
-      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as { c: number };
+      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as {
+        c: number;
+      };
       expect(days.c).toBe(5);
     });
   });
@@ -107,7 +132,9 @@ describe('Tool: create_trip', () => {
         arguments: { title: 'Long Trip', start_date: '2026-01-01', end_date: '2027-12-31' },
       });
       const data = parseToolResult(result) as any;
-      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as { c: number };
+      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as {
+        c: number;
+      };
       expect(days.c).toBe(90);
     });
   });
@@ -115,7 +142,10 @@ describe('Tool: create_trip', () => {
   it('returns error for invalid start_date format', async () => {
     const { user } = createUser(testDb);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'create_trip', arguments: { title: 'Trip', start_date: 'not-a-date' } });
+      const result = await h.client.callTool({
+        name: 'create_trip',
+        arguments: { title: 'Trip', start_date: 'not-a-date' },
+      });
       expect(result.isError).toBe(true);
     });
   });
@@ -143,9 +173,14 @@ describe('Tool: create_trip', () => {
   it('gives a dateless trip the requested day_count instead of the default 7', async () => {
     const { user } = createUser(testDb);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'create_trip', arguments: { title: 'Open Ended', day_count: 12 } });
+      const result = await h.client.callTool({
+        name: 'create_trip',
+        arguments: { title: 'Open Ended', day_count: 12 },
+      });
       const data = parseToolResult(result) as any;
-      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as { c: number };
+      const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(data.trip.id) as {
+        c: number;
+      };
       expect(days.c).toBe(12);
       const row = testDb.prepare('SELECT start_date, end_date FROM trips WHERE id = ?').get(data.trip.id) as any;
       expect(row.start_date).toBeNull();
@@ -156,8 +191,12 @@ describe('Tool: create_trip', () => {
   it('refuses a day_count outside 1..365', async () => {
     const { user } = createUser(testDb);
     await withHarness(user.id, async (h) => {
-      expect((await h.client.callTool({ name: 'create_trip', arguments: { title: 'Zero', day_count: 0 } })).isError).toBe(true);
-      expect((await h.client.callTool({ name: 'create_trip', arguments: { title: 'Huge', day_count: 400 } })).isError).toBe(true);
+      expect(
+        (await h.client.callTool({ name: 'create_trip', arguments: { title: 'Zero', day_count: 0 } })).isError,
+      ).toBe(true);
+      expect(
+        (await h.client.callTool({ name: 'create_trip', arguments: { title: 'Huge', day_count: 400 } })).isError,
+      ).toBe(true);
       expect(testDb.prepare('SELECT COUNT(*) as c FROM trips').get()).toEqual({ c: 0 });
     });
   });
@@ -165,7 +204,10 @@ describe('Tool: create_trip', () => {
   it('stores the requested reminder_days', async () => {
     const { user } = createUser(testDb);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'create_trip', arguments: { title: 'Reminded', reminder_days: 14 } });
+      const result = await h.client.callTool({
+        name: 'create_trip',
+        arguments: { title: 'Reminded', reminder_days: 14 },
+      });
       const data = parseToolResult(result) as any;
       const row = testDb.prepare('SELECT reminder_days FROM trips WHERE id = ?').get(data.trip.id) as any;
       expect(row.reminder_days).toBe(14);
@@ -185,8 +227,12 @@ describe('Tool: create_trip', () => {
   it('refuses a reminder_days outside 0..30', async () => {
     const { user } = createUser(testDb);
     await withHarness(user.id, async (h) => {
-      expect((await h.client.callTool({ name: 'create_trip', arguments: { title: 'Early', reminder_days: 31 } })).isError).toBe(true);
-      expect((await h.client.callTool({ name: 'create_trip', arguments: { title: 'Negative', reminder_days: -1 } })).isError).toBe(true);
+      expect(
+        (await h.client.callTool({ name: 'create_trip', arguments: { title: 'Early', reminder_days: 31 } })).isError,
+      ).toBe(true);
+      expect(
+        (await h.client.callTool({ name: 'create_trip', arguments: { title: 'Negative', reminder_days: -1 } })).isError,
+      ).toBe(true);
       expect(testDb.prepare('SELECT COUNT(*) as c FROM trips').get()).toEqual({ c: 0 });
     });
   });
@@ -201,7 +247,10 @@ describe('Tool: update_trip', () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id, { title: 'Old Title' });
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, title: 'New Title' } });
+      const result = await h.client.callTool({
+        name: 'update_trip',
+        arguments: { tripId: trip.id, title: 'New Title' },
+      });
       const data = parseToolResult(result) as any;
       expect(data.trip.title).toBe('New Title');
     });
@@ -255,11 +304,15 @@ describe('Tool: update_trip', () => {
     const planRes = testDb.prepare('INSERT INTO vacay_plans (owner_id) VALUES (?)').run(user.id);
     const planId = Number(planRes.lastInsertRowid);
     testDb.prepare('INSERT INTO vacay_years (plan_id, year) VALUES (?, ?)').run(planId, 2026);
-    testDb.prepare(
-        'INSERT INTO vacay_user_years (user_id, plan_id, year, vacation_days, carried_over) VALUES (?, ?, ?, 30, 0)'
-    ).run(user.id, planId, 2026);
+    testDb
+      .prepare(
+        'INSERT INTO vacay_user_years (user_id, plan_id, year, vacation_days, carried_over) VALUES (?, ?, ?, 30, 0)',
+      )
+      .run(user.id, planId, 2026);
     for (const d of ['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07']) {
-      testDb.prepare('INSERT INTO vacay_entries (plan_id, user_id, date, note) VALUES (?, ?, ?, ?)').run(planId, user.id, d, '');
+      testDb
+        .prepare('INSERT INTO vacay_entries (plan_id, user_id, date, note) VALUES (?, ?, ?, ?)')
+        .run(planId, user.id, d, '');
     }
 
     await withHarness(user.id, async (h) => {
@@ -272,21 +325,19 @@ describe('Tool: update_trip', () => {
       expect(data.trip.end_date).toBe('2026-08-16');
     });
 
-    const oldWindow = testDb.prepare(
-        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-08-01' AND '2026-08-09'"
-    ).all(planId, user.id) as { date: string }[];
+    const oldWindow = testDb
+      .prepare(
+        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-08-01' AND '2026-08-09'",
+      )
+      .all(planId, user.id) as { date: string }[];
     expect(oldWindow).toHaveLength(0);
 
-    const shifted = testDb.prepare(
-        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-08-08' AND '2026-08-16' ORDER BY date"
-    ).all(planId, user.id) as { date: string }[];
-    expect(shifted.map(r => r.date)).toEqual([
-      '2026-08-10',
-      '2026-08-11',
-      '2026-08-12',
-      '2026-08-13',
-      '2026-08-14',
-    ]);
+    const shifted = testDb
+      .prepare(
+        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-08-08' AND '2026-08-16' ORDER BY date",
+      )
+      .all(planId, user.id) as { date: string }[];
+    expect(shifted.map((r) => r.date)).toEqual(['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-14']);
   });
 
   it('shifts entries from the owners own plan even if another vacay plan is active', async () => {
@@ -298,17 +349,23 @@ describe('Tool: update_trip', () => {
     const ownPlanRes = testDb.prepare('INSERT INTO vacay_plans (owner_id) VALUES (?)').run(user.id);
     const ownPlanId = Number(ownPlanRes.lastInsertRowid);
     testDb.prepare('INSERT INTO vacay_years (plan_id, year) VALUES (?, ?)').run(ownPlanId, 2026);
-    testDb.prepare(
-        'INSERT INTO vacay_user_years (user_id, plan_id, year, vacation_days, carried_over) VALUES (?, ?, ?, 30, 0)'
-    ).run(user.id, ownPlanId, 2026);
+    testDb
+      .prepare(
+        'INSERT INTO vacay_user_years (user_id, plan_id, year, vacation_days, carried_over) VALUES (?, ?, ?, 30, 0)',
+      )
+      .run(user.id, ownPlanId, 2026);
     for (const d of ['2026-09-02', '2026-09-03']) {
-      testDb.prepare('INSERT INTO vacay_entries (plan_id, user_id, date, note) VALUES (?, ?, ?, ?)').run(ownPlanId, user.id, d, '');
+      testDb
+        .prepare('INSERT INTO vacay_entries (plan_id, user_id, date, note) VALUES (?, ?, ?, ?)')
+        .run(ownPlanId, user.id, d, '');
     }
 
     // Different accepted plan becomes "active" for the owner.
     const foreignPlanRes = testDb.prepare('INSERT INTO vacay_plans (owner_id) VALUES (?)').run(otherOwner.id);
     const foreignPlanId = Number(foreignPlanRes.lastInsertRowid);
-    testDb.prepare('INSERT INTO vacay_plan_members (plan_id, user_id, status) VALUES (?, ?, ?)').run(foreignPlanId, user.id, 'accepted');
+    testDb
+      .prepare('INSERT INTO vacay_plan_members (plan_id, user_id, status) VALUES (?, ?, ?)')
+      .run(foreignPlanId, user.id, 'accepted');
 
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
@@ -318,27 +375,36 @@ describe('Tool: update_trip', () => {
       expect(result.isError).toBeFalsy();
     });
 
-    const oldWindow = testDb.prepare(
-        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-09-01' AND '2026-09-07' ORDER BY date"
-    ).all(ownPlanId, user.id) as { date: string }[];
+    const oldWindow = testDb
+      .prepare(
+        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-09-01' AND '2026-09-07' ORDER BY date",
+      )
+      .all(ownPlanId, user.id) as { date: string }[];
     expect(oldWindow).toHaveLength(0);
 
-    const shifted = testDb.prepare(
-        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-09-08' AND '2026-09-14' ORDER BY date"
-    ).all(ownPlanId, user.id) as { date: string }[];
-    expect(shifted.map(r => r.date)).toEqual(['2026-09-09', '2026-09-10']);
+    const shifted = testDb
+      .prepare(
+        "SELECT date FROM vacay_entries WHERE plan_id = ? AND user_id = ? AND date BETWEEN '2026-09-08' AND '2026-09-14' ORDER BY date",
+      )
+      .all(ownPlanId, user.id) as { date: string }[];
+    expect(shifted.map((r) => r.date)).toEqual(['2026-09-09', '2026-09-10']);
   });
 
   it('clear_dates turns a dated trip back into a dateless one and un-dates its days', async () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id, { start_date: '2026-07-01', end_date: '2026-07-05' });
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, clear_dates: true } });
+      const result = await h.client.callTool({
+        name: 'update_trip',
+        arguments: { tripId: trip.id, clear_dates: true },
+      });
       expect(result.isError).toBeFalsy();
       const row = testDb.prepare('SELECT start_date, end_date FROM trips WHERE id = ?').get(trip.id) as any;
       expect(row.start_date).toBeNull();
       expect(row.end_date).toBeNull();
-      const dated = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ? AND date IS NOT NULL').get(trip.id) as { c: number };
+      const dated = testDb
+        .prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ? AND date IS NOT NULL')
+        .get(trip.id) as { c: number };
       expect(dated.c).toBe(0);
     });
   });
@@ -370,7 +436,9 @@ describe('Tool: update_trip', () => {
   it('resizes a dateless trip with day_count', async () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);
-    testDb.prepare('INSERT INTO days (trip_id, day_number, date) VALUES (?, 1, NULL), (?, 2, NULL)').run(trip.id, trip.id);
+    testDb
+      .prepare('INSERT INTO days (trip_id, day_number, date) VALUES (?, 1, NULL), (?, 2, NULL)')
+      .run(trip.id, trip.id);
     await withHarness(user.id, async (h) => {
       await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, day_count: 6 } });
       const days = testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(trip.id) as { c: number };
@@ -382,8 +450,12 @@ describe('Tool: update_trip', () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id, { title: 'Untouched' });
     await withHarness(user.id, async (h) => {
-      expect((await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, day_count: 0 } })).isError).toBe(true);
-      expect((await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, day_count: 400 } })).isError).toBe(true);
+      expect(
+        (await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, day_count: 0 } })).isError,
+      ).toBe(true);
+      expect(
+        (await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, day_count: 400 } })).isError,
+      ).toBe(true);
       expect(testDb.prepare('SELECT COUNT(*) as c FROM days WHERE trip_id = ?').get(trip.id)).toEqual({ c: 0 });
     });
   });
@@ -393,9 +465,13 @@ describe('Tool: update_trip', () => {
     const trip = createTrip(testDb, user.id);
     await withHarness(user.id, async (h) => {
       await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, reminder_days: 10 } });
-      expect((testDb.prepare('SELECT reminder_days FROM trips WHERE id = ?').get(trip.id) as any).reminder_days).toBe(10);
+      expect((testDb.prepare('SELECT reminder_days FROM trips WHERE id = ?').get(trip.id) as any).reminder_days).toBe(
+        10,
+      );
       await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, reminder_days: 0 } });
-      expect((testDb.prepare('SELECT reminder_days FROM trips WHERE id = ?').get(trip.id) as any).reminder_days).toBe(0);
+      expect((testDb.prepare('SELECT reminder_days FROM trips WHERE id = ?').get(trip.id) as any).reminder_days).toBe(
+        0,
+      );
     });
   });
 
@@ -403,9 +479,14 @@ describe('Tool: update_trip', () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);
     await withHarness(user.id, async (h) => {
-      const result = await h.client.callTool({ name: 'update_trip', arguments: { tripId: trip.id, reminder_days: 31 } });
+      const result = await h.client.callTool({
+        name: 'update_trip',
+        arguments: { tripId: trip.id, reminder_days: 31 },
+      });
       expect(result.isError).toBe(true);
-      expect((testDb.prepare('SELECT reminder_days FROM trips WHERE id = ?').get(trip.id) as any).reminder_days).toBe(3);
+      expect((testDb.prepare('SELECT reminder_days FROM trips WHERE id = ?').get(trip.id) as any).reminder_days).toBe(
+        3,
+      );
     });
   });
 
@@ -437,23 +518,31 @@ describe('Tool: update_trip', () => {
 
 describe('Tool: search_cover_images', () => {
   function stubUnsplash(body: unknown, init: { ok?: boolean; status?: number } = {}) {
-    vi.stubGlobal('fetch', vi.fn(async () => ({
-      ok: init.ok ?? true,
-      status: init.status ?? 200,
-      json: async () => body,
-    })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: init.ok ?? true,
+        status: init.status ?? 200,
+        json: async () => body,
+      })),
+    );
   }
 
   it('returns the photo candidates for a query', async () => {
     const { user } = createUser(testDb);
     stubUnsplash({
-      results: [{
-        id: 'p1',
-        urls: { regular: 'https://images.unsplash.com/photo-1.jpg', small: 'https://images.unsplash.com/thumb-1.jpg' },
-        alt_description: 'Rooftops at sunset',
-        user: { name: 'Ada L.' },
-        links: { html: 'https://unsplash.com/photos/p1' },
-      }],
+      results: [
+        {
+          id: 'p1',
+          urls: {
+            regular: 'https://images.unsplash.com/photo-1.jpg',
+            small: 'https://images.unsplash.com/thumb-1.jpg',
+          },
+          alt_description: 'Rooftops at sunset',
+          user: { name: 'Ada L.' },
+          links: { html: 'https://unsplash.com/photos/p1' },
+        },
+      ],
     });
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({ name: 'search_cover_images', arguments: { query: 'Lisbon rooftops' } });
@@ -715,20 +804,28 @@ describe('Tool: get_trip_summary', () => {
   });
 
   // Regression: get_trip_summary must hide another member's private packing items (#858).
-  it('hides another member\'s private packing item from the summary', async () => {
+  it("hides another member's private packing item from the summary", async () => {
     const { user: owner } = createUser(testDb);
     const { user: member } = createUser(testDb);
     const trip = createTrip(testDb, owner.id, { title: 'Shared Trip' });
     addTripMember(testDb, trip.id, member.id);
-    testDb.prepare("INSERT INTO packing_items (trip_id, name, category, checked, is_private, owner_id) VALUES (?, 'Secret gift', 'Misc', 0, 1, ?)").run(trip.id, owner.id);
-    testDb.prepare("INSERT INTO packing_items (trip_id, name, category, checked, is_private, owner_id) VALUES (?, 'Sunscreen', 'Misc', 0, 0, ?)").run(trip.id, owner.id);
+    testDb
+      .prepare(
+        "INSERT INTO packing_items (trip_id, name, category, checked, is_private, owner_id) VALUES (?, 'Secret gift', 'Misc', 0, 1, ?)",
+      )
+      .run(trip.id, owner.id);
+    testDb
+      .prepare(
+        "INSERT INTO packing_items (trip_id, name, category, checked, is_private, owner_id) VALUES (?, 'Sunscreen', 'Misc', 0, 0, ?)",
+      )
+      .run(trip.id, owner.id);
 
     await withHarness(member.id, async (h) => {
       const result = await h.client.callTool({ name: 'get_trip_summary', arguments: { tripId: trip.id } });
       const data = parseToolResult(result) as any;
       const names = (data.packing?.items || []).map((i: any) => i.name);
-      expect(names).toContain('Sunscreen');       // common item visible
-      expect(names).not.toContain('Secret gift');  // owner's private item hidden from the member
+      expect(names).toContain('Sunscreen'); // common item visible
+      expect(names).not.toContain('Secret gift'); // owner's private item hidden from the member
     });
   });
 });
@@ -863,7 +960,12 @@ describe('static-token deprecation notice', () => {
       emitted = true;
       return 'static tokens are deprecated';
     };
-    const h = await createMcpHarness({ userId: user.id, withResources: false, isStaticToken: true, getDeprecationNotice });
+    const h = await createMcpHarness({
+      userId: user.id,
+      withResources: false,
+      isStaticToken: true,
+      getDeprecationNotice,
+    });
     try {
       const first = await h.client.callTool({ name: 'list_trips', arguments: {} });
       expect(first.isError).toBe(true);
@@ -897,7 +999,14 @@ describe('scope gating', () => {
     }
   }
 
-  const WRITE_TOOLS = ['create_trip', 'update_trip', 'add_trip_member', 'remove_trip_member', 'leave_trip', 'copy_trip'];
+  const WRITE_TOOLS = [
+    'create_trip',
+    'update_trip',
+    'add_trip_member',
+    'remove_trip_member',
+    'leave_trip',
+    'copy_trip',
+  ];
   const READ_TOOLS = ['list_trip_members', 'export_trip_ics', 'search_cover_images'];
   const NAV_TOOLS = ['list_trips', 'get_trip_summary'];
   const SHARE_TOOLS = ['get_share_link', 'create_share_link', 'delete_share_link'];

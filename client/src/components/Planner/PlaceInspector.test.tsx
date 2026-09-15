@@ -1,15 +1,15 @@
-import { render, screen, waitFor, fireEvent, act, within } from '../../../tests/helpers/render';
 import userEvent from '@testing-library/user-event';
-import { buildUser, buildTrip, buildPlace, buildCategory, buildReservation } from '../../../tests/helpers/factories';
+import { http, HttpResponse } from 'msw';
+import { buildCategory, buildPlace, buildReservation, buildTrip, buildUser } from '../../../tests/helpers/factories';
+import { server } from '../../../tests/helpers/msw/server';
+import { act, fireEvent, render, screen, waitFor, within } from '../../../tests/helpers/render';
 import { resetAllStores, seedStore } from '../../../tests/helpers/store';
-import { useAuthStore } from '../../store/authStore';
-import { useTripStore } from '../../store/tripStore';
-import { useSettingsStore } from '../../store/settingsStore';
 import { useAddonStore } from '../../store/addonStore';
+import { useAuthStore } from '../../store/authStore';
 import { usePluginStore } from '../../store/pluginStore';
 import { useSaveToCollectionStore } from '../../store/saveToCollectionStore';
-import { http, HttpResponse } from 'msw';
-import { server } from '../../../tests/helpers/msw/server';
+import { useSettingsStore } from '../../store/settingsStore';
+import { useTripStore } from '../../store/tripStore';
 import type { AssignmentsMap } from '../../types';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
@@ -47,8 +47,8 @@ beforeAll(() => {
 
 // ── Import component after mocks ──────────────────────────────────────────────
 
-import PlaceInspector from './PlaceInspector';
 import { mapsApi } from '../../api/client';
+import PlaceInspector from './PlaceInspector';
 
 // ── Shared fixtures ───────────────────────────────────────────────────────────
 
@@ -100,7 +100,6 @@ beforeEach(() => {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('PlaceInspector', () => {
-
   // ── Rendering ──────────────────────────────────────────────────────────────
 
   it('FE-PLANNER-INSPECTOR-001: returns null when place is null', () => {
@@ -175,7 +174,7 @@ describe('PlaceInspector', () => {
     // Find the X button — it's the close button with an X icon inside
     const buttons = screen.getAllByRole('button');
     // The close button is typically in the header, first button with X icon
-    const closeBtn = buttons.find(btn => btn.querySelector('svg'));
+    const closeBtn = buttons.find((btn) => btn.querySelector('svg'));
     // Click the last-found header button that has no text label (the X)
     // More reliable: find button by its position as close button
     await user.click(buttons[0]); // first button is the close X
@@ -228,12 +227,7 @@ describe('PlaceInspector', () => {
     const user = userEvent.setup();
     const onAssignToDay = vi.fn();
     render(
-      <PlaceInspector
-        {...defaultProps}
-        selectedDayId={1}
-        assignments={{ '1': [] }}
-        onAssignToDay={onAssignToDay}
-      />
+      <PlaceInspector {...defaultProps} selectedDayId={1} assignments={{ '1': [] }} onAssignToDay={onAssignToDay} />
     );
     const addBtn = screen.getByText('Add to Day').closest('button')!;
     await user.click(addBtn);
@@ -242,13 +236,7 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-017: "Remove from day" button appears when place IS assigned to selectedDay', () => {
     const assignmentInDay = [{ id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: null }];
-    render(
-      <PlaceInspector
-        {...defaultProps}
-        selectedDayId={1}
-        assignments={{ '1': assignmentInDay }}
-      />
-    );
+    render(<PlaceInspector {...defaultProps} selectedDayId={1} assignments={{ '1': assignmentInDay }} />);
     const allButtons = screen.getAllByRole('button');
     expect(allButtons.length).toBeGreaterThan(2);
   });
@@ -368,7 +356,9 @@ describe('PlaceInspector', () => {
     const p = buildPlace({ id: 204, google_place_id: null, osm_id: null });
     render(<PlaceInspector {...defaultProps} place={p} />);
     // Wait a tick
-    await act(async () => { await new Promise(r => setTimeout(r, 50)) });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(vi.mocked(mapsApi.details)).not.toHaveBeenCalled();
   });
 
@@ -390,14 +380,14 @@ describe('PlaceInspector', () => {
     render(<PlaceInspector {...defaultProps} files={[file as any]} />);
     // The files section header/toggle is always visible; click to expand
     const allButtons = screen.getAllByRole('button');
-    const filesBtn = allButtons.find(btn => btn.textContent?.includes('1'));
+    const filesBtn = allButtons.find((btn) => btn.textContent?.includes('1'));
     // Click the expand button (file count label button)
     if (filesBtn) {
       await user.click(filesBtn);
       expect(await screen.findByText('photo.jpg')).toBeInTheDocument();
     } else {
       // Try clicking the last non-footer button
-      const toggleButtons = allButtons.filter(btn => !btn.closest('footer'));
+      const toggleButtons = allButtons.filter((btn) => !btn.closest('footer'));
       await user.click(toggleButtons[0]);
     }
   });
@@ -428,11 +418,19 @@ describe('PlaceInspector', () => {
   it('FE-PLANNER-INSPECTOR-030g: every booking on the stop gets its own strip (#2201)', () => {
     const onEditReservation = vi.fn();
     const parking = buildReservation({
-      id: 530, title: 'Parking pass', status: 'confirmed', type: 'parking', assignment_id: 99,
+      id: 530,
+      title: 'Parking pass',
+      status: 'confirmed',
+      type: 'parking',
+      assignment_id: 99,
       reservation_time: '2025-06-01T09:00:00',
     } as any);
     const tickets = buildReservation({
-      id: 531, title: 'Zoo tickets', status: 'pending', type: 'activity', assignment_id: 99,
+      id: 531,
+      title: 'Zoo tickets',
+      status: 'pending',
+      type: 'activity',
+      assignment_id: 99,
       reservation_time: '2025-06-01T10:15:00',
     } as any);
     const assignmentInDay = [{ id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: null }];
@@ -476,7 +474,12 @@ describe('PlaceInspector', () => {
     const onEditTransport = vi.fn();
     const onEditReservation = vi.fn();
     // A ferry is a transport, and ReservationModal has no transport type to hold it.
-    const reservation = buildReservation({ title: 'Ferry to Corfu', status: 'pending', type: 'ferry', assignment_id: 99 } as any);
+    const reservation = buildReservation({
+      title: 'Ferry to Corfu',
+      status: 'pending',
+      type: 'ferry',
+      assignment_id: 99,
+    } as any);
     const assignmentInDay = [{ id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: null }];
     render(
       <PlaceInspector
@@ -496,7 +499,12 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-030f: no transport handler means no affordance on a transport (#2012)', () => {
     // A member who may edit bookings but not days must not get a button that no-ops.
-    const reservation = buildReservation({ title: 'Ferry to Corfu', status: 'pending', type: 'ferry', assignment_id: 99 } as any);
+    const reservation = buildReservation({
+      title: 'Ferry to Corfu',
+      status: 'pending',
+      type: 'ferry',
+      assignment_id: 99,
+    } as any);
     const assignmentInDay = [{ id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: null }];
     render(
       <PlaceInspector
@@ -618,7 +626,7 @@ describe('PlaceInspector', () => {
     };
     render(<PlaceInspector {...defaultProps} files={[file as any]} />);
     // Click expand to see file details
-    const expandBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('1'));
+    const expandBtn = screen.getAllByRole('button').find((b) => b.textContent?.includes('1'));
     if (expandBtn) {
       await user.click(expandBtn);
       await waitFor(() => {
@@ -641,7 +649,7 @@ describe('PlaceInspector', () => {
       created_at: '2025-01-01T00:00:00.000Z',
     };
     render(<PlaceInspector {...defaultProps} files={[file as any]} />);
-    const expandBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('1'));
+    const expandBtn = screen.getAllByRole('button').find((b) => b.textContent?.includes('1'));
     if (expandBtn) {
       await user.click(expandBtn);
       await waitFor(() => {
@@ -653,7 +661,11 @@ describe('PlaceInspector', () => {
   // ── GPX track stats ────────────────────────────────────────────────────────
 
   it('FE-PLANNER-INSPECTOR-036: GPX track stats shown when route_geometry has 2D points', () => {
-    const pts = [[48.8584, 2.2945], [48.8600, 2.3000], [48.8620, 2.3050]];
+    const pts = [
+      [48.8584, 2.2945],
+      [48.86, 2.3],
+      [48.862, 2.305],
+    ];
     const p = buildPlace({ id: 302, route_geometry: JSON.stringify(pts) } as any);
     render(<PlaceInspector {...defaultProps} place={p} />);
     // Track distance should be visible (e.g. "x.x km" or "xxx m")
@@ -664,9 +676,9 @@ describe('PlaceInspector', () => {
   it('FE-PLANNER-INSPECTOR-037: GPX track stats shown with 3D points (elevation data)', () => {
     const pts = [
       [48.8584, 2.2945, 100],
-      [48.8600, 2.3000, 120],
-      [48.8620, 2.3050, 110],
-      [48.8640, 2.3100, 130],
+      [48.86, 2.3, 120],
+      [48.862, 2.305, 110],
+      [48.864, 2.31, 130],
     ];
     const p = buildPlace({ id: 303, route_geometry: JSON.stringify(pts) } as any);
     const { container } = render(<PlaceInspector {...defaultProps} place={p} />);
@@ -680,10 +692,17 @@ describe('PlaceInspector', () => {
     const member1 = buildUser({ id: 10, username: 'alice' });
     const member2 = buildUser({ id: 11, username: 'bob' });
     const members = [member1, member2];
-    const assignmentInDay = [{
-      id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: null,
-      participants: [{ user_id: 10, username: 'alice' }],
-    }];
+    const assignmentInDay = [
+      {
+        id: 99,
+        place,
+        day_id: 1,
+        place_id: place.id,
+        order_index: 0,
+        notes: null,
+        participants: [{ user_id: 10, username: 'alice' }],
+      },
+    ];
     render(
       <PlaceInspector
         {...defaultProps}
@@ -703,7 +722,9 @@ describe('PlaceInspector', () => {
     const p = buildPlace({ id: 304, google_place_id: 'ChIJ005' });
     render(<PlaceInspector {...defaultProps} place={p} />);
     // Wait for effect to run
-    await act(async () => { await new Promise(r => setTimeout(r, 50)) });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     // mapsApi.details should NOT have been called (cache hit)
     expect(vi.mocked(mapsApi.details)).not.toHaveBeenCalled();
     // Rating from cache should be visible
@@ -761,7 +782,7 @@ describe('PlaceInspector', () => {
     render(<PlaceInspector {...defaultProps} />);
     // A place with coordinates reaches Google Maps and Waze (Apple Maps only on
     // Apple platforms), so the button collects them behind one entry.
-    const navBtn = screen.getAllByRole('button').find(btn => btn.textContent?.includes('Navigation'))!;
+    const navBtn = screen.getAllByRole('button').find((btn) => btn.textContent?.includes('Navigation'))!;
     expect(navBtn).toBeTruthy();
 
     await user.click(navBtn);
@@ -772,15 +793,21 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-043b: Google Maps action uses google_ftid over coordinates', async () => {
     const user = userEvent.setup();
-    const mapsUrl = "https://www.google.com/maps/place/?q=St.%20Jacobs%20Farmers'%20Market&ftid=0x882bf179e806d471:0x8591dde29c821a93";
+    const mapsUrl =
+      "https://www.google.com/maps/place/?q=St.%20Jacobs%20Farmers'%20Market&ftid=0x882bf179e806d471:0x8591dde29c821a93";
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    render(<PlaceInspector {...defaultProps} place={buildPlace({
-      name: "St. Jacobs Farmers' Market",
-      lat: 43.5118527,
-      lng: -80.5542617,
-      google_ftid: '0x882bf179e806d471:0x8591dde29c821a93',
-    })} />);
-    const navBtn = screen.getAllByRole('button').find(btn => btn.textContent?.includes('Navigation'))!;
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        place={buildPlace({
+          name: "St. Jacobs Farmers' Market",
+          lat: 43.5118527,
+          lng: -80.5542617,
+          google_ftid: '0x882bf179e806d471:0x8591dde29c821a93',
+        })}
+      />
+    );
+    const navBtn = screen.getAllByRole('button').find((btn) => btn.textContent?.includes('Navigation'))!;
     await user.click(navBtn);
     await user.click(await screen.findByRole('menuitem', { name: 'Google Maps' }));
     expect(openSpy).toHaveBeenCalledWith(mapsUrl, '_blank', 'noopener,noreferrer');
@@ -790,9 +817,7 @@ describe('PlaceInspector', () => {
   // ── No files section when no upload handler and no files ──────────────────
 
   it('FE-PLANNER-INSPECTOR-044: files section hidden when no files and no onFileUpload', () => {
-    const { container } = render(
-      <PlaceInspector {...defaultProps} files={[]} onFileUpload={undefined} />
-    );
+    const { container } = render(<PlaceInspector {...defaultProps} files={[]} onFileUpload={undefined} />);
     expect(container.querySelector('input[type="file"]')).toBeNull();
   });
 
@@ -868,7 +893,7 @@ describe('PlaceInspector', () => {
     expect(screen.queryByRole('button', { name: 'Change image' })).toBeNull();
   });
 
-// ── Track colour (#776) ──────────────────────────────────────────────────────
+  // ── Track colour (#776) ──────────────────────────────────────────────────────
 
   it('FE-PLANNER-INSPECTOR-051: the colour row only exists for a place with geometry', () => {
     const { rerender } = render(<PlaceInspector {...defaultProps} />);
@@ -903,7 +928,9 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-054: a cached detail payload is reused without a second request', async () => {
     const withId = buildPlace({ id: 700, name: 'Cached Place', google_place_id: 'gp-700' });
-    vi.mocked(mapsApi.details).mockResolvedValue({ place: { phone: '+49 30 111', rating: 4.2, rating_count: 12 } } as any);
+    vi.mocked(mapsApi.details).mockResolvedValue({
+      place: { phone: '+49 30 111', rating: 4.2, rating_count: 12 },
+    } as any);
     const { unmount } = render(<PlaceInspector {...defaultProps} place={withId} />);
     expect(await screen.findByText('+49 30 111')).toBeTruthy();
     expect(vi.mocked(mapsApi.details)).toHaveBeenCalledTimes(1);
@@ -979,8 +1006,14 @@ describe('PlaceInspector', () => {
   // ── Files ────────────────────────────────────────────────────────────────────
 
   const placeFile = (over: Record<string, unknown> = {}) => ({
-    id: 1, trip_id: 1, place_id: 1, original_name: 'map.pdf', filename: 'map.pdf',
-    mime_type: 'application/pdf', url: '/uploads/map.pdf', created_at: '2025-01-01T00:00:00.000Z',
+    id: 1,
+    trip_id: 1,
+    place_id: 1,
+    original_name: 'map.pdf',
+    filename: 'map.pdf',
+    mime_type: 'application/pdf',
+    url: '/uploads/map.pdf',
+    created_at: '2025-01-01T00:00:00.000Z',
     ...over,
   });
 
@@ -1055,7 +1088,11 @@ describe('PlaceInspector', () => {
   });
 
   it('FE-PLANNER-INSPECTOR-068: a track with elevations reports distance, peaks and an elevation profile', () => {
-    const geom = JSON.stringify([[48.0, 2.0, 100], [48.01, 2.01, 180], [48.02, 2.02, 140]]);
+    const geom = JSON.stringify([
+      [48.0, 2.0, 100],
+      [48.01, 2.01, 180],
+      [48.02, 2.02, 140],
+    ]);
     render(<PlaceInspector {...defaultProps} place={{ ...place, route_geometry: geom } as any} />);
     expect(screen.getByText('Track Stats')).toBeTruthy();
     expect(screen.getByText(/↑/)).toBeTruthy();
@@ -1072,7 +1109,7 @@ describe('PlaceInspector', () => {
     render(<PlaceInspector {...defaultProps} place={p} />);
 
     // OSM moved in with the other map apps rather than standing beside them.
-    await user.click(screen.getAllByRole('button').find(b => b.textContent?.includes('Navigation'))!);
+    await user.click(screen.getAllByRole('button').find((b) => b.textContent?.includes('Navigation'))!);
     await user.click(await screen.findByRole('menuitem', { name: 'OpenStreetMap' }));
 
     fireEvent.click(screen.getByText('Open Website').closest('button')!);
@@ -1084,18 +1121,26 @@ describe('PlaceInspector', () => {
   it('FE-PLANNER-INSPECTOR-070: an action button restores its idle background after hover', () => {
     render(<PlaceInspector {...defaultProps} />);
     const edit = screen.getByText('Edit').closest('button') as HTMLButtonElement;
-    act(() => { edit.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    act(() => {
+      edit.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
     expect(edit.style.background).toBe('var(--bg-tertiary)');
-    act(() => { edit.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    act(() => {
+      edit.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    });
     expect(edit.style.background).toBe('var(--bg-hover)');
   });
 
   it('FE-PLANNER-INSPECTOR-071: the header close button resets its hover background', () => {
     render(<PlaceInspector {...defaultProps} />);
     const close = document.querySelector('.bg-surface-hover') as HTMLButtonElement;
-    act(() => { close.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    act(() => {
+      close.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
     expect(close.style.background).toBe('var(--bg-tertiary)');
-    act(() => { close.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    act(() => {
+      close.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    });
     expect(close.style.background).toBe('var(--bg-hover)');
   });
 
@@ -1112,25 +1157,59 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-073: the linked reservation summarises flight, platform and check-in metadata', () => {
     const res = buildReservation({
-      id: 1, title: 'Flight to Nice', status: 'pending', assignment_id: 9,
-      reservation_time: '2025-06-15T08:30', reservation_end_time: '2025-06-15T10:15',
-      confirmation_number: 'ABC999', notes: 'Aisle seat',
-      metadata: JSON.stringify({ airline: 'Air France', flight_number: 'AF123', departure_airport: 'CDG', arrival_airport: 'NCE', train_number: 'TGV1', platform: '7', check_in_time: '06:00', check_out_time: '12:00' }),
+      id: 1,
+      title: 'Flight to Nice',
+      status: 'pending',
+      assignment_id: 9,
+      reservation_time: '2025-06-15T08:30',
+      reservation_end_time: '2025-06-15T10:15',
+      confirmation_number: 'ABC999',
+      notes: 'Aisle seat',
+      metadata: JSON.stringify({
+        airline: 'Air France',
+        flight_number: 'AF123',
+        departure_airport: 'CDG',
+        arrival_airport: 'NCE',
+        train_number: 'TGV1',
+        platform: '7',
+        check_in_time: '06:00',
+        check_out_time: '12:00',
+      }),
     } as any);
-    render(<PlaceInspector {...defaultProps} selectedDayId={1} selectedAssignmentId={9}
-      assignments={{ '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null }] }}
-      reservations={[res]} />);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        selectedDayId={1}
+        selectedAssignmentId={9}
+        assignments={{ '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null }] }}
+        reservations={[res]}
+      />
+    );
     expect(screen.getByText('Flight to Nice')).toBeTruthy();
     expect(screen.getByText('ABC999')).toBeTruthy();
     expect(screen.getByText('Aisle seat')).toBeTruthy();
-    expect(screen.getByText(/Air France AF123 · CDG → NCE · TGV1 · Gl\. 7 · Check-in 06:00 · Check-out 12:00/)).toBeTruthy();
+    expect(
+      screen.getByText(/Air France AF123 · CDG → NCE · TGV1 · Gl\. 7 · Check-in 06:00 · Check-out 12:00/)
+    ).toBeTruthy();
   });
 
   it('FE-PLANNER-INSPECTOR-074: a reservation whose metadata has no printable fields shows no meta line', () => {
-    const res = buildReservation({ id: 2, title: 'Plain booking', status: 'confirmed', assignment_id: 9, metadata: JSON.stringify({ seat: '4A' }) } as any);
-    render(<PlaceInspector {...defaultProps} selectedDayId={1} selectedAssignmentId={9}
-      assignments={{ '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null }] }}
-      reservations={[res]} />);
+    const res = buildReservation({
+      id: 2,
+      title: 'Plain booking',
+      status: 'confirmed',
+      assignment_id: 9,
+      metadata: JSON.stringify({ seat: '4A' }),
+    } as any);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        selectedDayId={1}
+        selectedAssignmentId={9}
+        assignments={{ '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null }] }}
+        reservations={[res]}
+      />
+    );
     expect(screen.getByText('Plain booking')).toBeTruthy();
     expect(screen.queryByText(/Gl\./)).toBeNull();
   });
@@ -1146,7 +1225,9 @@ describe('PlaceInspector', () => {
     selectedDayId: 1,
     selectedAssignmentId: 9,
     tripMembers: members,
-    assignments: { '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null, participants }] } as unknown as AssignmentsMap,
+    assignments: {
+      '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null, participants }],
+    } as unknown as AssignmentsMap,
   });
 
   it('FE-PLANNER-INSPECTOR-075: with nobody explicitly set, every member counts as joined', () => {
@@ -1166,7 +1247,13 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-077: removing down to the full member list is stored as "everyone" again', () => {
     const onSetParticipants = vi.fn();
-    render(<PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }])} onSetParticipants={onSetParticipants} />);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        {...participantProps([{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }])}
+        onSetParticipants={onSetParticipants}
+      />
+    );
     // The chip is hovered first, which flags it removable.
     fireEvent.mouseEnter(screen.getByText('ada').closest('div')!);
     fireEvent.click(screen.getByText('cleo'));
@@ -1175,14 +1262,18 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-078: the last remaining participant cannot be removed', () => {
     const onSetParticipants = vi.fn();
-    render(<PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }])} onSetParticipants={onSetParticipants} />);
+    render(
+      <PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }])} onSetParticipants={onSetParticipants} />
+    );
     fireEvent.click(screen.getByText('ada'));
     expect(onSetParticipants).not.toHaveBeenCalled();
   });
 
   it('FE-PLANNER-INSPECTOR-079: the add menu lists the missing members and marks guests', () => {
     const onSetParticipants = vi.fn();
-    render(<PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }])} onSetParticipants={onSetParticipants} />);
+    render(
+      <PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }])} onSetParticipants={onSetParticipants} />
+    );
     fireEvent.click(screen.getByText('+'));
     expect(screen.getByText('bob')).toBeTruthy();
     expect(screen.getByText('Guest')).toBeTruthy();
@@ -1192,7 +1283,13 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-080: adding the final missing member stores "everyone" instead of a full list', () => {
     const onSetParticipants = vi.fn();
-    render(<PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }, { user_id: 2 }])} onSetParticipants={onSetParticipants} />);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        {...participantProps([{ user_id: 1 }, { user_id: 2 }])}
+        onSetParticipants={onSetParticipants}
+      />
+    );
     fireEvent.click(screen.getByText('+'));
     fireEvent.click(screen.getByText('cleo'));
     expect(onSetParticipants).toHaveBeenCalledWith(9, 1, []);
@@ -1201,31 +1298,41 @@ describe('PlaceInspector', () => {
   // ── Save to collection ───────────────────────────────────────────────────────
 
   it('FE-PLANNER-INSPECTOR-081: with collections enabled the footer offers to save the place', async () => {
-    seedStore(useAddonStore, { addons: [{ id: 'collections', name: 'Collections', type: 'addon', icon: 'bookmark', enabled: true }], loaded: true });
+    seedStore(useAddonStore, {
+      addons: [{ id: 'collections', name: 'Collections', type: 'addon', icon: 'bookmark', enabled: true }],
+      loaded: true,
+    });
     server.use(
-      http.get('/api/addons/collections/membership', () => HttpResponse.json({ saved: true, collections: [] })),
+      http.get('/api/addons/collections/membership', () => HttpResponse.json({ saved: true, collections: [] }))
     );
     render(<PlaceInspector {...defaultProps} />);
     expect(await screen.findByText('Saved')).toBeTruthy();
   });
 
   it('FE-PLANNER-INSPECTOR-082: clicking save hands the whole place to the collection picker', async () => {
-    seedStore(useAddonStore, { addons: [{ id: 'collections', name: 'Collections', type: 'addon', icon: 'bookmark', enabled: true }], loaded: true });
+    seedStore(useAddonStore, {
+      addons: [{ id: 'collections', name: 'Collections', type: 'addon', icon: 'bookmark', enabled: true }],
+      loaded: true,
+    });
     server.use(
-      http.get('/api/addons/collections/membership', () => HttpResponse.json({ saved: false, collections: [] })),
+      http.get('/api/addons/collections/membership', () => HttpResponse.json({ saved: false, collections: [] }))
     );
     render(<PlaceInspector {...defaultProps} />);
     fireEvent.click((await screen.findByText('Save to Collection')).closest('button')!);
     expect(useSaveToCollectionStore.getState().target).toMatchObject({
-      name: 'Eiffel Tower', source_place_id: place.id, lat: 48.8584, lng: 2.2945,
+      name: 'Eiffel Tower',
+      source_place_id: place.id,
+      lat: 48.8584,
+      lng: 2.2945,
     });
   });
 
   it('FE-PLANNER-INSPECTOR-083: a failing membership check leaves the unsaved label', async () => {
-    seedStore(useAddonStore, { addons: [{ id: 'collections', name: 'Collections', type: 'addon', icon: 'bookmark', enabled: true }], loaded: true });
-    server.use(
-      http.get('/api/addons/collections/membership', () => new HttpResponse(null, { status: 500 })),
-    );
+    seedStore(useAddonStore, {
+      addons: [{ id: 'collections', name: 'Collections', type: 'addon', icon: 'bookmark', enabled: true }],
+      loaded: true,
+    });
+    server.use(http.get('/api/addons/collections/membership', () => new HttpResponse(null, { status: 500 })));
     render(<PlaceInspector {...defaultProps} />);
     expect(await screen.findByText('Save to Collection')).toBeTruthy();
   });
@@ -1234,13 +1341,21 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-084: placeDetailProvider rows render as label/value and links', async () => {
     server.use(
-      http.get('/api/place-details/1', () => HttpResponse.json({
-        providers: [
-          { pluginId: 'tides', items: [{ label: 'High tide', value: '14:20' }, { label: 'Forecast', url: 'https://tides.example' }] },
-          // Empty providers are dropped before render.
-          { pluginId: 'empty', items: [] },
-        ],
-      })),
+      http.get('/api/place-details/1', () =>
+        HttpResponse.json({
+          providers: [
+            {
+              pluginId: 'tides',
+              items: [
+                { label: 'High tide', value: '14:20' },
+                { label: 'Forecast', url: 'https://tides.example' },
+              ],
+            },
+            // Empty providers are dropped before render.
+            { pluginId: 'empty', items: [] },
+          ],
+        })
+      )
     );
     render(<PlaceInspector {...defaultProps} />);
     expect(await screen.findByText('High tide')).toBeTruthy();
@@ -1269,7 +1384,12 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-087: in collection mode neither provider rows nor plugin frames are fetched', async () => {
     let called = false;
-    server.use(http.get('/api/place-details/1', () => { called = true; return HttpResponse.json({ providers: [] }); }));
+    server.use(
+      http.get('/api/place-details/1', () => {
+        called = true;
+        return HttpResponse.json({ providers: [] });
+      })
+    );
     seedStore(usePluginStore, {
       plugins: [{ id: 'tide-widget', name: 'Tides', type: 'widget', icon: null, slot: 'place-detail' }],
     });
@@ -1285,7 +1405,9 @@ describe('PlaceInspector', () => {
     const onUpdatePlace = vi.fn();
     const onUploadImage = vi.fn(async () => {});
     const withImage = buildPlace({ id: 706, name: 'Pictured', image_url: '/uploads/places/x.jpg' });
-    render(<PlaceInspector {...defaultProps} place={withImage} onUpdatePlace={onUpdatePlace} onUploadImage={onUploadImage} />);
+    render(
+      <PlaceInspector {...defaultProps} place={withImage} onUpdatePlace={onUpdatePlace} onUploadImage={onUploadImage} />
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Remove image' }));
     expect(onUpdatePlace).toHaveBeenCalledWith(706, { image_url: null });
   });
@@ -1293,15 +1415,30 @@ describe('PlaceInspector', () => {
   it('FE-PLANNER-INSPECTOR-090: opening hours are read for the selected day, not for today', async () => {
     const withId = buildPlace({ id: 707, name: 'Day-aware', google_place_id: 'gp-707' });
     vi.mocked(mapsApi.details).mockResolvedValue({
-      place: { opening_hours: ['Mon 08:00', 'Tue 09:00', 'Wed 10:00', 'Thu 11:00', 'Fri 12:00', 'Sat 13:00', 'Sun 14:00'] },
+      place: {
+        opening_hours: ['Mon 08:00', 'Tue 09:00', 'Wed 10:00', 'Thu 11:00', 'Fri 12:00', 'Sat 13:00', 'Sun 14:00'],
+      },
     } as any);
     // 2025-06-18 is a Wednesday → index 2.
-    render(<PlaceInspector {...defaultProps} place={withId} days={[{ id: 5, date: '2025-06-18' }] as any} selectedDayId={5} />);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        place={withId}
+        days={[{ id: 5, date: '2025-06-18' }] as any}
+        selectedDayId={5}
+      />
+    );
     expect(await screen.findByText('Wed 10:00')).toBeTruthy();
   });
 
   it('FE-PLANNER-INSPECTOR-091: without an onSetParticipants handler the chips are inert', () => {
-    render(<PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }, { user_id: 2 }])} onSetParticipants={undefined} />);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        {...participantProps([{ user_id: 1 }, { user_id: 2 }])}
+        onSetParticipants={undefined}
+      />
+    );
     fireEvent.click(screen.getByText('ada'));
     fireEvent.click(screen.getByText('+'));
     fireEvent.click(screen.getByText('cleo'));
@@ -1311,7 +1448,13 @@ describe('PlaceInspector', () => {
 
   it('FE-PLANNER-INSPECTOR-092: a stale participant id outside the member list collapses back to "everyone"', () => {
     const onSetParticipants = vi.fn();
-    render(<PlaceInspector {...defaultProps} {...participantProps([{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }, { user_id: 99 }])} onSetParticipants={onSetParticipants} />);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        {...participantProps([{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }, { user_id: 99 }])}
+        onSetParticipants={onSetParticipants}
+      />
+    );
     fireEvent.click(screen.getByText('ada'));
     expect(onSetParticipants).toHaveBeenCalledWith(9, 1, []);
   });
@@ -1325,31 +1468,57 @@ describe('PlaceInspector', () => {
     expect(chip.className).toContain('text-content');
 
     const add = screen.getByText('+') as HTMLButtonElement;
-    act(() => { add.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    act(() => {
+      add.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
     expect(add.style.color).toBe('var(--text-primary)');
-    act(() => { add.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    act(() => {
+      add.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    });
     expect(add.style.color).toBe('var(--text-faint)');
 
     fireEvent.click(add);
     const entry = screen.getByText('cleo').closest('button') as HTMLButtonElement;
-    act(() => { entry.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+    act(() => {
+      entry.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    });
     expect(entry.style.background).toBe('var(--bg-hover)');
-    act(() => { entry.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); });
+    act(() => {
+      entry.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    });
     expect(entry.style.background).toBe('none');
   });
 
   it('FE-PLANNER-INSPECTOR-094: a flight number without an airline is still summarised', () => {
-    const res = buildReservation({ id: 3, title: 'Numbered flight', status: 'confirmed', assignment_id: 9, metadata: JSON.stringify({ flight_number: 'LH400' }) } as any);
-    render(<PlaceInspector {...defaultProps} selectedDayId={1} selectedAssignmentId={9}
-      assignments={{ '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null }] }}
-      reservations={[res]} />);
+    const res = buildReservation({
+      id: 3,
+      title: 'Numbered flight',
+      status: 'confirmed',
+      assignment_id: 9,
+      metadata: JSON.stringify({ flight_number: 'LH400' }),
+    } as any);
+    render(
+      <PlaceInspector
+        {...defaultProps}
+        selectedDayId={1}
+        selectedAssignmentId={9}
+        assignments={{ '1': [{ id: 9, place, place_id: place.id, day_id: 1, order_index: 0, notes: null }] }}
+        reservations={[res]}
+      />
+    );
     expect(screen.getByText('LH400')).toBeTruthy();
   });
 
   // ── Open/closed ring (#1680) ─────────────────────────────────────────────────
 
   it('FE-PLANNER-INSPECTOR-095: the ring follows the periods, not the cached open_now', async () => {
-    const seoul = buildPlace({ id: 708, name: 'Round the clock', google_place_id: 'gp-708', lat: 37.5665, lng: 126.978 });
+    const seoul = buildPlace({
+      id: 708,
+      name: 'Round the clock',
+      google_place_id: 'gp-708',
+      lat: 37.5665,
+      lng: 126.978,
+    });
     vi.mocked(mapsApi.details).mockResolvedValue({
       place: {
         open_now: false,
@@ -1398,7 +1567,13 @@ describe('PlaceInspector', () => {
           opening_special_days: ['2026-07-29'],
         },
       } as any);
-      const seoul = buildPlace({ id: 711, name: 'Holiday spot', google_place_id: 'gp-711', lat: 37.5665, lng: 126.978 });
+      const seoul = buildPlace({
+        id: 711,
+        name: 'Holiday spot',
+        google_place_id: 'gp-711',
+        lat: 37.5665,
+        lng: 126.978,
+      });
       render(<PlaceInspector {...defaultProps} place={seoul} />);
       expect(await screen.findByText('Closed')).toBeTruthy();
     } finally {
@@ -1432,7 +1607,9 @@ describe('PlaceInspector', () => {
   // ── Day-specific assignment note (#2163) ─────────────────────────────────────
 
   it('FE-PLANNER-INSPECTOR-099: the assignment note renders as markdown under its own eyebrow', () => {
-    const assignmentInDay = [{ id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: 'Book the **10:00** timed entry' }];
+    const assignmentInDay = [
+      { id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: 'Book the **10:00** timed entry' },
+    ];
     render(
       <PlaceInspector
         {...defaultProps}
@@ -1442,19 +1619,28 @@ describe('PlaceInspector', () => {
       />
     );
     expect(screen.getByText('Notes for this day')).toBeTruthy();
-    const strong = Array.from(document.querySelectorAll('strong')).find(el => el.textContent === '10:00');
+    const strong = Array.from(document.querySelectorAll('strong')).find((el) => el.textContent === '10:00');
     expect(strong).toBeTruthy();
   });
 
   it('FE-PLANNER-INSPECTOR-100: without a note (or without a day in context) the block stays away', () => {
     const assignmentInDay = [{ id: 99, place, day_id: 1, place_id: place.id, order_index: 0, notes: null }];
     const { rerender } = render(
-      <PlaceInspector {...defaultProps} selectedDayId={1} selectedAssignmentId={99} assignments={{ '1': assignmentInDay }} />
+      <PlaceInspector
+        {...defaultProps}
+        selectedDayId={1}
+        selectedAssignmentId={99}
+        assignments={{ '1': assignmentInDay }}
+      />
     );
     expect(screen.queryByText('Notes for this day')).toBeNull();
     // A note exists but no day is selected — nothing to attribute it to, so no block.
     rerender(
-      <PlaceInspector {...defaultProps} selectedDayId={null} assignments={{ '1': [{ ...assignmentInDay[0], notes: 'hidden' }] }} />
+      <PlaceInspector
+        {...defaultProps}
+        selectedDayId={null}
+        assignments={{ '1': [{ ...assignmentInDay[0], notes: 'hidden' }] }}
+      />
     );
     expect(screen.queryByText('Notes for this day')).toBeNull();
   });
@@ -1477,5 +1663,4 @@ describe('PlaceInspector', () => {
     );
     expect(screen.getByText('Museum Ticket').closest('[role="button"]')).toHaveAttribute('data-no-press');
   });
-
 });

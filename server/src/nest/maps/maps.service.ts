@@ -1,22 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import type {
-  MapsSearchResult,
-  MapsAutocompleteResult,
-  MapsPlaceDetailsResult,
-  MapsPlacePhotoResult,
-  MapsReverseResult,
-  MapsResolveUrlResult,
-} from '@trek/shared';
 import { readEnv, getAppUrl } from '../../app-config';
-import { safeFetchFollow, SsrfBlockedError } from '../../utils/ssrfGuard';
 import { discardBody, exceedsDeclaredLength, readCappedText } from '../../utils/cappedFetch';
-import { resolveApiKey, type ApiKeySource } from '../settings/instance-api-keys';
-// ── Photo cache (disk-backed) ────────────────────────────────────────────────
-import { PlacePhotoCacheService } from '../place-photos/place-photo-cache.service';
+import { safeFetchFollow, SsrfBlockedError } from '../../utils/ssrfGuard';
 import { DatabaseService } from '../database/database.service';
+import { getAmapKey, isAmapSearchEnabled, amapSearchPlaces, amapRoute } from '../geo/amap.service';
 import { nominatimFetch, type GeoLane } from '../geo/nominatim.client';
 import { photonSearch } from '../geo/photon.client';
-import { getAmapKey, isAmapSearchEnabled, amapSearchPlaces, amapRoute } from '../geo/amap.service';
+// ── Photo cache (disk-backed) ────────────────────────────────────────────────
+import { PlacePhotoCacheService } from '../place-photos/place-photo-cache.service';
+import { resolveApiKey, type ApiKeySource } from '../settings/instance-api-keys';
 import {
   UA,
   SEARCH_TEXT_FIELD_MASK,
@@ -38,6 +29,15 @@ import {
   type GoogleOpeningHours,
   type OverpassPoi,
 } from './maps.helpers';
+import { Injectable } from '@nestjs/common';
+import type {
+  MapsSearchResult,
+  MapsAutocompleteResult,
+  MapsPlaceDetailsResult,
+  MapsPlacePhotoResult,
+  MapsReverseResult,
+  MapsResolveUrlResult,
+} from '@trek/shared';
 
 // ── Google API call counter ───────────────────────────────────────────────────
 
@@ -194,7 +194,11 @@ function wikidataImageClaims(claims: WikidataClaims, limit: number): string[] {
 
 /** `File:` prefix off, underscores and case normalised — Commons treats these as one title. */
 function normalizeFileTitle(title: string): string {
-  return title.replace(/^File:/i, '').replaceAll('_', ' ').trim().toLowerCase();
+  return title
+    .replace(/^File:/i, '')
+    .replaceAll('_', ' ')
+    .trim()
+    .toLowerCase();
 }
 
 /**
@@ -365,8 +369,7 @@ const GOOGLE_SHORT_HOSTS = ['goo.gl', 'maps.app.goo.gl'];
  * `google.evil.com` is not a Google host.
  */
 function isGoogleMapsHost(hostname: string): boolean {
-  return GOOGLE_SHORT_HOSTS.includes(hostname)
-    || /^(www\.|maps\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(hostname);
+  return GOOGLE_SHORT_HOSTS.includes(hostname) || /^(www\.|maps\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(hostname);
 }
 
 const WIKI_TIMEOUT_MS = 6000;
@@ -534,10 +537,7 @@ export class MapsService {
   ) {}
 
   private isSettingDisabled(key: string): boolean {
-    const row = this.database.get<{ value: string }>(
-      'SELECT value FROM app_settings WHERE key = ?',
-      key,
-    );
+    const row = this.database.get<{ value: string }>('SELECT value FROM app_settings WHERE key = ?', key);
     return row?.value === 'false';
   }
 
@@ -555,19 +555,44 @@ export class MapsService {
 
   // ── Controller-facing surface (unchanged signatures) ───────────────────────
 
-  search(userId: number, query: string, lang?: string, locationBias?: { lat: number; lng: number; radius?: number }, provider?: 'amap' | 'native'): Promise<MapsSearchResult> {
+  search(
+    userId: number,
+    query: string,
+    lang?: string,
+    locationBias?: { lat: number; lng: number; radius?: number },
+    provider?: 'amap' | 'native',
+  ): Promise<MapsSearchResult> {
     return this.searchPlaces(userId, query, lang, locationBias, provider) as Promise<MapsSearchResult>;
   }
 
-  autocomplete(userId: number, input: string, lang?: string, locationBias?: LocationBias, sessionToken?: string, provider?: 'amap' | 'native'): Promise<MapsAutocompleteResult> {
-    return this.autocompletePlaces(userId, input, lang, locationBias, sessionToken, provider) as Promise<MapsAutocompleteResult>;
+  autocomplete(
+    userId: number,
+    input: string,
+    lang?: string,
+    locationBias?: LocationBias,
+    sessionToken?: string,
+    provider?: 'amap' | 'native',
+  ): Promise<MapsAutocompleteResult> {
+    return this.autocompletePlaces(
+      userId,
+      input,
+      lang,
+      locationBias,
+      sessionToken,
+      provider,
+    ) as Promise<MapsAutocompleteResult>;
   }
 
   details(userId: number, placeId: string, lang?: string, sessionToken?: string): Promise<MapsPlaceDetailsResult> {
     return this.getPlaceDetails(userId, placeId, lang, sessionToken) as Promise<MapsPlaceDetailsResult>;
   }
 
-  detailsExpanded(userId: number, placeId: string, lang: string | undefined, refresh: boolean): Promise<MapsPlaceDetailsResult> {
+  detailsExpanded(
+    userId: number,
+    placeId: string,
+    lang: string | undefined,
+    refresh: boolean,
+  ): Promise<MapsPlaceDetailsResult> {
     return this.getPlaceDetailsExpanded(userId, placeId, lang, refresh) as Promise<MapsPlaceDetailsResult>;
   }
 
@@ -599,10 +624,7 @@ export class MapsService {
    * adapter. Throws when no key is configured, and the caller falls back to
    * OSRM exactly like it does for any routing outage.
    */
-  async amapRoute(
-    profile: 'driving' | 'walking' | 'cycling',
-    waypoints: { lat: number; lng: number }[],
-  ) {
+  async amapRoute(profile: 'driving' | 'walking' | 'cycling', waypoints: { lat: number; lng: number }[]) {
     if (!getAmapKey(this.database)) {
       throw Object.assign(new Error('AMap is not configured on this instance'), { status: 400 });
     }
@@ -788,9 +810,7 @@ export class MapsService {
         .sort((a, b) => {
           const byImportance = (b.item.importance ?? 0) - (a.item.importance ?? 0);
           if (byImportance !== 0) return byImportance;
-          return (
-            haversineMetres(lat, lng, a.lat, a.lng) - haversineMetres(lat, lng, b.lat, b.lng)
-          );
+          return haversineMetres(lat, lng, a.lat, a.lng) - haversineMetres(lat, lng, b.lat, b.lng);
         })[0];
 
       if (!best) return null;
@@ -994,9 +1014,13 @@ export class MapsService {
           pilimit: '1',
           redirects: '1',
         });
-        const res = await fetch(`https://en.wikipedia.org/w/api.php?${searchParams}`, { headers: { 'User-Agent': UA } });
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?${searchParams}`, {
+          headers: { 'User-Agent': UA },
+        });
         if (res.ok) {
-          const data = (await res.json()) as { query?: { pages?: Record<string, { thumbnail?: { source?: string } }> } };
+          const data = (await res.json()) as {
+            query?: { pages?: Record<string, { thumbnail?: { source?: string } }> };
+          };
           const pages = data.query?.pages;
           if (pages) {
             for (const page of Object.values(pages)) {
@@ -1061,10 +1085,7 @@ export class MapsService {
   }
 
   /** Shared shaping for every Commons query (coordinate, category, Wikidata, batch). */
-  private toCommonsCandidates(
-    pages: Record<string, WikiCommonsPage> | undefined,
-    limit: number,
-  ): CommonsCandidate[] {
+  private toCommonsCandidates(pages: Record<string, WikiCommonsPage> | undefined, limit: number): CommonsCandidate[] {
     if (!pages) return [];
     const out: CommonsCandidate[] = [];
     // entries(), not values(): the map key is the page id, and for the queries
@@ -1088,13 +1109,14 @@ export class MapsService {
         title: page.title ?? null,
         width: info.width ?? null,
         height: info.height ?? null,
-        descriptors: [
-          stripWikiMarkup(meta?.ObjectName?.value),
-          stripWikiMarkup(meta?.ImageDescription?.value),
-          stripWikiMarkup(meta?.Categories?.value),
-        ]
-          .filter(Boolean)
-          .join(' | ') || null,
+        descriptors:
+          [
+            stripWikiMarkup(meta?.ObjectName?.value),
+            stripWikiMarkup(meta?.ImageDescription?.value),
+            stripWikiMarkup(meta?.Categories?.value),
+          ]
+            .filter(Boolean)
+            .join(' | ') || null,
       });
       if (out.length >= limit) break;
     }
@@ -1266,7 +1288,9 @@ export class MapsService {
 
       const byTitle = await this.fetchCommonsFilesByName(fileNames);
       // Back into the order Wikidata implied, which the batch response loses.
-      const candidates = fileNames.map((name) => byTitle.get(normalizeFileTitle(name))).filter((c): c is CommonsCandidate => !!c);
+      const candidates = fileNames
+        .map((name) => byTitle.get(normalizeFileTitle(name)))
+        .filter((c): c is CommonsCandidate => !!c);
       return { candidates, commonsCategory };
     } catch {
       return empty;
@@ -1522,7 +1546,11 @@ export class MapsService {
     // providers below rather than failing the search. Resolved AFTER the Maps
     // key so the app_settings read order stays stable for the key-resolution
     // tests below.
-    if (provider !== 'native' && (provider === 'amap' || isAmapSearchEnabled(this.database)) && getAmapKey(this.database)) {
+    if (
+      provider !== 'native' &&
+      (provider === 'amap' || isAmapSearchEnabled(this.database)) &&
+      getAmapKey(this.database)
+    ) {
       try {
         const places = await amapSearchPlaces(this.database, query, { locationBias });
         if (places.length) return { places: places as unknown as Record<string, unknown>[], source: 'amap' };
@@ -1574,19 +1602,19 @@ export class MapsService {
     const places = (data.places || [])
       .filter((p: GooglePlaceResult) => p.businessStatus !== 'CLOSED_PERMANENTLY')
       .map((p: GooglePlaceResult) => ({
-      google_place_id: p.id,
-      google_ftid: googleFtidFromMapsUrl(p.googleMapsUri),
-      name: p.displayName?.text || '',
-      address: p.formattedAddress || '',
-      // `?? null`, not `|| null`: 0 is a real coordinate (equator / prime meridian).
-      lat: p.location?.latitude ?? null,
-      lng: p.location?.longitude ?? null,
-      rating: p.rating || null,
-      website: p.websiteUri || null,
-      phone: p.nationalPhoneNumber || null,
-      types: p.types || [],
-      source: 'google',
-    }));
+        google_place_id: p.id,
+        google_ftid: googleFtidFromMapsUrl(p.googleMapsUri),
+        name: p.displayName?.text || '',
+        address: p.formattedAddress || '',
+        // `?? null`, not `|| null`: 0 is a real coordinate (equator / prime meridian).
+        lat: p.location?.latitude ?? null,
+        lng: p.location?.longitude ?? null,
+        rating: p.rating || null,
+        website: p.websiteUri || null,
+        phone: p.nationalPhoneNumber || null,
+        types: p.types || [],
+        source: 'google',
+      }));
 
     return { places, source: 'google' };
   }
@@ -1613,11 +1641,13 @@ export class MapsService {
           const places = await amapSearchPlaces(this.database, input, { locationBias: bias, limit: 5 });
           if (places.length) {
             return {
-              suggestions: places.map((p) => ({
-                placeId: p.amap_id ? `amap:${p.amap_id}` : '',
-                mainText: p.name,
-                secondaryText: p.address,
-              })).filter((s) => s.placeId),
+              suggestions: places
+                .map((p) => ({
+                  placeId: p.amap_id ? `amap:${p.amap_id}` : '',
+                  mainText: p.name,
+                  secondaryText: p.address,
+                }))
+                .filter((s) => s.placeId),
               source: 'amap',
             };
           }
@@ -1739,11 +1769,7 @@ export class MapsService {
       // Nominatim's extratags carry the wikidata/wikipedia/commons tags too, so
       // a place keeps its pictures and its description when Overpass times out
       // instead of falling back to "photographed within 300m".
-      const details = buildOsmDetails(
-        { ...(nominatim?.extratags ?? {}), ...(element?.tags ?? {}) },
-        osmType,
-        osmId,
-      );
+      const details = buildOsmDetails({ ...(nominatim?.extratags ?? {}), ...(element?.tags ?? {}) }, osmType, osmId);
 
       return {
         place: {
@@ -1970,7 +1996,10 @@ export class MapsService {
     if (existing !== undefined) {
       const result = await existing;
       if (!result) return noPhoto;
-      return { photoUrl: `/api/maps/place-photo/${encodeURIComponent(placeId)}/bytes`, attribution: result.attribution };
+      return {
+        photoUrl: `/api/maps/place-photo/${encodeURIComponent(placeId)}/bytes`,
+        attribution: result.attribution,
+      };
     }
 
     // Tells the two empty outcomes apart for the negative cache below: a place that
@@ -2181,7 +2210,11 @@ export class MapsService {
     // Only Google's own pages get read; the resolved host is what counts, so a
     // short link that lands on maps.google.com still qualifies.
     let resolvedHost = '';
-    try { resolvedHost = new URL(resolvedUrl).hostname; } catch { /* keep the empty host, the branch is skipped */ }
+    try {
+      resolvedHost = new URL(resolvedUrl).hostname;
+    } catch {
+      /* keep the empty host, the branch is skipped */
+    }
     if (!coords && isGoogleMapsHost(resolvedHost)) {
       try {
         const pageRes = await followRedirects(resolvedUrl, {

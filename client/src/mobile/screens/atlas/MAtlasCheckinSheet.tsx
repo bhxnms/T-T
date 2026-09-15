@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
-import { CheckCircle2, X } from 'lucide-react'
-import MSheet from '../../components/MSheet'
-import MIconBtn from '../../components/MIconBtn'
-import { useTranslation } from '../../../i18n'
-import { getAllLandmarks } from '../../../data/chinaProvinces'
-import { getLandmarkColor } from '../../../utils/landmarkIcons'
-import { getVisitedLandmarks } from '../../../utils/landmarkStorage'
-import { getCheckedPlaces } from '../../../utils/checkinStorage'
+import { CheckCircle2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getAllLandmarks } from '../../../data/chinaProvinces';
+import { useTranslation } from '../../../i18n';
+import { getCheckedPlaces } from '../../../utils/checkinStorage';
+import { getLandmarkColor } from '../../../utils/landmarkIcons';
+import { getVisitedLandmarks } from '../../../utils/landmarkStorage';
+import MIconBtn from '../../components/MIconBtn';
+import MSheet from '../../components/MSheet';
 
 interface MAtlasCheckinSheetProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
 /**
@@ -21,28 +21,28 @@ interface MAtlasCheckinSheetProps {
  * ('storage').
  */
 export default function MAtlasCheckinSheet({ open, onClose }: MAtlasCheckinSheetProps) {
-  const { t, language } = useTranslation()
-  const [version, setVersion] = useState(0)
+  const { t, language } = useTranslation();
+  const [version, setVersion] = useState(0);
   useEffect(() => {
-    const bump = () => setVersion(v => v + 1)
-    window.addEventListener('tt-checkins-changed', bump)
-    window.addEventListener('storage', bump)
+    const bump = () => setVersion((v) => v + 1);
+    window.addEventListener('tt-checkins-changed', bump);
+    window.addEventListener('storage', bump);
     return () => {
-      window.removeEventListener('tt-checkins-changed', bump)
-      window.removeEventListener('storage', bump)
-    }
-  }, [])
+      window.removeEventListener('tt-checkins-changed', bump);
+      window.removeEventListener('storage', bump);
+    };
+  }, []);
 
   const visitedLandmarks = (() => {
-    void version
-    const visited = getVisitedLandmarks()
-    return getAllLandmarks().filter((l) => visited.has(`${l.provinceCode}:${l.name}`))
-  })()
+    void version;
+    const visited = getVisitedLandmarks();
+    return getAllLandmarks().filter((l) => visited.has(`${l.provinceCode}:${l.name}`));
+  })();
   const checkedPlaces = (() => {
-    void version
-    return getCheckedPlaces()
-  })()
-  const total = visitedLandmarks.length + checkedPlaces.length
+    void version;
+    return getCheckedPlaces();
+  })();
+  const total = visitedLandmarks.length + checkedPlaces.length;
 
   return (
     <MSheet open={open} onClose={onClose} variant="bottom" material="glass" ariaLabel={t('atlas.checkinTab')}>
@@ -71,11 +71,11 @@ export default function MAtlasCheckinSheet({ open, onClose }: MAtlasCheckinSheet
                 {t('atlas.checkinLandmarks')} · {visitedLandmarks.length}
               </div>
               {visitedLandmarks.map((l) => (
-                <div key={`${l.provinceCode}:${l.name}`} className="flex items-center gap-3 rounded-[18px] bg-[color:var(--m-ic)] px-[14px] py-[11px]">
-                  <span
-                    className="h-2 w-2 flex-none rounded-full"
-                    style={{ background: getLandmarkColor(l.type) }}
-                  />
+                <div
+                  key={`${l.provinceCode}:${l.name}`}
+                  className="flex items-center gap-3 rounded-[18px] bg-[color:var(--m-ic)] px-[14px] py-[11px]"
+                >
+                  <span className="h-2 w-2 flex-none rounded-full" style={{ background: getLandmarkColor(l.type) }} />
                   <span className="min-w-0 flex-1 truncate text-[0.84375rem] font-semibold text-m-ink">{l.name}</span>
                   <span className="flex-none font-geist text-[0.65625rem] text-m-faint">{l.provinceName}</span>
                 </div>
@@ -89,7 +89,10 @@ export default function MAtlasCheckinSheet({ open, onClose }: MAtlasCheckinSheet
                 {t('atlas.checkinPlaces')} · {checkedPlaces.length}
               </div>
               {checkedPlaces.map((p) => (
-                <div key={p.id} className="flex items-center gap-3 rounded-[18px] bg-[color:var(--m-ic)] px-[14px] py-[11px]">
+                <div
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-[18px] bg-[color:var(--m-ic)] px-[14px] py-[11px]"
+                >
                   <span className="h-2 w-2 flex-none rounded-full bg-[#10b981]" />
                   <span className="min-w-0 flex-1 truncate text-[0.84375rem] font-semibold text-m-ink">{p.name}</span>
                   {p.checkedAt > 0 && (
@@ -104,5 +107,5 @@ export default function MAtlasCheckinSheet({ open, onClose }: MAtlasCheckinSheet
         </div>
       </div>
     </MSheet>
-  )
+  );
 }

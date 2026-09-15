@@ -1,7 +1,7 @@
 // FE-PLANNER-ICS-001 to FE-PLANNER-ICS-012
-import { render, screen, fireEvent, waitFor } from '../../../tests/helpers/render';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../../tests/helpers/msw/server';
+import { fireEvent, render, screen, waitFor } from '../../../tests/helpers/render';
 import { IcsSubscribeModal } from './IcsSubscribeModal';
 
 const ENDPOINT = '/api/trips/9/feed';
@@ -27,8 +27,15 @@ function tokenHandlers(handler: (method: string) => Response | Promise<Response>
 describe('IcsSubscribeModal', () => {
   it('FE-PLANNER-ICS-001: shows the loading state until the token read resolves', async () => {
     let release: (() => void) | null = null;
-    const gate = new Promise<void>(res => { release = res; });
-    server.use(http.get(TOKEN_URL, async () => { await gate; return HttpResponse.json({ feed_url: null }); }));
+    const gate = new Promise<void>((res) => {
+      release = res;
+    });
+    server.use(
+      http.get(TOKEN_URL, async () => {
+        await gate;
+        return HttpResponse.json({ feed_url: null });
+      })
+    );
     render(<IcsSubscribeModal {...defaultProps} />);
     expect(screen.getByText('Loading…')).toBeInTheDocument();
     release!();
@@ -54,8 +61,14 @@ describe('IcsSubscribeModal', () => {
   it('FE-PLANNER-ICS-004: enabling POSTs the token endpoint and swaps in the subscribe links', async () => {
     const seen: string[] = [];
     server.use(
-      http.get(TOKEN_URL, () => { seen.push('GET'); return HttpResponse.json({ feed_url: null }); }),
-      http.post(TOKEN_URL, () => { seen.push('POST'); return HttpResponse.json({ feed_url: 'https://trek.example/api/trips/9/feed/tok.ics' }); }),
+      http.get(TOKEN_URL, () => {
+        seen.push('GET');
+        return HttpResponse.json({ feed_url: null });
+      }),
+      http.post(TOKEN_URL, () => {
+        seen.push('POST');
+        return HttpResponse.json({ feed_url: 'https://trek.example/api/trips/9/feed/tok.ics' });
+      })
     );
     render(<IcsSubscribeModal {...defaultProps} />);
     fireEvent.click(await screen.findByRole('button', { name: /Enable calendar subscription/i }));
@@ -69,8 +82,10 @@ describe('IcsSubscribeModal', () => {
     server.use(http.get(TOKEN_URL, () => HttpResponse.json({ feed_url: 'https://trek.example/feed/tok.ics' })));
     render(<IcsSubscribeModal {...defaultProps} />);
     expect(await screen.findByText('https://trek.example/feed/tok.ics')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Add to Apple Calendar \/ Outlook/i }))
-      .toHaveAttribute('href', 'webcal://trek.example/feed/tok.ics');
+    expect(screen.getByRole('link', { name: /Add to Apple Calendar \/ Outlook/i })).toHaveAttribute(
+      'href',
+      'webcal://trek.example/feed/tok.ics'
+    );
   });
 
   it('FE-PLANNER-ICS-006: a host-relative feed_url is resolved against the current origin', async () => {
@@ -78,8 +93,10 @@ describe('IcsSubscribeModal', () => {
     render(<IcsSubscribeModal {...defaultProps} />);
     const absolute = `${window.location.origin}/api/trips/9/feed/tok.ics`;
     expect(await screen.findByText(absolute)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Add to Apple Calendar \/ Outlook/i }))
-      .toHaveAttribute('href', absolute.replace(/^https?:\/\//, 'webcal://'));
+    expect(screen.getByRole('link', { name: /Add to Apple Calendar \/ Outlook/i })).toHaveAttribute(
+      'href',
+      absolute.replace(/^https?:\/\//, 'webcal://')
+    );
   });
 
   it('FE-PLANNER-ICS-012: a feed_url with neither scheme nor leading slash is used verbatim', async () => {
@@ -88,15 +105,20 @@ describe('IcsSubscribeModal', () => {
     // Nothing to absolutize against, so the raw value reaches the copy rows and
     // the webcal handoff stays schemeless rather than being mangled.
     expect(await screen.findAllByText('trips/9/feed/tok.ics')).toHaveLength(2);
-    expect(screen.getByRole('link', { name: /Add to Apple Calendar \/ Outlook/i }))
-      .toHaveAttribute('href', 'trips/9/feed/tok.ics');
+    expect(screen.getByRole('link', { name: /Add to Apple Calendar \/ Outlook/i })).toHaveAttribute(
+      'href',
+      'trips/9/feed/tok.ics'
+    );
   });
 
   it('FE-PLANNER-ICS-007: Regenerate sends PUT and shows the new link', async () => {
     let method = '';
     server.use(
       http.get(TOKEN_URL, () => HttpResponse.json({ feed_url: 'https://trek.example/feed/old.ics' })),
-      http.put(TOKEN_URL, () => { method = 'PUT'; return HttpResponse.json({ feed_url: 'https://trek.example/feed/new.ics' }); }),
+      http.put(TOKEN_URL, () => {
+        method = 'PUT';
+        return HttpResponse.json({ feed_url: 'https://trek.example/feed/new.ics' });
+      })
     );
     render(<IcsSubscribeModal {...defaultProps} />);
     fireEvent.click(await screen.findByRole('button', { name: /Regenerate/i }));
@@ -108,7 +130,10 @@ describe('IcsSubscribeModal', () => {
     let method = '';
     server.use(
       http.get(TOKEN_URL, () => HttpResponse.json({ feed_url: 'https://trek.example/feed/tok.ics' })),
-      http.delete(TOKEN_URL, () => { method = 'DELETE'; return HttpResponse.json({ feed_url: null }); }),
+      http.delete(TOKEN_URL, () => {
+        method = 'DELETE';
+        return HttpResponse.json({ feed_url: null });
+      })
     );
     render(<IcsSubscribeModal {...defaultProps} />);
     fireEvent.click(await screen.findByRole('button', { name: /Turn off/i }));
@@ -125,9 +150,11 @@ describe('IcsSubscribeModal', () => {
 
   it('FE-PLANNER-ICS-010: a non-ok mutate response leaves the current token untouched', async () => {
     server.use(
-      ...tokenHandlers(m => (m === 'GET'
-        ? HttpResponse.json({ feed_url: 'https://trek.example/feed/keep.ics' })
-        : new HttpResponse(null, { status: 500 }))),
+      ...tokenHandlers((m) =>
+        m === 'GET'
+          ? HttpResponse.json({ feed_url: 'https://trek.example/feed/keep.ics' })
+          : new HttpResponse(null, { status: 500 })
+      )
     );
     render(<IcsSubscribeModal {...defaultProps} />);
     const regenerate = await screen.findByRole('button', { name: /Regenerate/i });
@@ -142,8 +169,10 @@ describe('IcsSubscribeModal', () => {
     render(<IcsSubscribeModal {...defaultProps} onClose={onClose} />);
     await screen.findByRole('button', { name: /Enable calendar subscription/i });
 
-    const closeBtn = screen.getByText('Subscribe to this trip').closest('div')!.parentElement!
-      .querySelector('button') as HTMLButtonElement;
+    const closeBtn = screen
+      .getByText('Subscribe to this trip')
+      .closest('div')!
+      .parentElement!.querySelector('button') as HTMLButtonElement;
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
 

@@ -4,6 +4,14 @@
  * get_place_details, search_pois, reverse_geocode, resolve_maps_url,
  * get_weather, get_detailed_weather.
  */
+import { runMigrations } from '../../../src/db/migrations';
+import { createTables } from '../../../src/db/schema';
+import { MapsService } from '../../../src/nest/maps/maps.service';
+import { getWeather, getDetailedWeather } from '../../../src/nest/weather/weather.impl';
+import { createUser } from '../../helpers/factories';
+import { createMcpHarness, parseToolResult, type McpHarness } from '../../helpers/mcp-harness';
+import { resetTestDb } from '../../helpers/test-db';
+
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 
 const { testDb, dbMock } = vi.hoisted(() => {
@@ -18,7 +26,11 @@ const { testDb, dbMock } = vi.hoisted(() => {
     reinitialize: () => {},
     getPlaceWithTags: () => null,
     canAccessTrip: (tripId: any, userId: number) =>
-      db.prepare(`SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`).get(userId, tripId, userId),
+      db
+        .prepare(
+          `SELECT t.id, t.user_id FROM trips t LEFT JOIN trip_members m ON m.trip_id = t.id AND m.user_id = ? WHERE t.id = ? AND (t.user_id = ? OR m.user_id IS NOT NULL)`,
+        )
+        .get(userId, tripId, userId),
     isOwner: (tripId: any, userId: number) =>
       !!db.prepare('SELECT id FROM trips WHERE id = ? AND user_id = ?').get(tripId, userId),
   };
@@ -39,14 +51,6 @@ vi.mock('../../../src/nest/weather/weather.impl', () => ({
   getWeather: vi.fn().mockResolvedValue({ temp: 20, condition: 'sunny' }),
   getDetailedWeather: vi.fn().mockResolvedValue({ hourly: [] }),
 }));
-
-import { createTables } from '../../../src/db/schema';
-import { runMigrations } from '../../../src/db/migrations';
-import { resetTestDb } from '../../helpers/test-db';
-import { createUser } from '../../helpers/factories';
-import { createMcpHarness, parseToolResult, type McpHarness } from '../../helpers/mcp-harness';
-import { MapsService } from '../../../src/nest/maps/maps.service';
-import { getWeather, getDetailedWeather } from '../../../src/nest/weather/weather.impl';
 
 // The geo tools live on the DI-discovered maps.mcp.ts since the maps fold; the
 // test registry builds a real MapsService over the mocked db proxy, so stub the
@@ -95,7 +99,11 @@ afterAll(() => {
 
 async function withHarness(userId: number, fn: (h: McpHarness) => Promise<void>) {
   const h = await createMcpHarness({ userId, withResources: false });
-  try { await fn(h); } finally { await h.cleanup(); }
+  try {
+    await fn(h);
+  } finally {
+    await h.cleanup();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +186,9 @@ describe('Tool: create_tag', () => {
 describe('Tool: update_tag', () => {
   it('updates tag name and color', async () => {
     const { user } = createUser(testDb);
-    const r = testDb.prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)').run(user.id, 'Old Name', '#aaaaaa');
+    const r = testDb
+      .prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)')
+      .run(user.id, 'Old Name', '#aaaaaa');
     const tagId = r.lastInsertRowid as number;
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
@@ -206,7 +216,9 @@ describe('Tool: update_tag', () => {
   it('blocks demo user', async () => {
     process.env.DEMO_MODE = 'true';
     const { user } = createUser(testDb, { email: 'demo@nomad.app' });
-    const r = testDb.prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)').run(user.id, 'Demo Tag', '#aaaaaa');
+    const r = testDb
+      .prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)')
+      .run(user.id, 'Demo Tag', '#aaaaaa');
     const tagId = r.lastInsertRowid as number;
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
@@ -226,7 +238,9 @@ describe('Tool: update_tag', () => {
 describe('Tool: delete_tag', () => {
   it('removes the tag row', async () => {
     const { user } = createUser(testDb);
-    const r = testDb.prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)').run(user.id, 'To Delete', '#cccccc');
+    const r = testDb
+      .prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)')
+      .run(user.id, 'To Delete', '#cccccc');
     const tagId = r.lastInsertRowid as number;
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
@@ -253,7 +267,9 @@ describe('Tool: delete_tag', () => {
   it('blocks demo user', async () => {
     process.env.DEMO_MODE = 'true';
     const { user } = createUser(testDb, { email: 'demo@nomad.app' });
-    const r = testDb.prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)').run(user.id, 'Demo Tag', '#aaaaaa');
+    const r = testDb
+      .prepare('INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)')
+      .run(user.id, 'Demo Tag', '#aaaaaa');
     const tagId = r.lastInsertRowid as number;
     await withHarness(user.id, async (h) => {
       const result = await h.client.callTool({
@@ -373,7 +389,12 @@ describe('Tool: get_place_details', () => {
       const data = parseToolResult(result) as any;
       expect(data.details.summary).toBe('Wrought-iron lattice tower.');
       expect(data.details.reviews).toHaveLength(1);
-      expect(MapsService.prototype.getPlaceDetailsExpanded).toHaveBeenCalledWith(user.id, 'ChIJD7fiBh9u5kcRYJSMaMOCCwQ', 'de', false);
+      expect(MapsService.prototype.getPlaceDetailsExpanded).toHaveBeenCalledWith(
+        user.id,
+        'ChIJD7fiBh9u5kcRYJSMaMOCCwQ',
+        'de',
+        false,
+      );
       expect(MapsService.prototype.getPlaceDetails).not.toHaveBeenCalled();
     });
   });
@@ -387,7 +408,12 @@ describe('Tool: get_place_details', () => {
         name: 'get_place_details',
         arguments: { placeId: 'ChIJD7fiBh9u5kcRYJSMaMOCCwQ', expand: true, refresh: true },
       });
-      expect(MapsService.prototype.getPlaceDetailsExpanded).toHaveBeenCalledWith(user.id, 'ChIJD7fiBh9u5kcRYJSMaMOCCwQ', 'en', true);
+      expect(MapsService.prototype.getPlaceDetailsExpanded).toHaveBeenCalledWith(
+        user.id,
+        'ChIJD7fiBh9u5kcRYJSMaMOCCwQ',
+        'en',
+        true,
+      );
     });
   });
 
@@ -628,7 +654,7 @@ describe('Tool: search_airports', () => {
       expect(Array.isArray(data.airports)).toBe(true);
       expect(data.airports.length).toBeGreaterThan(0);
       expect(data.airports.length).toBeLessThanOrEqual(5);
-      expect(data.airports.some(a => a.iata === 'ZRH')).toBe(true);
+      expect(data.airports.some((a) => a.iata === 'ZRH')).toBe(true);
     });
   });
 

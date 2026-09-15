@@ -5,13 +5,22 @@
  * ordering (404 wins over 401), auth, the service-owned 403/404 mapping, status
  * codes and the unguarded public route.
  */
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
-import request from 'supertest';
+import { AddonsService } from '../../src/nest/addons/addons.service';
+import { TrekExceptionFilter } from '../../src/nest/common/trek-exception.filter';
+import { ZodValidationPipe } from '../../src/nest/common/zod-validation.pipe';
+import { DatabaseModule } from '../../src/nest/database/database.module';
+import { JourneyBookService } from '../../src/nest/journey/journey-book.service';
+import { JourneyDomainService } from '../../src/nest/journey/journey-domain.service';
+import { JourneyShareService } from '../../src/nest/journey/journey-share.service';
+import { JourneyModule } from '../../src/nest/journey/journey.module';
+import { seedUser, sessionCookie } from './harness';
+import { Test } from '@nestjs/testing';
+import { MAX_SPREAD_ELEMENTS } from '@trek/shared';
+
 import cookieParser from 'cookie-parser';
 import type { Server } from 'http';
-import { DatabaseModule } from '../../src/nest/database/database.module';
-import { Test } from '@nestjs/testing';
-import { seedUser, sessionCookie } from './harness';
+import request from 'supertest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 
 const { db } = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -48,28 +57,25 @@ vi.mock('../../src/nest/memories/photo-resolver.service', async (importOriginal)
 
 const { jsvc } = vi.hoisted(() => ({
   jsvc: {
-    listJourneys: vi.fn(), createJourney: vi.fn(), getJourneyFull: vi.fn(),
-    journeyStats: vi.fn(), updateEntry: vi.fn(),
+    listJourneys: vi.fn(),
+    createJourney: vi.fn(),
+    getJourneyFull: vi.fn(),
+    journeyStats: vi.fn(),
+    updateEntry: vi.fn(),
   },
 }));
-import { JourneyDomainService } from '../../src/nest/journey/journey-domain.service';
 
 const { sharesvc } = vi.hoisted(() => ({ sharesvc: { getPublicJourney: vi.fn() } }));
-import { JourneyShareService } from '../../src/nest/journey/journey-share.service';
 
 const { booksvc } = vi.hoisted(() => ({
   booksvc: {
-    getBook: vi.fn(), canOpen: vi.fn(), saveBook: vi.fn(),
-    deleteBook: vi.fn(), broadcastSaved: vi.fn(),
+    getBook: vi.fn(),
+    canOpen: vi.fn(),
+    saveBook: vi.fn(),
+    deleteBook: vi.fn(),
+    broadcastSaved: vi.fn(),
   },
 }));
-import { JourneyBookService } from '../../src/nest/journey/journey-book.service';
-import { MAX_SPREAD_ELEMENTS } from '@trek/shared';
-
-import { JourneyModule } from '../../src/nest/journey/journey.module';
-import { AddonsService } from '../../src/nest/addons/addons.service';
-import { TrekExceptionFilter } from '../../src/nest/common/trek-exception.filter';
-import { ZodValidationPipe } from '../../src/nest/common/zod-validation.pipe';
 
 describe('Journey e2e (real auth guard + temp SQLite)', () => {
   let server: Server;
@@ -196,11 +202,17 @@ describe('Journey e2e (real auth guard + temp SQLite)', () => {
 
   it('200 with the figures, returned bare rather than in an envelope', async () => {
     jsvc.journeyStats.mockReturnValue({
-      journeyId: 9, distance: 1_189_000, days: 14, steps: 14, photos: 57, places: 0,
+      journeyId: 9,
+      distance: 1_189_000,
+      days: 14,
+      steps: 14,
+      photos: 57,
+      places: 0,
       furthest: 408_000,
       countries: [{ code: 'IS', name: 'Iceland', places: 14, firstVisit: '2026-06-02' }],
       points: [{ lat: 64.14, lng: -21.94, label: 'Reykjavík', date: '2026-06-02', country: 'IS' }],
-      start: '2026-06-02', end: '2026-06-15',
+      start: '2026-06-02',
+      end: '2026-06-15',
     });
     const res = await request(server).get('/api/journeys/9/stats').set('Cookie', sessionCookie(1));
     expect(res.status).toBe(200);
@@ -317,10 +329,7 @@ describe('Journey e2e (real auth guard + temp SQLite)', () => {
   });
 
   it('400 for a save with no document at all', async () => {
-    const res = await request(server)
-      .put('/api/journeys/9/book')
-      .set('Cookie', sessionCookie(1))
-      .send({ title: 'T' });
+    const res = await request(server).put('/api/journeys/9/book').set('Cookie', sessionCookie(1)).send({ title: 'T' });
     expect(res.status).toBe(400);
     expect(booksvc.saveBook).not.toHaveBeenCalled();
   });
@@ -336,7 +345,10 @@ describe('Journey e2e (real auth guard + temp SQLite)', () => {
    */
   it('400 for a spread carrying more elements than the contract allows', async () => {
     const element = (i: number) => ({
-      id: 'e' + i, kind: 'shape', frame: { x: 0, y: 0, w: 10, h: 10 }, shape: 'rect',
+      id: 'e' + i,
+      kind: 'shape',
+      frame: { x: 0, y: 0, w: 10, h: 10 },
+      shape: 'rect',
     });
     const res = await request(server)
       .put('/api/journeys/9/book')
@@ -345,11 +357,13 @@ describe('Journey e2e (real auth guard + temp SQLite)', () => {
         title: 'T',
         document: {
           version: 1,
-          spreads: [{
-            id: 'sp1',
-            role: 'inner',
-            elements: Array.from({ length: MAX_SPREAD_ELEMENTS + 1 }, (_, i) => element(i)),
-          }],
+          spreads: [
+            {
+              id: 'sp1',
+              role: 'inner',
+              elements: Array.from({ length: MAX_SPREAD_ELEMENTS + 1 }, (_, i) => element(i)),
+            },
+          ],
         },
       });
     expect(res.status).toBe(400);

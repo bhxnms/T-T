@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'Couleur du parcours',
   'inspector.trackColorAuto': 'Couleur automatique',
   'inspector.trackColorCustom': 'Choisir une couleur personnalisée',
-  "inspector.checkin": "Enregistrer la visite",
-  "inspector.checkinDone": "Visite enregistrée",
+  'inspector.checkin': 'Enregistrer la visite',
+  'inspector.checkinDone': 'Visite enregistrée',
 };
 export default inspector;

@@ -1,4 +1,4 @@
-import StudioShell from '../components/Studio/StudioShell'
+import StudioShell from '../components/Studio/StudioShell';
 
 /**
  * TREK Studio, the Journey book designer.
@@ -10,5 +10,5 @@ import StudioShell from '../components/Studio/StudioShell'
  * user never sees it.
  */
 export default function JourneyStudioPage() {
-  return <StudioShell />
+  return <StudioShell />;
 }

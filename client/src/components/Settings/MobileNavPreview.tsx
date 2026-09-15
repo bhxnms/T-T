@@ -1,5 +1,5 @@
-import { Plus, MoreHorizontal } from 'lucide-react'
-import type { NavItemDef } from '../Layout/navItems'
+import { MoreHorizontal, Plus } from 'lucide-react';
+import type { NavItemDef } from '../Layout/navItems';
 
 /**
  * A live, non-interactive mock of the mobile bottom dock that mirrors the
@@ -12,30 +12,34 @@ export default function MobileNavPreview({
   hasMore,
   moreLabel,
 }: {
-  bar: NavItemDef[]
-  hasMore: boolean
-  moreLabel: string
+  bar: NavItemDef[];
+  hasMore: boolean;
+  moreLabel: string;
 }) {
   // Mirror MBottomNav's geometry: split the slots (bar items + the More slot)
   // around the centre so the "+" sits dead centre.
-  const slotCount = bar.length + (hasMore ? 1 : 0)
-  const splitAt = Math.ceil(slotCount / 2)
-  const left = bar.slice(0, splitAt)
-  const right = bar.slice(splitAt)
+  const slotCount = bar.length + (hasMore ? 1 : 0);
+  const splitAt = Math.ceil(slotCount / 2);
+  const left = bar.slice(0, splitAt);
+  const right = bar.slice(splitAt);
 
   const circle = (item: NavItemDef) => {
-    const Icon = item.icon
+    const Icon = item.icon;
     return (
       <span
         key={item.id}
         title={item.label}
         className="flex h-8 w-8 flex-none items-center justify-center rounded-full"
-        style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', boxShadow: 'inset 0 0 0 1px var(--border-faint)' }}
+        style={{
+          background: 'var(--bg-card)',
+          color: 'var(--text-secondary)',
+          boxShadow: 'inset 0 0 0 1px var(--border-faint)',
+        }}
       >
         <Icon size={16} strokeWidth={1.9} />
       </span>
-    )
-  }
+    );
+  };
 
   return (
     <div
@@ -56,11 +60,15 @@ export default function MobileNavPreview({
         <span
           title={moreLabel}
           className="flex h-8 w-8 flex-none items-center justify-center rounded-full"
-          style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', boxShadow: 'inset 0 0 0 1px var(--border-faint)' }}
+          style={{
+            background: 'var(--bg-card)',
+            color: 'var(--text-secondary)',
+            boxShadow: 'inset 0 0 0 1px var(--border-faint)',
+          }}
         >
           <MoreHorizontal size={16} strokeWidth={1.9} />
         </span>
       )}
     </div>
-  )
+  );
 }

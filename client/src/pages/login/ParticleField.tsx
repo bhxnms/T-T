@@ -172,16 +172,26 @@ export default function ParticleField({ variant = 'ambient' }: ParticleFieldProp
       <div
         className="pf-glow pf-glow-a"
         style={{
-          position: 'absolute', width: '46vw', height: '46vw', top: '-8%', left: '2%',
-          borderRadius: '50%', filter: 'blur(110px)',
+          position: 'absolute',
+          width: '46vw',
+          height: '46vw',
+          top: '-8%',
+          left: '2%',
+          borderRadius: '50%',
+          filter: 'blur(110px)',
           background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, rgba(99,102,241,0) 70%)',
         }}
       />
       <div
         className="pf-glow pf-glow-b"
         style={{
-          position: 'absolute', width: '38vw', height: '38vw', bottom: '-10%', right: '4%',
-          borderRadius: '50%', filter: 'blur(110px)',
+          position: 'absolute',
+          width: '38vw',
+          height: '38vw',
+          bottom: '-10%',
+          right: '4%',
+          borderRadius: '50%',
+          filter: 'blur(110px)',
           background: 'radial-gradient(circle, rgba(34,211,238,0.28) 0%, rgba(34,211,238,0) 72%)',
         }}
       />

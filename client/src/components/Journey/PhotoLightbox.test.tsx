@@ -15,7 +15,7 @@ vi.mock('../../api/websocket', () => ({
   removeListener: vi.fn(),
 }));
 
-import { render, screen, fireEvent } from '../../../tests/helpers/render';
+import { fireEvent, render, screen } from '../../../tests/helpers/render';
 import { resetAllStores } from '../../../tests/helpers/store';
 import PhotoLightbox from './PhotoLightbox';
 
@@ -156,7 +156,7 @@ describe('PhotoLightbox', () => {
       <PhotoLightbox
         photos={[{ id: 'v1', src: '/videos/1.mp4', caption: null, mediaType: 'video' }]}
         onClose={vi.fn()}
-      />,
+      />
     );
     // The player loads on demand now — plyr no longer ships with the journal.
     expect(await screen.findByTestId('video-player')).toHaveAttribute('src', '/videos/1.mp4');

@@ -33,8 +33,8 @@ long is dropped without affecting the planner.
 ## Run it
 
 ```bash
-npx @trek/plugin-sdk dev      # hot-reload against a local TREK
-npx @trek/plugin-sdk pack     # build a signed .trekplugin bundle
+npx trek-plugin-sdk dev      # hot-reload against a local TREK
+npx trek-plugin-sdk pack     # build a signed .trekplugin bundle
 ```
 
 See the [Plugin Cookbook](https://github.com/liketrek/TREK/wiki/Plugin-Cookbook)

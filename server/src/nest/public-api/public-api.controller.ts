@@ -1,5 +1,8 @@
+import { RateLimitService } from '../common/rate-limit.service';
+import { ApiTokenGuard } from './api-token.guard';
+import { enforcePublicApiRateLimit, requireUserId } from './public-api-request';
+import { PublicApiService } from './public-api.service';
 import { Controller, Get, HttpException, Param, Query, Req, UseGuards } from '@nestjs/common';
-import type { Request } from 'express';
 import {
   PUBLIC_API_INCLUDES,
   publicApiIncludeQuerySchema,
@@ -8,10 +11,8 @@ import {
   type PublicApiTrip,
   type PublicApiTripList,
 } from '@trek/shared';
-import { ApiTokenGuard } from './api-token.guard';
-import { PublicApiService } from './public-api.service';
-import { enforcePublicApiRateLimit, requireUserId } from './public-api-request';
-import { RateLimitService } from '../common/rate-limit.service';
+
+import type { Request } from 'express';
 
 /**
  * `/api/v1` — the versioned, read-only surface for third-party integrations.
@@ -72,11 +73,7 @@ export class PublicApiController {
    * endpoint into a way to count someone else's trips.
    */
   @Get('trips/:id')
-  getTrip(
-    @Req() req: Request,
-    @Param('id') id: string,
-    @Query('include') include?: string,
-  ): PublicApiTrip {
+  getTrip(@Req() req: Request, @Param('id') id: string, @Query('include') include?: string): PublicApiTrip {
     this.limit(req);
     const tripId = parseTripId(id);
     const trip = this.api.getTrip(tripId, requireUserId(req), parseInclude(include));

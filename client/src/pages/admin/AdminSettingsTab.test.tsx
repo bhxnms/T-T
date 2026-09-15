@@ -2,9 +2,9 @@
 import { http, HttpResponse } from 'msw';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildAdminHook, type AdminHook } from '../../../tests/helpers/mobileAdmin';
 import { server } from '../../../tests/helpers/msw/server';
 import { fireEvent, render, screen, waitFor, within } from '../../../tests/helpers/render';
-import { buildAdminHook, type AdminHook } from '../../../tests/helpers/mobileAdmin';
 import { resetAllStores } from '../../../tests/helpers/store';
 import { useTranslation } from '../../i18n';
 import type { OidcConfig } from './adminModel';
@@ -31,7 +31,7 @@ function card(heading: string | RegExp): HTMLElement {
 
 /** The toggle button in the row belonging to a label paragraph. */
 function toggleFor(label: string): HTMLElement {
-  const row = screen.getAllByText(label).map(el => el.closest<HTMLElement>('.flex.items-center.justify-between'));
+  const row = screen.getAllByText(label).map((el) => el.closest<HTMLElement>('.flex.items-center.justify-between'));
   const found = row.find(Boolean)!;
   return within(found).getByRole('button');
 }
@@ -405,9 +405,7 @@ describe('AdminSettingsTab', () => {
 
     expect(screen.getByDisplayValue('Authentik')).toBeInTheDocument();
     expect(screen.getByDisplayValue('https://auth.example.com')).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue('https://auth.example.com/.well-known/openid-configuration')
-    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue('https://auth.example.com/.well-known/openid-configuration')).toBeInTheDocument();
   });
 
   it('FE-ADMSET-034: client id and client secret update the OIDC config', () => {

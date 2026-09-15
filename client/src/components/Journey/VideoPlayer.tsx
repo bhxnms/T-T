@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react'
-import Plyr from 'plyr'
-import 'plyr/dist/plyr.css'
+import Plyr from 'plyr';
+import 'plyr/dist/plyr.css';
+import React, { useEffect, useRef } from 'react';
 
 /**
  * Video player for gallery/lightbox playback (#823), built on Plyr over a native
@@ -15,41 +15,32 @@ export default function VideoPlayer({
   autoPlay = true,
   style,
 }: {
-  src: string
-  poster?: string
-  autoPlay?: boolean
-  style?: React.CSSProperties
+  src: string;
+  poster?: string;
+  autoPlay?: boolean;
+  style?: React.CSSProperties;
 }): React.ReactElement {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const el = videoRef.current
-    if (!el) return
+    const el = videoRef.current;
+    if (!el) return;
 
     const player = new Plyr(el, {
-      controls: [
-        'play-large',
-        'play',
-        'progress',
-        'current-time',
-        'duration',
-        'mute',
-        'volume',
-        'fullscreen',
-      ],
+      controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'fullscreen'],
       autoplay: autoPlay,
       clickToPlay: true,
       hideControls: false,
-    })
+    });
 
     return () => {
       try {
-        player.destroy()
+        player.destroy();
       } catch {
         /* already torn down */
       }
-    }
-  }, [src, autoPlay])
+    };
+  }, [src, autoPlay]);
 
   return (
     <div
@@ -87,5 +78,5 @@ export default function VideoPlayer({
         <track kind="captions" />
       </video>
     </div>
-  )
+  );
 }

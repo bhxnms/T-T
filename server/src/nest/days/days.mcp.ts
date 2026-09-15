@@ -1,17 +1,23 @@
-import {
-  McpController, Tool, ResourceTemplate, type McpContext,
-  TOOL_ANNOTATIONS_WRITE, TOOL_ANNOTATIONS_DELETE, TOOL_ANNOTATIONS_NON_IDEMPOTENT,
-  demoDenied, errorResult, ok,
-} from '../../nest-mcp';
-import { McpToolGuardsService } from '../mcp-shared/mcp-tool-guards.service';
-import { z } from 'zod';
-import { AuthService } from '../auth/auth.service';
 import { noAccess, permissionDenied } from '../../mcp/tools/_shared';
 import {
-  dayCreateRequestSchema, dayReorderRequestSchema, dayUpdateRequestSchema,
-} from '@trek/shared';
-import type { DayCreateRequest, DayReorderRequest, DayUpdateRequest } from '@trek/shared';
+  McpController,
+  Tool,
+  ResourceTemplate,
+  type McpContext,
+  TOOL_ANNOTATIONS_WRITE,
+  TOOL_ANNOTATIONS_DELETE,
+  TOOL_ANNOTATIONS_NON_IDEMPOTENT,
+  demoDenied,
+  errorResult,
+  ok,
+} from '../../nest-mcp';
+import { AuthService } from '../auth/auth.service';
+import { McpToolGuardsService } from '../mcp-shared/mcp-tool-guards.service';
 import { DaysService, DayReorderError } from './days.service';
+import { dayCreateRequestSchema, dayReorderRequestSchema, dayUpdateRequestSchema } from '@trek/shared';
+import type { DayCreateRequest, DayReorderRequest, DayUpdateRequest } from '@trek/shared';
+
+import { z } from 'zod';
 
 function parseId(value: string | string[]): number | null {
   const n = Number(Array.isArray(value) ? value[0] : value);
@@ -45,7 +51,8 @@ export class DaysMcp {
 
   @Tool({
     name: 'update_day',
-    description: 'Set the title and/or the notes of a day in a trip (e.g. "Arrival in Paris", "Free day"). An omitted field keeps its current value, so the title and the notes can be changed independently.',
+    description:
+      'Set the title and/or the notes of a day in a trip (e.g. "Arrival in Paris", "Free day"). An omitted field keeps its current value, so the title and the notes can be changed independently.',
     inputSchema: {
       tripId: z.number().int().positive(),
       dayId: z.number().int().positive(),
@@ -58,10 +65,7 @@ export class DaysMcp {
     annotations: TOOL_ANNOTATIONS_WRITE,
     access: { group: 'trips', mode: 'write' },
   })
-  async updateDay(
-    { tripId, dayId, ...fields }: { tripId: number; dayId: number } & DayUpdateRequest,
-    ctx: McpContext,
-  ) {
+  async updateDay({ tripId, dayId, ...fields }: { tripId: number; dayId: number } & DayUpdateRequest, ctx: McpContext) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
     if (!this.days.verifyTripAccess(tripId, ctx.userId)) return noAccess();
     if (!this.guards.hasTripPermission('day_edit', tripId, ctx.userId)) return permissionDenied();
@@ -77,20 +81,20 @@ export class DaysMcp {
 
   @Tool({
     name: 'create_day',
-    description: 'Add a day to a trip. Without `position` the day is appended at the end, optionally with a date and notes. With `position` an empty day is slotted in at that place instead, which is the way to add a day in the middle of an itinerary that already has days.',
+    description:
+      'Add a day to a trip. Without `position` the day is appended at the end, optionally with a date and notes. With `position` an empty day is slotted in at that place instead, which is the way to add a day in the middle of an itinerary that already has days.',
     inputSchema: {
       tripId: z.number().int().positive(),
       date: dayCreateRequestSchema.shape.date.describe('ISO date string YYYY-MM-DD, optional for dateless trips'),
       notes: dayCreateRequestSchema.shape.notes,
-      position: dayCreateRequestSchema.shape.position.describe('1-based slot to insert an empty day at; omit to append at the end. On a dated trip the days keep their calendar slots, so the trip gains one day at its end and bookings move with the day they sit on. date and notes are ignored when this is set, as on the REST route.'),
+      position: dayCreateRequestSchema.shape.position.describe(
+        '1-based slot to insert an empty day at; omit to append at the end. On a dated trip the days keep their calendar slots, so the trip gains one day at its end and bookings move with the day they sit on. date and notes are ignored when this is set, as on the REST route.',
+      ),
     },
     annotations: TOOL_ANNOTATIONS_NON_IDEMPOTENT,
     access: { group: 'trips', mode: 'write' },
   })
-  async createDay(
-    { tripId, date, notes, position }: { tripId: number } & DayCreateRequest,
-    ctx: McpContext,
-  ) {
+  async createDay({ tripId, date, notes, position }: { tripId: number } & DayCreateRequest, ctx: McpContext) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
     if (!this.days.verifyTripAccess(tripId, ctx.userId)) return noAccess();
     if (!this.guards.hasTripPermission('day_edit', tripId, ctx.userId)) return permissionDenied();
@@ -114,18 +118,18 @@ export class DaysMcp {
 
   @Tool({
     name: 'reorder_days',
-    description: 'Reorder the days of a trip by listing every one of its day IDs in the desired order. This moves whole days of the itinerary; to move places around inside a single day use reorder_day_assignments instead. Each day keeps its places, notes, stays and bookings, and on a dated trip the calendar dates stay pinned to their slots, so the content moves across the dates.',
+    description:
+      'Reorder the days of a trip by listing every one of its day IDs in the desired order. This moves whole days of the itinerary; to move places around inside a single day use reorder_day_assignments instead. Each day keeps its places, notes, stays and bookings, and on a dated trip the calendar dates stay pinned to their slots, so the content moves across the dates.',
     inputSchema: {
       tripId: z.number().int().positive(),
-      orderedIds: dayReorderRequestSchema.shape.orderedIds.min(1).describe('Every day ID of the trip, in the desired order'),
+      orderedIds: dayReorderRequestSchema.shape.orderedIds
+        .min(1)
+        .describe('Every day ID of the trip, in the desired order'),
     },
     annotations: TOOL_ANNOTATIONS_WRITE,
     access: { group: 'trips', mode: 'write' },
   })
-  async reorderDays(
-    { tripId, orderedIds }: { tripId: number } & DayReorderRequest,
-    ctx: McpContext,
-  ) {
+  async reorderDays({ tripId, orderedIds }: { tripId: number } & DayReorderRequest, ctx: McpContext) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
     if (!this.days.verifyTripAccess(tripId, ctx.userId)) return noAccess();
     if (!this.guards.hasTripPermission('day_edit', tripId, ctx.userId)) return permissionDenied();
@@ -166,11 +170,16 @@ export class DaysMcp {
 
   @Tool({
     name: 'set_day_default_transport_mode',
-    description: 'Set the whole-day default travel mode for a day. transport_mode is a route profile key: "driving", "walking", "cycling", or a plugin profile written as "plugin:<pluginId>/<profileId>". Any other value is stored but drawn as a driving route. null clears the default. Per-segment leg modes still override this.',
+    description:
+      'Set the whole-day default travel mode for a day. transport_mode is a route profile key: "driving", "walking", "cycling", or a plugin profile written as "plugin:<pluginId>/<profileId>". Any other value is stored but drawn as a driving route. null clears the default. Per-segment leg modes still override this.',
     inputSchema: {
       tripId: z.number().int().positive(),
       dayId: z.number().int().positive(),
-      transport_mode: z.string().nullable().optional().describe('Route profile key (e.g. "driving"), or null to clear the day default'),
+      transport_mode: z
+        .string()
+        .nullable()
+        .optional()
+        .describe('Route profile key (e.g. "driving"), or null to clear the day default'),
     },
     annotations: TOOL_ANNOTATIONS_WRITE,
     access: { group: 'trips', mode: 'write' },
@@ -199,20 +208,24 @@ export class DaysMcp {
     const id = parseId(tripId);
     if (id === null || !this.days.verifyTripAccess(id, ctx.userId)) {
       return {
-        contents: [{
-          uri: uri.href,
-          mimeType: 'application/json',
-          text: JSON.stringify({ error: 'Trip not found or access denied' }),
-        }],
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: 'application/json',
+            text: JSON.stringify({ error: 'Trip not found or access denied' }),
+          },
+        ],
       };
     }
     const { days } = this.days.list(id);
     return {
-      contents: [{
-        uri: uri.href,
-        mimeType: 'application/json',
-        text: JSON.stringify(days, null, 2),
-      }],
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'application/json',
+          text: JSON.stringify(days, null, 2),
+        },
+      ],
     };
   }
 }

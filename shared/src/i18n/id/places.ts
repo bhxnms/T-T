@@ -99,7 +99,8 @@ const places: TranslationStrings = {
   'places.details.facts': 'Perlu diketahui',
   'places.details.nothing': 'Tidak ada yang ditemukan untuk tempat ini.',
   'places.details.noKeyTitle': 'Tersedia detail lebih lanjut',
-  'places.details.noKeyHint': 'Tanpa kunci API Google, instans ini hanya memakai sumber bebas. Minta administrator TREK menambahkannya untuk rating, jam buka, dan foto.',
+  'places.details.noKeyHint':
+    'Tanpa kunci API Google, instans ini hanya memakai sumber bebas. Minta administrator TREK menambahkannya untuk rating, jam buka, dan foto.',
   'places.details.aboutBrand': 'Tentang jaringan',
   'places.details.aboutBrandNote': 'Menjelaskan jaringannya, bukan cabang ini.',
   'places.details.fact.rating': 'Peringkat',
@@ -127,8 +128,8 @@ const places: TranslationStrings = {
   'places.removeImage': 'Hapus gambar',
   'places.imageUploadError': 'Tidak dapat mengunggah gambar',
   'places.imageRemoveError': 'Tidak dapat menghapus gambar',
-  "places.searchProvider": "Cari:",
-  "places.searchProviderAmap": "AMap",
-  "places.searchProviderNative": "TREK",
+  'places.searchProvider': 'Cari:',
+  'places.searchProviderAmap': 'AMap',
+  'places.searchProviderNative': 'TREK',
 };
 export default places;

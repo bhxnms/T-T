@@ -1,10 +1,10 @@
-import type { LucideIcon } from 'lucide-react'
-import { BarChart3, MessageCircle, StickyNote } from 'lucide-react'
-import type { MTabScreenProps } from './tabModel'
-import { TabScroller } from './tabChrome'
-import MCollabChat from './MCollabChat'
-import MCollabNotes from './MCollabNotes'
-import MCollabPolls from './MCollabPolls'
+import type { LucideIcon } from 'lucide-react';
+import { BarChart3, MessageCircle, StickyNote } from 'lucide-react';
+import MCollabChat from './MCollabChat';
+import MCollabNotes from './MCollabNotes';
+import MCollabPolls from './MCollabPolls';
+import { TabScroller } from './tabChrome';
+import type { MTabScreenProps } from './tabModel';
 
 /**
  * Tab 6 — Collab. Routes `shell.collabTab` ('chat' | 'notes' | 'polls', the
@@ -25,8 +25,8 @@ import MCollabPolls from './MCollabPolls'
  * deliberately not handled here — see the task report for why.
  */
 export default function MCollabTab({ planner, shell }: MTabScreenProps) {
-  const { t } = planner
-  const label = t('mobileTrip.collabFeatureDisabled')
+  const { t } = planner;
+  const label = t('mobileTrip.collabFeatureDisabled');
 
   if (shell.collabTab === 'chat') {
     if (!planner.collabFeatures.chat) {
@@ -34,9 +34,9 @@ export default function MCollabTab({ planner, shell }: MTabScreenProps) {
         <div className="flex h-full flex-col px-4 pb-[var(--bottom-nav-h,84px)] pt-[calc(var(--m-safe-top,12px)+58px)]">
           <CollabDisabledNotice icon={MessageCircle} label={label} />
         </div>
-      )
+      );
     }
-    return <MCollabChat planner={planner} />
+    return <MCollabChat planner={planner} />;
   }
 
   if (shell.collabTab === 'notes') {
@@ -45,9 +45,9 @@ export default function MCollabTab({ planner, shell }: MTabScreenProps) {
         <TabScroller>
           <CollabDisabledNotice icon={StickyNote} label={label} />
         </TabScroller>
-      )
+      );
     }
-    return <MCollabNotes planner={planner} />
+    return <MCollabNotes planner={planner} />;
   }
 
   if (shell.collabTab === 'polls') {
@@ -56,12 +56,12 @@ export default function MCollabTab({ planner, shell }: MTabScreenProps) {
         <TabScroller>
           <CollabDisabledNotice icon={BarChart3} label={label} />
         </TabScroller>
-      )
+      );
     }
-    return <MCollabPolls planner={planner} />
+    return <MCollabPolls planner={planner} />;
   }
 
-  return null
+  return null;
 }
 
 function CollabDisabledNotice({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
@@ -72,5 +72,5 @@ function CollabDisabledNotice({ icon: Icon, label }: { icon: LucideIcon; label: 
       </span>
       <p className="font-geist text-[0.8125rem] font-medium text-m-muted">{label}</p>
     </div>
-  )
+  );
 }

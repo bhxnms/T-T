@@ -16,17 +16,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run lint & format check
         id: checks
         continue-on-error: true
         run: |
-          cd shared
-          npm run lint
+          npm run lint:check
           npm run format:check
 
       - name: Comment on PR if checks failed
@@ -41,12 +40,12 @@ jobs:
               body: [
                 '## ❌ Lint & Prettier check failed',
                 '',
-                'Please fix the issues locally by running the following commands inside the `shared` package:',
+                'Please fix the issues locally from the repository root with:',
                 '',
                 '```bash',
-                'cd shared',
-                'npm run lint',
-                'npm run format',
+                'npm ci',
+                'npm run lint:check',
+                'npm run format:check',
                 '```',
                 '',
                 'Then commit and push the changes.',

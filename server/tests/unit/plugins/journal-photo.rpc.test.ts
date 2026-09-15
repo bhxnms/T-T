@@ -5,6 +5,9 @@
  * to link and no provider asset. These cases pin what the handler refuses before
  * it writes anything, and that a refused write leaves no object behind.
  */
+import { DEMO_EMAIL_PRIMARY } from '../../../src/nest/common/demo';
+import { JournalRpc } from '../../../src/nest/journey/journal.rpc';
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // vi.mock is hoisted above the imports, so the flag it reads has to be too.
@@ -16,25 +19,22 @@ vi.mock('../../../src/app-config', async (importOriginal) => {
   return { ...actual, readEnv: () => ({ ...actual.readEnv(), demo }) };
 });
 
-import { JournalRpc } from '../../../src/nest/journey/journal.rpc';
-import { DEMO_EMAIL_PRIMARY } from '../../../src/nest/common/demo';
-
 const ACTOR = { actingUserId: 7 } as never;
 const PNG = Buffer.from('89504e470d0a1a0a', 'hex').toString('base64');
 
-function build(overrides: {
-  addPhoto?: unknown;
-  allowed?: string;
-  demoEnabled?: boolean;
-  email?: string;
-} = {}) {
+function build(
+  overrides: {
+    addPhoto?: unknown;
+    allowed?: string;
+    demoEnabled?: boolean;
+    email?: string;
+  } = {},
+) {
   // Typed parameters so the assertions below can index mock.calls.
   const put = vi.fn(async (_category: string, _filename: string, _body?: unknown, _opts?: unknown) => undefined);
   const del = vi.fn(async (_category: string, _filename: string) => undefined);
   const schedule = vi.fn();
-  const addPhoto = vi.fn(overrides.addPhoto === undefined
-    ? () => ({ id: 5, photo_id: 42 })
-    : () => overrides.addPhoto);
+  const addPhoto = vi.fn(overrides.addPhoto === undefined ? () => ({ id: 5, photo_id: 42 }) : () => overrides.addPhoto);
 
   demo.enabled = overrides.demoEnabled ?? false;
 
@@ -77,7 +77,9 @@ describe('journal.addEntryPhoto', () => {
     // belongs to a journey this user may not edit.
     const { rpc, put, del } = build({ addPhoto: null });
 
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input() }, ACTOR)).rejects.toThrow(/no editable journal entry 3/);
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input() }, ACTOR)).rejects.toThrow(
+      /no editable journal entry 3/,
+    );
     expect(put).toHaveBeenCalledTimes(1);
     expect(del).toHaveBeenCalledWith('journey', put.mock.calls[0][1]);
   });
@@ -86,20 +88,24 @@ describe('journal.addEntryPhoto', () => {
     const { rpc, put } = build();
 
     // basename() reduces this to 'evil.sh', which is not an image extension.
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: '../../evil.sh' }) }, ACTOR))
-      .rejects.toThrow(/not an allowed image type/);
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: 'map.svg' }) }, ACTOR))
-      .rejects.toThrow(/not an allowed image type/);
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: 'noext' }) }, ACTOR))
-      .rejects.toThrow(/not an allowed image type/);
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: '../../evil.sh' }) }, ACTOR)).rejects.toThrow(
+      /not an allowed image type/,
+    );
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: 'map.svg' }) }, ACTOR)).rejects.toThrow(
+      /not an allowed image type/,
+    );
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: 'noext' }) }, ACTOR)).rejects.toThrow(
+      /not an allowed image type/,
+    );
     expect(put).not.toHaveBeenCalled();
   });
 
   it('JPHOTO-004: obeys the operator allowed-file-types setting, so the RPC is no way around it', async () => {
     const { rpc, put } = build({ allowed: 'png,pdf' });
 
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: 'photo.jpg' }) }, ACTOR))
-      .rejects.toThrow(/file type \.jpg is not allowed/);
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: 'photo.jpg' }) }, ACTOR)).rejects.toThrow(
+      /file type \.jpg is not allowed/,
+    );
     expect(put).not.toHaveBeenCalled();
 
     await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ name: 'photo.png' }) }, ACTOR)).resolves.toBeTruthy();
@@ -109,10 +115,12 @@ describe('journal.addEntryPhoto', () => {
     const { rpc, put } = build();
 
     // Encoded cap first: a 15MB string never becomes a 11MB buffer in memory.
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ content_base64: 'A'.repeat(15 * 1024 * 1024) }) }, ACTOR))
-      .rejects.toThrow(/invalid photo input/);
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ content_base64: '@@@@' }) }, ACTOR))
-      .rejects.toThrow(/photo content is empty/);
+    await expect(
+      rpc.addEntryPhoto({ entryId: 3, input: input({ content_base64: 'A'.repeat(15 * 1024 * 1024) }) }, ACTOR),
+    ).rejects.toThrow(/invalid photo input/);
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ content_base64: '@@@@' }) }, ACTOR)).rejects.toThrow(
+      /photo content is empty/,
+    );
     expect(put).not.toHaveBeenCalled();
   });
 
@@ -122,8 +130,9 @@ describe('journal.addEntryPhoto', () => {
     await expect(rpc.addEntryPhoto({ entryId: 1.5, input: input() }, ACTOR)).rejects.toThrow(/positive integer/);
     await expect(rpc.addEntryPhoto({ entryId: 0, input: input() }, ACTOR)).rejects.toThrow(/positive integer/);
     // strictObject: an unknown key is a mistake worth reporting, not ignoring.
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ provider: 'immich' }) }, ACTOR))
-      .rejects.toThrow(/invalid photo input/);
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input({ provider: 'immich' }) }, ACTOR)).rejects.toThrow(
+      /invalid photo input/,
+    );
   });
 
   it('JPHOTO-007: refuses to write bytes for a demo user, exactly as the REST upload does', async () => {
@@ -136,8 +145,9 @@ describe('journal.addEntryPhoto', () => {
   it('JPHOTO-008: a userless call never reaches storage', async () => {
     const { rpc, put } = build();
 
-    await expect(rpc.addEntryPhoto({ entryId: 3, input: input() }, {} as never))
-      .rejects.toThrow(/journal writes require an authenticated user context/);
+    await expect(rpc.addEntryPhoto({ entryId: 3, input: input() }, {} as never)).rejects.toThrow(
+      /journal writes require an authenticated user context/,
+    );
     expect(put).not.toHaveBeenCalled();
   });
 });

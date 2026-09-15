@@ -1648,9 +1648,7 @@ describe('AdminPage', () => {
   describe('FE-PAGE-ADMIN-059: Stats fallbacks', () => {
     it('shows a zero file count when the API omits totalFiles', async () => {
       server.use(
-        http.get('/api/admin/stats', () =>
-          HttpResponse.json({ totalUsers: 3, totalTrips: 11, totalPlaces: 42 })
-        )
+        http.get('/api/admin/stats', () => HttpResponse.json({ totalUsers: 3, totalTrips: 11, totalPlaces: 42 }))
       );
 
       seedStore(useAuthStore, { isAuthenticated: true, user: buildAdmin() });

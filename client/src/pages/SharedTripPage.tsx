@@ -16,21 +16,27 @@ import {
   Wallet,
 } from 'lucide-react';
 import { createElement, useEffect, useRef } from 'react';
-import { renderIconMarkup } from '../utils/iconMarkup';
 import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import VectorBasemap from '../components/Map/VectorBasemap';
 import { getCategoryIcon } from '../components/shared/categoryIcons';
 import PublicLanguagePicker from '../components/shared/PublicLanguagePicker';
-import { OFM_POSITRON, DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM, MAP_MAX_ZOOM, attributionForTile } from '../constants/mapDefaults';
-import VectorBasemap from '../components/Map/VectorBasemap';
 import { PRODUCT_NAME } from '../config/brand';
+import {
+  attributionForTile,
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+  MAP_MAX_ZOOM,
+  OFM_POSITRON,
+} from '../constants/mapDefaults';
 import { useTranslation } from '../i18n';
 import { avatarSrc } from '../utils/avatarSrc';
-import { safeHexColor } from '../utils/safeColor';
 import { getMergedItems, getTransportForDay, hidesOnMiddleDay } from '../utils/dayMerge';
 import { isDayInAccommodationRange } from '../utils/dayOrder';
 import { getFlightLegs, getTrainLegs } from '../utils/flightLegs';
 import { splitReservationDateTime } from '../utils/formatters';
+import { renderIconMarkup } from '../utils/iconMarkup';
 import { computeMapViewport, TILE_SIZE_RASTER } from '../utils/mapViewport';
+import { safeHexColor } from '../utils/safeColor';
 import { resolveBasemap } from '../utils/tileUrl';
 import { useSharedTrip } from './sharedTrip/useSharedTrip';
 
@@ -38,7 +44,8 @@ const TRANSPORT_ICONS = { flight: Plane, train: Train, bus: Bus, car: Car, cruis
 
 // Injected into Leaflet's marker HTML, where CSS variables cannot reach - the same
 // reason MapView.tsx is exempt from theme:lint outright.
-const ORDER_BADGE_STYLE = 'position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;padding:0 3px;background:rgba(255,255,255,0.94);border:1.5px solid rgba(0,0,0,0.15);box-shadow:0 1px 4px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;font-weight:800;color:#111827;line-height:1;box-sizing:border-box;white-space:nowrap;'; // theme-lint-disable
+const ORDER_BADGE_STYLE =
+  'position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;padding:0 3px;background:rgba(255,255,255,0.94);border:1.5px solid rgba(0,0,0,0.15);box-shadow:0 1px 4px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;font-weight:800;color:#111827;line-height:1;box-sizing:border-box;white-space:nowrap;'; // theme-lint-disable
 
 function createMarkerIcon(place: any, orderNumbers?: number[] | null) {
   const cat = place.category;
@@ -349,7 +356,8 @@ export default function SharedTripPage() {
             ...(permissions?.share_budget ? [{ id: 'budget', label: t('shared.tabBudget'), Icon: Wallet }] : []),
             ...(permissions?.share_collab ? [{ id: 'collab', label: t('shared.tabChat'), Icon: MessageCircle }] : []),
           ].map((tab) => (
-            <button type="button"
+            <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={activeTab === tab.id ? 'bg-[#111827] text-white' : 'bg-surface-card text-[#6b7280]'}
@@ -489,7 +497,7 @@ export default function SharedTripPage() {
                   dayNotes: notes,
                   dayTransports: dayTransport,
                   dayId: day.id,
-                }).filter(item => !(item.type === 'transport' && hidesOnMiddleDay(item.data, day.id)));
+                }).filter((item) => !(item.type === 'transport' && hidesOnMiddleDay(item.data, day.id)));
 
                 return (
                   <div
@@ -592,7 +600,11 @@ export default function SharedTripPage() {
                       ))}
                       <span
                         className="text-[#9ca3af]"
-                        style={{ fontSize: 'calc(11px * var(--fs-scale-caption, 1))', flexShrink: 0, whiteSpace: 'nowrap' }}
+                        style={{
+                          fontSize: 'calc(11px * var(--fs-scale-caption, 1))',
+                          flexShrink: 0,
+                          whiteSpace: 'nowrap',
+                        }}
                       >
                         {dayPlaceCount} {t('shared.places')}
                       </span>

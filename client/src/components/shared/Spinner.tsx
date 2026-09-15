@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 interface SpinnerProps {
   /**
@@ -6,28 +6,46 @@ interface SpinnerProps {
    * control so adopting the component never changes a spinner's appearance.
    * Defaults to the app's most common page-loader ring.
    */
-  className?: string
+  className?: string;
 }
 
 /** The bare spinning ring used throughout the app (`rounded-full animate-spin`). */
-export function Spinner({ className = 'w-6 h-6 border-2 border-zinc-300 border-t-zinc-900' }: SpinnerProps): React.ReactElement {
-  return <div className={`${className} rounded-full animate-spin`} />
+export function Spinner({
+  className = 'w-6 h-6 border-2 border-zinc-300 border-t-zinc-900',
+}: SpinnerProps): React.ReactElement {
+  const classes = className
+    ? className
+        .split(/\s+/)
+        .filter(Boolean)
+        .sort((a, b) => {
+          const order = ['w-', 'h-', 'border-', 'rounded-', 'animate-'];
+          const ai = order.findIndex((prefix) => a.startsWith(prefix));
+          const bi = order.findIndex((prefix) => b.startsWith(prefix));
+          return (ai < 0 ? order.length : ai) - (bi < 0 ? order.length : bi);
+        })
+        .join(' ')
+    : 'w-6 h-6 border-2 border-zinc-300 border-t-zinc-900';
+  return <div className={[classes, ['rounded-full', 'animate-spin'].join(' ')].join(' ')} />;
 }
 
 interface PageSpinnerProps extends SpinnerProps {
   /** Wrapper classes for the centring container. */
-  wrapperClassName?: string
-  wrapperStyle?: React.CSSProperties
+  wrapperClassName?: string;
+  wrapperStyle?: React.CSSProperties;
 }
 
 /**
  * A full-area centred loading spinner — the repeated "flex items-center
  * justify-center" loader that page loading-guards render while data resolves.
  */
-export function PageSpinner({ className, wrapperClassName = 'flex items-center justify-center', wrapperStyle }: PageSpinnerProps): React.ReactElement {
+export function PageSpinner({
+  className,
+  wrapperClassName = 'flex items-center justify-center',
+  wrapperStyle,
+}: PageSpinnerProps): React.ReactElement {
   return (
     <div className={wrapperClassName} style={wrapperStyle}>
       <Spinner className={className} />
     </div>
-  )
+  );
 }

@@ -13,15 +13,16 @@ const trips: TranslationStrings = {
   'trips.reminderDaysBefore': 'jours avant le départ',
   'trips.reminderDisabledHint':
     'Les rappels de voyage sont désactivés. Activez-les dans Admin > Paramètres > Notifications.',
-  "trips.importTrekTab": "Importer depuis TREK",
-  "trips.importTrekIntro": "Téléversez une sauvegarde TREK (.zip) et choisissez les voyages à copier dans TT — jours, lieux, réservations, budget et photos inclus.",
-  "trips.importTrekPick": "Choisir une sauvegarde TREK (.zip)",
-  "trips.importTrekScanning": "Lecture de la sauvegarde…",
-  "trips.importTrekImport": "Importer les voyages sélectionnés",
-  "trips.importTrekSuccess": "{count} voyage(s) importé(s)",
-  "trips.importTrekNone": "Aucun voyage trouvé dans cette sauvegarde",
-  "trips.importTrekFailed": "Échec de l'import — est-ce bien un fichier de sauvegarde TREK ?",
-  "trips.importTrekStats": "{days} jours · {places} lieux · {photos} photos · {budget} postes",
-  "trips.importTrekUntitled": "Voyage sans titre",
+  'trips.importTrekTab': 'Importer depuis TREK',
+  'trips.importTrekIntro':
+    'Téléversez une sauvegarde TREK (.zip) et choisissez les voyages à copier dans TT — jours, lieux, réservations, budget et photos inclus.',
+  'trips.importTrekPick': 'Choisir une sauvegarde TREK (.zip)',
+  'trips.importTrekScanning': 'Lecture de la sauvegarde…',
+  'trips.importTrekImport': 'Importer les voyages sélectionnés',
+  'trips.importTrekSuccess': '{count} voyage(s) importé(s)',
+  'trips.importTrekNone': 'Aucun voyage trouvé dans cette sauvegarde',
+  'trips.importTrekFailed': "Échec de l'import — est-ce bien un fichier de sauvegarde TREK ?",
+  'trips.importTrekStats': '{days} jours · {places} lieux · {photos} photos · {budget} postes',
+  'trips.importTrekUntitled': 'Voyage sans titre',
 };
 export default trips;

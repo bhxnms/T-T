@@ -1,6 +1,5 @@
 # OIDC / Single Sign-On
 
-<!-- TODO: screenshot: OIDC provider configuration form in admin panel -->
 
 ## What OIDC gives you
 

@@ -541,7 +541,8 @@ const settings: TranslationStrings = {
 
   // Public API keys (Settings -> Integrations)
   'settings.apiKeys.title': 'API-nycklar',
-  'settings.apiKeys.description': 'Nycklar för det publika API:et, så att annan programvara kan läsa dina resor. Endast läsning: en nyckel kan inte ändra eller ta bort något.',
+  'settings.apiKeys.description':
+    'Nycklar för det publika API:et, så att annan programvara kan läsa dina resor. Endast läsning: en nyckel kan inte ändra eller ta bort något.',
   'settings.apiKeys.create': 'Skapa nyckel',
   'settings.apiKeys.empty': 'Inga nycklar än. Skapa en för att koppla annan programvara.',
   'settings.apiKeys.createdAt': 'skapad',

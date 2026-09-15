@@ -1,6 +1,6 @@
-import type { BookPageSetup, BookSpread } from '@trek/shared'
-import { fontStack } from './bookFonts'
-import { folioInk } from './folioColour'
+import type { BookPageSetup, BookSpread } from '@trek/shared';
+import { fontStack } from './bookFonts';
+import { folioInk } from './folioColour';
 
 /**
  * The folios.
@@ -20,46 +20,53 @@ import { folioInk } from './folioColour'
  * every book ever bound.
  */
 export function PageNumbers({
-  spread, page, spreadIndex,
+  spread,
+  page,
+  spreadIndex,
 }: {
-  spread: BookSpread
-  page: BookPageSetup
+  spread: BookSpread;
+  page: BookPageSetup;
   /** Position in the document, cover included. */
-  spreadIndex: number
+  spreadIndex: number;
 }) {
-  const cfg = page.pageNumbers
-  if (!cfg?.show || spread.role !== 'inner') return null
+  const cfg = page.pageNumbers;
+  if (!cfg?.show || spread.role !== 'inner') return null;
 
   /*
    * The cover is one sheet with a front and a back, so the first inner spread
    * opens on `startAt` — 2 by default, the page you see when you open a book
    * whose cover is page 1. `spreadIndex` counts the cover, hence the -1.
    */
-  const left = cfg.startAt + (spreadIndex - 1) * 2
-  const right = left + 1
+  const left = cfg.startAt + (spreadIndex - 1) * 2;
+  const right = left + 1;
 
-  const size = cfg.size
-  const y = page.pageHeight - cfg.margin
+  const size = cfg.size;
+  const y = page.pageHeight - cfg.margin;
 
   /** Where the number sits on each page, given which edge it hangs from. */
   const place = (side: 'left' | 'right') => {
-    const pageX = side === 'left' ? 0 : page.pageWidth
+    const pageX = side === 'left' ? 0 : page.pageWidth;
     if (cfg.position === 'centre') {
-      return { x: pageX, w: page.pageWidth, align: 'center' as const }
+      return { x: pageX, w: page.pageWidth, align: 'center' as const };
     }
     // Outer is the cut edge, inner is the gutter — the distinction only exists
     // on a spread, and getting it backwards puts both numbers in the fold.
-    const outward = cfg.position === 'outer'
-    const atLeftEdge = side === 'left' ? outward : !outward
+    const outward = cfg.position === 'outer';
+    const atLeftEdge = side === 'left' ? outward : !outward;
     return atLeftEdge
       ? { x: pageX + cfg.margin, w: page.pageWidth * 0.4, align: 'left' as const }
-      : { x: pageX + page.pageWidth * 0.6 - cfg.margin, w: page.pageWidth * 0.4, align: 'right' as const }
-  }
+      : { x: pageX + page.pageWidth * 0.6 - cfg.margin, w: page.pageWidth * 0.4, align: 'right' as const };
+  };
 
   return (
     <>
-      {([['left', left], ['right', right]] as const).map(([side, number]) => {
-        const at = place(side)
+      {(
+        [
+          ['left', left],
+          ['right', right],
+        ] as const
+      ).map(([side, number]) => {
+        const at = place(side);
         /*
          * Sampled at the middle of the number's own box, which is where the
          * digits actually are — the box is 40% of the page wide so that the
@@ -68,7 +75,7 @@ export function PageNumbers({
          */
         const ink = cfg.autoColor
           ? folioInk(spread, at.x + at.w / 2, y - size * 0.18)
-          : { color: cfg.color, shadow: undefined }
+          : { color: cfg.color, shadow: undefined };
         return (
           <div
             key={side}
@@ -91,8 +98,8 @@ export function PageNumbers({
           >
             {number}
           </div>
-        )
+        );
       })}
     </>
-  )
+  );
 }

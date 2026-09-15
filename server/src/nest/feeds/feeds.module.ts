@@ -1,13 +1,13 @@
-import { Module } from '@nestjs/common';
 import { AppConfigModule } from '../app-config/app-config.module';
 import { CalendarModule } from '../calendar/calendar.module';
 import { DatabaseModule } from '../database/database.module';
 import { McpSharedModule } from '../mcp-shared/mcp-shared.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { RealtimeModule } from '../realtime/realtime.module';
-import { FeedsService } from './feeds.service';
-import { FeedsMcp } from './feeds.mcp';
 import { FeedsPublicController, TripFeedTokenController, UserFeedTokenController } from './feeds.controller';
+import { FeedsMcp } from './feeds.mcp';
+import { FeedsService } from './feeds.service';
+import { Module } from '@nestjs/common';
 
 @Module({
   // Calendars, not the trip aggregate: feeds only ever needed an ICS string, and

@@ -1,18 +1,26 @@
-import {
-  McpController, Tool, Resource, ResourceTemplate,
-  TOOL_ANNOTATIONS_DELETE, TOOL_ANNOTATIONS_NON_IDEMPOTENT,
-  TOOL_ANNOTATIONS_READONLY, TOOL_ANNOTATIONS_WRITE,
-  demoDenied, ok, type McpContext,
-} from '../../nest-mcp';
-import { z } from 'zod';
 import { ADDON_IDS } from '../../addons';
-import { JourneyDomainService } from './journey-domain.service';
-import { JourneyShareService } from './journey-share.service';
+import {
+  McpController,
+  Tool,
+  Resource,
+  ResourceTemplate,
+  TOOL_ANNOTATIONS_DELETE,
+  TOOL_ANNOTATIONS_NON_IDEMPOTENT,
+  TOOL_ANNOTATIONS_READONLY,
+  TOOL_ANNOTATIONS_WRITE,
+  demoDenied,
+  ok,
+  type McpContext,
+} from '../../nest-mcp';
 import type { JourneyContributor } from '../../types';
 import { addonGate } from '../addons/addon-gate';
 import { AddonsService } from '../addons/addons.service';
 import { AuthService } from '../auth/auth.service';
 import { PhotoCaptureBackfillService } from '../memories/photo-capture-backfill.service';
+import { JourneyDomainService } from './journey-domain.service';
+import { JourneyShareService } from './journey-share.service';
+
+import { z } from 'zod';
 
 /** Legacy registrar gate: the whole journey surface rode the journey addon. */
 const journeyAddonOn = addonGate(ADDON_IDS.JOURNEY);
@@ -28,21 +36,25 @@ function parseId(value: string | string[]): number | null {
 
 function accessDenied(uri: string) {
   return {
-    contents: [{
-      uri,
-      mimeType: 'application/json',
-      text: JSON.stringify({ error: 'Trip not found or access denied' }),
-    }],
+    contents: [
+      {
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify({ error: 'Trip not found or access denied' }),
+      },
+    ],
   };
 }
 
 function jsonContent(uri: string, data: unknown) {
   return {
-    contents: [{
-      uri,
-      mimeType: 'application/json',
-      text: JSON.stringify(data, null, 2),
-    }],
+    contents: [
+      {
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify(data, null, 2),
+      },
+    ],
   };
 }
 
@@ -143,10 +155,16 @@ export class JourneyMcp {
 
   @Tool({
     name: 'get_journey_stats',
-    description: 'What a journey adds up to: distance travelled in metres, calendar days spanned, countries in visit order, the furthest point reached, and entry, photo and place counts. Stops the traveller switched off with update_journey_entry count towards none of those and are listed under excluded instead. Prefer this over get_journey whenever the question is about totals, since the stats get_journey carries are three counts and nothing else.',
+    description:
+      'What a journey adds up to: distance travelled in metres, calendar days spanned, countries in visit order, the furthest point reached, and entry, photo and place counts. Stops the traveller switched off with update_journey_entry count towards none of those and are listed under excluded instead. Prefer this over get_journey whenever the question is about totals, since the stats get_journey carries are three counts and nothing else.',
     inputSchema: {
       journeyId: z.number().int().positive(),
-      include_route: z.boolean().optional().describe('Also return the route itself, up to 400 stops with coordinates. Off by default: the totals and the country list do not need it.'),
+      include_route: z
+        .boolean()
+        .optional()
+        .describe(
+          'Also return the route itself, up to 400 stops with coordinates. Off by default: the totals and the country list do not need it.',
+        ),
     },
     annotations: TOOL_ANNOTATIONS_READONLY,
     when: journeyAddonOn,
@@ -307,22 +325,39 @@ export class JourneyMcp {
 
   @Tool({
     name: 'create_journey_entry',
-    description: 'Create a new entry in a journey. Give location_lat/location_lng whenever the place is known, otherwise the entry is text-only and never appears on the journey map or in its distance.',
+    description:
+      'Create a new entry in a journey. Give location_lat/location_lng whenever the place is known, otherwise the entry is text-only and never appears on the journey map or in its distance.',
     inputSchema: {
       journeyId: z.number().int().positive(),
-      entry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Entry date (YYYY-MM-DD)'),
+      entry_date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .describe('Entry date (YYYY-MM-DD)'),
       title: z.string().max(300).optional(),
       story: z.string().optional(),
       entry_time: z.string().optional().describe('Time of day (e.g. "14:30")'),
       location_name: z.string().optional(),
-      location_lat: z.number().min(-90).max(90).optional().describe('Latitude; needed, with location_lng, to place the entry on the journey map'),
+      location_lat: z
+        .number()
+        .min(-90)
+        .max(90)
+        .optional()
+        .describe('Latitude; needed, with location_lng, to place the entry on the journey map'),
       location_lng: z.number().min(-180).max(180).optional(),
       mood: z.string().optional(),
-      weather: z.string().max(100).optional().describe('Weather as the traveller recorded it (e.g. "sunny", "24C and windy")'),
+      weather: z
+        .string()
+        .max(100)
+        .optional()
+        .describe('Weather as the traveller recorded it (e.g. "sunny", "24C and windy")'),
       tags: z.array(z.string()).optional(),
       pros_cons: PROS_CONS.optional().describe('The verdict on the place: what was worth it and what was not'),
-      visibility: ENTRY_VISIBILITY.optional().describe('Defaults to private; "shared" and "public" expose the entry through the journey share link'),
-      type: ENTRY_TYPE.optional().describe('Defaults to "entry"; "skeleton" is the stub TREK derives from a trip place and hides behind the hide-skeletons preference'),
+      visibility: ENTRY_VISIBILITY.optional().describe(
+        'Defaults to private; "shared" and "public" expose the entry through the journey share link',
+      ),
+      type: ENTRY_TYPE.optional().describe(
+        'Defaults to "entry"; "skeleton" is the stub TREK derives from a trip place and hides behind the hide-skeletons preference',
+      ),
       sort_order: z.number().int().min(0).optional(),
     },
     annotations: TOOL_ANNOTATIONS_NON_IDEMPOTENT,
@@ -330,11 +365,25 @@ export class JourneyMcp {
     access: { group: 'journey', mode: 'write' },
   })
   createJourneyEntry(
-    { journeyId, ...data }: {
-      journeyId: number; entry_date: string; title?: string; story?: string; entry_time?: string;
-      location_name?: string; location_lat?: number; location_lng?: number; mood?: string; weather?: string;
-      tags?: string[]; pros_cons?: { pros: string[]; cons: string[] }; visibility?: EntryVisibility;
-      type?: EntryType; sort_order?: number;
+    {
+      journeyId,
+      ...data
+    }: {
+      journeyId: number;
+      entry_date: string;
+      title?: string;
+      story?: string;
+      entry_time?: string;
+      location_name?: string;
+      location_lat?: number;
+      location_lng?: number;
+      mood?: string;
+      weather?: string;
+      tags?: string[];
+      pros_cons?: { pros: string[]; cons: string[] };
+      visibility?: EntryVisibility;
+      type?: EntryType;
+      sort_order?: number;
     },
     ctx: McpContext,
   ) {
@@ -342,42 +391,73 @@ export class JourneyMcp {
     const entry = this.journey.createEntry(journeyId, ctx.userId, data);
     if (!entry) return notFound('Journey not found or access denied.');
     // Return through the listEntries enrichment (parsed tags/pros_cons, photos, source_trip_name).
-    const enriched = this.journey.listEntries(journeyId, ctx.userId)?.find(e => e.id === entry.id) ?? entry;
+    const enriched = this.journey.listEntries(journeyId, ctx.userId)?.find((e) => e.id === entry.id) ?? entry;
     return ok({ entry: enriched });
   }
 
   @Tool({
     name: 'update_journey_entry',
-    description: 'Update an existing journey entry: its text, date, place, coordinates, weather, tags, verdict, visibility, or whether it counts as a stop. Fields left out keep their value; pass null to clear one. To move an entry within its day use reorder_journey_entries rather than setting sort_order here.',
+    description:
+      'Update an existing journey entry: its text, date, place, coordinates, weather, tags, verdict, visibility, or whether it counts as a stop. Fields left out keep their value; pass null to clear one. To move an entry within its day use reorder_journey_entries rather than setting sort_order here.',
     inputSchema: {
       entryId: z.number().int().positive(),
       title: z.string().max(300).nullable().optional(),
       story: z.string().nullable().optional(),
-      entry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      entry_date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
       entry_time: z.string().nullable().optional(),
       location_name: z.string().nullable().optional(),
-      location_lat: z.number().min(-90).max(90).nullable().optional().describe('Latitude, or null to take the entry off the journey map'),
+      location_lat: z
+        .number()
+        .min(-90)
+        .max(90)
+        .nullable()
+        .optional()
+        .describe('Latitude, or null to take the entry off the journey map'),
       location_lng: z.number().min(-180).max(180).nullable().optional(),
       mood: z.string().nullable().optional(),
       weather: z.string().max(100).nullable().optional(),
       tags: z.array(z.string()).nullable().optional(),
       pros_cons: PROS_CONS.nullable().optional().describe('Replaces the whole verdict; null clears it'),
       visibility: ENTRY_VISIBILITY.optional(),
-      type: ENTRY_TYPE.optional().describe('Promote a trip-derived "skeleton" to a real "entry" once it has been written up'),
+      type: ENTRY_TYPE.optional().describe(
+        'Promote a trip-derived "skeleton" to a real "entry" once it has been written up',
+      ),
       sort_order: z.number().int().min(0).optional(),
-      stats_excluded: z.boolean().optional().describe('True leaves the entry in the journal but takes it off the journey route and out of its distance, countries and step count (see get_journey_stats); false puts it back. For the home airport, a stopover, the place the trip was planned from'),
+      stats_excluded: z
+        .boolean()
+        .optional()
+        .describe(
+          'True leaves the entry in the journal but takes it off the journey route and out of its distance, countries and step count (see get_journey_stats); false puts it back. For the home airport, a stopover, the place the trip was planned from',
+        ),
     },
     annotations: TOOL_ANNOTATIONS_WRITE,
     when: journeyAddonOn,
     access: { group: 'journey', mode: 'write' },
   })
   updateJourneyEntry(
-    { entryId, ...data }: {
-      entryId: number; title?: string | null; story?: string | null; entry_date?: string;
-      entry_time?: string | null; location_name?: string | null; location_lat?: number | null;
-      location_lng?: number | null; mood?: string | null; weather?: string | null;
-      tags?: string[] | null; pros_cons?: { pros: string[]; cons: string[] } | null;
-      visibility?: EntryVisibility; type?: EntryType; sort_order?: number; stats_excluded?: boolean;
+    {
+      entryId,
+      ...data
+    }: {
+      entryId: number;
+      title?: string | null;
+      story?: string | null;
+      entry_date?: string;
+      entry_time?: string | null;
+      location_name?: string | null;
+      location_lat?: number | null;
+      location_lng?: number | null;
+      mood?: string | null;
+      weather?: string | null;
+      tags?: string[] | null;
+      pros_cons?: { pros: string[]; cons: string[] } | null;
+      visibility?: EntryVisibility;
+      type?: EntryType;
+      sort_order?: number;
+      stats_excluded?: boolean;
     },
     ctx: McpContext,
   ) {
@@ -385,7 +465,7 @@ export class JourneyMcp {
     const entry = this.journey.updateEntry(entryId, ctx.userId, data, undefined);
     if (!entry) return notFound('Entry not found or access denied.');
     // Return through the listEntries enrichment (parsed tags/pros_cons, photos), matching create_journey_entry.
-    const enriched = this.journey.listEntries(entry.journey_id, ctx.userId)?.find(e => e.id === entry.id) ?? entry;
+    const enriched = this.journey.listEntries(entry.journey_id, ctx.userId)?.find((e) => e.id === entry.id) ?? entry;
     return ok({ entry: enriched });
   }
 
@@ -438,7 +518,8 @@ export class JourneyMcp {
     ctx: McpContext,
   ) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
-    if (!this.journey.addContributor(journeyId, ctx.userId, targetUserId, role)) return notFound('Journey not found or access denied.');
+    if (!this.journey.addContributor(journeyId, ctx.userId, targetUserId, role))
+      return notFound('Journey not found or access denied.');
     return ok({ success: true });
   }
 
@@ -459,7 +540,8 @@ export class JourneyMcp {
     ctx: McpContext,
   ) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
-    if (!this.journey.updateContributorRole(journeyId, ctx.userId, targetUserId, role)) return notFound('Journey not found or access denied.');
+    if (!this.journey.updateContributorRole(journeyId, ctx.userId, targetUserId, role))
+      return notFound('Journey not found or access denied.');
     return ok({ success: true });
   }
 
@@ -476,7 +558,8 @@ export class JourneyMcp {
   })
   removeJourneyContributor({ journeyId, targetUserId }: { journeyId: number; targetUserId: number }, ctx: McpContext) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
-    if (!this.journey.removeContributor(journeyId, ctx.userId, targetUserId)) return notFound('Journey not found or access denied.');
+    if (!this.journey.removeContributor(journeyId, ctx.userId, targetUserId))
+      return notFound('Journey not found or access denied.');
     return ok({ success: true });
   }
 
@@ -504,24 +587,62 @@ export class JourneyMcp {
 
   @Tool({
     name: 'add_journey_provider_photos',
-    description: 'Attach photos from a connected library (Immich or Synology Photos) to a journey: to one entry when entryId is given, otherwise to the journey gallery only. Find the asset ids first with search_provider_photos or list_provider_album_photos. No image data passes through here, the journey stores a reference and the app fetches the picture, so this also works for photos far too large to hand to a model. An asset already attached is skipped rather than duplicated, which makes re-running the same call safe.',
+    description:
+      'Attach photos from a connected library (Immich or Synology Photos) to a journey: to one entry when entryId is given, otherwise to the journey gallery only. Find the asset ids first with search_provider_photos or list_provider_album_photos. No image data passes through here, the journey stores a reference and the app fetches the picture, so this also works for photos far too large to hand to a model. An asset already attached is skipped rather than duplicated, which makes re-running the same call safe.',
     inputSchema: {
       journeyId: z.number().int().positive(),
-      entryId: z.number().int().positive().optional().describe('Attach to this entry, which must belong to journeyId. The photo lands in the journey gallery either way; omitting this adds it to the gallery alone'),
+      entryId: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe(
+          'Attach to this entry, which must belong to journeyId. The photo lands in the journey gallery either way; omitting this adds it to the gallery alone',
+        ),
       provider: PHOTO_PROVIDER.describe('The library the asset ids came from'),
-      asset_ids: z.array(z.string().min(1)).min(1).max(MAX_PROVIDER_PHOTOS_PER_CALL).describe('Provider asset ids, as returned by the search and album tools'),
-      media_types: z.array(z.enum(['image', 'video'])).optional().describe('Parallel to asset_ids; anything not named here counts as an image'),
-      caption: z.string().max(500).optional().describe('Stored only when entryId is given, matching the REST routes: the gallery add records no caption'),
-      passphrase: z.string().min(1).optional().describe('Only for a Synology Photos album shared with the user: the passphrase list_provider_albums returned for that album'),
+      asset_ids: z
+        .array(z.string().min(1))
+        .min(1)
+        .max(MAX_PROVIDER_PHOTOS_PER_CALL)
+        .describe('Provider asset ids, as returned by the search and album tools'),
+      media_types: z
+        .array(z.enum(['image', 'video']))
+        .optional()
+        .describe('Parallel to asset_ids; anything not named here counts as an image'),
+      caption: z
+        .string()
+        .max(500)
+        .optional()
+        .describe('Stored only when entryId is given, matching the REST routes: the gallery add records no caption'),
+      passphrase: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          'Only for a Synology Photos album shared with the user: the passphrase list_provider_albums returned for that album',
+        ),
     },
     annotations: TOOL_ANNOTATIONS_NON_IDEMPOTENT,
     when: journeyAddonOn,
     access: { group: 'journey', mode: 'write' },
   })
   addJourneyProviderPhotos(
-    { journeyId, entryId, provider, asset_ids, media_types, caption, passphrase }: {
-      journeyId: number; entryId?: number; provider: z.infer<typeof PHOTO_PROVIDER>;
-      asset_ids: string[]; media_types?: Array<'image' | 'video'>; caption?: string; passphrase?: string;
+    {
+      journeyId,
+      entryId,
+      provider,
+      asset_ids,
+      media_types,
+      caption,
+      passphrase,
+    }: {
+      journeyId: number;
+      entryId?: number;
+      provider: z.infer<typeof PHOTO_PROVIDER>;
+      asset_ids: string[];
+      media_types?: Array<'image' | 'video'>;
+      caption?: string;
+      passphrase?: string;
     },
     ctx: McpContext,
   ) {
@@ -532,16 +653,25 @@ export class JourneyMcp {
     // into a sentence, and is what makes journeyId worth asking for: the entry
     // has to be shown to belong to it before anything is written.
     if (!this.journey.canEdit(journeyId, ctx.userId)) return notFound('Journey not found or access denied.');
-    if (entryId !== undefined && !this.journey.listEntries(journeyId, ctx.userId)?.some(e => e.id === entryId)) {
+    if (entryId !== undefined && !this.journey.listEntries(journeyId, ctx.userId)?.some((e) => e.id === entryId)) {
       return notFound('Entry not found in this journey.');
     }
 
     const photos: unknown[] = [];
     asset_ids.forEach((assetId, i) => {
       const mediaType = media_types?.[i] === 'video' ? 'video' : 'image';
-      const photo = entryId === undefined
-        ? this.journey.addProviderPhotoToGallery(journeyId, ctx.userId, provider, assetId, undefined, passphrase, mediaType)
-        : this.journey.addProviderPhoto(entryId, ctx.userId, provider, assetId, caption, passphrase, mediaType);
+      const photo =
+        entryId === undefined
+          ? this.journey.addProviderPhotoToGallery(
+              journeyId,
+              ctx.userId,
+              provider,
+              assetId,
+              undefined,
+              passphrase,
+              mediaType,
+            )
+          : this.journey.addProviderPhoto(entryId, ctx.userId, provider, assetId, caption, passphrase, mediaType);
       if (photo) photos.push(photo);
     });
 
@@ -549,7 +679,7 @@ export class JourneyMcp {
     // when and where each photo was taken, and without that answer an attached
     // photo can never appear on the journey map (#1614).
     this.captureBackfill.schedule(
-      photos.map(p => (p as { photo_id?: number }).photo_id).filter((id): id is number => typeof id === 'number'),
+      photos.map((p) => (p as { photo_id?: number }).photo_id).filter((id): id is number => typeof id === 'number'),
       ctx.userId,
     );
     // `skipped` is what tells a caller that a shortfall was duplicates rather
@@ -577,7 +707,8 @@ export class JourneyMcp {
 
   @Tool({
     name: 'create_journey_share_link',
-    description: 'Create or update the public share link for a journey. Owner only. Flags left out keep their current value on an existing link; a new link defaults to timeline/gallery/map on.',
+    description:
+      'Create or update the public share link for a journey. Owner only. Flags left out keep their current value on an existing link; a new link defaults to timeline/gallery/map on.',
     inputSchema: {
       journeyId: z.number().int().positive(),
       share_timeline: z.boolean().optional(),
@@ -589,7 +720,19 @@ export class JourneyMcp {
     when: journeyAddonOn,
     access: { group: 'journey', mode: 'share' },
   })
-  createJourneyShareLink({ journeyId, ...permissions }: { journeyId: number; share_timeline?: boolean; share_gallery?: boolean; share_map?: boolean; newest_first?: boolean }, ctx: McpContext) {
+  createJourneyShareLink(
+    {
+      journeyId,
+      ...permissions
+    }: {
+      journeyId: number;
+      share_timeline?: boolean;
+      share_gallery?: boolean;
+      share_map?: boolean;
+      newest_first?: boolean;
+    },
+    ctx: McpContext,
+  ) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
     const shareLink = this.share.createOrUpdateJourneyShareLink(journeyId, ctx.userId, permissions);
     if (!shareLink) return notFound('Journey not found or access denied.');
@@ -606,7 +749,8 @@ export class JourneyMcp {
   })
   deleteJourneyShareLink({ journeyId }: { journeyId: number }, ctx: McpContext) {
     if (this.auth.isDemoUser(ctx.userId)) return demoDenied();
-    if (!this.share.deleteJourneyShareLink(journeyId, ctx.userId)) return notFound('Journey not found or access denied.');
+    if (!this.share.deleteJourneyShareLink(journeyId, ctx.userId))
+      return notFound('Journey not found or access denied.');
     return ok({ success: true });
   }
 

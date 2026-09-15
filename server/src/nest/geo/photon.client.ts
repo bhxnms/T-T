@@ -54,11 +54,7 @@ const OSM_TYPE_PREFIX: Record<string, string> = { N: 'node', W: 'way', R: 'relat
  * (or answers nonsense) so the caller can rethrow its original Nominatim
  * error; an empty feature list is a legitimate "no results", not a failure.
  */
-export async function photonSearch(
-  query: string,
-  lang?: string,
-  limit = 10,
-): Promise<NominatimLikeResult[] | null> {
+export async function photonSearch(query: string, lang?: string, limit = 10): Promise<NominatimLikeResult[] | null> {
   const params = new URLSearchParams({ q: query, limit: String(limit) });
   const l = (lang || '').split('-')[0].toLowerCase();
   if (PHOTON_LANGS.has(l)) params.set('lang', l);
@@ -86,9 +82,7 @@ export async function photonSearch(
     const name = props.name || '';
     const street = [props.street, props.housenumber].filter(Boolean).join(' ');
     const display =
-      [name, street, props.city, props.county, props.state, props.country]
-        .filter(Boolean)
-        .join(', ') || name;
+      [name, street, props.city, props.county, props.state, props.country].filter(Boolean).join(', ') || name;
     return [
       {
         osm_type: OSM_TYPE_PREFIX[props.osm_type ?? ''] ?? 'node',
@@ -97,8 +91,7 @@ export async function photonSearch(
         display_name: display,
         lat: String(lat),
         lon: String(lng),
-        extratags:
-          props.osm_key && props.osm_value ? { [props.osm_key]: props.osm_value } : {},
+        extratags: props.osm_key && props.osm_value ? { [props.osm_key]: props.osm_value } : {},
       },
     ];
   });

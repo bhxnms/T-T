@@ -1,9 +1,9 @@
-import { AlertTriangle, RefreshCw, Sun } from 'lucide-react'
-import { adminApi, authApi } from '../../../api/client'
-import { getApiErrorMessage } from '../../../types'
-import type { TranslationFn } from '../../../types'
-import type { useAdmin } from '../../../pages/admin/useAdmin'
-import MToggle from '../../components/MToggle'
+import { AlertTriangle, RefreshCw, Sun } from 'lucide-react';
+import { adminApi, authApi } from '../../../api/client';
+import type { useAdmin } from '../../../pages/admin/useAdmin';
+import type { TranslationFn } from '../../../types';
+import { getApiErrorMessage } from '../../../types';
+import MToggle from '../../components/MToggle';
 import {
   MAdminButton,
   MAdminCard,
@@ -12,11 +12,11 @@ import {
   MAdminInput,
   MAdminRow,
   MAdminSecretInput,
-} from './MAdminUi'
+} from './MAdminUi';
 
 interface MAdminSettingsSectionProps {
-  admin: ReturnType<typeof useAdmin>
-  t: TranslationFn
+  admin: ReturnType<typeof useAdmin>;
+  t: TranslationFn;
 }
 
 // Settings section: auth methods, passkey login, require-MFA, allowed file
@@ -25,55 +25,95 @@ interface MAdminSettingsSectionProps {
 export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectionProps) {
   const {
     toast,
-    setPlacesPhotosEnabled, setPlacesAutocompleteEnabled, setPlacesDetailsEnabled, setPlacesEnrichEnabled,
-    placesPhotosEnabled, setPlacesPhotosEnabledState,
-    placesAutocompleteEnabled, setPlacesAutocompleteEnabledState,
-    placesDetailsEnabled, setPlacesDetailsEnabledState,
-    placesEnrichEnabled, setPlacesEnrichEnabledState,
-    oidcConfig, setOidcConfig, savingOidc, setSavingOidc,
-    passwordLogin, setPasswordLogin, passwordRegistration, setPasswordRegistration,
-    oidcLogin, setOidcLogin, oidcRegistration, setOidcRegistration,
-    envOverrideOidcOnly, oidcConfigured, requireMfa,
-    passkeyLogin, setPasskeyLogin, passkeyConfigured,
-    webauthnRpId, setWebauthnRpId, webauthnOrigins, setWebauthnOrigins, savingWebauthn, handleSaveWebauthn,
-    allowedFileTypes, setAllowedFileTypes, savingFileTypes, setSavingFileTypes,
-    mapsKey, setMapsKey, unsplashKey, setUnsplashKey, amapKey, setAmapKey, amapSearchEnabledState, setAmapSearchEnabledState, savingKeys, validating, validation,
+    setPlacesPhotosEnabled,
+    setPlacesAutocompleteEnabled,
+    setPlacesDetailsEnabled,
+    setPlacesEnrichEnabled,
+    placesPhotosEnabled,
+    setPlacesPhotosEnabledState,
+    placesAutocompleteEnabled,
+    setPlacesAutocompleteEnabledState,
+    placesDetailsEnabled,
+    setPlacesDetailsEnabledState,
+    placesEnrichEnabled,
+    setPlacesEnrichEnabledState,
+    oidcConfig,
+    setOidcConfig,
+    savingOidc,
+    setSavingOidc,
+    passwordLogin,
+    setPasswordLogin,
+    passwordRegistration,
+    setPasswordRegistration,
+    oidcLogin,
+    setOidcLogin,
+    oidcRegistration,
+    setOidcRegistration,
+    envOverrideOidcOnly,
+    oidcConfigured,
+    requireMfa,
+    passkeyLogin,
+    setPasskeyLogin,
+    passkeyConfigured,
+    webauthnRpId,
+    setWebauthnRpId,
+    webauthnOrigins,
+    setWebauthnOrigins,
+    savingWebauthn,
+    handleSaveWebauthn,
+    allowedFileTypes,
+    setAllowedFileTypes,
+    savingFileTypes,
+    setSavingFileTypes,
+    mapsKey,
+    setMapsKey,
+    unsplashKey,
+    setUnsplashKey,
+    amapKey,
+    setAmapKey,
+    amapSearchEnabledState,
+    setAmapSearchEnabledState,
+    savingKeys,
+    validating,
+    validation,
     managed,
     setShowRotateJwtModal,
-    handleToggleAuthSetting, handleToggleRequireMfa,
-    handleSaveApiKeys, handleValidateKey,
-  } = admin
+    handleToggleAuthSetting,
+    handleToggleRequireMfa,
+    handleSaveApiKeys,
+    handleValidateKey,
+  } = admin;
 
   const saveFileTypes = async () => {
-    setSavingFileTypes(true)
+    setSavingFileTypes(true);
     try {
-      await authApi.updateAppSettings({ allowed_file_types: allowedFileTypes })
-      toast.success(t('admin.fileTypesSaved'))
+      await authApi.updateAppSettings({ allowed_file_types: allowedFileTypes });
+      toast.success(t('admin.fileTypesSaved'));
     } catch {
-      toast.error(t('common.error'))
+      toast.error(t('common.error'));
     } finally {
-      setSavingFileTypes(false)
+      setSavingFileTypes(false);
     }
-  }
+  };
 
   const saveOidc = async () => {
-    setSavingOidc(true)
+    setSavingOidc(true);
     try {
       const payload: Record<string, unknown> = {
         issuer: oidcConfig.issuer,
         client_id: oidcConfig.client_id,
         display_name: oidcConfig.display_name,
         discovery_url: oidcConfig.discovery_url,
-      }
-      if (oidcConfig.client_secret) payload.client_secret = oidcConfig.client_secret
-      await adminApi.updateOidc(payload)
-      toast.success(t('admin.oidcSaved'))
+      };
+      if (oidcConfig.client_secret) payload.client_secret = oidcConfig.client_secret;
+      await adminApi.updateOidc(payload);
+      toast.success(t('admin.oidcSaved'));
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, t('common.error')))
+      toast.error(getApiErrorMessage(err, t('common.error')));
     } finally {
-      setSavingOidc(false)
+      setSavingOidc(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-3">
@@ -281,11 +321,11 @@ export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectio
                   checked={amapSearchEnabledState}
                   ariaLabel={t('admin.amapSearch.title')}
                   onChange={async (next) => {
-                    setAmapSearchEnabledState(next)
+                    setAmapSearchEnabledState(next);
                     try {
-                      await adminApi.updateAmapSearch(next)
+                      await adminApi.updateAmapSearch(next);
                     } catch {
-                      setAmapSearchEnabledState(!next)
+                      setAmapSearchEnabledState(!next);
                     }
                   }}
                 />
@@ -302,13 +342,13 @@ export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectio
                   checked={placesPhotosEnabled}
                   ariaLabel={t('admin.placesPhotos.title')}
                   onChange={async (next) => {
-                    setPlacesPhotosEnabledState(next)
-                    setPlacesPhotosEnabled(next)
+                    setPlacesPhotosEnabledState(next);
+                    setPlacesPhotosEnabled(next);
                     try {
-                      await adminApi.updatePlacesPhotos(next)
+                      await adminApi.updatePlacesPhotos(next);
                     } catch {
-                      setPlacesPhotosEnabledState(!next)
-                      setPlacesPhotosEnabled(!next)
+                      setPlacesPhotosEnabledState(!next);
+                      setPlacesPhotosEnabled(!next);
                     }
                   }}
                 />
@@ -322,13 +362,13 @@ export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectio
                   checked={placesAutocompleteEnabled}
                   ariaLabel={t('admin.placesAutocomplete.title')}
                   onChange={async (next) => {
-                    setPlacesAutocompleteEnabledState(next)
-                    setPlacesAutocompleteEnabled(next)
+                    setPlacesAutocompleteEnabledState(next);
+                    setPlacesAutocompleteEnabled(next);
                     try {
-                      await adminApi.updatePlacesAutocomplete(next)
+                      await adminApi.updatePlacesAutocomplete(next);
                     } catch {
-                      setPlacesAutocompleteEnabledState(!next)
-                      setPlacesAutocompleteEnabled(!next)
+                      setPlacesAutocompleteEnabledState(!next);
+                      setPlacesAutocompleteEnabled(!next);
                     }
                   }}
                 />
@@ -342,13 +382,13 @@ export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectio
                   checked={placesDetailsEnabled}
                   ariaLabel={t('admin.placesDetails.title')}
                   onChange={async (next) => {
-                    setPlacesDetailsEnabledState(next)
-                    setPlacesDetailsEnabled(next)
+                    setPlacesDetailsEnabledState(next);
+                    setPlacesDetailsEnabled(next);
                     try {
-                      await adminApi.updatePlacesDetails(next)
+                      await adminApi.updatePlacesDetails(next);
                     } catch {
-                      setPlacesDetailsEnabledState(!next)
-                      setPlacesDetailsEnabled(!next)
+                      setPlacesDetailsEnabledState(!next);
+                      setPlacesDetailsEnabled(!next);
                     }
                   }}
                 />
@@ -362,13 +402,13 @@ export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectio
                   checked={placesEnrichEnabled}
                   ariaLabel={t('admin.placesEnrich.title')}
                   onChange={async (next) => {
-                    setPlacesEnrichEnabledState(next)
-                    setPlacesEnrichEnabled(next)
+                    setPlacesEnrichEnabledState(next);
+                    setPlacesEnrichEnabled(next);
                     try {
-                      await adminApi.updatePlacesEnrich(next)
+                      await adminApi.updatePlacesEnrich(next);
                     } catch {
-                      setPlacesEnrichEnabledState(!next)
-                      setPlacesEnrichEnabled(!next)
+                      setPlacesEnrichEnabledState(!next);
+                      setPlacesEnrichEnabled(!next);
                     }
                   }}
                 />
@@ -435,7 +475,10 @@ export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectio
               placeholder="https://accounts.google.com"
             />
           </MAdminField>
-          <MAdminField label="Discovery URL" hint="Override the auto-constructed discovery URL. Required for providers like Authentik where the endpoint is not at <issuer>/.well-known/openid-configuration.">
+          <MAdminField
+            label="Discovery URL"
+            hint="Override the auto-constructed discovery URL. Required for providers like Authentik where the endpoint is not at <issuer>/.well-known/openid-configuration."
+          >
             <MAdminInput
               type="url"
               value={oidcConfig.discovery_url}
@@ -483,5 +526,5 @@ export default function MAdminSettingsSection({ admin, t }: MAdminSettingsSectio
         />
       </MAdminCard>
     </div>
-  )
+  );
 }

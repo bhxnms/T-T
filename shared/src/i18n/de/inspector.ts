@@ -26,7 +26,7 @@ const inspector: TranslationStrings = {
   'inspector.trackColor': 'Streckenfarbe',
   'inspector.trackColorAuto': 'Automatische Farbe',
   'inspector.trackColorCustom': 'Eigene Farbe wählen',
-  "inspector.checkin": "Einchecken",
-  "inspector.checkinDone": "Eingecheckt",
+  'inspector.checkin': 'Einchecken',
+  'inspector.checkinDone': 'Eingecheckt',
 };
 export default inspector;

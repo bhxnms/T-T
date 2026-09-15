@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'إظهار الدول المخطط زيارتها',
   'atlas.plannedFor': 'مخطط لـ',
   'atlas.antarctica': 'أنتاركتيكا',
-  "atlas.checkinTab": "تسجيلات الزيارة",
-  "atlas.checkinTotal": "تسجيلات الزيارة",
-  "atlas.checkinLandmarks": "المعالم السياحية",
-  "atlas.checkinPlaces": "أماكن الرحلة",
-  "atlas.checkinEmpty": "لا توجد تسجيلات زيارة بعد — حدّد معلمًا أو مكانًا في الرحلة كمُزار",
+  'atlas.checkinTab': 'تسجيلات الزيارة',
+  'atlas.checkinTotal': 'تسجيلات الزيارة',
+  'atlas.checkinLandmarks': 'المعالم السياحية',
+  'atlas.checkinPlaces': 'أماكن الرحلة',
+  'atlas.checkinEmpty': 'لا توجد تسجيلات زيارة بعد — حدّد معلمًا أو مكانًا في الرحلة كمُزار',
 };
 export default atlas;

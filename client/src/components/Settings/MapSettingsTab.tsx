@@ -154,7 +154,8 @@ function normalizeProvider(value: unknown): Provider {
 }
 
 function styleForProvider(provider: Provider, style?: string | null): string {
-  if (provider === 'leaflet' || provider === 'amap') return style || MAPBOX_DEFAULT_STYLE;
+  if (provider === 'amap') return '';
+  if (provider === 'leaflet') return style || MAPBOX_DEFAULT_STYLE;
   if (provider === 'mapbox-gl' && isOpenFreeMapStyle(style)) return MAPBOX_DEFAULT_STYLE;
   return normalizeStyleForProvider(provider, style);
 }
@@ -233,7 +234,7 @@ export default function MapSettingsTab(): React.ReactElement {
     setSaving(true);
     try {
       const glStyle =
-        provider === 'leaflet' || provider === 'amap' ? mapboxStyle : normalizeStyleForProvider(provider, mapboxStyle);
+        provider === 'leaflet' ? mapboxStyle : normalizeStyleForProvider(provider as GlMapProvider, mapboxStyle);
       // Save into the active provider's own slot so the other provider's style survives.
       const stylePatch =
         provider === 'maplibre-gl' ? { maplibre_style: glStyle } : provider === 'amap' ? {} : { mapbox_style: glStyle };
@@ -262,7 +263,8 @@ export default function MapSettingsTab(): React.ReactElement {
   const supports3d = true;
   const changeProvider = (nextProvider: Provider) => {
     setProvider(nextProvider);
-    if (nextProvider !== 'leaflet') setMapboxStyle(styleForProvider(nextProvider, mapboxStyle));
+    if (nextProvider === 'mapbox-gl' || nextProvider === 'maplibre-gl')
+      setMapboxStyle(styleForProvider(nextProvider, mapboxStyle));
   };
   // Only CARTO burns a watermark into keyless tiles, so the nudge is scoped to its hosts.
   const cartoNeedsKey = mapTileUrl.includes('basemaps.cartocdn.com') && !cartoKey.trim();
@@ -507,7 +509,7 @@ export default function MapSettingsTab(): React.ReactElement {
 
       <div>
         <div style={{ position: 'relative', inset: 0, height: '200px', width: '100%' }}>
-          {provider !== 'leaflet' ? (
+          {provider === 'mapbox-gl' || provider === 'maplibre-gl' ? (
             /* A net of its own: the preview is the one place a user flips providers
                live, so it is the likeliest chunk to fail — and a broken preview must
                not take the rest of the settings tab with it. */

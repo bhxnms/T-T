@@ -60,10 +60,10 @@ const atlas: TranslationStrings = {
   'atlas.showPlanned': 'Εμφάνιση προγραμματισμένων χωρών',
   'atlas.plannedFor': 'Προγραμματισμένο για',
   'atlas.antarctica': 'Ανταρκτική',
-  "atlas.checkinTab": "Check-in",
-  "atlas.checkinTotal": "Check-in",
-  "atlas.checkinLandmarks": "Ορόσημα",
-  "atlas.checkinPlaces": "Τοποθεσίες ταξιδιού",
-  "atlas.checkinEmpty": "Δεν υπάρχουν check-in ακόμη — επισημάνετε ορόσημο ή τοποθεσία ταξιδιού ως επισκεφθείσα",
+  'atlas.checkinTab': 'Check-in',
+  'atlas.checkinTotal': 'Check-in',
+  'atlas.checkinLandmarks': 'Ορόσημα',
+  'atlas.checkinPlaces': 'Τοποθεσίες ταξιδιού',
+  'atlas.checkinEmpty': 'Δεν υπάρχουν check-in ακόμη — επισημάνετε ορόσημο ή τοποθεσία ταξιδιού ως επισκεφθείσα',
 };
 export default atlas;

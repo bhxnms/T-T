@@ -378,7 +378,8 @@ const admin: TranslationStrings = {
     'Gün planındaki günleri renklendirir (örneğin bir günün yolculuğun hangi etabına ait olduğu)',
   'admin.plugins.cap.mcpTools': 'Yapay zekâ araçları yayımlar',
   'admin.plugins.mcpToolsTitle': 'Yayımlanan yapay zekâ araçları',
-  'admin.plugins.mcpToolsHint': 'Bir asistan bunları kullanıcı adına çalıştırabilir. Her biri yukarıda verilen yetkilerle çalışır.',
+  'admin.plugins.mcpToolsHint':
+    'Bir asistan bunları kullanıcı adına çalıştırabilir. Her biri yukarıda verilen yetkilerle çalışır.',
   'admin.plugins.perm.mcp:tools':
     'Bir yapay zekâ asistanının sizin adınıza çalıştırabileceği araçlar yayımlamak (burada eklentiye verdiğiniz yetkilerle çalışır, asistanın kendi yetkileriyle değil)',
   'admin.plugins.perm.geolocation:read':
@@ -481,7 +482,8 @@ const admin: TranslationStrings = {
   'admin.plugins.changeVersion': 'Sürüm değiştir…',
   'admin.plugins.noVersions': 'Kayıt defterinde yayımlanmış sürüm bulunamadı.',
   'admin.plugins.downgradeTitle': 'Bu eklenti geri alınsın mı?',
-  'admin.plugins.downgradeBody': 'v{from} sürümünden v{to} sürümüne geçiş: daha yeni sürümün yazdığı veriler yerinde kalır ve eski sürüm bunları anlamayabilir.',
+  'admin.plugins.downgradeBody':
+    'v{from} sürümünden v{to} sürümüne geçiş: daha yeni sürümün yazdığı veriler yerinde kalır ve eski sürüm bunları anlamayabilir.',
   'admin.plugins.downgradeConfirm': 'Geri al',
   'admin.plugins.updatesHeld': 'Güncellemeler v{version} sürümünde duraklatıldı',
   'admin.plugins.resumeUpdates': 'Güncellemeleri sürdür',
@@ -586,11 +588,13 @@ const admin: TranslationStrings = {
     'Kişiselleştirmenizi özelleştirmek için özellikleri etkinleştirin veya devre dışı bırakın.',
   'admin.addons.subtitleAfter': 'deneyim.',
   'admin.addons.catalog.naver_list_import.name': 'Naver List Import',
-  'admin.addons.catalog.naver_list_import.description': 'Paylaşılan bir Naver Haritalar listesinden yerleri içe aktarın',
+  'admin.addons.catalog.naver_list_import.description':
+    'Paylaşılan bir Naver Haritalar listesinden yerleri içe aktarın',
   'admin.addons.catalog.airtrail.name': 'AirTrail',
   'admin.addons.catalog.airtrail.description': 'AirTrail örneğinizden uçuşları eşitleyin',
   'admin.addons.catalog.llm_parsing.name': 'Yapay zekâ ile ayrıştırma',
-  'admin.addons.catalog.llm_parsing.description': 'Yerleşik ayrıştırıcının okuyamadığı rezervasyonları, seçtiğiniz yapay zekâ modeliyle okur',
+  'admin.addons.catalog.llm_parsing.description':
+    'Yerleşik ayrıştırıcının okuyamadığı rezervasyonları, seçtiğiniz yapay zekâ modeliyle okur',
   'admin.addons.enabled': 'Etkinleştirilmiş',
   'admin.addons.disabled': 'Engelli',
   'admin.addons.type.trip': 'Seyahat',
@@ -694,7 +698,8 @@ const admin: TranslationStrings = {
   'admin.addons.catalog.journey.description':
     'Check-in, fotoğraf ve günlük hikâyelerle seyahat takibi ve seyahat günlüğü',
   'admin.addons.catalog.collections.name': 'Koleksiyonlar',
-  'admin.addons.catalog.collections.description': 'Her geziden yerleri adlandırılmış listelerde toplayın ve yeniden kullanın',
+  'admin.addons.catalog.collections.description':
+    'Her geziden yerleri adlandırılmış listelerde toplayın ve yeniden kullanın',
   'admin.passkey.title': 'Passkey ile oturum açma',
   'admin.passkey.cardHint':
     'Kullanıcıların passkey (WebAuthn) ile oturum açmasına izin verin. Varsayılan olarak kapalı.',
@@ -738,9 +743,13 @@ const admin: TranslationStrings = {
   'admin.invite.tripNone': 'Seyahat yok',
   'admin.invite.tripHint': 'Yeni kullanıcı bağlantı üzerinden kaydolduğunda otomatik olarak bu seyahate eklenir.',
   'admin.invite.boundTo': '{trip} seyahatine ekler',
-  "admin.amapKey": "AMap Web Servis Anahtarı",
-  "admin.amapKeyHint": "Çin yer araması ve trafik duyarlı rotalar için. lbs.amap.com üzerinden Web servis anahtarı alın.",
-  "admin.amapSearch.title": "Yer araması için AMap kullan",
-  "admin.amapSearch.subtitle": "Varsayılan olarak AMap kullanılır; her yer arama formu TREK yerel kaynaklarına dönebilir.",
+  'admin.amapKey': 'AMap Web Servis Anahtarı',
+  'admin.amapKeyHint':
+    'Çin yer araması ve trafik duyarlı rotalar için. lbs.amap.com üzerinden Web servis anahtarı alın.',
+  'admin.amapSearch.title': 'Yer araması için AMap kullan',
+  'admin.amapSearch.subtitle':
+    'Varsayılan olarak AMap kullanılır; her yer arama formu TREK yerel kaynaklarına dönebilir.',
+  'admin.update.checkError': '',
+  'admin.update.checkNow': '',
 };
 export default admin;

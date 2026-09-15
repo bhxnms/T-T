@@ -1,3 +1,5 @@
+import { DatabaseService } from '../database/database.service';
+import { TripMembershipService } from '../trip-membership/trip-membership.service';
 import { Injectable } from '@nestjs/common';
 import type {
   PublicApiAccommodation,
@@ -11,8 +13,6 @@ import type {
   PublicApiTrip,
   PublicApiTripSummary,
 } from '@trek/shared';
-import { DatabaseService } from '../database/database.service';
-import { TripMembershipService } from '../trip-membership/trip-membership.service';
 
 /**
  * Assembles the read-only public API payloads.
@@ -110,9 +110,7 @@ export class PublicApiService {
 
     const placesByDay = include.includes('places') ? this.placesByDay(tripId) : new Map();
     const notesByDay = include.includes('notes') ? this.dayNotesByDay(tripId) : new Map();
-    const reservationsByDay = include.includes('reservations')
-      ? this.reservationsByDay(tripId)
-      : new Map();
+    const reservationsByDay = include.includes('reservations') ? this.reservationsByDay(tripId) : new Map();
 
     return days.map((day) => ({
       date: day.date,
@@ -155,10 +153,14 @@ export class PublicApiService {
         ORDER BY day_id ASC, sort_order ASC`,
       tripId,
     );
-    return groupBy(rows, (r) => r.day_id, (r) => ({
-      text: r.text,
-      time: r.time ?? null,
-    }));
+    return groupBy(
+      rows,
+      (r) => r.day_id,
+      (r) => ({
+        text: r.text,
+        time: r.time ?? null,
+      }),
+    );
   }
 
   /**
@@ -308,7 +310,8 @@ export class PublicApiService {
          FROM trip_members m JOIN users u ON u.id = m.user_id
         WHERE m.trip_id = ?
         ORDER BY is_owner DESC`,
-      tripId, tripId,
+      tripId,
+      tripId,
     );
     return rows.map((r) => ({ name: r.username, owner: r.is_owner === 1 }));
   }
@@ -365,11 +368,7 @@ function toTripSummary(row: TripRow): PublicApiTripSummary {
   };
 }
 
-function groupBy<Row, Out>(
-  rows: Row[],
-  key: (row: Row) => number,
-  map: (row: Row) => Out,
-): Map<number, Out[]> {
+function groupBy<Row, Out>(rows: Row[], key: (row: Row) => number, map: (row: Row) => Out): Map<number, Out[]> {
   const grouped = new Map<number, Out[]>();
   for (const row of rows) {
     const id = key(row);

@@ -70,7 +70,7 @@ export function wgs84ToGcj02(lng: number, lat: number): { lng: number; lat: numb
   // Same Krasovsky transform as the server adapter, kept in a browser-safe
   // module so markers, routes and click coordinates share one contract.
   if (!(lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55)) return { lng, lat }
-  const PI = Math.PI, A = 6378245, EE = 0.00669342162296594323
+  const PI = Math.PI, A = 6378245, EE = 0.006693421622965943
   const tLat = -100 + 2 * (lng - 105) + 3 * (lat - 35) + 0.2 * (lat - 35) ** 2
   const tLng = 300 + (lng - 105) + 2 * (lat - 35) + 0.1 * (lng - 105) ** 2
   const r = lat * PI / 180, m = 1 - EE * Math.sin(r) ** 2, s = Math.sqrt(m)
