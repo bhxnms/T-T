@@ -37,10 +37,14 @@ function initDb(): void {
   if (_db) {
     try {
       _db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
-    } catch (e) {}
+    } catch (_e) {
+      // Ignored: checkpoint may fail if database is locked
+    }
     try {
       _db.close();
-    } catch (e) {}
+    } catch (_e) {
+      // Ignored: close may fail if database is already closed
+    }
     _db = null;
   }
 
@@ -78,6 +82,7 @@ const db = new Proxy({} as Database.Database, {
 
 if (readEnv().demo.enabled) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { seedDemoData } = require('../demo/demo-seed');
     seedDemoData(_db);
   } catch (err: unknown) {
@@ -89,10 +94,14 @@ function closeDb(): void {
   if (_db) {
     try {
       _db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
-    } catch (e) {}
+    } catch (_e) {
+      // Ignored: checkpoint may fail if database is locked
+    }
     try {
       _db.close();
-    } catch (e) {}
+    } catch (_e) {
+      // Ignored: close may fail if database is already closed
+    }
     _db = null;
     console.log('[DB] Database connection closed');
   }

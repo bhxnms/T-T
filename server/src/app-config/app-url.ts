@@ -12,18 +12,22 @@ export function getAppUrl(): string {
   const appUrl = readEnv().app.appUrl;
   if (appUrl) {
     try {
-      const _ = new URL(appUrl);
+      new URL(appUrl);
       return stripTrailingSlashes(appUrl);
-    } catch (_ignored) {}
+    } catch {
+      // Invalid URL, fall through to next option
+    }
   }
   const origins = readEnv().http.allowedOriginsRaw;
   if (origins) {
     const first = origins.split(',')[0]?.trim();
     if (first) {
       try {
-        const _ = new URL(first);
+        new URL(first);
         return stripTrailingSlashes(first);
-      } catch (_ignored) {}
+      } catch {
+        // Invalid URL, fall through to next option
+      }
     }
   }
   const port = readEnv().app.port;
