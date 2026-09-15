@@ -32,7 +32,7 @@ jobs:
           tags: trek:scan
 
       - name: Scan image for fixed high and critical vulnerabilities
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: trek:scan
           format: table
