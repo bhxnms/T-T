@@ -20,7 +20,7 @@ jobs:
     if: github.repository == 'bhxnms/T-T'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check Wiki repository
         id: wiki
         env:
@@ -30,7 +30,7 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::GitHub Wiki is disabled or has not been initialized; skipping wiki deployment. Enable Wikis and create the first page, then rerun this workflow."
+            echo "::notice::GitHub Wiki is disabled or has not been initialized; wiki deployment was skipped. Enable Wikis and create the first page to publish these documents."
           fi
       - name: Publish to GitHub wiki
         if: steps.wiki.outputs.available == 'true'
