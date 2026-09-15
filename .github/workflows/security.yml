@@ -20,7 +20,7 @@ jobs:
     if: github.repository == 'bhxnms/T-T'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: docker/setup-buildx-action@v3
 
@@ -31,10 +31,11 @@ jobs:
           load: true
           tags: trek:scan
 
-      - uses: docker/scout-action@v1
+      - name: Scan image for fixed high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
         with:
-          command: cves
-          image: local://trek:scan
-          only-severities: critical,high
-          only-fixed: true
-          exit-code: true
+          image-ref: trek:scan
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

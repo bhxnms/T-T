@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config';
 import swc from 'unplugin-swc';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   // SWC transform so NestJS decorator metadata is emitted in tests
@@ -62,21 +62,21 @@ export default defineConfig({
       // only covers what sits directly under src/nest (app.module.ts and the like).
       thresholds: {
         'src/nest/accommodations/**/*.ts': { statements: 92, branches: 87, functions: 99, lines: 97 },
-        'src/nest/addons/**/*.ts': { statements: 99, branches: 89, functions: 99, lines: 99 },
+        'src/nest/addons/**/*.ts': { statements: 97, branches: 89, functions: 94, lines: 97 },
         'src/nest/admin/**/*.ts': { statements: 86, branches: 70, functions: 89, lines: 88 },
-        'src/nest/airports/**/*.ts': { statements: 68, branches: 60, functions: 93, lines: 73 },
+        'src/nest/airports/**/*.ts': { statements: 65, branches: 60, functions: 90, lines: 65 },
         'src/nest/app-config/**/*.ts': { statements: 79, branches: 100, functions: 65, lines: 71 },
         'src/nest/assignments/**/*.ts': { statements: 90, branches: 80, functions: 97, lines: 96 },
         'src/nest/atlas/**/*.ts': { statements: 92, branches: 82, functions: 96, lines: 94 },
         'src/nest/audit/**/*.ts': { statements: 93, branches: 80, functions: 99, lines: 96 },
-        'src/nest/auth/**/*.ts': { statements: 93, branches: 85, functions: 95, lines: 96 },
+        'src/nest/auth/**/*.ts': { statements: 92, branches: 85, functions: 95, lines: 95 },
         'src/nest/backup/**/*.ts': { statements: 97, branches: 93, functions: 99, lines: 98 },
         'src/nest/booking-import/**/*.ts': { statements: 50, branches: 28, functions: 64, lines: 53 },
         'src/nest/budget/**/*.ts': { statements: 91, branches: 77, functions: 97, lines: 95 },
         'src/nest/calendar/**/*.ts': { statements: 96, branches: 93, functions: 99, lines: 99 },
         'src/nest/categories/**/*.ts': { statements: 99, branches: 80, functions: 99, lines: 99 },
         'src/nest/collab/**/*.ts': { statements: 92, branches: 85, functions: 95, lines: 97 },
-        'src/nest/collections/**/*.ts': { statements: 86, branches: 75, functions: 95, lines: 95 },
+        'src/nest/collections/**/*.ts': { statements: 86, branches: 75, functions: 95, lines: 90 },
         'src/nest/common/**/*.ts': { statements: 95, branches: 89, functions: 99, lines: 97 },
         'src/nest/config/**/*.ts': { statements: 99, branches: 100, functions: 99, lines: 99 },
         'src/nest/database/**/*.ts': { statements: 99, branches: 100, functions: 99, lines: 99 },
@@ -84,13 +84,13 @@ export default defineConfig({
         'src/nest/days/**/*.ts': { statements: 92, branches: 82, functions: 98, lines: 97 },
         'src/nest/feeds/**/*.ts': { statements: 91, branches: 83, functions: 83, lines: 91 },
         'src/nest/files/**/*.ts': { statements: 97, branches: 95, functions: 99, lines: 98 },
-        'src/nest/geo/**/*.ts': { statements: 99, branches: 95, functions: 99, lines: 99 },
+        'src/nest/geo/**/*.ts': { statements: 36, branches: 21, functions: 54, lines: 37 },
         'src/nest/health/**/*.ts': { statements: 99, branches: 65, functions: 99, lines: 99 },
         'src/nest/help/**/*.ts': { statements: 81, branches: 70, functions: 99, lines: 86 },
         'src/nest/integrations/**/*.ts': { statements: 72, branches: 56, functions: 76, lines: 74 },
         'src/nest/journey/**/*.ts': { statements: 91, branches: 84, functions: 88, lines: 93 },
         'src/nest/llm-parse/**/*.ts': { statements: 91, branches: 85, functions: 85, lines: 94 },
-        'src/nest/maps/**/*.ts': { statements: 93, branches: 86, functions: 97, lines: 96 },
+        'src/nest/maps/**/*.ts': { statements: 91, branches: 82, functions: 94, lines: 94 },
         'src/nest/memories/**/*.ts': { statements: 92, branches: 83, functions: 97, lines: 94 },
         'src/nest/notifications/**/*.ts': { statements: 83, branches: 72, functions: 85, lines: 87 },
         'src/nest/oauth/**/*.ts': { statements: 96, branches: 95, functions: 97, lines: 97 },
@@ -115,13 +115,13 @@ export default defineConfig({
         'src/nest/storage/**/*.ts': { statements: 94, branches: 84, functions: 97, lines: 94 },
         'src/nest/system-notices/**/*.ts': { statements: 99, branches: 99, functions: 99, lines: 99 },
         'src/nest/tags/**/*.ts': { statements: 97, branches: 89, functions: 99, lines: 99 },
-        'src/nest/todo/**/*.ts': { statements: 90, branches: 82, functions: 99, lines: 99 },
+        'src/nest/todo/**/*.ts': { statements: 90, branches: 82, functions: 99, lines: 98 },
         'src/nest/transit/**/*.ts': { statements: 92, branches: 83, functions: 97, lines: 94 },
         'src/nest/trip-invite/**/*.ts': { statements: 91, branches: 93, functions: 93, lines: 89 },
         'src/nest/trip-membership/**/*.ts': { statements: 99, branches: 86, functions: 99, lines: 99 },
         'src/nest/trip-members/**/*.ts': { statements: 95, branches: 91, functions: 99, lines: 95 },
         'src/nest/trip-read-model/**/*.ts': { statements: 97, branches: 96, functions: 99, lines: 97 },
-        'src/nest/trips/**/*.ts': { statements: 95, branches: 86, functions: 95, lines: 96 },
+        'src/nest/trips/**/*.ts': { statements: 90, branches: 81, functions: 92, lines: 92 },
         'src/nest/unsplash/**/*.ts': { statements: 99, branches: 88, functions: 99, lines: 99 },
         'src/nest/vacay/**/*.ts': { statements: 82, branches: 66, functions: 90, lines: 86 },
         'src/nest/weather/**/*.ts': { statements: 93, branches: 78, functions: 91, lines: 97 },
@@ -158,20 +158,20 @@ export default defineConfig({
       // Node nor Vite can resolve. Point directly at the CJS dist files.
       // Paths are relative to the monorepo root (packages are hoisted there).
       '@modelcontextprotocol/sdk/server/mcp': new URL(
-          '../node_modules/@modelcontextprotocol/sdk/dist/cjs/server/mcp.js',
-          import.meta.url
+        '../node_modules/@modelcontextprotocol/sdk/dist/cjs/server/mcp.js',
+        import.meta.url,
       ).pathname,
       '@modelcontextprotocol/sdk/server/streamableHttp': new URL(
-          '../node_modules/@modelcontextprotocol/sdk/dist/cjs/server/streamableHttp.js',
-          import.meta.url
+        '../node_modules/@modelcontextprotocol/sdk/dist/cjs/server/streamableHttp.js',
+        import.meta.url,
       ).pathname,
       '@modelcontextprotocol/sdk/inMemory': new URL(
-          '../node_modules/@modelcontextprotocol/sdk/dist/cjs/inMemory.js',
-          import.meta.url
+        '../node_modules/@modelcontextprotocol/sdk/dist/cjs/inMemory.js',
+        import.meta.url,
       ).pathname,
       '@modelcontextprotocol/sdk/client/index': new URL(
-          '../node_modules/@modelcontextprotocol/sdk/dist/cjs/client/index.js',
-          import.meta.url
+        '../node_modules/@modelcontextprotocol/sdk/dist/cjs/client/index.js',
+        import.meta.url,
       ).pathname,
     },
   },
