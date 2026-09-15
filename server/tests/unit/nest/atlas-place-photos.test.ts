@@ -44,7 +44,7 @@ let OWNER = 0;
 let OTHER = 0;
 let MEMBER = 0;
 
-let seq = 0;
+const seq = 0;
 const IDS = { place: 0, photoCheckin: 0, photoEntry: 0, photoOther: 0, photoLegacy: 0 };
 
 function seed(): number {

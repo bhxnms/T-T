@@ -36,7 +36,7 @@ describe('MapMarkersController', () => {
 
   it('gates: disabled / no user / non-member all return [] (no plugin calls on the first)', async () => {
     pluginsEnabled.mockReturnValue(false);
-    let x = controller(() => [mk()]);
+    const x = controller(() => [mk()]);
     expect(await x.c.get('1', req(5))).toEqual({ markers: [] });
     expect(x.runtime.providersOf).not.toHaveBeenCalled();
     pluginsEnabled.mockReturnValue(true);

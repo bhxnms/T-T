@@ -6,7 +6,7 @@ const HOUR = 60 * 60 * 1000;
 
 describe('ReplicaFailureDebouncer', () => {
   it('DEB-001 first failure per backend is admitted with suppressed=0', () => {
-    let now = 1_000_000;
+    const now = 1_000_000;
     const debouncer = new ReplicaFailureDebouncer(HOUR, () => now);
     expect(debouncer.admit('s3-bkp')).toBe(0);
   });
@@ -25,7 +25,7 @@ describe('ReplicaFailureDebouncer', () => {
   });
 
   it('DEB-003 backends debounce independently', () => {
-    let now = 1_000_000;
+    const now = 1_000_000;
     const debouncer = new ReplicaFailureDebouncer(HOUR, () => now);
     expect(debouncer.admit('a')).toBe(0);
     expect(debouncer.admit('b')).toBe(0);
