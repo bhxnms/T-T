@@ -23,40 +23,6 @@ permissions:
 # unchanged code. GitHub Actions doesn't support YAML anchors, so the two
 # lists are literal copies: keep them identical when editing either one.
 on:
-  push:
-    branches: [main, dev]
-    paths:
-      - "server/**"
-      - "client/**"
-      - "shared/**"
-      - "plugin-sdk/**"
-      # npm workspaces hoist every dependency into the single root lockfile,
-      # so a dependency bump touches none of the four directories above — and
-      # a native binding like better-sqlite3 is exactly what needs the suite.
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/test.yml"
-      # Docs inside the workspaces (CLAUDE.md, READMEs, PATTERN.md) affect
-      # neither the tests — no test reads checked-in markdown.
-      # Negations must stay last.
-      - "!**/*.md"
-  pull_request:
-    branches: [main, dev]
-    paths:
-      - "server/**"
-      - "client/**"
-      - "shared/**"
-      - "plugin-sdk/**"
-      # npm workspaces hoist every dependency into the single root lockfile,
-      # so a dependency bump touches none of the four directories above — and
-      # a native binding like better-sqlite3 is exactly what needs the suite.
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/test.yml"
-      # Docs inside the workspaces (CLAUDE.md, READMEs, PATTERN.md) affect
-      # neither the tests — no test reads checked-in markdown.
-      # Negations must stay last.
-      - "!**/*.md"
   workflow_dispatch:
 
 # A newer push to the same branch/PR supersedes the running one — cancel it

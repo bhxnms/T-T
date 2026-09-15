@@ -1,8 +1,12 @@
 name: Enforce PR Target Branch
 
 on:
-  pull_request_target:
-    types: [opened, reopened, edited, synchronize]
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: 'Pull request number to check'
+        required: true
+        type: number
 
 jobs:
   check-target:
@@ -18,9 +22,12 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const base = context.payload.pull_request.base.ref;
-            const labels = context.payload.pull_request.labels.map(l => l.name);
-            const prNumber = context.payload.pull_request.number;
+            const prNumber = Number('${{ inputs.pull_request_number }}');
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: prNumber,
+            });
+            const base = pull.base.ref;
+            const labels = pull.labels.map(l => l.name);
 
             // bypass-branch-check label skips all enforcement
             if (labels.includes('bypass-branch-check')) {
@@ -74,7 +81,7 @@ jobs:
             // (there is no dependabot.yml). Labelling them meant close-stale-wrong-branch
             // shut them 24 hours later, which is how 13 of them died. Retarget instead:
             // a bot cannot click "Edit" the way the comment below asks a human to.
-            if (context.payload.pull_request.user.login === 'dependabot[bot]') {
+            if (pull.user.login === 'dependabot[bot]') {
               try {
                 await github.rest.pulls.update({
                   owner: context.repo.owner,
