@@ -73,7 +73,7 @@ export const DEFAULT_SETTINGS: Settings = {
   show_place_description: false,
   optimize_from_accommodation: true,
   map_provider: 'leaflet',
-  amap_api_key: '',
+  amap_js_api_key: '',
   map_base_layer: 'default',
   map_poi_pill_enabled: true,
   carto_api_key: '',

@@ -1,14 +1,14 @@
 // FE-MOB-SETMAP-001 onwards
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ToastContainer } from '../../../../src/components/shared/Toast';
+import MSettingsMap from '../../../../src/mobile/screens/settings/MSettingsMap';
+import { useAuthStore } from '../../../../src/store/authStore';
+import { useSettingsStore } from '../../../../src/store/settingsStore';
+import type { Settings } from '../../../../src/types';
+import { buildSettings } from '../../../helpers/factories';
 import { render, screen, waitFor } from '../../../helpers/render';
 import { resetAllStores, seedStore } from '../../../helpers/store';
-import { buildSettings } from '../../../helpers/factories';
-import { useSettingsStore } from '../../../../src/store/settingsStore';
-import { useAuthStore } from '../../../../src/store/authStore';
-import { ToastContainer } from '../../../../src/components/shared/Toast';
-import type { Settings } from '../../../../src/types';
-import MSettingsMap from '../../../../src/mobile/screens/settings/MSettingsMap';
 
 // Leaflet and the GL preview need a real canvas — stub both and expose the
 // props the screen feeds them so the preview wiring stays assertable.
@@ -16,8 +16,18 @@ vi.mock('../../../../src/components/Map/MapView', () => ({
   MapView: ({ tileUrl }: { tileUrl: string }) => <div data-testid="leaflet-preview" data-tile={tileUrl} />,
 }));
 vi.mock('../../../../src/components/Settings/MapboxPreview', () => ({
-  default: ({ provider, token, style, enable3d, quality }: {
-    provider: string; token: string; style: string; enable3d: boolean; quality: boolean;
+  default: ({
+    provider,
+    token,
+    style,
+    enable3d,
+    quality,
+  }: {
+    provider: string;
+    token: string;
+    style: string;
+    enable3d: boolean;
+    quality: boolean;
   }) => (
     <div
       data-testid="gl-preview"
@@ -51,7 +61,7 @@ function renderMap() {
     <>
       <ToastContainer />
       <MSettingsMap />
-    </>,
+    </>
   );
 }
 
@@ -94,7 +104,9 @@ describe('MSettingsMap', () => {
     await user.click(screen.getByRole('button', { name: /Select template/ }));
     await user.click(await screen.findByRole('button', { name: 'CartoDB Dark' }));
 
-    expect(screen.getByDisplayValue('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png')).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png')
+    ).toBeInTheDocument();
   });
 
   it('FE-MOB-SETMAP-005: typing a tile URL feeds straight into the Leaflet preview', async () => {
@@ -128,7 +140,10 @@ describe('MSettingsMap', () => {
     expect(screen.queryByPlaceholderText('pk.eyJ1Ijoi...')).not.toBeInTheDocument();
     expect(screen.queryByRole('switch', { name: '3D Buildings & Terrain' })).not.toBeInTheDocument();
     expect(screen.getByText('OpenFreeMap Liberty')).toBeInTheDocument();
-    expect(await screen.findByTestId('gl-preview')).toHaveAttribute('data-style', 'https://tiles.openfreemap.org/styles/liberty');
+    expect(await screen.findByTestId('gl-preview')).toHaveAttribute(
+      'data-style',
+      'https://tiles.openfreemap.org/styles/liberty'
+    );
     expect(screen.getByTestId('gl-preview')).toHaveAttribute('data-3d', 'false');
   });
 
@@ -149,7 +164,9 @@ describe('MSettingsMap', () => {
     renderMap();
 
     expect(screen.getByText('Select an OpenFreeMap style')).toBeInTheDocument();
-    expect(screen.getByText('Preset or OpenFreeMap style URL. OpenFreeMap styles work without a token.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Preset or OpenFreeMap style URL. OpenFreeMap styles work without a token.')
+    ).toBeInTheDocument();
   });
 
   it('FE-MOB-SETMAP-010: a stored mapbox provider hydrates token, style and both switches', async () => {
@@ -196,6 +213,7 @@ describe('MSettingsMap', () => {
       map_tile_url: OSM_URL,
       mapbox_access_token: '',
       carto_api_key: '',
+      amap_js_api_key: '',
       mapbox_style: 'mapbox://styles/mapbox/dark-v11',
       mapbox_3d_enabled: true,
       mapbox_quality_mode: false,
@@ -255,7 +273,7 @@ describe('MSettingsMap', () => {
     seedMap({ map_tile_url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png' });
 
     await waitFor(() =>
-      expect(screen.getByDisplayValue('https://tile.openstreetmap.de/{z}/{x}/{y}.png')).toBeInTheDocument(),
+      expect(screen.getByDisplayValue('https://tile.openstreetmap.de/{z}/{x}/{y}.png')).toBeInTheDocument()
     );
     expect(screen.getByText('OpenStreetMap DE')).toBeInTheDocument();
   });
@@ -270,7 +288,7 @@ describe('MSettingsMap', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save Map' }));
     expect(updateSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ mapbox_access_token: 'pk.new-token', map_provider: 'mapbox-gl' }),
+      expect.objectContaining({ mapbox_access_token: 'pk.new-token', map_provider: 'mapbox-gl' })
     );
   });
 
@@ -278,7 +296,10 @@ describe('MSettingsMap', () => {
     seedMap({ map_provider: 'maplibre-gl', maplibre_style: 'mapbox://styles/mapbox/dark-v11' });
     renderMap();
 
-    expect(await screen.findByTestId('gl-preview')).toHaveAttribute('data-style', 'https://tiles.openfreemap.org/styles/liberty');
+    expect(await screen.findByTestId('gl-preview')).toHaveAttribute(
+      'data-style',
+      'https://tiles.openfreemap.org/styles/liberty'
+    );
   });
 
   it('FE-MOB-SETMAP-020: the Leaflet branch offers the CARTO key field', async () => {

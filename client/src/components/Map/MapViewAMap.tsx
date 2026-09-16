@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { pluginsApi, type PluginMapLayer, type PluginMapMarker } from '../../api/client';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import { useSettingsStore } from '../../store/settingsStore';
 import type { RouteVia } from '../../types';
 import ErrorBoundary from '../shared/ErrorBoundary';
 import { MapView } from './MapView';
@@ -57,6 +58,7 @@ export function MapViewAMap(props: any) {
   const dayPlaces = props.dayPlaces || [];
   const selected = props.selectedPlaceId;
   const { position, mode } = useGeolocation();
+  const settingsKey = useSettingsStore((s) => s.settings.amap_js_api_key);
   const points = useMemo(() => places.filter((p: any) => valid(p.lat, p.lng)), [places]);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export function MapViewAMap(props: any) {
     let onMapClick: ((event: any) => void) | null = null;
     let onContextMenu: ((event: any) => void) | null = null;
     let onZoomEnd: (() => void) | null = null;
-    loadAmap()
+    loadAmap(settingsKey)
       .then((AMap) => {
         if (cancelled || !hostRef.current) return;
         amapRef.current = AMap;
@@ -128,7 +130,7 @@ export function MapViewAMap(props: any) {
       mapRef.current = null;
       setReady(false);
     };
-  }, []); // map lifecycle is intentionally mount-only
+  }, [settingsKey]); // map lifecycle is intentionally mount-only
 
   useEffect(() => {
     const map = mapRef.current;

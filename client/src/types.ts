@@ -151,7 +151,7 @@ export interface Settings {
   map_always_show_routes?: boolean;
   optimize_from_accommodation?: boolean;
   map_provider?: 'leaflet' | 'mapbox-gl' | 'maplibre-gl' | 'amap';
-  amap_api_key?: string;
+  amap_js_api_key?: string;
   /** Leaflet base layer: default street tiles or a satellite/aerial view. */
   map_base_layer?: 'default' | 'satellite';
   /** CARTO basemaps watermark keyless tiles; the key is appended as ?key= (#2054). */

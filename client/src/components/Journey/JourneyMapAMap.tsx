@@ -1,5 +1,6 @@
 import type { JourneyTrack } from '@trek/shared';
 import { useCallback, useEffect, useImperativeHandle, useRef, type Ref } from 'react';
+import { useSettingsStore } from '../../store/settingsStore';
 import {
   loadAmap,
   wgs84ToGcj02,
@@ -89,6 +90,7 @@ function JourneyMapAMap({
   const drawPhotosRef = useRef<(() => void) | null>(null);
   const photosRef = useRef(photos || []);
   const amapRef = useRef<any>(null);
+  const settingsKey = useSettingsStore((s) => s.settings.amap_js_api_key);
   const itemsRef = useRef(entries);
   const highlightedRef = useRef<string | null>(null);
   const onMarkerClickRef = useRef(onMarkerClick);
@@ -200,7 +202,7 @@ function JourneyMapAMap({
 
   useEffect(() => {
     let cancelled = false;
-    loadAmap()
+    loadAmap(settingsKey)
       .then((AMap) => {
         if (cancelled || !hostRef.current) return;
         amapRef.current = AMap;
@@ -267,7 +269,7 @@ function JourneyMapAMap({
       mapRef.current?.destroy();
       mapRef.current = null;
     };
-  }, [entries, trail, tracks, paddingBottom]);
+  }, [entries, trail, tracks, paddingBottom, settingsKey]);
 
   useEffect(() => {
     if (activeMarkerId) {

@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.1-blue?style=flat-square)
 
 ---
 
@@ -73,7 +73,7 @@
 
 ---
 
-## 🆕 v0.5.0 更新
+## 🆕 v0.5.1 更新
 
 - Atlas 地标标记和签到功能改进
 - 桌面端和移动端均可对地点进行签到
@@ -115,7 +115,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.5.0
+IMAGE_TAG=0.5.1
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -155,7 +155,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.5.0
+docker pull ghcr.io/bhxnms/tt-planner:0.5.1
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -165,7 +165,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.5.0
+  ghcr.io/bhxnms/tt-planner:0.5.1
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

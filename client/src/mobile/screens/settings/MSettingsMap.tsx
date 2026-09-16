@@ -79,6 +79,7 @@ export default function MSettingsMap() {
   const managed = useAuthStore((s) => s.managed);
   const [mapboxToken, setMapboxToken] = useState<string>(settings.mapbox_access_token || '');
   const [cartoKey, setCartoKey] = useState<string>(settings.carto_api_key || '');
+  const [amapKey, setAmapKey] = useState<string>(settings.amap_js_api_key || '');
   const [mapboxStyle, setMapboxStyle] = useState<string>(
     styleForProvider(initialProvider, slotStyle(initialProvider, settings))
   );
@@ -93,6 +94,7 @@ export default function MSettingsMap() {
     setMapTileUrl(settings.map_tile_url || '');
     setMapboxToken(settings.mapbox_access_token || '');
     setCartoKey(settings.carto_api_key || '');
+    setAmapKey(settings.amap_js_api_key || '');
     setMapboxStyle(styleForProvider(nextProvider, slotStyle(nextProvider, settings)));
     setMapbox3d(settings.mapbox_3d_enabled !== false);
     setMapboxQuality(settings.mapbox_quality_mode === true);
@@ -135,6 +137,7 @@ export default function MSettingsMap() {
         map_tile_url: mapTileUrl,
         mapbox_access_token: mapboxToken,
         carto_api_key: cartoKey,
+        amap_js_api_key: amapKey,
         ...stylePatch,
         mapbox_3d_enabled: mapbox3d,
         mapbox_quality_mode: mapboxQuality,
@@ -241,6 +244,26 @@ export default function MSettingsMap() {
               )}
             </>
           )}
+        </>
+      )}
+
+      {provider === 'amap' && (
+        <>
+          <MSetEyebrow className="mb-[5px] mt-[14px]">高德地图 Web JS API Key</MSetEyebrow>
+          <MSetInput
+            mono
+            value={amapKey}
+            onChange={(e) => setAmapKey(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
+            placeholder="请输入高德地图 API Key"
+          />
+          <MSetHint>
+            需要在高德开放平台申请 Web JS API Key。{' '}
+            <a href="https://console.amap.com/dev/key/app" target="_blank" rel="noreferrer" className="underline">
+              获取 API Key
+            </a>
+          </MSetHint>
         </>
       )}
 

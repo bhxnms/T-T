@@ -14,6 +14,7 @@ export const ENCRYPTED_SETTING_KEYS = new Set([
   'ntfy_token',
   'mapbox_access_token',
   'carto_api_key',
+  'amap_js_api_key',
   'llm_api_key',
 ]);
 // Encrypted keys that are masked (••••••••) when returned to the client.
@@ -34,8 +35,7 @@ export const DEFAULTABLE_USER_SETTING_KEYS = [
   // the key is per-instance rather than per-person: defaultable so one admin
   // value clears the watermark for everybody at once.
   'carto_api_key',
-  // Instance-wide GL map defaults: admins can set Mapbox token/style or
-  // tokenless MapLibre/OpenFreeMap style defaults for new users (#920).
+  // A user's browser-only AMap Web JS key is encrypted but never an admin default.
   'map_provider',
   'mapbox_access_token',
   'mapbox_style',

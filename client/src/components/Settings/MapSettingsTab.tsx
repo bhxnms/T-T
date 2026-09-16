@@ -185,7 +185,7 @@ export default function MapSettingsTab(): React.ReactElement {
   const managed = useAuthStore((s) => s.managed);
   const [mapboxToken, setMapboxToken] = useState<string>(settings.mapbox_access_token || '');
   const [cartoKey, setCartoKey] = useState<string>(settings.carto_api_key || '');
-  const [amapKey, setAmapKey] = useState<string>(settings.amap_api_key || '');
+  const [amapKey, setAmapKey] = useState<string>(settings.amap_js_api_key || '');
   const [mapboxStyle, setMapboxStyle] = useState<string>(
     styleForProvider(initialProvider, slotStyle(initialProvider, settings))
   );
@@ -200,7 +200,7 @@ export default function MapSettingsTab(): React.ReactElement {
     setMapTileUrl(settings.map_tile_url || '');
     setMapboxToken(settings.mapbox_access_token || '');
     setCartoKey(settings.carto_api_key || '');
-    setAmapKey(settings.amap_api_key || '');
+    setAmapKey(settings.amap_js_api_key || '');
     setMapboxStyle(styleForProvider(nextProvider, slotStyle(nextProvider, settings)));
     setMapbox3d(settings.mapbox_3d_enabled !== false);
     setMapboxQuality(settings.mapbox_quality_mode === true);
@@ -243,7 +243,7 @@ export default function MapSettingsTab(): React.ReactElement {
         map_tile_url: mapTileUrl,
         mapbox_access_token: mapboxToken,
         carto_api_key: cartoKey,
-        amap_api_key: amapKey,
+        amap_js_api_key: amapKey,
         ...stylePatch,
         mapbox_3d_enabled: mapbox3d,
         mapbox_quality_mode: mapboxQuality,
@@ -392,7 +392,7 @@ export default function MapSettingsTab(): React.ReactElement {
       )}
 
       {/* AMap settings */}
-      {provider === 'amap' && !managed && (
+      {provider === 'amap' && (
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-700">高德地图 Web JS API Key</label>
           <input
@@ -405,7 +405,7 @@ export default function MapSettingsTab(): React.ReactElement {
             className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-slate-400"
           />
           <p className="mt-1 text-xs text-slate-400">
-            需要在高德开放平台申请 Web 服务 API Key。{' '}
+            需要在高德开放平台申请 Web JS API Key。{' '}
             <a href="https://console.amap.com/dev/key/app" target="_blank" rel="noreferrer" className="underline">
               获取 API Key
             </a>
