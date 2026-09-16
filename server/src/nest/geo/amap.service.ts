@@ -77,9 +77,13 @@ export interface AmapSearchPlace {
   lat: number | null;
   lng: number | null;
   amap_id: string | null;
-  website: null;
+  website: string | null;
   phone: string | null;
-  rating: null;
+  rating: number | null;
+  rating_count: number | null;
+  photos: string[];
+  open_time: string | null;
+  business_area: string | null;
   source: 'amap';
   amap_type: string | null;
 }
@@ -96,7 +100,7 @@ export async function amapSearchPlaces(
     keywords: query,
     offset: String(opts.limit ?? 10),
     page: '1',
-    extensions: 'base',
+    extensions: 'all',
     output: 'JSON',
   });
   if (opts.locationBias && Number.isFinite(opts.locationBias.lat) && Number.isFinite(opts.locationBias.lng)) {
@@ -118,9 +122,18 @@ export async function amapSearchPlaces(
       lat: wgs ? wgs.lat : null,
       lng: wgs ? wgs.lng : null,
       amap_id: poi.id || null,
-      website: null,
+      website: String(poi.website || poi.biz_ext?.website || '') || null,
       phone: String(poi.tel || '') || null,
-      rating: null,
+      rating: Number.isFinite(Number(poi.biz_ext?.rating)) ? Number(poi.biz_ext.rating) : null,
+      rating_count: Number.isFinite(Number(poi.biz_ext?.rating_num)) ? Number(poi.biz_ext.rating_num) : null,
+      photos: Array.isArray(poi.photos)
+        ? poi.photos
+            .map((photo: any) => String(photo.url || photo.title || '').trim())
+            .filter((url: string) => /^https?:\/\//i.test(url))
+            .slice(0, 5)
+        : [],
+      open_time: String(poi.biz_ext?.open_time || poi.business?.opentime || '') || null,
+      business_area: String(poi.biz_ext?.business_area || '') || null,
       source: 'amap' as const,
       amap_type: String(poi.type || '') || null,
     };

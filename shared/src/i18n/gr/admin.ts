@@ -620,8 +620,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Δεν υπάρχουν διαθέσιμα πρόσθετα',
   'admin.weather.title': 'Δεδομένα Καιρού',
   'admin.weather.badge': 'Από 24 Μαρτίου 2026',
-  'admin.weather.description':
-    'Το TREK χρησιμοποιεί το Open-Meteo ως πηγή δεδομένων καιρού. Το Open-Meteo είναι μια δωρεάν, ανοιχτού κώδικα υπηρεσία καιρού — δεν απαιτείται κλειδί API.',
+  'admin.weather.description': 'Το TT συνεχίζει να χρησιμοποιεί το weather API του TREK — μια δωρεάν υπηρεσία ανοιχτού κώδικα, χωρίς κλειδί API.',
   'admin.weather.forecast': 'Πρόγνωση 16 ημερών',
   'admin.weather.forecastDesc': 'Προηγουμένως 5 ημέρες (OpenWeatherMap)',
   'admin.weather.climate': 'Ιστορικά δεδομένα κλίματος',

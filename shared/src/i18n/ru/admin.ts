@@ -564,8 +564,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Нет доступных дополнений',
   'admin.weather.title': 'Данные о погоде',
   'admin.weather.badge': 'С 24 марта 2026',
-  'admin.weather.description':
-    'TREK использует Open-Meteo как источник данных о погоде. Open-Meteo — бесплатный сервис с открытым кодом, API-ключ не требуется.',
+  'admin.weather.description': 'TT продолжает использовать weather API от TREK — бесплатный сервис с открытым кодом, без API-ключа.',
   'admin.weather.forecast': 'Прогноз на 16 дней',
   'admin.weather.forecastDesc': 'Ранее 5 дней (OpenWeatherMap)',
   'admin.weather.climate': 'Исторические климатические данные',

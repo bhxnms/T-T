@@ -36,7 +36,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            APP_VERSION=0.5.1
+            APP_VERSION=0.5.2
 
       - name: Run Docker Scout CVE scan
         uses: docker/scout-action@v1

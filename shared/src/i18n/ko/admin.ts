@@ -574,8 +574,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': '사용 가능한 애드온이 없습니다',
   'admin.weather.title': '날씨 데이터',
   'admin.weather.badge': '2026년 3월 24일부터',
-  'admin.weather.description':
-    'TREK은 날씨 데이터 소스로 Open-Meteo를 사용합니다. Open-Meteo는 무료 오픈 소스 날씨 서비스로 API 키가 필요 없습니다.',
+  'admin.weather.description': 'TT는 계속해서 TREK의 날씨 API를 사용합니다. 무료 오픈 소스 서비스이며 API 키가 필요 없습니다.',
   'admin.weather.forecast': '16일 예보',
   'admin.weather.forecastDesc': '이전: 5일 (OpenWeatherMap)',
   'admin.weather.climate': '과거 기후 데이터',

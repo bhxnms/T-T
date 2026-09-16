@@ -574,8 +574,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': '利用可能なアドオンはありません',
   'admin.weather.title': '天気データ',
   'admin.weather.badge': '2026年3月24日以降',
-  'admin.weather.description':
-    'TREKは天気データにOpen‑Meteoを使用しています。無料でオープンソース、APIキーは不要です。',
+  'admin.weather.description': 'TTは引き続きTREKの天気APIを使用しています。無料のオープンソースサービスで、APIキーは不要です。',
   'admin.weather.forecast': '16日間予報',
   'admin.weather.forecastDesc': '以前は5日（OpenWeatherMap）',
   'admin.weather.climate': '過去の気候データ',

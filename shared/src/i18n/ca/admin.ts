@@ -192,8 +192,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'No hi ha complements disponibles',
   'admin.weather.title': 'Dades meteorològiques',
   'admin.weather.badge': 'Des del 24 de març de 2026',
-  'admin.weather.description':
-    'TREK utilitza Open-Meteo com a font de dades meteorològiques. Open-Meteo és un servei meteorològic gratuït i de codi obert: no requereix clau API.',
+  'admin.weather.description': 'TT continua a utilitzar l\'API meteorològica de TREK: un servei gratuït i de codi obert, sense clau API.',
   'admin.weather.forecast': 'Pronòstic de 16 dies',
   'admin.weather.forecastDesc': 'Abans eren 5 dies (OpenWeatherMap)',
   'admin.weather.climate': 'Dades climàtiques històriques',

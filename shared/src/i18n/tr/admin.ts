@@ -609,8 +609,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Kullanılabilir eklenti yok',
   'admin.weather.title': 'Hava Durumu Verileri',
   'admin.weather.badge': "24 Mart 2026'dan beri",
-  'admin.weather.description':
-    "TREK, hava durumu veri kaynağı olarak Open-Meteo'yu kullanıyor. Open-Meteo ücretsiz, açık kaynaklı bir hava durumu hizmetidir; API anahtarı gerekmez.",
+  'admin.weather.description': 'TT, TREK\'in hava durumu API\'sini kullanmaya devam ediyor — ücretsiz, açık kaynaklı bir hizmet, API anahtarı gerekmez.',
   'admin.weather.forecast': '16 günlük tahmin',
   'admin.weather.forecastDesc': 'Daha önce 5 gün (OpenWeatherMap)',
   'admin.weather.climate': 'Geçmiş iklim verileri',

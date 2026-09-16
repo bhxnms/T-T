@@ -563,8 +563,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Không có tiện ích bổ sung nào',
   'admin.weather.title': 'Dữ liệu thời tiết',
   'admin.weather.badge': 'Kể từ ngày 24 tháng 3 năm 2026',
-  'admin.weather.description':
-    'TREK sử dụng Open-Meteo làm nguồn dữ liệu thời tiết. Open-Meteo là dịch vụ thời tiết nguồn mở, miễn phí — không yêu cầu khóa API.',
+  'admin.weather.description': 'TT tiếp tục sử dụng weather API của TREK — dịch vụ nguồn mở, miễn phí, không cần khóa API.',
   'admin.weather.forecast': 'dự báo 16 ngày',
   'admin.weather.forecastDesc': 'Trước đây 5 ngày (OpenWeatherMap)',
   'admin.weather.climate': 'Dữ liệu khí hậu lịch sử',

@@ -568,8 +568,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Nincsenek elérhető bővítmények',
   'admin.weather.title': 'Időjárás adatok',
   'admin.weather.badge': '2026. március 24. óta',
-  'admin.weather.description':
-    'A TREK az Open-Meteo-t használja időjárás-adatforrásként. Az Open-Meteo egy ingyenes, nyílt forráskódú időjárás-szolgáltatás — nincs szükség API kulcsra.',
+  'admin.weather.description': 'A TT továbbra is a TREK időjárás API-ját használja — ingyenes, nyílt forráskódú szolgáltatás, API kulcs nélkül.',
   'admin.weather.forecast': '16 napos előrejelzés',
   'admin.weather.forecastDesc': 'Korábban 5 nap volt (OpenWeatherMap)',
   'admin.weather.climate': 'Történelmi klímaadatok',

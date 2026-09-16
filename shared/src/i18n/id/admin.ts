@@ -610,8 +610,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Tidak ada addon yang tersedia',
   'admin.weather.title': 'Data Cuaca',
   'admin.weather.badge': 'Sejak 24 Maret 2026',
-  'admin.weather.description':
-    'TREK menggunakan Open-Meteo sebagai sumber data cuaca. Open-Meteo adalah layanan cuaca gratis dan open-source — tidak perlu kunci API.',
+  'admin.weather.description': 'TT tetap menggunakan weather API dari TREK — layanan gratis dan open-source, tanpa kunci API.',
   'admin.weather.forecast': 'Prakiraan 16 hari',
   'admin.weather.forecastDesc': 'Sebelumnya 5 hari (OpenWeatherMap)',
   'admin.weather.climate': 'Data iklim historis',

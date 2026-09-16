@@ -565,8 +565,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'لا توجد إضافات متاحة',
   'admin.weather.title': 'بيانات الطقس',
   'admin.weather.badge': 'منذ 24 مارس 2026',
-  'admin.weather.description':
-    'يستخدم TREK خدمة Open-Meteo كمصدر لبيانات الطقس. وهي خدمة مجانية ومفتوحة المصدر ولا تتطلب مفتاح API.',
+  'admin.weather.description': 'يستمر TT في استخدام واجهة برمجة تطبيقات الطقس الخاصة بـ TREK — وهي خدمة مجانية ومفتوحة المصدر لا تتطلب مفتاح API.',
   'admin.weather.forecast': 'توقعات 16 يومًا',
   'admin.weather.forecastDesc': 'سابقًا 5 أيام (OpenWeatherMap)',
   'admin.weather.climate': 'بيانات المناخ التاريخية',

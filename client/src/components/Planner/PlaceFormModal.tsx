@@ -1,4 +1,4 @@
-import { AlertTriangle, Loader2, Paperclip, Plus, Search, X } from 'lucide-react';
+import { AlertTriangle, ImageOff, Loader2, Paperclip, Plus, Search, Star, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { mapsApi } from '../../api/client';
 import { useTranslation } from '../../i18n';
@@ -35,6 +35,32 @@ export interface PlaceSubmitData extends Omit<PlaceFormData, 'lat' | 'lng' | 'ca
   lng: number | null;
   category_id: string | null;
   _pendingFiles?: File[];
+}
+
+/**
+ * First photo of an AMap result (both /v5/place/text and /v5/place/detail hand
+ * back absolute image URLs). Plain <img> rather than the lazy image component:
+ * the list holds at most ten rows and they are already in the viewport.
+ */
+function AmapResultThumb({ photo, name }: { photo?: string; name?: string }): React.ReactElement {
+  const [broken, setBroken] = useState(false);
+  if (!photo || broken) {
+    return (
+      <div className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-surface-hover text-content-faint">
+        <ImageOff size={16} aria-hidden="true" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={photo}
+      alt={name || ''}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setBroken(true)}
+      className="h-12 w-12 flex-none rounded-md object-cover"
+    />
+  );
 }
 
 interface PlaceFormModalProps {
@@ -856,21 +882,47 @@ export default function PlaceFormModal(props: PlaceFormModalProps) {
               )}
             </div>
 
-            {/* Search results (populated after full search) */}
+            {/* Search results (populated after full search). AMap rows carry the
+                richer Web-Service payload (photo, rating, opening hours), so
+                they render a thumbnail and a meta line instead of plain text. */}
             {mapsResults.length > 0 && (
-              <div className="mt-2 max-h-40 overflow-hidden overflow-y-auto rounded-lg border border-edge bg-surface-card">
+              <div className="mt-2 max-h-72 overflow-hidden overflow-y-auto rounded-lg border border-edge bg-surface-card">
                 {mapsResults.map((result, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSelectMapsResult(result)}
-                    className="w-full border-b border-edge-faint px-3 py-2 text-left last:border-0 hover:bg-surface-hover"
+                    className="flex w-full gap-2.5 border-b border-edge-faint px-3 py-2 text-left last:border-0 hover:bg-surface-hover"
                   >
-                    <div className="text-sm font-medium">{result.name}</div>
-                    <div className="truncate text-xs text-content-muted">
-                      {result.address}
+                    <AmapResultThumb photo={result.photos?.[0]} name={result.name} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate text-sm font-medium">{result.name}</span>
+                        {result.source === 'amap' && (
+                          <span className="bg-accent/15 flex-none rounded px-1 py-[1px] text-[10px]">高德</span>
+                        )}
+                      </div>
+                      <div className="truncate text-xs text-content-muted">{result.address}</div>
                       {result.source === 'amap' && (
-                        <span className="bg-accent/15 ml-1.5 rounded px-1 py-[1px] text-[10px]">高德</span>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-content-faint">
+                          {result.rating != null && (
+                            <span className="flex items-center gap-0.5 text-amber-500">
+                              <Star size={11} className="fill-current" aria-hidden="true" />
+                              {Number(result.rating).toFixed(1)}
+                              {result.rating_count ? (
+                                <span className="text-content-faint">
+                                  ({Number(result.rating_count).toLocaleString()})
+                                </span>
+                              ) : null}
+                            </span>
+                          )}
+                          {result.amap_type && (
+                            <span className="truncate">{String(result.amap_type).split(';')[0]}</span>
+                          )}
+                          {result.open_time && <span className="truncate">{result.open_time}</span>}
+                          {result.phone && <span className="truncate">{result.phone}</span>}
+                          {result.photos?.length > 1 && <span>{result.photos.length} 张照片</span>}
+                        </div>
                       )}
                     </div>
                   </button>

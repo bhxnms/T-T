@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.2-blue?style=flat-square)
 
 ---
 
@@ -73,14 +73,16 @@
 
 ---
 
-## 🆕 v0.5.1 更新
+## 🆕 v0.5.2 更新
 
-- Atlas 地标标记和签到功能改进
-- 桌面端和移动端均可对地点进行签到
-- Photon 作为 Nominatim 的备用地点搜索服务
-- 移除上游 TREK 更新检查
-- 桌面端和移动端行程加载界面更新
-- 国际化 key parity 恢复，测试套件保持绿色
+### 高德地图地点搜索
+- 高德搜索结果不再只有地址：新增地点照片、评分与评价数、营业时间、电话、分类和商圈
+- 搜索列表为每条高德结果显示照片缩略图和评分标签，默认开启，无需额外设置
+- 高德拥有独立的用户级 Web JS API Key 入口（设置 → 地图），按账号加密存储，用户之间互不共享
+- 高德设置保持独立：选择高德时不会回退到 Leaflet 或 Mapbox 的样式设置
+
+### 天气与国际化
+- 设置 → 天气中的 API 说明改为“TT沿用TREK天气API”，全部 23 种语言同步更新
 
 ---
 
@@ -115,7 +117,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.5.1
+IMAGE_TAG=0.5.2
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -155,7 +157,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.5.1
+docker pull ghcr.io/bhxnms/tt-planner:0.5.2
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -165,7 +167,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.5.1
+  ghcr.io/bhxnms/tt-planner:0.5.2
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

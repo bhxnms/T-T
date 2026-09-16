@@ -604,8 +604,7 @@ const admin: TranslationStrings = {
   'admin.github.support': 'Pomáhá udržovat vývoj TREK',
   'admin.weather.title': 'Data o počasí',
   'admin.weather.badge': 'Od 24. března 2026',
-  'admin.weather.description':
-    'TREK používá Open-Meteo jako zdroj dat. Je to bezplatná open-source služba – není vyžadován API klíč.',
+  'admin.weather.description': 'TT nadále používá weather API z TREK — bezplatnou open-source službu bez API klíče.',
   'admin.weather.forecast': 'Předpověď na 16 dní',
   'admin.weather.forecastDesc': 'Dříve 5 dní (OpenWeatherMap)',
   'admin.weather.climate': 'Historická klimatická data',

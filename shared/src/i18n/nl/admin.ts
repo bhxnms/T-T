@@ -562,8 +562,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Geen add-ons beschikbaar',
   'admin.weather.title': 'Weergegevens',
   'admin.weather.badge': 'Sinds 24 maart 2026',
-  'admin.weather.description':
-    'TREK gebruikt Open-Meteo als weerbron. Open-Meteo is een gratis, open-source weerdienst — geen API-sleutel vereist.',
+  'admin.weather.description': 'TT blijft de weer-API van TREK gebruiken — een gratis, open-source dienst zonder API-sleutel.',
   'admin.weather.forecast': '16-daagse voorspelling',
   'admin.weather.forecastDesc': 'Voorheen 5 dagen (OpenWeatherMap)',
   'admin.weather.climate': 'Historische klimaatgegevens',

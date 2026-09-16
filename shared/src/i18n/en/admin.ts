@@ -605,8 +605,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'No addons available',
   'admin.weather.title': 'Weather Data',
   'admin.weather.badge': 'Since March 24, 2026',
-  'admin.weather.description':
-    'TREK uses Open-Meteo as its weather data source. Open-Meteo is a free, open-source weather service — no API key required.',
+  'admin.weather.description': 'TT continues to use the TREK weather API — a free, open-source service with no API key required.',
   'admin.weather.forecast': '16-day forecast',
   'admin.weather.forecastDesc': 'Previously 5 days (OpenWeatherMap)',
   'admin.weather.climate': 'Historical climate data',

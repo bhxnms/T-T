@@ -621,8 +621,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Inga tillägg tillgängliga',
   'admin.weather.title': 'Väderdata',
   'admin.weather.badge': 'Sedan den 24 mars 2026',
-  'admin.weather.description':
-    'TREK använder Open-Meteo som källa för väderdata. Open-Meteo är en kostnadsfri vädertjänst med öppen källkod – ingen API-nyckel krävs.',
+  'admin.weather.description': 'TT fortsätter att använda TREKs väder-API — en kostnadsfri tjänst med öppen källkod, ingen API-nyckel krävs.',
   'admin.weather.forecast': '16-dagarsprognos',
   'admin.weather.forecastDesc': 'Tidigare 5 dagar (OpenWeatherMap)',
   'admin.weather.climate': 'Historiska klimatdata',

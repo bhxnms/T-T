@@ -16,7 +16,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.2-blue?style=flat-square)
 
 ---
 
@@ -70,20 +70,21 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.5.1
+## 🆕 What's New in v0.5.2
 
-### Atlas & Check-ins
-- Landmark markers redesigned as clean colored dots (visited landmarks glow)
-- Markers hide while zooming and fade back in as one layer when zooming settles
-- New "Check-ins" tab in the Atlas sidebar: total count plus landmark and trip-place lists
-- Check-in any place from the trip planner (desktop & mobile) — it automatically appears as a dot on the Atlas map
-- Mobile Atlas gains the Check-ins sheet and landmark popups
+### AMap (高德) place search
+- AMap results now come back with far more than an address: photos, rating with
+  vote count, opening hours, phone number, category and business district
+- The search list shows a photo thumbnail and a rating badge for every AMap hit,
+  enabled by default with no extra setting to turn on
+- AMap gets its own per-user Web JS API Key field under Settings → Map; the key
+  is stored encrypted per account and never shared between users
+- AMap settings stay independent: choosing 高德 never falls back to Leaflet or
+  Mapbox styling options
 
-### Fixes & Improvements
-- Place search no longer fails in restricted networks: Photon (OpenStreetMap data) now backs up Nominatim automatically
-- Removed the upstream TREK update check — TT never shows "update available" banners or notifications
-- Trip loading splash now features the TT mascot on desktop and mobile
-- i18n key parity restored across all 20 languages; test suite fully green (13,400+ cases)
+### Weather & i18n
+- The weather API note in Settings → Weather now reads "TT continues to use the
+  TREK weather API" instead of the old TREK-only wording, in all 23 locales
 
 ---
 
@@ -105,7 +106,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.5.1`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.5.2`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -155,7 +156,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.5.1 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.5.2 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \

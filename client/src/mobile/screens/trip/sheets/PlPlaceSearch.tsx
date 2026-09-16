@@ -1,4 +1,4 @@
-import { Loader2, Search } from 'lucide-react';
+import { ImageOff, Loader2, Search, Star } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mapsApi } from '../../../../api/client';
 import { isGoogleMapsUrl } from '../../../../components/Planner/PlaceFormModal.helpers';
@@ -43,6 +43,28 @@ interface PlPlaceSearchProps {
 
 /** "48.8566, 2.3522" (also ; or whitespace separated) → direct coordinates. */
 const COORD_RE = /^(-?\d+(?:\.\d*)?)(?:\s*[,;]\s*|\s+)(-?\d+(?:\.\d*)?)$/;
+
+/** First AMap result photo, with a neutral placeholder for AMap rows that have none. */
+function AmapResultThumb({ photo, name }: { photo?: string; name?: string }): React.ReactElement {
+  const [broken, setBroken] = useState(false);
+  if (!photo || broken) {
+    return (
+      <div className="flex h-11 w-11 flex-none items-center justify-center rounded-[9px] bg-[color:var(--m-rowbr)] text-m-muted">
+        <ImageOff size={14} aria-hidden="true" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={photo}
+      alt={name || ''}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setBroken(true)}
+      className="h-11 w-11 flex-none rounded-[9px] object-cover"
+    />
+  );
+}
 
 function placeToPick(place: MapsPlace): PlSearchPick {
   const s = (v: unknown) => (v == null ? undefined : String(v));
@@ -284,16 +306,44 @@ export default function PlPlaceSearch({
       )}
 
       {results.length > 0 && (
-        <div className="mt-2 max-h-40 overflow-y-auto rounded-[14px] border border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)]">
+        <div className="mt-2 max-h-60 overflow-y-auto rounded-[14px] border border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)]">
           {results.map((result, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => applyPlace(result)}
-              className="block w-full border-t border-[color:var(--m-rowbr)] px-[13px] py-[10px] text-left first:border-t-0"
+              className="flex w-full gap-2.5 border-t border-[color:var(--m-rowbr)] px-[13px] py-[10px] text-left first:border-t-0"
             >
-              <div className="truncate text-[0.8125rem] font-semibold text-m-ink">{String(result.name ?? '')}</div>
-              <div className="truncate font-geist text-[0.65625rem] text-m-muted">{String(result.address ?? '')}</div>
+              <AmapResultThumb photo={(result.photos as string[] | undefined)?.[0]} name={String(result.name ?? '')} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-[0.8125rem] font-semibold text-m-ink">
+                    {String(result.name ?? '')}
+                  </span>
+                  {result.source === 'amap' && (
+                    <span className="flex-none rounded bg-[color:var(--m-ic)] px-1 py-[1px] text-[10px] text-m-muted">
+                      高德
+                    </span>
+                  )}
+                </div>
+                <div className="truncate font-geist text-[0.65625rem] text-m-muted">{String(result.address ?? '')}</div>
+                {result.source === 'amap' && (
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-geist text-[0.65625rem] text-m-muted">
+                    {result.rating != null && (
+                      <span className="flex items-center gap-0.5 text-amber-500">
+                        <Star size={10} className="fill-current" aria-hidden="true" />
+                        {Number(result.rating).toFixed(1)}
+                        {result.rating_count ? (
+                          <span className="text-m-muted">({Number(result.rating_count).toLocaleString()})</span>
+                        ) : null}
+                      </span>
+                    )}
+                    {result.amap_type && <span className="truncate">{String(result.amap_type).split(';')[0]}</span>}
+                    {result.open_time && <span className="truncate">{String(result.open_time)}</span>}
+                    {result.phone && <span className="truncate">{String(result.phone)}</span>}
+                  </div>
+                )}
+              </div>
             </button>
           ))}
         </div>

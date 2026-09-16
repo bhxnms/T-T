@@ -555,8 +555,7 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': '暫無可用擴充套件',
   'admin.weather.title': '天氣資料',
   'admin.weather.badge': '自 2026 年 3 月 24 日起',
-  'admin.weather.description':
-    'TREK 使用 Open-Meteo 作為天氣資料來源。Open-Meteo 是免費的開源天氣服務——無需 API 金鑰。',
+  'admin.weather.description': 'TT 沿用 TREK 天氣 API——免費的開源服務，無需 API 金鑰。',
   'admin.weather.forecast': '16 天天氣預報',
   'admin.weather.forecastDesc': '之前為 5 天 (OpenWeatherMap)',
   'admin.weather.climate': '歷史氣候資料',
