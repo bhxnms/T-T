@@ -1,4 +1,5 @@
 import { readEnv } from '../app-config';
+import { encrypt_api_key } from '../nest/common/crypto/apiKeyCrypto';
 
 import Database from 'better-sqlite3';
 import crypto from 'crypto';
@@ -79,6 +80,17 @@ function seedAdminAccount(db: Database.Database): void {
     db.prepare(
       'INSERT INTO users (username, email, password_hash, role, must_change_password) VALUES (?, ?, ?, ?, 1)',
     ).run(username, email, hash, 'admin');
+    // Keep the generated credentials in the encrypted bootstrap store. The
+    // system-notice service exposes them only to this admin while
+    // must_change_password is set, and auth.service deletes them after a change.
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run(
+      'bootstrap_admin_email',
+      encrypt_api_key(email),
+    );
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run(
+      'bootstrap_admin_password',
+      encrypt_api_key(password),
+    );
 
     console.log('');
     console.log('╔══════════════════════════════════════════════╗');

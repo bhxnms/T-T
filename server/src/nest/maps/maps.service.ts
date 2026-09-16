@@ -429,7 +429,7 @@ interface OverpassPoiElement {
 
 interface PoiSearchResult {
   pois: OverpassPoi[];
-  source: 'openstreetmap';
+  source: 'openstreetmap' | 'amap';
   truncated: boolean;
   // True when the requested viewport was too large and got shrunk to a centred
   // window before querying — the results then cover the middle of the view only.
@@ -612,9 +612,65 @@ export class MapsService {
     return this.resolveGoogleMapsUrl(url) as Promise<MapsResolveUrlResult>;
   }
 
-  // OSM-only POI search by category within a viewport bbox (never calls Google).
-  pois(category: string, bbox: { south: number; west: number; north: number; east: number }, lang?: string) {
+  // POI search by category within a viewport bbox. AMap uses the instance's
+  // Web-Service key; native/omitted keeps the existing Overpass path.
+  pois(
+    category: string,
+    bbox: { south: number; west: number; north: number; east: number },
+    lang?: string,
+    provider?: 'amap' | 'native',
+  ) {
+    if (provider === 'amap' && getAmapKey(this.database)) {
+      return this.searchAmapPois(category, bbox, lang);
+    }
     return this.searchOverpassPois(category, bbox, lang);
+  }
+
+  private async searchAmapPois(
+    category: string,
+    bbox: { south: number; west: number; north: number; east: number },
+    _lang?: string,
+  ): Promise<PoiSearchResult> {
+    const keywords: Record<string, string> = {
+      restaurant: '餐厅',
+      cafe: '咖啡馆',
+      bar: '酒吧',
+      hotel: '酒店',
+      sights: '景点',
+      museum: '博物馆',
+      nature: '公园',
+      activity: '游乐场',
+    };
+    const keyword = keywords[category];
+    if (!keyword) throw Object.assign(new Error('Unknown POI category'), { status: 400 });
+    const lat = (bbox.south + bbox.north) / 2;
+    const lng = (bbox.west + bbox.east) / 2;
+    const radius = Math.min(
+      Math.max(Math.hypot(bbox.north - bbox.south, bbox.east - bbox.west) * 55_500, 1000),
+      300_000,
+    );
+    const places = await amapSearchPlaces(this.database, keyword, { locationBias: { lat, lng, radius }, limit: 60 });
+    return {
+      pois: places
+        .filter((p) => p.lat != null && p.lng != null)
+        .map((p) => ({
+          osm_id: `amap:${p.amap_id || `${p.lat}:${p.lng}`}`,
+          name: p.name,
+          lat: p.lat as number,
+          lng: p.lng as number,
+          category,
+          poi_type: p.amap_type || category,
+          address: p.address || null,
+          website: p.website,
+          phone: p.phone,
+          opening_hours: p.open_time,
+          cuisine: null,
+          source: 'amap' as const,
+        })),
+      source: 'amap',
+      truncated: places.length >= 60,
+      clamped: false,
+    };
   }
 
   /**

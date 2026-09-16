@@ -37,6 +37,18 @@ export const RETIRED_NOTICE_IDS = [
 
 export const SYSTEM_NOTICES: SystemNotice[] = [
   {
+    id: 'tt-bootstrap-password',
+    display: 'modal',
+    severity: 'critical',
+    titleKey: 'system_notice.bootstrap_password.title',
+    bodyKey: 'system_notice.bootstrap_password.body',
+    dismissible: false,
+    conditions: [{ kind: 'mustChangePassword' }, { kind: 'role', roles: ['admin'] }],
+    publishedAt: '2026-09-17T00:00:00Z',
+    priority: 1000,
+  },
+
+  {
     id: 'tt-welcome-v1',
     display: 'modal',
     severity: 'info',

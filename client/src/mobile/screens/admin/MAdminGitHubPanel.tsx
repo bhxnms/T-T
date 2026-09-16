@@ -215,7 +215,7 @@ export default function MAdminGitHubPanel({ isPrerelease = false }: { isPrerelea
       sub: t('settings.about.reportBugHint'),
     },
     {
-      href: 'https://github.com/bhxnms/T-T/discussions/new?category=feature-requests',
+      href: 'https://github.com/bhxnms/T-T/discussions',
       color: '#f59e0b',
       icon: <Lightbulb size={18} className="text-[#f59e0b]" />,
       title: t('settings.about.featureRequest'),

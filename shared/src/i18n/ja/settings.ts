@@ -314,6 +314,8 @@ const settings: TranslationStrings = {
   'settings.mapPoiPill': '地図でスポットを探す',
   'settings.mapPoiPillHint':
     '旅行の地図にカテゴリピルを表示して、OpenStreetMapから近くのレストランや宿泊施設などを見つけられます。',
+  'settings.mapPoiPillHintAmap':
+    'Use AMap to find nearby restaurants, hotels and other places from the category pill on the trip map.',
   'settings.airtrail.title': 'AirTrail',
   'settings.airtrail.hint':
     'セルフホストの AirTrail を接続して、フライトをインポート・同期します。AirTrail の「設定 → セキュリティ」で API キーを作成してください。',

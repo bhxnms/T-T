@@ -32,6 +32,9 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     'The 3.0.14 upgrade detected one or more username or email collisions caused by leading/trailing whitespace in stored accounts. Affected accounts were renamed automatically. Check the server logs for lines starting with **[migration] WHITESPACE COLLISION** to identify which accounts need review.',
   'system_notice.welcome_v1.title': 'Welcome to TT',
+  'system_notice.bootstrap_password.title': 'Change the initial admin password',
+  'system_notice.bootstrap_password.body':
+    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.',
   'system_notice.welcome_v1.body':
     'TT is a travel planning and activity management tool maintained by the TT team. Plan itineraries, manage activities, and collaborate with travel partners. This project is developed from a TREK open-source branch.',
   'system_notice.welcome_v1.cta_label': 'Plan a trip',

@@ -695,6 +695,10 @@ export class AuthService {
         newPv,
         userId,
       );
+      // The one credential pair that must not outlive the password it describes:
+      // the first-deploy notice reads these rows, and a stale copy would keep
+      // showing the old password after it stopped working.
+      this.db.run("DELETE FROM app_settings WHERE key IN ('bootstrap_admin_email', 'bootstrap_admin_password')");
       // A password change rotates the user's sessions: bumping password_version
       // invalidates existing JWT cookie sessions, and the separate MCP static
       // token and OAuth bearer-token stores are pruned to match (same set the

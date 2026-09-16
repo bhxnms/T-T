@@ -13,8 +13,8 @@ interface AtlasLayerToggleProps {
 
 // Floating switch that reveals the countries you only plan to visit (#1048). Hidden
 // entirely when there is nothing planned — an always-present control for an empty set
-// is just clutter over the globe. Sits on the desktop map only; the mobile atlas has
-// its own compact toggle in MAtlas.
+// is just clutter over the globe. Sits on the desktop map only; MAtlas renders the
+// same two layers as compact chips in its top control row.
 export default function AtlasLayerToggle({
   t,
   showPlanned,

@@ -99,7 +99,7 @@ describe('usePoiExplore', () => {
     });
 
     await waitFor(() => expect(result.current.pois).toHaveLength(1));
-    expect(pois).toHaveBeenCalledWith('cafe', BBOX, 'en-US', expect.any(AbortSignal));
+    expect(pois).toHaveBeenCalledWith('cafe', BBOX, 'en-US', expect.any(AbortSignal), undefined);
     expect(result.current.pois[0].osm_id).toBe('node/1');
   });
 
@@ -199,7 +199,7 @@ describe('usePoiExplore', () => {
 
     expect(result.current.moved).toBe(false);
     await waitFor(() => expect(pois).toHaveBeenCalledTimes(2));
-    expect(pois).toHaveBeenLastCalledWith('cafe', moved, 'en-US', expect.any(AbortSignal));
+    expect(pois).toHaveBeenLastCalledWith('cafe', moved, 'en-US', expect.any(AbortSignal), undefined);
   });
 
   it('FE-COMP-POIEXPLORE-010: searchArea without a viewport is a no-op', () => {

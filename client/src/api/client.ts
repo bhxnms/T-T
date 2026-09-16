@@ -1081,11 +1081,16 @@ export const mapsApi = {
   placePhoto: (placeId: string, lat?: number, lng?: number, name?: string) => apiClient.get(`/maps/place-photo/${encodeURIComponent(placeId)}`, { params: { lat, lng, name } }).then(r => checkInDev(mapsPlacePhotoResultSchema, r.data, 'maps.placePhoto')),
   reverse: (lat: number, lng: number, lang?: string) => apiClient.get('/maps/reverse', { params: { lat, lng, lang } }).then(r => checkInDev(mapsReverseResultSchema, r.data, 'maps.reverse')),
   resolveUrl: (url: string) => apiClient.post('/maps/resolve-url', { url }).then(r => checkInDev(mapsResolveUrlResultSchema, r.data, 'maps.resolveUrl')),
-  // OSM-only POI explore: places of a category within the current map viewport bbox.
-  // Overpass can be slow on a fresh (uncached) area, so this call gets a longer
-  // timeout than the global default instead of aborting at 8s and showing nothing.
-  pois: (category: string, bbox: { south: number; west: number; north: number; east: number }, lang?: string, signal?: AbortSignal) =>
-    apiClient.get('/maps/pois', { params: { category, ...bbox, lang }, signal, timeout: 20000 }).then(r => r.data as { pois: import('../components/Map/poiCategories').Poi[]; source: string; truncated: boolean; clamped?: boolean }),
+  // POI explore uses Overpass by default and can target AMap when the map
+  // provider is 高德 and the instance has its Web-Service key.
+  pois: (
+    category: string,
+    bbox: { south: number; west: number; north: number; east: number },
+    lang?: string,
+    signal?: AbortSignal,
+    provider?: 'amap' | 'native'
+  ) =>
+    apiClient.get('/maps/pois', { params: { category, ...bbox, lang, provider }, signal, timeout: 20000 }).then(r => r.data as { pois: import('../components/Map/poiCategories').Poi[]; source: string; truncated: boolean; clamped?: boolean }),
 }
 
 export const airportsApi = {

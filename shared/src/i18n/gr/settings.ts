@@ -350,6 +350,8 @@ const settings: TranslationStrings = {
   'settings.mapPoiPill': 'Εξερεύνηση μερών στον χάρτη',
   'settings.mapPoiPillHint':
     'Εμφάνιση ετικέτας κατηγορίας στον χάρτη του ταξιδιού για εύρεση κοντινών εστιατορίων, ξενοδοχείων και άλλων από το OpenStreetMap.',
+  'settings.mapPoiPillHintAmap':
+    'Use AMap to find nearby restaurants, hotels and other places from the category pill on the trip map.',
   'settings.airtrail.title': 'AirTrail',
   'settings.airtrail.hint':
     'Συνδέστε το αυτο-φιλοξενούμενο AirTrail σας για εισαγωγή και συγχρονισμό πτήσεων. Δημιουργήστε ένα κλειδί API στο AirTrail από Ρυθμίσεις → Ασφάλεια.',

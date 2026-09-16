@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import { mapsApi } from '../../api/client'
 import { useTranslation } from '../../i18n'
+import { useAuthStore } from '../../store/authStore'
+import { useSettingsStore } from '../../store/settingsStore'
 import type { Poi } from './poiCategories'
 
 export interface Bbox { south: number; west: number; north: number; east: number }
@@ -19,6 +21,9 @@ function isAbortError(err: unknown): boolean {
  */
 export function usePoiExplore() {
   const { locale } = useTranslation()
+  const mapProvider = useSettingsStore((s) => s.settings.map_provider)
+  const amapEnabled = useAuthStore((s) => s.amapSearchEnabled && s.hasAmapKey)
+  const provider = mapProvider === 'amap' && amapEnabled ? 'amap' : undefined
   const [active, setActive] = useState<Set<string>>(() => new Set())
   const [byCat, setByCat] = useState<Record<string, Poi[]>>({})
   const [loadingKeys, setLoadingKeys] = useState<Set<string>>(() => new Set())
@@ -56,7 +61,7 @@ export function usePoiExplore() {
     setLoading(key, true)
     setError(key, false)
     try {
-      const res = await mapsApi.pois(key, bbox, locale, ctrl.signal)
+      const res = await mapsApi.pois(key, bbox, locale, ctrl.signal, provider)
       // Drop the result if the user toggled this category off while the (slow)
       // Overpass request was in flight — otherwise stale results re-appear.
       setByCat(prev => (activeRef.current.has(key) ? { ...prev, [key]: res.pois } : prev))
@@ -81,7 +86,7 @@ export function usePoiExplore() {
         setLoading(key, false)
       }
     }
-  }, [setLoading, setError, locale])
+  }, [setLoading, setError, locale, provider])
 
   const onViewportChange = useCallback((bbox: Bbox) => {
     bboxRef.current = bbox

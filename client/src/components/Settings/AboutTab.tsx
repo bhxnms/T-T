@@ -76,7 +76,9 @@ export default function AboutTab({ appVersion }: Props): React.ReactElement {
         <>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <a
-              href="mailto:bhxnms@gmail.com?subject=TT%20Bug%20Report"
+              href="https://github.com/bhxnms/T-T/issues/new?template=bug_report.yml"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = '#ef4444';
@@ -103,12 +105,14 @@ export default function AboutTab({ appVersion }: Props): React.ReactElement {
               </div>
               <div>
                 <div className="text-sm font-semibold text-content">{t('settings.about.reportBug')}</div>
-                <div className="text-xs text-content-faint">bhxnms@gmail.com</div>
+                <div className="text-xs text-content-faint">github.com/bhxnms/T-T</div>
               </div>
               <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
             </a>
             <a
-              href="mailto:bhxnms@gmail.com?subject=TT%20Feature%20Request"
+              href="https://github.com/bhxnms/T-T/discussions"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-4 overflow-hidden rounded-xl border border-edge bg-surface-card px-5 py-4 no-underline transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = '#f59e0b';
@@ -135,7 +139,7 @@ export default function AboutTab({ appVersion }: Props): React.ReactElement {
               </div>
               <div>
                 <div className="text-sm font-semibold text-content">{t('settings.about.featureRequest')}</div>
-                <div className="text-xs text-content-faint">bhxnms@gmail.com</div>
+                <div className="text-xs text-content-faint">github.com/bhxnms/T-T</div>
               </div>
               <ExternalLink size={14} className="ml-auto flex-shrink-0 text-content-faint" />
             </a>

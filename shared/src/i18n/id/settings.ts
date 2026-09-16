@@ -337,6 +337,8 @@ const settings: TranslationStrings = {
   'settings.mapPoiPill': 'Jelajahi tempat di peta',
   'settings.mapPoiPillHint':
     'Tampilkan pil kategori di peta perjalanan untuk menemukan restoran, hotel, dan lainnya di sekitar dari OpenStreetMap.',
+  'settings.mapPoiPillHintAmap':
+    'Use AMap to find nearby restaurants, hotels and other places from the category pill on the trip map.',
   'settings.airtrail.title': 'AirTrail',
   'settings.airtrail.hint':
     'Hubungkan AirTrail yang kamu host sendiri untuk mengimpor dan menyinkronkan penerbangan. Buat kunci API di AirTrail pada Pengaturan → Keamanan.',

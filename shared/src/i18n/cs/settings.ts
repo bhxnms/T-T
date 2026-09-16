@@ -333,6 +333,8 @@ const settings: TranslationStrings = {
   'settings.mapPoiPill': 'Objevovat místa na mapě',
   'settings.mapPoiPillHint':
     'Zobrazit na mapě výletu kategorie pro hledání restaurací, hotelů a dalšího v okolí z OpenStreetMap.',
+  'settings.mapPoiPillHintAmap':
+    'Use AMap to find nearby restaurants, hotels and other places from the category pill on the trip map.',
   'settings.airtrail.title': 'AirTrail',
   'settings.airtrail.hint':
     'Připojte svou vlastní instanci AirTrail pro import a synchronizaci letů. Vytvořte API klíč v AirTrail v Nastavení → Zabezpečení.',

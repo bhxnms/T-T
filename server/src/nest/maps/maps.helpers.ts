@@ -172,7 +172,7 @@ export interface OverpassPoi {
   phone: string | null;
   opening_hours: string | null;
   cuisine: string | null;
-  source: 'openstreetmap';
+  source: 'openstreetmap' | 'amap';
 }
 
 // Each pill category → the OSM tag selectors it searches. Keys here are the

@@ -317,6 +317,7 @@ const settings: TranslationStrings = {
   'settings.passkey.neverUsed': '从未使用',
   'settings.mapPoiPill': '在地图上探索地点',
   'settings.mapPoiPillHint': '在行程地图上显示分类标签，从 OpenStreetMap 查找附近的餐厅、酒店等。',
+  'settings.mapPoiPillHintAmap': '在行程地图上显示分类标签，从高德查找附近的餐厅、酒店等。',
   'settings.airtrail.title': 'AirTrail',
   'settings.airtrail.hint': '连接您的自托管 AirTrail 以导入和同步航班。在 AirTrail 的“设置 → 安全”中创建 API 密钥。',
   'settings.airtrail.url': '实例 URL',

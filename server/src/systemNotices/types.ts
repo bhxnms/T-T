@@ -3,6 +3,7 @@ export type Severity = 'info' | 'warn' | 'critical';
 
 export type NoticeCondition =
   | { kind: 'firstLogin' }
+  | { kind: 'mustChangePassword' }
   | { kind: 'always' }
   | { kind: 'noTrips' }
   | { kind: 'existingUserBeforeVersion'; version: string }

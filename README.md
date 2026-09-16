@@ -16,13 +16,14 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.2-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.3-blue?style=flat-square)
 
 ---
 
 ## ✨ Key Features
 
 ### 🗺️ Planning & Maps
+
 - **Interactive Maps**: Multiple map providers (Mapbox, MapLibre, Amap) with clustering and route visualization
 - **Activity Management**: Drag-and-drop scheduling with time-based planning and dual-view support
 - **Amap Integration**: Complete 高德地图 support for China travel with place search and navigation
@@ -32,6 +33,7 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 - **Import/Export**: Support for Google Maps lists, GPX, KML, KMZ, and ICS formats
 
 ### 🗓️ Activity & Day Planning
+
 - **Unified Timeline**: Manage places and reservations in a single, cohesive schedule
 - **Drag-and-Drop**: Reorder activities within days or move between days effortlessly
 - **Time Scheduling**: Set start times and durations for precise planning
@@ -39,6 +41,7 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 - **Real-time Updates**: Changes sync instantly across all devices
 
 ### 🧳 Bookings & Expenses
+
 - **Comprehensive Booking Types**: 16+ booking categories including flights, trains, hotels, and activities
 - **Smart Import**: Extract booking details from emails, PDFs, and PKPass files
 - **Multi-Traveler Support**: Track confirmation codes, travelers, and booking status
@@ -48,6 +51,7 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 - **To-Do Management**: Assignees, due dates, priorities, and reminders
 
 ### 👥 Real-Time Collaboration
+
 - **Live Sync**: WebSocket-based instant updates for all trip members
 - **Flexible Permissions**: Granular control over 16 different trip actions
 - **Multiple Invite Methods**: Add members by email/username or shareable links
@@ -56,6 +60,7 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 - **Collaboration Tools**: Group chat, shared notes, polls, and activity coordination
 
 ### 📔 Travel Journal & Tracking
+
 - **Journey Studio**: Create rich travel journals with photos, videos, mood tracking, and weather
 - **Interactive Atlas**: Track visited countries and regions on a visual world map
 - **China Province Landmarks**: 34 provinces with 200+ landmarks and check-in functionality
@@ -64,27 +69,31 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 - **Collections**: Organize and tag places for future reference
 
 ### 🤖 AI & Extensions
+
 - **AI Booking Parser**: OpenAI/Anthropic-powered extraction from booking confirmations
 - **MCP Integration**: Claude desktop app integration via Model Context Protocol
 - **Plugin System**: Extensible IFRAME-based architecture for custom features
 
 ---
 
-## 🆕 What's New in v0.5.2
+## 🆕 What's New in v0.5.3
 
-### AMap (高德) place search
-- AMap results now come back with far more than an address: photos, rating with
-  vote count, opening hours, phone number, category and business district
-- The search list shows a photo thumbnail and a rating badge for every AMap hit,
-  enabled by default with no extra setting to turn on
-- AMap gets its own per-user Web JS API Key field under Settings → Map; the key
-  is stored encrypted per account and never shared between users
-- AMap settings stay independent: choosing 高德 never falls back to Leaflet or
-  Mapbox styling options
+### Mobile Atlas & AMap exploration
 
-### Weather & i18n
-- The weather API note in Settings → Weather now reads "TT continues to use the
-  TREK weather API" instead of the old TREK-only wording, in all 23 locales
+- Mobile Atlas now includes the same one-tap preset-landmark visibility switch as desktop.
+- “Explore places on the map” automatically uses AMap for nearby restaurants, hotels and categories when AMap search is enabled; otherwise it keeps using OpenStreetMap.
+
+### First-deploy security and support
+
+- The first-run administrator receives a one-time credential notice and must change the generated password before continuing.
+- Bug reports and feature requests now open TT GitHub pages instead of the former mailbox.
+- Trivy findings were addressed by upgrading vulnerable runtime dependencies in the server image.
+
+### Existing 0.5.2 improvements
+
+- AMap search results include photos, ratings, opening hours, phone numbers and category details.
+- AMap has an independent encrypted per-user Web JS API Key setting.
+- The weather API wording now identifies TT as continuing to use the TREK weather API.
 
 ---
 
@@ -106,7 +115,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.5.2`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.5.3`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -156,7 +165,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.5.2 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.5.3 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -174,15 +183,15 @@ recreating the container. Do not put real secrets in Git.
 
 ### Environment variables
 
-| Variable | Purpose |
-|----------|---------|
-| `HOST_PORT` | Host port mapped to the container's port 3000 (Compose only) |
-| `ENCRYPTION_KEY` | Recommended 256-bit hex key for encrypted stored secrets |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | First admin, used together only on an empty database |
-| `TZ` | Timezone for logs, reminders and schedules; default `UTC` |
-| `LOG_LEVEL` | `info` or `debug`; default `info` |
-| `ALLOWED_ORIGINS` | Comma-separated browser origins for CORS |
-| `APP_URL` and `OIDC_*` | Optional OpenID Connect configuration |
+| Variable                         | Purpose                                                      |
+| -------------------------------- | ------------------------------------------------------------ |
+| `HOST_PORT`                      | Host port mapped to the container's port 3000 (Compose only) |
+| `ENCRYPTION_KEY`                 | Recommended 256-bit hex key for encrypted stored secrets     |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | First admin, used together only on an empty database         |
+| `TZ`                             | Timezone for logs, reminders and schedules; default `UTC`    |
+| `LOG_LEVEL`                      | `info` or `debug`; default `info`                            |
+| `ALLOWED_ORIGINS`                | Comma-separated browser origins for CORS                     |
+| `APP_URL` and `OIDC_*`           | Optional OpenID Connect configuration                        |
 
 If `OIDC_ONLY=true`, password login is disabled and the first SSO user becomes
 administrator; local `ADMIN_EMAIL`/`ADMIN_PASSWORD` are not used.
@@ -192,6 +201,7 @@ administrator; local `ADMIN_EMAIL`/`ADMIN_PASSWORD` are not used.
 ## 🛠️ Development from source
 
 ### Prerequisites
+
 - Node.js 24+ and npm 11+
 - SQLite is the default local database; Docker is recommended for production
 
@@ -218,6 +228,7 @@ npm run e2e --workspace=client
 
 For another machine, use the Docker Compose procedure above; it includes the
 production build and does not require a local Node.js installation.
+
 ---
 
 ## 📂 Project Structure
@@ -248,12 +259,14 @@ TT supports multiple map providers:
 ## 🌏 China Travel Features
 
 ### Amap Integration
+
 - Native Chinese language support
 - Accurate POI data for mainland China
 - Public transport and driving directions
 - Place search with Chinese characters
 
 ### Atlas - China Provinces
+
 - 34 provinces, municipalities, and special administrative regions
 - 200+ famous landmarks across China
 - Check-in functionality for visited landmarks

@@ -1,5 +1,6 @@
 import { readEnv } from '../app-config';
 import { db } from '../db/database.js';
+import { decrypt_api_key } from '../nest/common/crypto/apiKeyCrypto';
 import { evaluate } from './conditions.js';
 import { SYSTEM_NOTICES } from './registry.js';
 import type { SystemNotice, SystemNoticeDTO } from './types.js';
@@ -47,8 +48,16 @@ export function getActiveNoticesFor(
   addonEnabled: (addonId: string) => boolean,
   managed = false,
 ): SystemNoticeDTO[] {
-  const user = db.prepare('SELECT login_count, first_seen_version, role FROM users WHERE id = ?').get(userId) as
-    | { login_count: number; first_seen_version: string; role: string }
+  const user = db
+    .prepare('SELECT id, login_count, first_seen_version, role, must_change_password FROM users WHERE id = ?')
+    .get(userId) as
+    | {
+        id: number;
+        login_count: number;
+        first_seen_version: string;
+        role: string;
+        must_change_password: number | boolean;
+      }
     | undefined;
 
   if (!user) return [];
@@ -70,6 +79,20 @@ export function getActiveNoticesFor(
   const currentAppVersion = getCurrentAppVersion();
   const ctx = { user: { ...user, noTrips: tripCount }, currentAppVersion, now, addonEnabled, managed };
   const appVer = semver.coerce(currentAppVersion)?.version ?? '0.0.0';
+
+  // First-deploy credentials, encrypted in app_settings by the seeder and
+  // deleted the moment the admin changes that password (auth.service). Absent,
+  // the bootstrap notice still renders — it just cannot repeat the password.
+  const bootstrapEmail = decrypt_api_key(
+    db.prepare("SELECT value FROM app_settings WHERE key = 'bootstrap_admin_email'").get() as
+      | { value?: string }
+      | undefined,
+  );
+  const bootstrapPassword = decrypt_api_key(
+    db.prepare("SELECT value FROM app_settings WHERE key = 'bootstrap_admin_password'").get() as
+      | { value?: string }
+      | undefined,
+  );
 
   const isStillDismissed = (n: SystemNotice): boolean => {
     if (!dismissals.has(n.id)) return false;
@@ -96,7 +119,15 @@ export function getActiveNoticesFor(
     })
     .map(
       ({ conditions: _c, publishedAt: _p, minVersion: _mn, maxVersion: _mx, priority: _pr, recurring: _rc, ...dto }) =>
-        dto,
+        dto.id === 'tt-bootstrap-password' && (bootstrapEmail || bootstrapPassword)
+          ? {
+              ...dto,
+              bodyParams: {
+                email: bootstrapEmail ?? '',
+                password: bootstrapPassword ?? '',
+              },
+            }
+          : dto,
     );
 }
 

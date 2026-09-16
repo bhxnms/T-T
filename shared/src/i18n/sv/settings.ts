@@ -80,6 +80,8 @@ const settings: TranslationStrings = {
   'settings.mapPoiPill': 'Utforska platser på kartan',
   'settings.mapPoiPillHint':
     'Visa en kategoriknapp på resekartan för att hitta restauranger, hotell och annat i närheten från OpenStreetMap.',
+  'settings.mapPoiPillHintAmap':
+    'Use AMap to find nearby restaurants, hotels and other places from the category pill on the trip map.',
   'settings.blurBookingCodes': 'Blurra bokningskoder',
   'settings.optimizeFromAccommodation': 'Optimera rutten från boendet',
   'settings.optimizeFromAccommodationHint':

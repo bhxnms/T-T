@@ -312,6 +312,8 @@ const settings: TranslationStrings = {
   'settings.mapPoiPillHint':
     "Mostra una píndola de categories al mapa del viatge per trobar restaurants, allotjaments i més a prop, des d'OpenStreetMap.",
 
+  'settings.mapPoiPillHintAmap':
+    'Use AMap to find nearby restaurants, hotels and other places from the category pill on the trip map.',
   'settings.mapMapLibreSubtitle': "Tessel·les vectorials d'OpenFreeMap, sense token",
   'settings.mapOpenFreeMapStylePlaceholder': "Selecciona un estil d'OpenFreeMap",
   'settings.mapOpenFreeMapStyleHint':

@@ -17,16 +17,16 @@ export default function MSettingsAbout({ appVersion }: { appVersion: string }) {
 
   const links: AboutLink[] = [
     {
-      href: 'mailto:bhxnms@gmail.com?subject=TT%20Bug%20Report',
+      href: 'https://github.com/bhxnms/T-T/issues/new?template=bug_report.yml',
       icon: Bug,
       title: t('settings.about.reportBug'),
-      sub: 'bhxnms@gmail.com',
+      sub: 'github.com/bhxnms/T-T',
     },
     {
-      href: 'mailto:bhxnms@gmail.com?subject=TT%20Feature%20Request',
+      href: 'https://github.com/bhxnms/T-T/discussions',
       icon: Lightbulb,
       title: t('settings.about.featureRequest'),
-      sub: 'bhxnms@gmail.com',
+      sub: 'github.com/bhxnms/T-T',
     },
   ];
 

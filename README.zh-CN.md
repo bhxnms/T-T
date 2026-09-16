@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.2-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.3-blue?style=flat-square)
 
 ---
 
@@ -73,16 +73,24 @@
 
 ---
 
-## 🆕 v0.5.2 更新
+## 🆕 v0.5.3 更新
 
-### 高德地图地点搜索
-- 高德搜索结果不再只有地址：新增地点照片、评分与评价数、营业时间、电话、分类和商圈
-- 搜索列表为每条高德结果显示照片缩略图和评分标签，默认开启，无需额外设置
-- 高德拥有独立的用户级 Web JS API Key 入口（设置 → 地图），按账号加密存储，用户之间互不共享
-- 高德设置保持独立：选择高德时不会回退到 Leaflet 或 Mapbox 的样式设置
+### 移动端 Atlas 与高德地点探索
 
-### 天气与国际化
-- 设置 → 天气中的 API 说明改为“TT沿用TREK天气API”，全部 23 种语言同步更新
+- 移动端 Atlas 新增与桌面端一致的“一键隐藏预设打卡点”开关。
+- 启用高德地点搜索时，“在地图上探索地点”会自动从高德查找附近餐厅、酒店及分类地点；未启用时继续使用 OpenStreetMap。
+
+### 首次部署安全与反馈入口
+
+- 首次部署的管理员会收到一次性初始凭据通知，并且必须修改预设密码后才能继续使用。
+- “报告错误”和“功能建议”现在指向 TT GitHub 页面，不再使用原邮箱。
+- 针对扫描结果升级了存在漏洞的服务端运行时依赖。
+
+### 0.5.2 已有改进
+
+- 高德搜索结果包含照片、评分、营业时间、电话和分类详情。
+- 高德拥有独立、加密、按用户隔离的 Web JS API Key 设置。
+- 天气 API 说明改为“TT沿用TREK天气API”。
 
 ---
 
@@ -117,7 +125,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.5.2
+IMAGE_TAG=0.5.3
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -157,7 +165,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.5.2
+docker pull ghcr.io/bhxnms/tt-planner:0.5.3
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -167,7 +175,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.5.2
+  ghcr.io/bhxnms/tt-planner:0.5.3
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。
@@ -176,16 +184,16 @@ docker run -d --name tt-planner --restart unless-stopped \
 
 ## ⚙️ 环境变量
 
-| 变量 | 用途 |
-|---|---|
-| `HOST_PORT` | Compose 映射到宿主机的端口，容器端口固定为 3000 |
-| `IMAGE_TAG` | 使用的 GHCR 镜像标签 |
-| `ENCRYPTION_KEY` | 加密 API key、MFA、SMTP 和 OIDC 等敏感信息 |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | 空数据库的首个管理员账号 |
-| `TZ` | 日志、提醒和任务时区，默认 `UTC` |
-| `LOG_LEVEL` | `info` 或 `debug` |
-| `ALLOWED_ORIGINS` | CORS 允许的来源列表 |
-| `APP_URL` / `OIDC_*` | 可选的 OpenID Connect 配置 |
+| 变量                             | 用途                                            |
+| -------------------------------- | ----------------------------------------------- |
+| `HOST_PORT`                      | Compose 映射到宿主机的端口，容器端口固定为 3000 |
+| `IMAGE_TAG`                      | 使用的 GHCR 镜像标签                            |
+| `ENCRYPTION_KEY`                 | 加密 API key、MFA、SMTP 和 OIDC 等敏感信息      |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | 空数据库的首个管理员账号                        |
+| `TZ`                             | 日志、提醒和任务时区，默认 `UTC`                |
+| `LOG_LEVEL`                      | `info` 或 `debug`                               |
+| `ALLOWED_ORIGINS`                | CORS 允许的来源列表                             |
+| `APP_URL` / `OIDC_*`             | 可选的 OpenID Connect 配置                      |
 
 设置 `OIDC_ONLY=true` 后会关闭密码登录，首个 SSO 用户成为管理员，本地管理员变量不再使用。
 

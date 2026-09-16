@@ -337,6 +337,8 @@ const settings: TranslationStrings = {
   'settings.mapPoiPill': 'Haritada yerleri keşfet',
   'settings.mapPoiPillHint':
     "Yakındaki restoranları, otelleri ve daha fazlasını OpenStreetMap'ten bulmak için gezi haritasında bir kategori etiketi göster.",
+  'settings.mapPoiPillHintAmap':
+    'Use AMap to find nearby restaurants, hotels and other places from the category pill on the trip map.',
   'settings.airtrail.title': 'AirTrail',
   'settings.airtrail.hint':
     "Uçuşları içe aktarmak ve senkronize etmek için kendi barındırdığınız AirTrail'i bağlayın. AirTrail'de Ayarlar → Güvenlik altından bir API anahtarı oluşturun.",

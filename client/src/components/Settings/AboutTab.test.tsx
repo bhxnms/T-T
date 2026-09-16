@@ -20,16 +20,19 @@ describe('AboutTab', () => {
     expect(screen.getByText('v2.9.10')).toBeInTheDocument();
   });
 
-  it('FE-COMP-ABOUT-003: displays the bug-report card with the TT mail link', () => {
+  it('FE-COMP-ABOUT-003: displays the bug-report card linking to the TT GitHub issue form', () => {
     render(<AboutTab appVersion="2.9.10" />);
     const link = screen.getByText('Report a Bug').closest('a');
-    expect(link).toHaveAttribute('href', 'mailto:bhxnms@gmail.com?subject=TT%20Bug%20Report');
+    expect(link).toHaveAttribute('href', 'https://github.com/bhxnms/T-T/issues/new?template=bug_report.yml');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('FE-COMP-ABOUT-004: displays the feature-request card with the TT mail link', () => {
+  it('FE-COMP-ABOUT-004: displays the feature-request card linking to TT discussions', () => {
     render(<AboutTab appVersion="2.9.10" />);
     const link = screen.getByText('Feature Request').closest('a');
-    expect(link).toHaveAttribute('href', 'mailto:bhxnms@gmail.com?subject=TT%20Feature%20Request');
+    expect(link).toHaveAttribute('href', 'https://github.com/bhxnms/T-T/discussions');
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('FE-COMP-ABOUT-005: no third-party support/funding links remain', () => {
@@ -43,16 +46,21 @@ describe('AboutTab', () => {
     expect(document.querySelector('a[href*="discord.gg"]')).toBeNull();
   });
 
-  it('FE-COMP-ABOUT-006: bug-report link carries the TT subject line', () => {
+  it('FE-COMP-ABOUT-006: no mailto fallback survives the GitHub move', () => {
     render(<AboutTab appVersion="2.9.10" />);
-    const link = document.querySelector('a[href*="subject=TT%20Bug%20Report"]');
-    expect(link).toBeInTheDocument();
+    expect(document.querySelectorAll('a[href^="mailto:"]')).toHaveLength(0);
+    expect(document.body.textContent).not.toContain('bhxnms@gmail.com');
   });
 
-  it('FE-COMP-ABOUT-007: feature-request link carries the TT subject line', () => {
+  it('FE-COMP-ABOUT-007: both feedback cards point at the TT project', () => {
     render(<AboutTab appVersion="2.9.10" />);
-    const link = document.querySelector('a[href*="subject=TT%20Feature%20Request"]');
-    expect(link).toBeInTheDocument();
+    const links = Array.from(document.querySelectorAll('a[href^="https://github.com/bhxnms/T-T"]'));
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(
+      expect.arrayContaining([
+        'https://github.com/bhxnms/T-T/issues/new?template=bug_report.yml',
+        'https://github.com/bhxnms/T-T/discussions',
+      ])
+    );
   });
 
   it('FE-COMP-ABOUT-008: managed mode swaps the support cards for the source link', () => {

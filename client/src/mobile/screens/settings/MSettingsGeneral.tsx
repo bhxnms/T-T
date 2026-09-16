@@ -37,6 +37,8 @@ export default function MSettingsGeneral() {
   const currencyLabel = currency ? `${currency} — ${SYMBOLS[currency] || currency}` : t('settings.currencyTrip');
   const language = SUPPORTED_LANGUAGES.find((l) => l.value === settings.language) || SUPPORTED_LANGUAGES[0];
 
+  const mapPoiHint = settings.map_provider === 'amap' ? t('settings.mapPoiPillHintAmap') : t('settings.mapPoiPillHint');
+
   const chevron = <ChevronDown size={13} strokeWidth={2} className="flex-none text-m-faint" />;
 
   const travelRows: {
@@ -56,7 +58,7 @@ export default function MSettingsGeneral() {
     {
       key: 'map_poi_pill_enabled',
       label: t('settings.mapPoiPill'),
-      sub: t('settings.mapPoiPillHint'),
+      sub: mapPoiHint,
       on: settings.map_poi_pill_enabled !== false,
       value: (on) => on,
     },

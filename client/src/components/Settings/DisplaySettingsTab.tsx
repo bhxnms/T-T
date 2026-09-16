@@ -40,6 +40,7 @@ export default function DisplaySettingsTab(): React.ReactElement {
 
   const startPage = settings.start_page === 'active_trip' ? 'active_trip' : DEFAULT_START_PAGE;
   const startTripTab = settings.start_trip_tab || DEFAULT_START_TRIP_TAB;
+  const mapPoiHint = settings.map_provider === 'amap' ? t('settings.mapPoiPillHintAmap') : t('settings.mapPoiPillHint');
 
   return (
     <>
@@ -537,7 +538,7 @@ export default function DisplaySettingsTab(): React.ReactElement {
               </button>
             ))}
           </div>
-          <p className="mt-1 text-xs text-content-faint">{t('settings.mapPoiPillHint')}</p>
+          <p className="mt-1 text-xs text-content-faint">{mapPoiHint}</p>
         </div>
 
         {/* Blur Booking Codes */}

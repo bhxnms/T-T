@@ -82,14 +82,18 @@ export class MapsController {
     @Query('north') north?: string,
     @Query('east') east?: string,
     @Query('lang') lang?: string,
+    @Query('provider') provider?: string,
   ) {
     if (!category) throw new HttpException({ error: 'A category is required' }, 400);
+    if (provider && provider !== 'amap' && provider !== 'native') {
+      throw new HttpException({ error: 'Invalid provider' }, 400);
+    }
     const bbox = { south: Number(south), west: Number(west), north: Number(north), east: Number(east) };
     if (Object.values(bbox).some((v) => !Number.isFinite(v))) {
       throw new HttpException({ error: 'A valid bbox (south, west, north, east) is required' }, 400);
     }
     try {
-      return await this.maps.pois(category, bbox, lang);
+      return await this.maps.pois(category, bbox, lang, provider as 'amap' | 'native' | undefined);
     } catch (err: unknown) {
       throw toHttpException(err, 'POI search error', 500);
     }

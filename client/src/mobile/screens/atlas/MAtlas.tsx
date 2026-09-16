@@ -38,6 +38,8 @@ export default function MAtlas() {
     visitedCountries,
     showPlanned,
     togglePlanned,
+    showLandmarks,
+    setShowLandmarks,
     bucketList,
     selectedCountry,
     countryDetail,
@@ -142,6 +144,14 @@ export default function MAtlas() {
             <MToggle checked={showPlanned} onChange={() => togglePlanned()} ariaLabel={t('atlas.showPlanned')} />
           </div>
         )}
+        <div className="flex h-[38px] shrink-0 items-center gap-2 rounded-full border border-[color:var(--m-gbr)] bg-[color:var(--m-sheet)] px-3 shadow-[0_5px_12px_-8px_rgba(0,0,0,.18)]">
+          <span className="text-[0.6875rem] font-bold text-m-ink">{t('atlas.showLandmarks')}</span>
+          <MToggle
+            checked={showLandmarks}
+            onChange={() => setShowLandmarks((current) => !current)}
+            ariaLabel={t('atlas.showLandmarks')}
+          />
+        </div>
       </div>
 
       <MAtlasStatsCard stats={stats} />

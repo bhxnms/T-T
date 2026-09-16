@@ -3,7 +3,14 @@ import type { NoticeCondition, SystemNotice } from './types.js';
 import semver from 'semver';
 
 interface ConditionContext {
-  user: { login_count: number; first_seen_version: string; role: string; noTrips: number };
+  user: {
+    id: number;
+    login_count: number;
+    first_seen_version: string;
+    role: string;
+    noTrips: number;
+    must_change_password: number | boolean;
+  };
   currentAppVersion: string;
   now: Date;
   /**
@@ -28,6 +35,8 @@ function evaluateOne(condition: NoticeCondition, ctx: ConditionContext): boolean
     case 'firstLogin':
       // login_count is incremented during login, so on the FIRST post-login fetch it's 1.
       return ctx.user.login_count <= 1;
+    case 'mustChangePassword':
+      return ctx.user.must_change_password === 1 || ctx.user.must_change_password === true;
     case 'noTrips':
       return ctx.user.noTrips === 0;
 
