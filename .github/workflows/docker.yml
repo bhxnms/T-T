@@ -59,14 +59,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # A hung npm registry request inside the arm64 emulated build once stalled
+      # this step for nearly six hours until the run was cancelled, so the step
+      # now carries its own ceiling: a build that cannot finish in an hour is
+      # not going to finish, and failing fast leaves the runner free.
       - name: Build and push image
         uses: docker/build-push-action@v6
+        timeout-minutes: 60
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
             APP_VERSION=${{ steps.tags.outputs.version }}
+            NPM_CONFIG_FETCH_RETRIES=5
+            NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
+            NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=300000
+            NPM_CONFIG_FETCH_TIMEOUT=300000
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.version }}
             ${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.major }}
