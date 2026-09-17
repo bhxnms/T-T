@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.3-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.4-blue?style=flat-square)
 
 ---
 
@@ -73,18 +73,25 @@
 
 ---
 
-## 🆕 v0.5.3 更新
+## 🆕 v0.5.4 更新
 
-### 移动端 Atlas 与高德地点探索
+### 修复高德地点搜索
+
+- 此前调用高德 v5 POI 接口时误用了 v3 的参数名（`offset`、`page`、`extensions`），并读取 v3 的响应路径（`biz_ext`）。高德对这类请求返回 `status: 0`，搜索随后回退到 OpenStreetMap，而 OSM 在国内网络通常不可达，因此用户只能看到“地点搜索失败”。
+- 现已改为符合 v5 文档的调用方式：分页使用 `page_size` / `page_num`，详情字段使用 `show_fields=business,photos`；只要存在坐标就改用 `place/around`（`place/text` 不接受 `location` 和 `radius`）；详情字段从 `poi.business` 读取。
+- 高德搜索结果只展示评分本身。高德不返回评价数量，代码中不会用人均价格冒充评价数。
+- 新增 14 个回归测试，覆盖 v5 参数名、接口选择、字段路径和 GCJ-02 → WGS-84 坐标转换。
+
+### 构建可靠性
+
+- Docker 构建增加一小时超时上限，并在所有构建阶段启用 npm 下载重试。此前模拟 arm64 构建曾卡住近六小时才被取消，且重试参数只覆盖了部分构建阶段。
+
+### 0.5.3 已有改进
 
 - 移动端 Atlas 新增与桌面端一致的“一键隐藏预设打卡点”开关。
-- 启用高德地点搜索时，“在地图上探索地点”会自动从高德查找附近餐厅、酒店及分类地点；未启用时继续使用 OpenStreetMap。
-
-### 首次部署安全与反馈入口
-
+- 启用高德地点搜索时，“在地图上探索地点”会从高德查找附近餐厅、酒店及分类地点。
 - 首次部署的管理员会收到一次性初始凭据通知，并且必须修改预设密码后才能继续使用。
-- “报告错误”和“功能建议”现在指向 TT GitHub 页面，不再使用原邮箱。
-- 针对扫描结果升级了存在漏洞的服务端运行时依赖。
+- “报告错误”和“功能建议”现在指向 TT GitHub 页面。
 
 ### 0.5.2 已有改进
 
@@ -125,7 +132,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.5.3
+IMAGE_TAG=0.5.4
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -165,7 +172,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.5.3
+docker pull ghcr.io/bhxnms/tt-planner:0.5.4
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -175,7 +182,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.5.3
+  ghcr.io/bhxnms/tt-planner:0.5.4
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

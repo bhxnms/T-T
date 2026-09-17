@@ -1,5 +1,5 @@
 apiVersion: v2
 name: trek
-version: 0.5.3
+version: 0.5.4
 description: Minimal Helm chart for Tourism-Team (based on TREK)
-appVersion: "0.5.3"
+appVersion: "0.5.4"

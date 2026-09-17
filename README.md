@@ -16,7 +16,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.3-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.4-blue?style=flat-square)
 
 ---
 
@@ -76,18 +76,38 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.5.3
+## 🆕 What's New in v0.5.4
 
-### Mobile Atlas & AMap exploration
+### AMap place search fixed
 
-- Mobile Atlas now includes the same one-tap preset-landmark visibility switch as desktop.
-- “Explore places on the map” automatically uses AMap for nearby restaurants, hotels and categories when AMap search is enabled; otherwise it keeps using OpenStreetMap.
+- Place search against AMap was calling the v5 POI endpoints with the older v3
+  parameter names (`offset`, `page`, `extensions`) and reading the v3 response
+  path (`biz_ext`). AMap answers those requests with `status: 0`, and the search
+  then fell back to OpenStreetMap — which is unreachable from many Chinese
+  networks, so the user saw only “place search failed”.
+- Requests now use the documented v5 contract: `page_size` / `page_num` for
+  paging, `show_fields=business,photos` for the detail groups, and
+  `place/around` (not `place/text`) whenever a coordinate is available, since
+  only `around` accepts `location` and `radius`. Detail fields are read from
+  `poi.business`.
+- The rating shown for an AMap result is the rating alone. AMap reports no vote
+  count, and the price per person is deliberately not substituted for one.
+- Added 14 regression tests pinning the v5 parameter names, endpoint choice,
+  field paths and GCJ-02 → WGS-84 conversion.
 
-### First-deploy security and support
+### Build reliability
 
+- Docker builds carry a one-hour ceiling and npm fetch retries on every stage.
+  They previously hung for nearly six hours inside the emulated arm64 build
+  before being cancelled, and the retry settings had been applied to only some
+  of the builder stages.
+
+### Existing 0.5.3 improvements
+
+- Mobile Atlas includes the same one-tap preset-landmark visibility switch as desktop.
+- “Explore places on the map” uses AMap for nearby restaurants, hotels and categories when AMap search is enabled.
 - The first-run administrator receives a one-time credential notice and must change the generated password before continuing.
-- Bug reports and feature requests now open TT GitHub pages instead of the former mailbox.
-- Trivy findings were addressed by upgrading vulnerable runtime dependencies in the server image.
+- Bug reports and feature requests open TT GitHub pages instead of the former mailbox.
 
 ### Existing 0.5.2 improvements
 
@@ -115,7 +135,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.5.3`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.5.4`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -165,7 +185,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.5.3 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.5.4 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
