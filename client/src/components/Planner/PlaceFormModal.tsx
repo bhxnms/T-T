@@ -22,6 +22,9 @@ import type { BookingExpenseRequest } from './BookingCostsSection.types';
 import PlaceDetailsColumn, { type PlaceDetailsSelection } from './PlaceDetailsColumn';
 import {
   DEFAULT_FORM,
+  extractAmapPoiId,
+  extractAmapUrl,
+  isAmapShareInput,
   isGoogleMapsUrl,
   mergeResult,
   type PlaceFormData,
@@ -383,6 +386,36 @@ function usePlaceFormModal(props: PlaceFormModalProps) {
           return;
         }
       }
+      // AMap (高德) share links and share text resolve through the AMap POI id,
+      // so they take their own path rather than keyword search. Checked before
+      // the keyword branch below because a pasted share paragraph is not a query.
+      if (!isGoogleMapsUrl(trimmed) && isAmapShareInput(trimmed)) {
+        const amapUrl = extractAmapUrl(trimmed) ?? extractAmapPoiId(trimmed);
+        if (amapUrl) {
+          const resolved = await mapsApi.resolveUrl(amapUrl);
+          if (resolved.lat && resolved.lng) {
+            setForm((prev) => ({
+              ...prev,
+              name: resolved.name || prev.name,
+              address: resolved.address || prev.address,
+              lat: String(resolved.lat),
+              lng: String(resolved.lng),
+              amap_id: resolved.amap_id || prev.amap_id,
+            }));
+            // The POI's own picture, when it has one. No picture leaves the field
+            // as it was rather than clearing a hero the user already picked.
+            if (resolved.photos?.[0] && !form.image_url) {
+              setForm((prev) => ({ ...prev, image_url: resolved.photos![0] }));
+            }
+            setMapsResults([]);
+            setMapsSearch('');
+            toast.success(t('places.urlResolved'));
+            return;
+          }
+        }
+        toast.error(t('places.amapImportFailed'));
+        return;
+      }
       const result = await mapsApi.search(mapsSearch, language, mapSearchProvider);
       setMapsResults(result.places || []);
     } catch (err: unknown) {
@@ -400,7 +433,7 @@ function usePlaceFormModal(props: PlaceFormModalProps) {
     const lng = Number(result.lng);
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
       setDetailsSelection({
-        placeId: result.google_place_id || result.osm_id || undefined,
+        placeId: result.google_place_id || result.osm_id || (result.amap_id ? `amap:${result.amap_id}` : undefined),
         lat,
         lng,
         name: result.name || '',

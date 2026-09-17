@@ -103,15 +103,21 @@ export interface KmlImportOptions {
 }
 
 // Reclaim a deleted place's cached marker photo if nothing else references it.
-// The cache key is the Google place_id, or — for coordinate-only places — the
-// pseudo-id embedded in the stored proxy URL (/api/maps/place-photo/{id}/bytes).
+// The cache key is the Google place_id, the AMap one (stored as 'amap:<id>'), or
+// — for coordinate-only places — the pseudo-id embedded in the stored proxy URL
+// (/api/maps/place-photo/{id}/bytes).
 export async function reclaimPhotoCache(
   cache: PlacePhotoCacheService,
   googlePlaceId: string | null,
   imageUrl: string | null,
+  amapId?: string | null,
 ): Promise<void> {
   const candidates = new Set<string>();
   if (googlePlaceId) candidates.add(googlePlaceId);
+  // The image_url regex below already covers the usual case (the proxy URL is
+  // what got written). This also catches a place whose photo was cached but
+  // never stored — e.g. the user replaced the thumbnail before deleting.
+  if (amapId) candidates.add(`amap:${amapId}`);
   const m = imageUrl?.match(/^\/api\/maps\/place-photo\/(.+)\/bytes$/);
   if (m) {
     try {

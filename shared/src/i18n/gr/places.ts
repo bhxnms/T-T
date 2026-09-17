@@ -29,6 +29,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': '{count} μέρη εισήχθησαν από KMZ/KML',
   'places.urlResolved': 'Το μέρος εισήχθη από URL',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'Εισαγωγή Λίστας',
   'places.kmlKmzSummaryValues': 'Placemarks: {total} • Εισήχθησαν: {created} • Παραλείφθηκαν: {skipped}',
   'places.importGoogleList': 'Λίστα Google',

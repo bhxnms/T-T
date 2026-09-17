@@ -28,6 +28,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '已更新 {count} 个地点',
   'places.kmlKmzImported': '已从 KMZ/KML 导入 {count} 个地点',
   'places.urlResolved': '已从 URL 导入地点',
+  'places.amapImportFailed': '无法从该链接读取高德地点。',
   'places.importList': '列表导入',
   'places.kmlKmzSummaryValues': 'Placemarks：{total} • 已导入：{created} • 已跳过：{skipped}',
   'places.importGoogleList': 'Google 列表',

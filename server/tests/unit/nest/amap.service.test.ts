@@ -10,7 +10,7 @@
  *
  * fetch is stubbed; the DB module is mocked.
  */
-import { amapSearchPlaces } from '../../../src/nest/geo/amap.service';
+import { amapPlaceDetail, amapSearchPlaces } from '../../../src/nest/geo/amap.service';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -234,5 +234,72 @@ describe('amapSearchPlaces — v5 response mapping', () => {
     expect(place.phone).toBeNull();
     expect(place.open_time).toBeNull();
     expect(place.photos).toEqual([]);
+  });
+});
+
+describe('amapPlaceDetail — v5 detail contract', () => {
+  it('AMAP-SVC-015: addresses the POI by id and asks for the detail groups', async () => {
+    const fetchMock = stubFetch({ status: '1', pois: [v5Poi] });
+
+    await amapPlaceDetail(dbStub, 'B000A83M61');
+
+    const url = String(fetchMock.mock.calls[0][0]);
+    expect(url).toContain('/v5/place/detail');
+    expect(url).toContain('id=B000A83M61');
+    expect(decodeURIComponent(url)).toContain('show_fields=business,photos');
+    // page_* and keywords belong to the search endpoints, not this one.
+    expect(url).not.toContain('page_size=');
+    expect(url).not.toContain('keywords=');
+  });
+
+  it('AMAP-SVC-016: maps the POI the same way search does', async () => {
+    stubFetch({ status: '1', pois: [v5Poi] });
+
+    const place = await amapPlaceDetail(dbStub, 'B000A83M61');
+
+    expect(place?.name).toBe('故宫博物院');
+    expect(place?.amap_id).toBe('B000A83M61');
+    expect(place?.rating).toBe(4.7);
+    expect(place?.photos).toEqual([
+      'https://store.is.autonavi.com/showpic/1',
+      'https://store.is.autonavi.com/showpic/2',
+    ]);
+    expect(place?.address).toBe('北京市 · 北京市 · 东城区 · 景山前街4号');
+  });
+
+  it('AMAP-SVC-017: converts the detail coordinates to WGS-84 too', async () => {
+    stubFetch({ status: '1', pois: [v5Poi] });
+
+    const place = await amapPlaceDetail(dbStub, 'B000A83M61');
+
+    expect(place?.lng).toBeCloseTo(116.3912, 3);
+    expect(place?.lat).toBeCloseTo(39.9149, 3);
+  });
+
+  it('AMAP-SVC-018: no stored key means no request at all', async () => {
+    mockInstanceGet.mockReturnValue({ value: '' });
+    const fetchMock = stubFetch({ status: '1', pois: [v5Poi] });
+
+    await expect(amapPlaceDetail(dbStub, 'B000A83M61')).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('AMAP-SVC-019: an empty id is refused without a request', async () => {
+    const fetchMock = stubFetch({ status: '1', pois: [v5Poi] });
+
+    await expect(amapPlaceDetail(dbStub, '   ')).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('AMAP-SVC-020: a POI-less answer is a null result, not a throw', async () => {
+    stubFetch({ status: '1', pois: [] });
+
+    await expect(amapPlaceDetail(dbStub, 'B000A83M61')).resolves.toBeNull();
+  });
+
+  it('AMAP-SVC-021: an upstream status-0 still throws so callers can tell it apart', async () => {
+    stubFetch({ status: '0', info: 'INVALID_USER_KEY', infocode: '10001' });
+
+    await expect(amapPlaceDetail(dbStub, 'B000A83M61')).rejects.toThrow(/INVALID_USER_KEY/);
   });
 });

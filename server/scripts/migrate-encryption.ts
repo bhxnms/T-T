@@ -14,12 +14,11 @@
  * The script will prompt for the old and new keys interactively so they never
  * appear in shell history, process arguments, or log output.
  */
-
+import Database from 'better-sqlite3';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
-import Database from 'better-sqlite3';
 
 // ---------------------------------------------------------------------------
 // Crypto helpers — mirrors apiKeyCrypto.ts and mfaCrypto.ts but with
@@ -143,9 +142,7 @@ async function main() {
   console.log('A backup of the database will be created before any changes are made.\n');
 
   // Resolve DB path
-  const dbPath = path.resolve(
-    process.env.DB_PATH ?? path.join(__dirname, '../data/travel.db')
-  );
+  const dbPath = path.resolve(process.env.DB_PATH ?? path.join(__dirname, '../data/travel.db'));
 
   if (!fs.existsSync(dbPath)) {
     console.error(`Database not found at: ${dbPath}`);
@@ -209,14 +206,18 @@ async function main() {
   const wantedJournal = (process.env.TREK_DB_JOURNAL_MODE ?? '').trim().toUpperCase();
   const journalMode = journalModes.includes(wantedJournal) ? wantedJournal : 'WAL';
   if (wantedJournal && journalMode !== wantedJournal) {
-    console.warn(`TREK_DB_JOURNAL_MODE="${process.env.TREK_DB_JOURNAL_MODE}" is not a SQLite journal mode — using ${journalMode}.`);
+    console.warn(
+      `TREK_DB_JOURNAL_MODE="${process.env.TREK_DB_JOURNAL_MODE}" is not a SQLite journal mode — using ${journalMode}.`,
+    );
   }
 
   const wantedSync = (process.env.TREK_DB_SYNCHRONOUS ?? '').trim().toUpperCase();
   const defaultSync = journalMode === 'WAL' ? 'NORMAL' : 'FULL';
   const synchronous = syncLevels.includes(wantedSync) ? wantedSync : defaultSync;
   if (wantedSync && synchronous !== wantedSync) {
-    console.warn(`TREK_DB_SYNCHRONOUS="${process.env.TREK_DB_SYNCHRONOUS}" is not a SQLite synchronous level — using ${synchronous}.`);
+    console.warn(
+      `TREK_DB_SYNCHRONOUS="${process.env.TREK_DB_SYNCHRONOUS}" is not a SQLite synchronous level — using ${synchronous}.`,
+    );
   }
 
   db.pragma(`journal_mode = ${journalMode}`);
@@ -253,7 +254,10 @@ async function main() {
 
   // Helper: migrate a single MFA value (no prefix, raw base64)
   function migrateMfaValue(raw: string, label: string): string | null {
-    if (!raw) { result.skipped++; return null; }
+    if (!raw) {
+      result.skipped++;
+      return null;
+    }
 
     const plain = decryptMfa(raw, oldKey);
     if (plain !== null) {
@@ -322,7 +326,10 @@ async function main() {
     const users = db.prepare('SELECT id FROM users').all() as { id: number }[];
 
     for (const user of users) {
-      const row = db.prepare(`SELECT ${apiKeyColumns.join(', ')} FROM users WHERE id = ?`).get(user.id) as Record<string, string>;
+      const row = db.prepare(`SELECT ${apiKeyColumns.join(', ')} FROM users WHERE id = ?`).get(user.id) as Record<
+        string,
+        string
+      >;
 
       for (const col of apiKeyColumns) {
         if (!row[col]) continue;
@@ -333,7 +340,9 @@ async function main() {
       }
 
       // mfa_secret (mfa crypto)
-      const mfaRow = db.prepare('SELECT mfa_secret FROM users WHERE id = ? AND mfa_secret IS NOT NULL').get(user.id) as { mfa_secret: string } | undefined;
+      const mfaRow = db.prepare('SELECT mfa_secret FROM users WHERE id = ? AND mfa_secret IS NOT NULL').get(user.id) as
+        | { mfa_secret: string }
+        | undefined;
       if (mfaRow?.mfa_secret) {
         const newVal = migrateMfaValue(mfaRow.mfa_secret, `users[${user.id}].mfa_secret`);
         if (newVal !== null) {
@@ -404,10 +413,22 @@ async function main() {
     }
 
     // --- settings: per-user encrypted keys ---
-    const encryptedSettingKeys = ['webhook_url', 'ntfy_token', 'mapbox_access_token', 'carto_api_key', 'llm_api_key'];
-    const settingRows = db.prepare(
-      `SELECT user_id, key, value FROM settings WHERE key IN (${encryptedSettingKeys.map(() => '?').join(', ')})`
-    ).all(...encryptedSettingKeys) as { user_id: number; key: string; value: string }[];
+    // Must stay in step with ENCRYPTED_SETTING_KEYS in
+    // src/nest/settings/settings.service.ts — a key encrypted by the app but
+    // missing here reads back as unset after a rotation.
+    const encryptedSettingKeys = [
+      'webhook_url',
+      'ntfy_token',
+      'mapbox_access_token',
+      'carto_api_key',
+      'amap_js_api_key',
+      'llm_api_key',
+    ];
+    const settingRows = db
+      .prepare(
+        `SELECT user_id, key, value FROM settings WHERE key IN (${encryptedSettingKeys.map(() => '?').join(', ')})`,
+      )
+      .all(...encryptedSettingKeys) as { user_id: number; key: string; value: string }[];
 
     for (const row of settingRows) {
       if (!row.value) continue;
@@ -452,7 +473,7 @@ async function main() {
       // Which keys are secret is per plugin and per scope, and it lives in the DB
       // rather than in this script, so nothing has to be pinned by hand here.
       const secretFields = db
-        .prepare("SELECT plugin_id, field_key, scope FROM plugin_settings_fields WHERE secret = 1")
+        .prepare('SELECT plugin_id, field_key, scope FROM plugin_settings_fields WHERE secret = 1')
         .all() as { plugin_id: string; field_key: string; scope: string | null }[];
       const secretKeysFor = (pluginId: string, scope: string): string[] =>
         secretFields
@@ -487,7 +508,10 @@ async function main() {
       };
 
       if (tableExists('plugins')) {
-        const pluginRows = db.prepare('SELECT id, config FROM plugins').all() as { id: string; config: string | null }[];
+        const pluginRows = db.prepare('SELECT id, config FROM plugins').all() as {
+          id: string;
+          config: string | null;
+        }[];
         for (const row of pluginRows) {
           const next = migrateConfigJson(row.config, secretKeysFor(row.id, 'instance'), `plugins[${row.id}].config`);
           if (next !== null) {
@@ -497,9 +521,11 @@ async function main() {
       }
 
       if (tableExists('plugin_user_config')) {
-        const userConfigRows = db
-          .prepare('SELECT plugin_id, user_id, config FROM plugin_user_config')
-          .all() as { plugin_id: string; user_id: number; config: string | null }[];
+        const userConfigRows = db.prepare('SELECT plugin_id, user_id, config FROM plugin_user_config').all() as {
+          plugin_id: string;
+          user_id: number;
+          config: string | null;
+        }[];
         for (const row of userConfigRows) {
           const next = migrateConfigJson(
             row.config,
@@ -518,7 +544,10 @@ async function main() {
     }
 
     // --- trip_album_links: passphrase ---
-    const albumLinks = db.prepare('SELECT id, passphrase FROM trip_album_links WHERE passphrase IS NOT NULL').all() as { id: number; passphrase: string }[];
+    const albumLinks = db.prepare('SELECT id, passphrase FROM trip_album_links WHERE passphrase IS NOT NULL').all() as {
+      id: number;
+      passphrase: string;
+    }[];
     for (const row of albumLinks) {
       const newVal = migrateApiKeyValue(row.passphrase, `trip_album_links[${row.id}].passphrase`);
       if (newVal !== null) {
@@ -527,7 +556,10 @@ async function main() {
     }
 
     // --- trek_photos: passphrase ---
-    const photos = db.prepare('SELECT id, passphrase FROM trek_photos WHERE passphrase IS NOT NULL').all() as { id: number; passphrase: string }[];
+    const photos = db.prepare('SELECT id, passphrase FROM trek_photos WHERE passphrase IS NOT NULL').all() as {
+      id: number;
+      passphrase: string;
+    }[];
     for (const row of photos) {
       const newVal = migrateApiKeyValue(row.passphrase, `trek_photos[${row.id}].passphrase`);
       if (newVal !== null) {
@@ -545,7 +577,7 @@ async function main() {
   console.log(`  Skipped (empty): ${result.skipped}`);
   if (result.errors.length > 0) {
     console.warn(`  Errors:          ${result.errors.length}`);
-    result.errors.forEach(e => console.warn(`    - ${e}`));
+    result.errors.forEach((e) => console.warn(`    - ${e}`));
     console.warn('\nSome secrets could not be migrated. Check the errors above.');
     console.warn(`Your original database is backed up at: ${backupPath}`);
     process.exit(1);

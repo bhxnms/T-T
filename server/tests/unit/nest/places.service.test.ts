@@ -2025,3 +2025,123 @@ describe('findMatchingPlaceId', () => {
     expect(svc.findMatchingPlaceId(String(trip.id), edge)).toBeNull();
   });
 });
+
+// ── AMap (高德) id + automatic thumbnail ─────────────────────────────────────
+//
+// A place picked from AMap search now carries its POI id, and the service turns
+// that into a thumbnail on its own. These cases pin both halves: the id survives
+// a round-trip, and the photo is attached only when there is one and only when
+// the place has no picture yet.
+
+describe('amap_id persistence', () => {
+  it('PLACE-SVC-AMAP-001 — create stores the AMap POI id on its own column', () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const place = svc.create(String(trip.id), { name: '故宫', amap_id: 'B000A83M61' }) as any;
+
+    expect(place.amap_id).toBe('B000A83M61');
+    // Kept apart from osm_id: the OSM details path parses '<type>/<id>'.
+    expect(place.osm_id ?? null).toBeNull();
+  });
+
+  it('PLACE-SVC-AMAP-002 — update sets and clears it like any provider column', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const place = createPlace(testDb, trip.id, { name: 'Place' }) as any;
+
+    const set = (await svc.update(String(trip.id), String(place.id), { amap_id: 'B000A83M61' })) as any;
+    expect(set.amap_id).toBe('B000A83M61');
+
+    // An untouched field must survive an unrelated edit.
+    const other = (await svc.update(String(trip.id), String(place.id), { name: 'Renamed' })) as any;
+    expect(other.amap_id).toBe('B000A83M61');
+  });
+});
+
+describe('attachAmapPhoto', () => {
+  it('PLACE-SVC-AMAP-003 — attaches the photo when the POI has one', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const place = svc.create(String(trip.id), {
+      name: '故宫',
+      amap_id: 'B000A83M61',
+      lat: 39.916,
+      lng: 116.397,
+    }) as any;
+
+    const maps = { getPlacePhoto: vi.fn().mockResolvedValue({ photoUrl: '/api/maps/place-photo/amap%3AB1/bytes' }) };
+    const svcWithMaps = makePlacesService(maps as unknown as MapsService);
+
+    await svcWithMaps.attachAmapPhoto(String(trip.id), user.id, place.id);
+
+    expect(maps.getPlacePhoto).toHaveBeenCalledWith(
+      user.id,
+      'amap:B000A83M61',
+      expect.any(Number),
+      expect.any(Number),
+      '故宫',
+    );
+    const row = testDb.prepare('SELECT image_url FROM places WHERE id = ?').get(place.id) as any;
+    expect(row.image_url).toBe('/api/maps/place-photo/amap%3AB1/bytes');
+  });
+
+  it('PLACE-SVC-AMAP-004 — a POI with no picture leaves image_url empty', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const place = svc.create(String(trip.id), { name: '无图地点', amap_id: 'B000A83M99' }) as any;
+
+    const maps = { getPlacePhoto: vi.fn().mockResolvedValue({ photoUrl: null }) };
+    const svcWithMaps = makePlacesService(maps as unknown as MapsService);
+
+    await svcWithMaps.attachAmapPhoto(String(trip.id), user.id, place.id);
+
+    const row = testDb.prepare('SELECT image_url FROM places WHERE id = ?').get(place.id) as any;
+    expect(row.image_url ?? null).toBeNull();
+  });
+
+  it('PLACE-SVC-AMAP-005 — never overwrites a picture the place already has', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const place = svc.create(String(trip.id), {
+      name: '已选图',
+      amap_id: 'B000A83M61',
+      image_url: '/uploads/covers/mine.jpg',
+    }) as any;
+
+    const maps = { getPlacePhoto: vi.fn() };
+    const svcWithMaps = makePlacesService(maps as unknown as MapsService);
+
+    await svcWithMaps.attachAmapPhoto(String(trip.id), user.id, place.id);
+
+    // The lookup is skipped entirely, so the chosen hero image is untouched.
+    expect(maps.getPlacePhoto).not.toHaveBeenCalled();
+    const row = testDb.prepare('SELECT image_url FROM places WHERE id = ?').get(place.id) as any;
+    expect(row.image_url).toBe('/uploads/covers/mine.jpg');
+  });
+
+  it('PLACE-SVC-AMAP-006 — a place with no AMap id is left alone', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const place = createPlace(testDb, trip.id, { name: 'OSM place' }) as any;
+
+    const maps = { getPlacePhoto: vi.fn() };
+    const svcWithMaps = makePlacesService(maps as unknown as MapsService);
+
+    await svcWithMaps.attachAmapPhoto(String(trip.id), user.id, place.id);
+
+    expect(maps.getPlacePhoto).not.toHaveBeenCalled();
+  });
+
+  it('PLACE-SVC-AMAP-007 — a provider failure is swallowed, not surfaced', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const place = svc.create(String(trip.id), { name: '失败', amap_id: 'B000A83M61' }) as any;
+
+    const maps = { getPlacePhoto: vi.fn().mockRejectedValue(new Error('upstream down')) };
+    const svcWithMaps = makePlacesService(maps as unknown as MapsService);
+
+    await expect(svcWithMaps.attachAmapPhoto(String(trip.id), user.id, place.id)).resolves.toBeUndefined();
+    const row = testDb.prepare('SELECT image_url FROM places WHERE id = ?').get(place.id) as any;
+    expect(row.image_url ?? null).toBeNull();
+  });
+});

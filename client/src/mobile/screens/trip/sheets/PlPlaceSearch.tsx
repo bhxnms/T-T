@@ -1,7 +1,12 @@
 import { ImageOff, Loader2, Search, Star } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mapsApi } from '../../../../api/client';
-import { isGoogleMapsUrl } from '../../../../components/Planner/PlaceFormModal.helpers';
+import {
+  extractAmapPoiId,
+  extractAmapUrl,
+  isAmapShareInput,
+  isGoogleMapsUrl,
+} from '../../../../components/Planner/PlaceFormModal.helpers';
 import { getApiErrorMessage } from '../../../../utils/apiError';
 import { PlacesSession } from '../../../../utils/placesSession';
 import type { TripPlanner } from '../MTripShell';
@@ -16,8 +21,11 @@ export interface PlSearchPick {
   google_place_id?: string;
   google_ftid?: string;
   osm_id?: string;
+  amap_id?: string;
   website?: string;
   phone?: string;
+  /** Hero image from the picked place, when the provider supplied one. */
+  image_url?: string;
 }
 
 interface Suggestion {
@@ -76,6 +84,7 @@ function placeToPick(place: MapsPlace): PlSearchPick {
     google_place_id: s(place.google_place_id),
     google_ftid: s(place.google_ftid),
     osm_id: s(place.osm_id),
+    amap_id: s(place.amap_id),
     website: s(place.website),
     phone: s(place.phone),
   };
@@ -186,6 +195,28 @@ export default function PlPlaceSearch({
           toast.success(t('places.urlResolved'));
           return;
         }
+      }
+      // AMap share links/text resolve by POI id, so they never go to keyword search.
+      if (!isGoogleMapsUrl(trimmed) && isAmapShareInput(trimmed)) {
+        const amapUrl = extractAmapUrl(trimmed) ?? extractAmapPoiId(trimmed);
+        if (amapUrl) {
+          const resolved = await mapsApi.resolveUrl(amapUrl);
+          if (resolved.lat && resolved.lng) {
+            onPick({
+              name: resolved.name || undefined,
+              address: resolved.address || undefined,
+              lat: String(resolved.lat),
+              lng: String(resolved.lng),
+              amap_id: resolved.amap_id || undefined,
+              image_url: resolved.photos?.[0],
+            });
+            setQuery('');
+            toast.success(t('places.urlResolved'));
+            return;
+          }
+        }
+        toast.error(t('places.amapImportFailed'));
+        return;
       }
       const result = await mapsApi.search(trimmed, language, provider);
       setResults(result.places || []);

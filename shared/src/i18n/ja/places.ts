@@ -29,6 +29,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': 'KMZ/KMLから {count} 件の場所をインポートしました',
   'places.urlResolved': 'URLから場所をインポートしました',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'リストをインポート',
   'places.kmlKmzSummaryValues': 'プレースマーク: {total} • 追加: {created} • スキップ: {skipped}',
   'places.importGoogleList': 'Google リスト',

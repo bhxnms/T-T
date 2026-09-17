@@ -28,6 +28,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': '{count} tempat diimpor dari KMZ/KML',
   'places.urlResolved': 'Tempat diimpor dari URL',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'Impor Daftar',
   'places.kmlKmzSummaryValues': 'Placemark: {total} • Diimpor: {created} • Dilewati: {skipped}',
   'places.importGoogleList': 'Daftar Google',

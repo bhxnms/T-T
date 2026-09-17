@@ -162,6 +162,10 @@ export class PlacesController {
     const place = this.places.create(tripId, body as never);
     this.places.broadcast(tripId, 'place:created', { place }, socketId);
     this.places.onCreated(tripId, place.id);
+    // Detached: the response carries the place immediately, and the AMap photo
+    // (when the POI has one) arrives over the websocket as place:updated. The
+    // task swallows its own errors, so nothing here can fail the create.
+    void this.places.attachAmapPhoto(tripId, user.id, place.id);
     return { place };
   }
 

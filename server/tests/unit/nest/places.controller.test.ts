@@ -20,6 +20,9 @@ function svc(o: Partial<PlacesService> = {}): PlacesService {
     onCreated: vi.fn(),
     onUpdated: vi.fn(),
     onDeleted: vi.fn(),
+    // Fired detached by create() to attach an AMap thumbnail; resolves so the
+    // unawaited call in the handler cannot reject after the test finished.
+    attachAmapPhoto: vi.fn().mockResolvedValue(undefined),
     // Trip-scoping reads the delete paths run before firing the journey hook
     // (#1745); default to "everything belongs to the trip".
     get: vi.fn().mockReturnValue({ id: 9 }),
@@ -102,12 +105,16 @@ describe('PlacesController (parity with the legacy /api/trips/:tripId/places rou
       const create = vi.fn().mockReturnValue({ id: 9 });
       const broadcast = vi.fn();
       const onCreated = vi.fn();
-      const s = svc({ create, broadcast, onCreated } as Partial<PlacesService>);
+      const attachAmapPhoto = vi.fn().mockResolvedValue(undefined);
+      const s = svc({ create, broadcast, onCreated, attachAmapPhoto } as Partial<PlacesService>);
       expect(
         new PlacesController(s, new RuntimeEnvService(), storageStub).create(user, '5', { name: 'Spot' }, 'sock'),
       ).toEqual({ place: { id: 9 } });
       expect(broadcast).toHaveBeenCalledWith('5', 'place:created', { place: { id: 9 } }, 'sock');
       expect(onCreated).toHaveBeenCalledWith('5', 9);
+      // The AMap thumbnail lookup is fired detached, so the response never waits
+      // on a provider round trip.
+      expect(attachAmapPhoto).toHaveBeenCalledWith('5', user.id, 9);
     });
   });
 

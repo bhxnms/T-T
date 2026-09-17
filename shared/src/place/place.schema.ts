@@ -103,6 +103,9 @@ export const placeSchema = z.object({
   google_place_id: z.string().nullable().optional(),
   google_ftid: z.string().nullable().optional(),
   osm_id: z.string().nullable().optional(),
+  // AMap (高德) POI id, e.g. 'B000A83M61'. Kept apart from osm_id: the OSM
+  // details path parses its id as '<type>/<id>' and an AMap id has no slash.
+  amap_id: z.string().nullable().optional(),
   route_geometry: z.string().nullable().optional(),
   // Manual track colour (#776). null = inherit the category colour like before.
   route_color: hexColorSchema.nullable().optional(),
@@ -148,6 +151,8 @@ export const assignmentPlaceSchema = z.object({
   // Carried on the embedded place so the day-plan thumbnail can auto-fetch an
   // OSM photo the same way the sidebar/inspector do (#1136 follow-up).
   osm_id: z.string().nullable().optional(),
+  /** Same purpose as osm_id, for a place that came from AMap search. */
+  amap_id: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
   category: placeCategorySchema.optional(),

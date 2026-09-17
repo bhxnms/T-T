@@ -27,6 +27,7 @@ const places: TranslationStrings = {
   'places.deleteSelected': 'Elimina la selecció',
   'places.kmlKmzImported': '{count} llocs importats des de KMZ/KML',
   'places.urlResolved': "Lloc importat des de l'URL",
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'Importa una llista',
   'places.kmlKmzSummaryValues': 'Placemarks: {total} · Importats: {created} · Omès: {skipped}',
   'places.importGoogleList': 'Llista de Google',

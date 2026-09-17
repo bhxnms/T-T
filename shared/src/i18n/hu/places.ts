@@ -29,6 +29,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': '{count} hely importálva KMZ/KML-ből',
   'places.urlResolved': 'Hely importálva URL-ből',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'Lista importálás',
   'places.kmlKmzSummaryValues': 'Placemarks: {total} • Importálva: {created} • Kihagyva: {skipped}',
   'places.importGoogleList': 'Google Lista',

@@ -142,6 +142,10 @@ function createTables(db: Database.Database): void {
       image_url TEXT,
       google_place_id TEXT,
       google_ftid TEXT,
+      -- AMap (高德) POI id, e.g. 'B000A83M61'. Its own column rather than a
+      -- reuse of osm_id: osm_id is addressed by the Overpass/Nominatim details
+      -- path, which parses it as '<type>/<id>' and would mis-read an AMap id.
+      amap_id TEXT,
       website TEXT,
       phone TEXT,
       transport_mode TEXT DEFAULT 'walking',

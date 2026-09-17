@@ -123,6 +123,14 @@ export const mapsResolveUrlResultSchema = z.object({
   name: z.string().nullable(),
   address: z.string().nullable(),
   google_ftid: z.string().nullable().optional(),
+  /**
+   * AMap POI id, when the link resolved through 高德 rather than Google. Optional
+   * because one response shape serves both providers, and because a server that
+   * predates this field must still parse.
+   */
+  amap_id: z.string().nullable().optional(),
+  /** AMap photo URLs, best-first. Absent or empty when the POI has none. */
+  photos: z.array(z.string()).optional(),
 });
 export type MapsResolveUrlResult = z.infer<typeof mapsResolveUrlResultSchema>;
 

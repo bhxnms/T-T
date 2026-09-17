@@ -16,7 +16,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.4-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.0-blue?style=flat-square)
 
 ---
 
@@ -76,7 +76,54 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.5.4
+## 🆕 What's New in v0.6.0
+
+### AMap places now come with their photo
+
+- A place added from AMap (高德) search remembers its POI id, and the server
+  fetches that POI's own picture and attaches it as the place thumbnail. A POI
+  with no picture keeps an empty thumbnail rather than getting a placeholder.
+- The image is downloaded and cached server-side behind the existing photo proxy,
+  the same way Google and Wikimedia photos already are — it is never hot-linked,
+  so a CDN referer check or an expiring URL cannot turn the thumbnail blank later.
+- The fetch is detached from the save: the place appears immediately and the
+  thumbnail arrives over the websocket. It never overwrites a picture the place
+  already has.
+
+### Import a place from an AMap share link
+
+- The place search box now accepts an AMap link: `www.amap.com/place/…`,
+  `ditu.amap.com/place/…`, the `surl.amap.com` / `uri.amap.com` short links, or a
+  bare POI id.
+- The AMap app's 分享 text can be pasted whole — the link is lifted out of the
+  surrounding sentence, which is what actually ends up on the clipboard.
+- Resolving goes through the AMap POI id (`/v5/place/detail`), so the name,
+  address and coordinates are the POI's own rather than reverse-geocoded guesses.
+  Every redirected hop is re-checked by the SSRF guard.
+
+### Fixed
+
+- `amap_js_api_key` was encrypted at rest but missing from the key-rotation
+  script, so rotating the encryption key would have silently left every user's
+  AMap browser key unreadable. It is now rotated with the other encrypted
+  settings.
+
+### Existing 0.5.4 improvements
+
+- AMap place search uses the documented v5 request contract (`page_size` /
+  `page_num` / `show_fields`, and `place/around` whenever a coordinate exists).
+- AMap search results show photos, ratings, opening hours, phone and category.
+- AMap has an independent encrypted per-user Web JS API Key setting.
+
+### Existing 0.5.3 improvements
+
+- Mobile Atlas includes the same one-tap preset-landmark visibility switch as desktop.
+- “Explore places on the map” uses AMap for nearby restaurants, hotels and categories when AMap search is enabled.
+- The first-run administrator receives a one-time credential notice and must change the generated password before continuing.
+
+---
+
+## v0.5.4 (detail)
 
 ### AMap place search fixed
 
@@ -135,7 +182,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.5.4`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.6.0`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -185,7 +232,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.5.4 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.6.0 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \

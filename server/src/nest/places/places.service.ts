@@ -79,6 +79,7 @@ export interface PlaceCreateInput {
   google_place_id?: string;
   google_ftid?: string;
   osm_id?: string;
+  amap_id?: string;
   website?: string;
   phone?: string;
   transport_mode?: string;
@@ -105,6 +106,7 @@ export interface PlaceUpdateInput {
   google_place_id?: string;
   google_ftid?: string;
   osm_id?: string;
+  amap_id?: string;
   website?: string;
   phone?: string;
   transport_mode?: string;
@@ -276,6 +278,7 @@ export class PlacesService {
       google_place_id,
       google_ftid,
       osm_id,
+      amap_id,
       website,
       phone,
       transport_mode,
@@ -288,9 +291,9 @@ export class PlacesService {
       `
     INSERT INTO places (trip_id, name, description, lat, lng, address, category_id, price, currency,
       place_time, end_time,
-      duration_minutes, notes, image_url, google_place_id, google_ftid, osm_id, website, phone, transport_mode,
+      duration_minutes, notes, image_url, google_place_id, google_ftid, osm_id, amap_id, website, phone, transport_mode,
       route_geometry, route_color)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
       // lat/lng/price/duration_minutes use an explicit undefined check, not `||`:
       // 0 is a legitimate value for all four (Null Island, a free entry, a
@@ -312,6 +315,7 @@ export class PlacesService {
       google_place_id || null,
       google_ftid || null,
       osm_id || null,
+      amap_id || null,
       website || null,
       phone || null,
       transport_mode || 'walking',
@@ -394,6 +398,7 @@ export class PlacesService {
       google_place_id,
       google_ftid,
       osm_id,
+      amap_id,
       website,
       phone,
       transport_mode,
@@ -420,6 +425,7 @@ export class PlacesService {
       google_place_id = ?,
       google_ftid = ?,
       osm_id = ?,
+      amap_id = ?,
       website = ?,
       phone = ?,
       transport_mode = COALESCE(?, transport_mode),
@@ -445,6 +451,7 @@ export class PlacesService {
       google_place_id !== undefined ? google_place_id : existingPlace.google_place_id,
       google_ftid !== undefined ? google_ftid : existingPlace.google_ftid,
       osm_id !== undefined ? osm_id : existingPlace.osm_id,
+      amap_id !== undefined ? amap_id : existingPlace.amap_id,
       website !== undefined ? website : existingPlace.website,
       phone !== undefined ? phone : existingPlace.phone,
       transport_mode || null,
@@ -493,11 +500,11 @@ export class PlacesService {
   }
 
   async remove(tripId: string, placeId: string): Promise<boolean> {
-    const place = this.dbs.get<{ google_place_id: string | null; image_url: string | null }>(
-      'SELECT google_place_id, image_url FROM places WHERE id = ? AND trip_id = ?',
-      placeId,
-      tripId,
-    );
+    const place = this.dbs.get<{
+      google_place_id: string | null;
+      image_url: string | null;
+      amap_id: string | null;
+    }>('SELECT google_place_id, image_url, amap_id FROM places WHERE id = ? AND trip_id = ?', placeId, tripId);
     if (!place) return false;
     // The linked expense goes with the place, the same way a booking takes its
     // expense with it (#1298). One transaction, so a place can never survive
@@ -506,22 +513,24 @@ export class PlacesService {
       this.dbs.run('DELETE FROM budget_items WHERE trip_id = ? AND place_id = ?', tripId, placeId);
       this.dbs.run('DELETE FROM places WHERE id = ?', placeId);
     });
-    await reclaimPhotoCache(this.photoCache, place.google_place_id, place.image_url);
+    await reclaimPhotoCache(this.photoCache, place.google_place_id, place.image_url, place.amap_id);
     await reclaimPlaceImage(this.storage, place.image_url);
     return true;
   }
 
   async removeMany(tripId: string, ids: number[]): Promise<number[]> {
     if (ids.length === 0) return [];
-    const selectStmt = this.dbs.prepare('SELECT google_place_id, image_url FROM places WHERE id = ? AND trip_id = ?');
+    const selectStmt = this.dbs.prepare(
+      'SELECT google_place_id, image_url, amap_id FROM places WHERE id = ? AND trip_id = ?',
+    );
     const deleteStmt = this.dbs.prepare('DELETE FROM places WHERE id = ?');
     const deleteExpenseStmt = this.dbs.prepare('DELETE FROM budget_items WHERE trip_id = ? AND place_id = ?');
     const deleted: number[] = [];
-    const reclaimable: { google_place_id: string | null; image_url: string | null }[] = [];
+    const reclaimable: { google_place_id: string | null; image_url: string | null; amap_id: string | null }[] = [];
     this.dbs.transaction(() => {
       for (const id of ids) {
         const row = selectStmt.get(id, tripId) as
-          | { google_place_id: string | null; image_url: string | null }
+          | { google_place_id: string | null; image_url: string | null; amap_id: string | null }
           | undefined;
         if (!row) continue;
         deleteExpenseStmt.run(tripId, id);
@@ -532,7 +541,7 @@ export class PlacesService {
     });
     // Reclaim after the transaction commits so isReferenced() sees the final place set.
     for (const row of reclaimable) {
-      await reclaimPhotoCache(this.photoCache, row.google_place_id, row.image_url);
+      await reclaimPhotoCache(this.photoCache, row.google_place_id, row.image_url, row.amap_id);
       await reclaimPlaceImage(this.storage, row.image_url);
     }
     return deleted;
@@ -1491,6 +1500,48 @@ export class PlacesService {
     // importer's own client should also receive the late update).
     const updated = this.dbs.getPlaceWithTags(place.id);
     if (updated) this.realtime.broadcast(tripId, 'place:updated', { place: updated }, undefined);
+  }
+
+  /**
+   * Fetch the AMap photo for one just-created place and attach it as the
+   * thumbnail. Detached and best-effort, mirroring enrichOne's Google half:
+   * a place with no photo, no key, or an unreachable image keeps the empty
+   * image_url it was saved with rather than getting a placeholder.
+   *
+   * COALESCE on the write, so a photo that arrived between the create and this
+   * task (or one the user picked by hand) is never overwritten.
+   */
+  async attachAmapPhoto(tripId: string, userId: number, placeId: number): Promise<void> {
+    try {
+      const row = this.dbs.get<{
+        amap_id: string | null;
+        image_url: string | null;
+        lat: number | null;
+        lng: number | null;
+        name: string;
+      }>('SELECT amap_id, image_url, lat, lng, name FROM places WHERE id = ? AND trip_id = ?', placeId, tripId);
+      const amapId = trimOrNull(row?.amap_id);
+      if (!row || !amapId) return;
+      if (trimOrNull(row.image_url)) return;
+      const photo = await this.maps.getPlacePhoto(
+        userId,
+        `amap:${amapId}`,
+        Number(row.lat ?? NaN),
+        Number(row.lng ?? NaN),
+        row.name,
+      );
+      if (!photo?.photoUrl) return;
+      this.dbs.run(
+        'UPDATE places SET image_url = COALESCE(image_url, ?), updated_at = CURRENT_TIMESTAMP WHERE id = ? AND trip_id = ?',
+        photo.photoUrl,
+        placeId,
+        tripId,
+      );
+      const updated = this.dbs.getPlaceWithTags(placeId);
+      if (updated) this.realtime.broadcast(tripId, 'place:updated', { place: updated }, undefined);
+    } catch (err) {
+      console.error('[Places] AMap photo attach failed:', err instanceof Error ? err.message : err);
+    }
   }
 
   /**

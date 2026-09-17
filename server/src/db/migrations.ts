@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { readEnv } from '../app-config';
 import { encrypt_api_key } from '../nest/common/crypto/apiKeyCrypto';
 
@@ -4363,6 +4362,24 @@ function runMigrations(db: Database.Database): void {
         `);
 
         console.log('[DB] Created activities table and migrated day_assignments');
+      }
+    },
+
+    /**
+     * TT: AMap (高德) POI id on a place.
+     *
+     * A place picked from AMap search now remembers which POI it came from, so
+     * its photo and details can be re-fetched later. Deliberately its own column
+     * rather than a reuse of osm_id: the OSM details path parses that id as
+     * '<type>/<id>', and an AMap id ('B000A83M61') carries no slash, so it would
+     * be read as a malformed OSM reference.
+     *
+     * Appended LAST: the array is index-addressed against schema_version.
+     */
+    () => {
+      const cols = db.prepare("SELECT name FROM pragma_table_info('places')").all() as Array<{ name: string }>;
+      if (!cols.some((c) => c.name === 'amap_id')) {
+        db.exec('ALTER TABLE places ADD COLUMN amap_id TEXT');
       }
     },
   ];

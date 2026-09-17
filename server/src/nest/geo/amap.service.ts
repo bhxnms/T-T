@@ -173,6 +173,65 @@ export interface AmapRouteLeg {
   duration: number; // seconds
 }
 
+/** One POI as /v5/place/detail answers it, mapped like the search results. */
+export type AmapDetailPlace = AmapSearchPlace;
+
+/**
+ * Single-POI lookup by AMap id (/v5/place/detail).
+ *
+ * Separate endpoint from search because it is addressed by id rather than by
+ * keyword, and it is the only way to reach a POI's photos once the search
+ * response has been discarded. Same v5 contract as amapSearchPlaces: `id`
+ * identifies the POI, `show_fields` opts into the detail groups, and the fields
+ * live under `poi.business` / `poi.photos`.
+ *
+ * Returns null when there is no key, the id is empty, or AMap answers with no
+ * POI. A genuinely absent POI is an empty result, not an error — the caller
+ * treats null as "no details" rather than retrying.
+ */
+export async function amapPlaceDetail(db: DatabaseService, amapId: string): Promise<AmapDetailPlace | null> {
+  const key = getAmapKey(db);
+  const id = amapId?.trim();
+  if (!key || !id) return null;
+  const params = new URLSearchParams({
+    id,
+    show_fields: 'business,photos',
+    output: 'JSON',
+  });
+  const data = await amapFetchV3('/v5/place/detail', params, key);
+  const poi: any = Array.isArray(data.pois) ? data.pois[0] : null;
+  if (!poi) return null;
+  const [lngStr, latStr] = String(poi.location || '').split(',');
+  const lng = Number.parseFloat(lngStr);
+  const lat = Number.parseFloat(latStr);
+  const wgs = Number.isFinite(lng) && Number.isFinite(lat) ? gcj02ToWgs84(lng, lat) : null;
+  const business = poi.business || {};
+  const rating = Number(business.rating);
+  return {
+    name: poi.name || '',
+    address:
+      [poi.pname, poi.cityname, poi.adname, poi.address].filter(Boolean).join(' · ') || String(poi.address || ''),
+    lat: wgs ? wgs.lat : null,
+    lng: wgs ? wgs.lng : null,
+    amap_id: poi.id || id,
+    website: null,
+    phone: String(business.tel || '') || null,
+    rating: Number.isFinite(rating) ? rating : null,
+    // See amapSearchPlaces: v5 reports no vote count, and the price is not one.
+    rating_count: null,
+    photos: Array.isArray(poi.photos)
+      ? poi.photos
+          .map((photo: any) => String(photo?.url || '').trim())
+          .filter((url: string) => /^https?:\/\//i.test(url))
+          .slice(0, 5)
+      : [],
+    open_time: String(business.opentime_today || business.opentime_week || '') || null,
+    business_area: String(business.business_area || '') || null,
+    source: 'amap' as const,
+    amap_type: String(poi.type || '') || null,
+  };
+}
+
 export interface AmapRouteResult {
   /** WGS-84 [lat, lng] polyline for the whole route. */
   coordinates: [number, number][];

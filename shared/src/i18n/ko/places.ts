@@ -28,6 +28,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': 'KMZ/KML에서 {count}개 장소를 가져왔습니다',
   'places.urlResolved': 'URL에서 장소를 가져왔습니다',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': '목록 가져오기',
   'places.kmlKmzSummaryValues': '총 Placemarks: {total} · 가져옴: {created} · 건너뜀: {skipped}',
   'places.importGoogleList': 'Google 목록',

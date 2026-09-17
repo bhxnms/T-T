@@ -28,6 +28,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': '已從 KMZ/KML 匯入 {count} 個地點',
   'places.urlResolved': '已從 URL 匯入地點',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': '列表匯入',
   'places.kmlKmzSummaryValues': 'Placemarks：{total} • 已匯入：{created} • 已略過：{skipped}',
   'places.importGoogleList': 'Google 列表',

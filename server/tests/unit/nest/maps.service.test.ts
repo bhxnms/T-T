@@ -3244,3 +3244,79 @@ describe('readWikiIdentity', () => {
     expect(identity).toEqual({ wikidata: null, wikipedia: null, wikimedia_commons: null });
   });
 });
+
+// ── AMap (高德) link import + photo ──────────────────────────────────────────
+//
+// The resolver dispatches AMap links to their own path because they are
+// addressed by POI id rather than coordinates. These cases cover the dispatch,
+// the id lookup, and the "no key means unresolvable, not silently wrong" rule.
+
+describe('resolveGoogleMapsUrl — AMap branch', () => {
+  const amapDetailPayload = {
+    status: '1',
+    pois: [
+      {
+        id: 'B000A83M61',
+        name: '故宫博物院',
+        location: '116.397451,39.916342',
+        pname: '北京市',
+        cityname: '北京市',
+        adname: '东城区',
+        address: '景山前街4号',
+        business: { rating: '4.7' },
+        photos: [{ url: 'https://store.is.autonavi.com/showpic/1' }],
+      },
+    ],
+  };
+
+  it('MAPS-AMAP-001: resolves a desktop place link through the POI id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => amapDetailPayload });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    const result = await svc.resolveGoogleMapsUrl('https://www.amap.com/place/B000A83M61');
+
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/v5/place/detail');
+    expect(result.amap_id).toBe('B000A83M61');
+    expect(result.name).toBe('故宫博物院');
+    expect(result.photos).toEqual(['https://store.is.autonavi.com/showpic/1']);
+    // Coordinates come back WGS-84, like every other maps answer.
+    expect(result.lng).toBeCloseTo(116.3912, 3);
+    expect(result.lat).toBeCloseTo(39.9149, 3);
+  });
+
+  it('MAPS-AMAP-002: never leaks an AMap link into the Google parser', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => amapDetailPayload });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    await svc.resolveGoogleMapsUrl('https://ditu.amap.com/place/B000A83M61');
+
+    // Only the AMap detail call; no Google/Nominatim request was made.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0][0])).toContain('restapi.amap.com');
+  });
+
+  it('MAPS-AMAP-003: an AMap link without a configured key is a 400, not a wrong answer', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: '' });
+
+    await expect(svc.resolveGoogleMapsUrl('https://www.amap.com/place/B000A83M61')).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('MAPS-AMAP-004: a POI the detail call cannot resolve is a 400', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, json: async () => ({ status: '1', pois: [] }) });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    await expect(svc.resolveGoogleMapsUrl('https://www.amap.com/place/B000A83M61')).rejects.toMatchObject({
+      status: 400,
+    });
+  });
+});

@@ -2,7 +2,7 @@ import { readEnv, getAppUrl } from '../../app-config';
 import { discardBody, exceedsDeclaredLength, readCappedText } from '../../utils/cappedFetch';
 import { safeFetchFollow, SsrfBlockedError } from '../../utils/ssrfGuard';
 import { DatabaseService } from '../database/database.service';
-import { getAmapKey, isAmapSearchEnabled, amapSearchPlaces, amapRoute } from '../geo/amap.service';
+import { getAmapKey, isAmapSearchEnabled, amapSearchPlaces, amapPlaceDetail, amapRoute } from '../geo/amap.service';
 import { nominatimFetch, type GeoLane } from '../geo/nominatim.client';
 import { photonSearch } from '../geo/photon.client';
 // ── Photo cache (disk-backed) ────────────────────────────────────────────────
@@ -370,6 +370,27 @@ const GOOGLE_SHORT_HOSTS = ['goo.gl', 'maps.app.goo.gl'];
  */
 function isGoogleMapsHost(hostname: string): boolean {
   return GOOGLE_SHORT_HOSTS.includes(hostname) || /^(www\.|maps\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(hostname);
+}
+
+/**
+ * AMap (高德) place pages and share links.
+ *
+ * www/ditu serve the desktop place page (`/place/<poiId>`), while surl/uri are
+ * the app's short links that redirect there. Matched by shape like the Google
+ * hosts above, and anchored so `amap.com.evil.test` is not an AMap host.
+ */
+const AMAP_PLACE_HOSTS = /^(www\.|ditu\.|surl\.|uri\.)?amap\.com$/i;
+
+function isAmapHost(hostname: string): boolean {
+  return AMAP_PLACE_HOSTS.test(hostname);
+}
+
+/** AMap POI id inside a URL path or query (`/place/B000A83M61`, `?poiid=…`). */
+function amapPoiIdFrom(value: string): string | null {
+  const path = value.match(/\/place\/([A-Za-z0-9]+)/);
+  if (path) return path[1];
+  const query = value.match(/[?&](?:poiid|id)=([A-Za-z0-9]{8,20})/);
+  return query ? query[1] : null;
 }
 
 const WIKI_TIMEOUT_MS = 6000;
@@ -2166,12 +2187,47 @@ export class MapsService {
           return { attribution };
         };
 
+        // AMap (高德) POI photo, addressed by the id the place was saved with.
+        // Like the Google branch this returns null on any miss — no key, no POI,
+        // no photos, or a failed image download — so an AMap place with no
+        // picture simply falls through to the coordinate lookup below instead of
+        // inventing a thumbnail. The image host comes from AMap's own response,
+        // so it goes through the SSRF guard rather than a hard-coded allow-list.
+        const fetchAmapPhoto = async (): Promise<{ attribution: string | null } | null> => {
+          if (!getAmapKey(this.database)) return null;
+          try {
+            const detail = await amapPlaceDetail(this.database, placeId.slice('amap:'.length));
+            const photoUrl = detail?.photos?.[0];
+            if (!photoUrl) return null;
+            const imgRes = await safeFetchFollow(photoUrl, undefined, { bypassInternalIpAllowed: true });
+            if (!imgRes.ok) {
+              providerFailed = true;
+              return null;
+            }
+            const bytes = Buffer.from(await imgRes.arrayBuffer());
+            if (!bytes.length) {
+              providerFailed = true;
+              return null;
+            }
+            const cached = await this.photoCache.put(placeId, bytes, null);
+            return { attribution: cached.attribution };
+          } catch {
+            providerFailed = true;
+            return null;
+          }
+        };
+
         // Prefer the Google photo (higher quality); if Google yields nothing, fall
         // back to the same coordinate-based Wikipedia/OSM lookup that right-click
         // places use. Ids Google cannot resolve skip it entirely.
         if (isGooglePlaceId(placeId)) {
           const googlePhoto = await fetchGooglePhoto();
           if (googlePhoto) return googlePhoto;
+        }
+
+        if (placeId.startsWith('amap:')) {
+          const amapPhoto = await fetchAmapPhoto();
+          if (amapPhoto) return amapPhoto;
         }
 
         const fallback = await fetchWikimediaFallback();
@@ -2215,9 +2271,119 @@ export class MapsService {
     return { name, address: data.display_name || null };
   }
 
-  // ── Resolve Google Maps URL ────────────────────────────────────────────────
+  // ── Resolve Maps URL (Google or AMap) ─────────────────────────────────────
 
-  async resolveGoogleMapsUrl(
+  /**
+   * Resolve a pasted maps link to a place record.
+   *
+   * AMap share links are served by their own path: they are addressed by POI id,
+   * not by coordinates, so nothing is parsed out of a page body the way the
+   * Google branch has to. The two hosts never overlap, so the dispatch is a
+   * single test up front.
+   */
+  async resolveGoogleMapsUrl(url: string): Promise<{
+    lat: number;
+    lng: number;
+    name: string | null;
+    address: string | null;
+    google_ftid: string | null;
+    amap_id?: string | null;
+    photos?: string[];
+  }> {
+    let isAmap = false;
+    try {
+      isAmap = isAmapHost(new URL(url.trim()).hostname);
+    } catch {
+      /* not a URL — the Google branch reports the unusable input */
+    }
+    if (isAmap) {
+      const resolved = await this.resolveAmapUrl(url.trim());
+      if (!resolved) {
+        throw Object.assign(new Error('Could not resolve AMap place link'), { status: 400 });
+      }
+      return resolved;
+    }
+    return this.resolveGoogleMapsUrlOnly(url);
+  }
+
+  /**
+   * Resolve an AMap (高德) place link to a full place record.
+   *
+   * Two hops at most: a share link (surl/uri) is followed to the desktop place
+   * page, whose path carries the POI id, and the id is then looked up through
+   * /v5/place/detail. Every followed hop goes through the SSRF guard, so a short
+   * link that redirects somewhere unexpected is refused rather than fetched.
+   *
+   * Returns null when no POI id can be found or the lookup yields nothing —
+   * the caller turns that into a 400. Requires the instance's Web-Service key;
+   * without one an AMap link is unresolvable rather than silently wrong.
+   */
+  private async resolveAmapUrl(url: string): Promise<{
+    lat: number;
+    lng: number;
+    name: string | null;
+    address: string | null;
+    google_ftid: string | null;
+    amap_id: string | null;
+    photos: string[];
+  } | null> {
+    if (!getAmapKey(this.database)) return null;
+
+    let target = url;
+    let poiId = amapPoiIdFrom(target);
+
+    // A bare POI id pasted on its own (the app's share text can carry it alone).
+    if (!poiId && /^[A-Za-z0-9]{8,20}$/.test(target)) {
+      poiId = target;
+    }
+
+    if (!poiId) {
+      // Share short link: follow it to the place page and read the id from there.
+      // Redirects are followed manually so each hop is re-checked by the guard.
+      try {
+        const res = await safeFetchFollow(
+          target,
+          { signal: AbortSignal.timeout(10_000) },
+          {
+            bypassInternalIpAllowed: true,
+          },
+        );
+        target = res.url || target;
+        poiId = amapPoiIdFrom(target);
+        if (!poiId && isAmapHost(new URL(target).hostname)) {
+          // The id can also sit in the page body for links that resolve client-side.
+          if (exceedsDeclaredLength(res, MAX_MAPS_PAGE_BYTES)) {
+            discardBody(res);
+          } else {
+            const { text } = await readCappedText(res, MAX_MAPS_PAGE_BYTES);
+            poiId = amapPoiIdFrom(text);
+          }
+        }
+      } catch (err) {
+        if (err instanceof SsrfBlockedError) {
+          throw Object.assign(new Error('URL blocked by SSRF check'), { status: 403 });
+        }
+        return null;
+      }
+    }
+
+    if (!poiId) return null;
+
+    const detail = await amapPlaceDetail(this.database, poiId);
+    if (!detail || detail.lat == null || detail.lng == null) return null;
+
+    return {
+      lat: detail.lat,
+      lng: detail.lng,
+      name: detail.name || null,
+      address: detail.address || null,
+      google_ftid: null,
+      amap_id: detail.amap_id ?? poiId,
+      photos: detail.photos ?? [],
+    };
+  }
+
+  private async resolveGoogleMapsUrlOnly(
     url: string,
   ): Promise<{ lat: number; lng: number; name: string | null; address: string | null; google_ftid: string | null }> {
     let resolvedUrl = url;

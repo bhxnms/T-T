@@ -224,7 +224,13 @@ export default function MPlaceEditSheet({ planner, onOpenExpense }: MPlaceEditSh
   // value the user typed from one the previous pick wrote, so searching an
   // airport and then a station left the airport's website in the field.
   const applyPick = (pick: PlSearchPick) => {
-    setForm((prev) => mergeResult(prev, pick as unknown as Record<string, unknown>, autoFilledRef.current));
+    setForm((prev) => {
+      const merged = mergeResult(prev, pick as unknown as Record<string, unknown>, autoFilledRef.current);
+      // image_url is deliberately not a RESULT_FIELD — mergeResult owns the
+      // provider-identity columns, while the hero image is settled here so an
+      // AMap import can supply one without clobbering a picture already chosen.
+      return pick.image_url && !prev.image_url ? { ...merged, image_url: pick.image_url } : merged;
+    });
   };
 
   const handleClose = () => {

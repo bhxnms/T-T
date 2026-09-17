@@ -29,6 +29,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': '{count} lieux importés depuis KMZ/KML',
   'places.urlResolved': "Lieu importé depuis l'URL",
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'Import de liste',
   'places.kmlKmzSummaryValues': 'Placemarks : {total} • Importés : {created} • Ignorés : {skipped}',
   'places.importGoogleList': 'Liste Google',

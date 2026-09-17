@@ -6,7 +6,7 @@ on:
       tag:
         description: 'Image tag to publish (without the leading v)'
         required: true
-        default: '0.5.4'
+        default: '0.6.0'
         type: string
 
 permissions:

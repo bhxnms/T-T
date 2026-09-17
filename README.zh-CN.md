@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.5.4-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.0-blue?style=flat-square)
 
 ---
 
@@ -73,7 +73,39 @@
 
 ---
 
-## 🆕 v0.5.4 更新
+## 🆕 v0.6.0 更新
+
+### 高德地点自动带上图片
+
+- 通过高德搜索添加的地点会记住其 POI 编号，服务端据此获取该 POI 自身的图片并作为地点缩略图。确实没有图片的 POI 保持无缩略图，不会填充占位图。
+- 图片由服务端下载后存入现有的照片代理缓存，与 Google、Wikimedia 的处理方式一致；不使用外链热链接，因此高德 CDN 的防盗链或链接过期都不会让缩略图日后变空白。
+- 取图过程与保存分离：地点立即返回，缩略图随后通过 websocket 推送；且绝不会覆盖地点已有的图片。
+
+### 支持从高德分享链接导入地点
+
+- 地点搜索框现在可以直接接受高德链接：`www.amap.com/place/…`、`ditu.amap.com/place/…`，以及 `surl.amap.com` / `uri.amap.com` 短链，或裸 POI 编号。
+- 高德 App 的“分享”整段文本可直接粘贴：程序会从句子中提取链接，因为剪贴板里实际就是这样的文本。
+- 解析通过高德 POI 编号调用 `/v5/place/detail`，因此名称、地址和坐标都来自该 POI 本身，而不是反查地理编码的推测结果。每一次跳转都重新经过 SSRF 校验。
+
+### 修复
+
+- `amap_js_api_key` 在数据库中加密存储，但此前遗漏于密钥轮换脚本；一旦轮换加密密钥，所有用户的高德浏览器 Key 都会静默失效。现已纳入轮换范围。
+
+### 0.5.4 已有改进
+
+- 高德地点搜索改用符合文档的 v5 请求契约（`page_size` / `page_num` / `show_fields`，有坐标时使用 `place/around`）。
+- 高德搜索结果包含照片、评分、营业时间、电话和分类详情。
+- 高德拥有独立、加密、按用户隔离的 Web JS API Key 设置。
+
+### 0.5.3 已有改进
+
+- 移动端 Atlas 新增与桌面端一致的“一键隐藏预设打卡点”开关。
+- 启用高德地点搜索时，“在地图上探索地点”会从高德查找附近餐厅、酒店及分类地点。
+- 首次部署的管理员会收到一次性初始凭据通知，并且必须修改预设密码后才能继续使用。
+
+---
+
+## v0.5.4（详情）
 
 ### 修复高德地点搜索
 
@@ -132,7 +164,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.5.4
+IMAGE_TAG=0.6.0
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -172,7 +204,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.5.4
+docker pull ghcr.io/bhxnms/tt-planner:0.6.0
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -182,7 +214,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.5.4
+  ghcr.io/bhxnms/tt-planner:0.6.0
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

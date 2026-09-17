@@ -29,6 +29,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': '{count} địa điểm được nhập từ KMZ/KML',
   'places.urlResolved': 'Địa điểm được nhập từ URL',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'Nhập danh sách',
   'places.kmlKmzSummaryValues': 'Dấu vị trí: {total} • Đã nhập: {created} • Đã bỏ qua: {skipped}',
   'places.importGoogleList': 'Danh sách Google',

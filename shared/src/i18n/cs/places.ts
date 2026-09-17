@@ -29,6 +29,7 @@ const places: TranslationStrings = {
   'places.categoryChanged': '{count} places updated',
   'places.kmlKmzImported': 'Importováno {count} míst z KMZ/KML',
   'places.urlResolved': 'Místo importováno z URL',
+  'places.amapImportFailed': 'Could not read an AMap place from that link.', // en-fallback
   'places.importList': 'Import seznamu',
   'places.kmlKmzSummaryValues': 'Placemarks: {total} • Importováno: {created} • Přeskočeno: {skipped}',
   'places.importGoogleList': 'Google Seznam',
