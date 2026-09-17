@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.2-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.3-blue?style=flat-square)
 
 ---
 
@@ -73,7 +73,29 @@
 
 ---
 
-## 🆕 v0.6.2 更新
+## 🆕 v0.6.3 更新
+
+### 修复高德分享链接名称乱码
+
+通过分享链接导入时坐标正确，但名称和地址是乱码（形如 `é¾ç«ç²¾çµéåº`）。问题不在解码环节，而是发生在高德自身的跳转链里：
+
+```
+surl.amap.com  → 302 → Location: …%E9%BE%99%E7%8C%AB…   正确且完整
+wb.amap.com    → 302 → Location: …é¾ç«ç²¾çµéåº…      已经损坏
+www.amap.com   → 301 → 损坏的文本被再次百分号编码
+```
+
+`wb.amap.com` 把中文本地按 latin1 重新编码，从这一跳起字节就已经错了，后续任何解码都无法还原。现在解析器只读取**第一跳**的 `Location` 就停止：那一跳是干净的，且已包含编号、坐标、名称和地址，只做解析、不发起请求。
+
+### 相关修复
+
+- 高德主机改为按形状匹配（`*.amap.com`），不再用固定列表——分享短链经过的 `wb` 子域此前会解析失败，未来新增子域也不会再出问题。
+- 名称中含字面百分号（如 `100% Coffee`）时不再抛出 `URI malformed` 导致导入中断，直接使用原文本。
+- 名称中含编码逗号时不再导致地址字段错位。
+
+---
+
+## v0.6.2（详情）
 
 ### 高德分享链接现在能正确解析
 
@@ -205,7 +227,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.6.2
+IMAGE_TAG=0.6.3
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -245,7 +267,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.6.2
+docker pull ghcr.io/bhxnms/tt-planner:0.6.3
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -255,7 +277,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.6.2
+  ghcr.io/bhxnms/tt-planner:0.6.3
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

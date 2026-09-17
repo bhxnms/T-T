@@ -48,8 +48,9 @@ export function isGoogleMapsUrl(input: string): boolean {
   }
 }
 
-/** Hosts that serve an AMap place page or short link. */
-const AMAP_PLACE_HOSTS = /^(www\.|ditu\.|surl\.|uri\.)?amap\.com$/i;
+/** Any amap.com subdomain serves a place page or share link (www, ditu, surl,
+ *  uri, wb). Matched by shape so a new subdomain does not stop resolving. */
+const AMAP_PLACE_HOSTS = /^([a-z0-9-]+\.)*amap\.com$/i;
 
 /** A bare AMap POI id ("B000A83M61") — the app's share text ends with one. */
 const AMAP_POI_ID = /^[A-Z0-9]{8,20}$/;
@@ -182,9 +183,18 @@ export function parseAmapPoiPayload(url: string): AmapPoiPayload | null {
   // be means the payload is laid out differently than assumed, so decline it.
   if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
 
+  // Tolerant: a name may contain a literal '%' ("100% Coffee"), which
+  // decodeURIComponent rejects outright.
   const clean = (v?: string) => {
-    const decoded = v ? decodeURIComponent(v).trim() : '';
-    return decoded || null;
+    if (!v) return null;
+    let decoded = v;
+    try {
+      decoded = decodeURIComponent(v);
+    } catch {
+      /* literal '%' - use the value as it arrived */
+    }
+    const trimmed = decoded.trim();
+    return trimmed || null;
   };
   return {
     amapId: AMAP_POI_ID.test(id) ? id : null,

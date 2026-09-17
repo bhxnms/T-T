@@ -16,7 +16,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.2-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.3-blue?style=flat-square)
 
 ---
 
@@ -76,7 +76,38 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.6.2
+## 🆕 What's New in v0.6.3
+
+### AMap share-link names are no longer garbled
+
+Importing from a share link gave the right coordinates but a mangled name and
+address, like `é¾ç«ç²¾çµéåº`. The damage was not in the decoding — it happened
+inside AMap's own redirect chain:
+
+```
+surl.amap.com  → 302 → Location: …%E9%BE%99%E7%8C%AB…   correct, complete
+wb.amap.com    → 302 → Location: …é¾ç«ç²¾çµéåº…      already corrupted
+www.amap.com   → 301 → the corrupted text, percent-encoded again
+```
+
+`wb.amap.com` re-encodes the Chinese as if the UTF-8 bytes were latin1, and the
+bytes are wrong from that hop onward — nothing downstream can recover them. The
+resolver now reads the **first** redirect's `Location` and stops: that one is
+clean and already carries the id, coordinates, name and address, and it is parsed
+rather than fetched.
+
+### Related fixes
+
+- AMap hosts are matched by shape (`*.amap.com`) instead of a fixed list, so the
+  `wb` subdomain the share shortener redirects through no longer fails to
+  resolve — and a future subdomain will not either.
+- A place name containing a literal `%` ("100% Coffee") no longer throws
+  `URI malformed` and abort the import; the text is used as it arrived.
+- A name containing an encoded comma no longer shifts the address field.
+
+---
+
+## 0.6.2 (detail)
 
 ### AMap share links now actually resolve
 
@@ -251,7 +282,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.6.2`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.6.3`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -301,7 +332,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.6.2 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.6.3 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \

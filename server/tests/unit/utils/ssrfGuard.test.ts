@@ -357,6 +357,50 @@ describe('safeFetchFollow (manual per-hop redirect SSRF)', () => {
     expect(res.url).toBe('https://maps.google.com/maps/place/Foo');
   });
 
+  // The AMap share shortener needs the FIRST redirect's Location and nothing
+  // beyond it: that hop carries the place payload intact, while the next one has
+  // already re-encoded the Chinese as latin1. `maxRedirects: 0` cannot express
+  // this — a 3xx with a Location still counts as a redirect there, so it throws
+  // "Too many redirects" instead of returning the response.
+  describe('stopAtFirstRedirect', () => {
+    it('returns the redirect response itself, without fetching its target', async () => {
+      mockLookup.mockResolvedValue({ address: '142.250.0.0', family: 4 });
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          fakeResponse({ status: 302, location: 'https://wb.amap.com/?p=abc', url: 'https://surl.amap.com/x' }),
+        );
+      vi.stubGlobal('fetch', mockFetch);
+
+      const res = await safeFetchFollow('https://surl.amap.com/x', undefined, { stopAtFirstRedirect: true });
+
+      expect(res.status).toBe(302);
+      expect(res.headers.get('location')).toBe('https://wb.amap.com/?p=abc');
+      // One request only: the target is handed back, never visited.
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('still SSRF-checks the URL it does fetch', async () => {
+      mockLookup.mockResolvedValue({ address: '169.254.169.254', family: 4 });
+      const mockFetch = vi.fn();
+      vi.stubGlobal('fetch', mockFetch);
+
+      await expect(
+        safeFetchFollow('https://internal.example/x', undefined, { stopAtFirstRedirect: true }),
+      ).rejects.toThrow(SsrfBlockedError);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('returns a non-redirect response unchanged', async () => {
+      mockLookup.mockResolvedValue({ address: '142.250.0.0', family: 4 });
+      const mockFetch = vi.fn().mockResolvedValueOnce(fakeResponse({ status: 200, url: 'https://surl.amap.com/x' }));
+      vi.stubGlobal('fetch', mockFetch);
+
+      const res = await safeFetchFollow('https://surl.amap.com/x', undefined, { stopAtFirstRedirect: true });
+      expect(res.status).toBe(200);
+    });
+  });
+
   it('blocks a redirect whose target resolves to an internal IP', async () => {
     vi.stubEnv('ALLOW_INTERNAL_NETWORK', 'false');
     // First hop (public) is allowed; the redirect target resolves to a private IP.

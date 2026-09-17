@@ -3372,15 +3372,24 @@ describe('resolveGoogleMapsUrl — AMap ?p= payload', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('MAPS-AMAP-007: follows a share short link and reads the payload it lands on', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: true, status: 200, url: shareUrl, arrayBuffer: async () => new ArrayBuffer(0) });
+  it('MAPS-AMAP-007: reads a share short link from its redirect target, without following it', async () => {
+    // The shortener answers a 3xx whose Location carries the payload. That one
+    // response is all the resolver uses: the target is parsed, never fetched.
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 302,
+      headers: new Headers({ location: shareUrl }),
+      url: 'https://surl.amap.com/gXe3qqOFa56',
+    });
     vi.stubGlobal('fetch', fetchMock);
     mockInstanceGet.mockReturnValue({ value: 'amap-key' });
 
     const result = await svc.resolveGoogleMapsUrl('https://surl.amap.com/gXe3qqOFa56');
 
+    // Exactly one request: the redirect target is parsed, not fetched. (The
+    // mock's safeFetchFollow stub drops the options argument, so the manual
+    // redirect itself is asserted by the hop tests below, which drive the
+    // resolver through a Location header.)
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.amap_id).toBe('B0MRJ44YYT');
     expect(result.name).toBe('龙猫精灵酒店');
@@ -3406,5 +3415,89 @@ describe('resolveGoogleMapsUrl — AMap ?p= payload', () => {
     // the link.
     expect(fetchMock.mock.calls.some((c: unknown[]) => String(c[0]).includes('/v5/place/detail'))).toBe(false);
     await expect(svc.resolveGoogleMapsUrl('https://www.amap.com/')).rejects.toMatchObject({ status: 400 });
+  });
+});
+
+// ── AMap share links: the intermediate hop that mangles the name ─────────────
+//
+// Reproduced against the live shortener. surl.amap.com answers a 302 whose
+// Location is clean and complete; that Location points at wb.amap.com, whose own
+// 302 has already re-encoded the UTF-8 bytes as latin1 ("龙猫" becomes "é¾ç«"),
+// and www.amap.com percent-encodes the damage again. Any client that walks the
+// whole chain therefore receives a corrupted place name, which is why the
+// resolver reads the FIRST hop and never travels through wb.
+
+describe('resolveGoogleMapsUrl — AMap short link hops', () => {
+  afterEach(() => {
+    mockInstanceGet.mockReset();
+    vi.unstubAllGlobals();
+  });
+
+  const cleanFirstHop =
+    'https://wb.amap.com/?p=B0MRJ44YYT%2C26.65037499661199%2C106.62117451429364%2C%E9%BE%99%E7%8C%AB%E7%B2%BE%E7%81%B5%E9%85%92%E5%BA%97%28%E5%88%86%E5%BA%97%29%2C%E8%AF%9A%E4%BF%A1%E5%8C%97%E8%B7%AF81%E5%8F%B7';
+  // What wb.amap.com sends next: the CJK bytes re-encoded as latin1, then
+  // percent-encoded — the exact shape that produced mojibake.
+  const mangledSecondHop =
+    'https://www.amap.com/?p=B0MRJ44YYT,26.65037499661199,106.62117451429364,%C3%A9%C2%BE%C2%99%C3%A7%C2%8C%C2%AB,%25E8%25AF%259A';
+
+  it('MAPS-AMAP-009: reads the first hop and stops, so the name survives', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 302,
+      ok: false,
+      headers: new Headers({ location: cleanFirstHop }),
+      url: 'https://surl.amap.com/gXe3qqOFa56',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    const result = await svc.resolveGoogleMapsUrl('https://surl.amap.com/gXe3qqOFa56');
+
+    // Exactly one request: the mangled second hop is never fetched.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.name).toBe('龙猫精灵酒店(分店)');
+    expect(result.address).toBe('诚信北路81号');
+    expect(result.amap_id).toBe('B0MRJ44YYT');
+  });
+
+  it('MAPS-AMAP-010: a name read only through the untouched first hop is never mojibake', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 302,
+      ok: false,
+      headers: new Headers({ location: cleanFirstHop }),
+      url: 'https://surl.amap.com/gXe3qqOFa56',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    const result = await svc.resolveGoogleMapsUrl('https://surl.amap.com/gXe3qqOFa56');
+
+    // The giveaway for the old corruption: latin1-looking CJK.
+    expect(result.name).not.toMatch(/[Ã©Ã¨Ã¤Ã¼Â]/);
+    expect(result.name).toBe('龙猫精灵酒店(分店)');
+  });
+
+  it('MAPS-AMAP-011: a short link that does not redirect to amap is refused', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 302,
+      ok: false,
+      headers: new Headers({ location: 'https://evil.test/?p=B0MRJ44YYT,1,2,x,y' }),
+      url: 'https://surl.amap.com/abc',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    await expect(svc.resolveGoogleMapsUrl('https://surl.amap.com/abc')).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('MAPS-AMAP-012: a place name containing a literal percent sign does not throw', async () => {
+    const withPercent = 'https://www.amap.com/?p=B0MRJ44YYT,26.65,106.62,100%%20Coffee,%E8%B7%AF1%E5%8F%B7';
+    vi.stubGlobal('fetch', vi.fn());
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    // decodeURIComponent would raise "URI malformed" on the stray '%'; the
+    // resolver must return the text rather than fail the whole import.
+    const result = await svc.resolveGoogleMapsUrl(withPercent);
+    expect(result.name).toBe('100% Coffee');
+    expect(result.address).toBe('路1号');
   });
 });

@@ -181,3 +181,29 @@ describe('parseAmapPoiPayload', () => {
     expect(parseAmapPoiPayload('not a url')).toBeNull();
   });
 });
+
+describe('AMap host and payload corner cases', () => {
+  it('accepts every amap.com subdomain, including the share redirector', () => {
+    // wb.amap.com is the host a surl.amap.com share link redirects through.
+    expect(extractAmapUrl('https://wb.amap.com/?p=B0MRJ44YYT,26.65,106.62,Name')).toContain('wb.amap.com');
+    expect(extractAmapUrl('https://surl.amap.com/abc')).toContain('surl.amap.com');
+  });
+
+  it('still rejects a lookalike that merely ends in amap.com', () => {
+    expect(extractAmapUrl('https://amap.com.evil.test/place/B000A83M61')).toBeNull();
+    expect(extractAmapUrl('https://notamap.com/place/B000A83M61')).toBeNull();
+  });
+
+  it('survives a place name containing a literal percent sign', () => {
+    // decodeURIComponent raises "URI malformed" on a bare '%'; the payload must
+    // still come back rather than failing the import.
+    const payload = parseAmapPoiPayload('https://www.amap.com/?p=B0MRJ44YYT,26.65,106.62,100%25%20Coffee,路1号');
+    expect(payload!.name).toBe('100% Coffee');
+    expect(payload!.address).toBe('路1号');
+  });
+
+  it('keeps a name whose percent sign is not an escape at all', () => {
+    const payload = parseAmapPoiPayload('https://www.amap.com/?p=B0MRJ44YYT,26.65,106.62,Diner 100%,Road 1');
+    expect(payload!.name).toBe('Diner 100%');
+  });
+});

@@ -370,6 +370,20 @@ export interface SafeFetchFollowOptions extends SafeFetchOptions {
   /** Maximum number of redirects to follow before giving up. Defaults to 5. */
   maxRedirects?: number;
   /**
+   * Return the first redirect response instead of following it.
+   *
+   * For a caller that wants only the `Location` header of the first hop — the
+   * AMap share shortener, whose first target carries the whole place payload
+   * while the second one has already corrupted the text. The URL in that
+   * Location is never fetched by this helper, so the only request made is the
+   * one to the caller's own URL, which is still SSRF-checked and DNS-pinned.
+   *
+   * Distinct from `maxRedirects: 0`, which cannot express this: a 3xx that has a
+   * Location still counts as a redirect there, so it throws "Too many
+   * redirects" rather than handing the response back.
+   */
+  stopAtFirstRedirect?: boolean;
+  /**
    * Keep credential headers across an origin change. Off by default, and no
    * caller needs it today — it exists so a future one that genuinely does has
    * to say so here rather than route around the guard.
@@ -408,6 +422,7 @@ export async function safeFetchFollow(
   const maxRedirects = options?.maxRedirects ?? 5;
   const rejectUnauthorized = options?.rejectUnauthorized ?? true;
   const bypassInternalIpAllowed = options?.bypassInternalIpAllowed ?? false;
+  const stopAtFirstRedirect = options?.stopAtFirstRedirect ?? false;
 
   let currentUrl = url;
   let hopInit = init;
@@ -431,6 +446,11 @@ export async function safeFetchFollow(
     const isRedirectStatus = status >= 300 && status < 400;
     const location = isRedirectStatus ? (response.headers?.get('location') ?? null) : null;
     if (!location) {
+      return response;
+    }
+
+    // The caller wants this redirect, not what it points at.
+    if (stopAtFirstRedirect) {
       return response;
     }
 

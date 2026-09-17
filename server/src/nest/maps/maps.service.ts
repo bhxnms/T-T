@@ -376,11 +376,13 @@ function isGoogleMapsHost(hostname: string): boolean {
 /**
  * AMap (高德) place pages and share links.
  *
- * www/ditu serve the desktop place page (`/place/<poiId>`), while surl/uri are
- * the app's short links that redirect there. Matched by shape like the Google
- * hosts above, and anchored so `amap.com.evil.test` is not an AMap host.
+ * Any amap.com subdomain counts: www/ditu serve the desktop place page
+ * (`/place/<poiId>`), surl/uri are the app's short links, and wb is the host
+ * surl redirects through. Listed by shape rather than by name so a new
+ * subdomain does not silently stop resolving, and anchored so
+ * `amap.com.evil.test` is not an AMap host.
  */
-const AMAP_PLACE_HOSTS = /^(www\.|ditu\.|surl\.|uri\.)?amap\.com$/i;
+const AMAP_PLACE_HOSTS = /^([a-z0-9-]+\.)*amap\.com$/i;
 
 function isAmapHost(hostname: string): boolean {
   return AMAP_PLACE_HOSTS.test(hostname);
@@ -440,9 +442,21 @@ export function parseAmapSharePayload(url: string): AmapSharePayload | null {
   const lng = Number.parseFloat(lngPart);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  // Tolerant decode: a place name may legitimately contain a '%' that is not an
+  // escape ("100% Coffee"), and decodeURIComponent throws on that rather than
+  // returning it. searchParams.get() has already decoded the payload once, so
+  // this is only a second pass for values that arrived with their own escapes -
+  // failing it means the text was plain all along, not that it is unusable.
   const clean = (v?: string) => {
-    const decoded = v ? decodeURIComponent(v).trim() : '';
-    return decoded || null;
+    if (!v) return null;
+    let decoded = v;
+    try {
+      decoded = decodeURIComponent(v);
+    } catch {
+      /* literal '%' - use the value as it arrived */
+    }
+    const trimmed = decoded.trim();
+    return trimmed || null;
   };
   return {
     amapId: /^[A-Za-z0-9]{8,20}$/.test(id) ? id : null,
@@ -2409,21 +2423,39 @@ export class MapsService {
 
     let inline = parseAmapSharePayload(target);
 
-    // Short link (surl/uri) — follow it to the page it points at. The final URL
-    // carries either `?p=` or `/place/<id>`, so both are re-read from there.
+    // Short link (surl/uri): read its FIRST redirect target and stop there.
+    //
+    // Following the chain all the way is what corrupted the place name.
+    // surl.amap.com answers a 302 whose Location is clean and already carries the
+    // whole payload (id, lat, lng, name, address). That Location points at
+    // wb.amap.com, which answers another 302 — and THAT one has already mangled
+    // the Chinese: it re-encodes the UTF-8 bytes as if they were latin1
+    // ("龙猫" arrives as "é¾ç«"), and www.amap.com then percent-encodes the
+    // damaged text again. The bytes are wrong from that hop onward, so no amount
+    // of decoding downstream can recover them; the only fix is not to travel
+    // through it.
+    //
+    // One hop only: `maxRedirects: 0` makes safeFetchFollow return the first 3xx
+    // response itself instead of walking the chain, so the SSRF check and the
+    // DNS-pinned dispatcher still apply to the one request this makes.
     if (!poiId && !inline && isAmapHost(safeHostname(target))) {
       try {
         const res = await safeFetchFollow(
           target,
           { signal: AbortSignal.timeout(10_000) },
-          {
-            bypassInternalIpAllowed: true,
-          },
+          { stopAtFirstRedirect: true, bypassInternalIpAllowed: true },
         );
-        discardBody(res); // only the redirect target is needed, never the body
-        target = res.url || target;
-        inline = parseAmapSharePayload(target);
-        poiId = amapPoiIdFrom(target);
+        discardBody(res);
+        const location = res.headers?.get('location');
+        if (location) {
+          const hop = new URL(location, target).toString();
+          // Read the payload out of the Location header only; the hop itself is
+          // never fetched, because that is where the text is mangled.
+          if (isAmapHost(safeHostname(hop))) {
+            inline = parseAmapSharePayload(hop);
+            poiId = amapPoiIdFrom(hop);
+          }
+        }
       } catch (err) {
         if (err instanceof SsrfBlockedError) {
           throw Object.assign(new Error('URL blocked by SSRF check'), { status: 403 });
