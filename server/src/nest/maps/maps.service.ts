@@ -645,11 +645,13 @@ export class MapsService {
     if (!keyword) throw Object.assign(new Error('Unknown POI category'), { status: 400 });
     const lat = (bbox.south + bbox.north) / 2;
     const lng = (bbox.west + bbox.east) / 2;
+    // v5 place/around caps its radius at 50 km, so the viewport diagonal is
+    // clamped to that rather than the larger server-side ceiling used elsewhere.
     const radius = Math.min(
       Math.max(Math.hypot(bbox.north - bbox.south, bbox.east - bbox.west) * 55_500, 1000),
-      300_000,
+      50_000,
     );
-    const places = await amapSearchPlaces(this.database, keyword, { locationBias: { lat, lng, radius }, limit: 60 });
+    const places = await amapSearchPlaces(this.database, keyword, { locationBias: { lat, lng, radius }, limit: 25 });
     return {
       pois: places
         .filter((p) => p.lat != null && p.lng != null)
@@ -668,7 +670,7 @@ export class MapsService {
           source: 'amap' as const,
         })),
       source: 'amap',
-      truncated: places.length >= 60,
+      truncated: places.length >= 25,
       clamped: false,
     };
   }

@@ -88,7 +88,21 @@ export interface AmapSearchPlace {
   amap_type: string | null;
 }
 
-/** POI text search (v5 place/text), results converted to WGS-84. */
+/**
+ * POI text search, results converted to WGS-84.
+ *
+ * Two v5 endpoints, picked by whether the caller has a coordinate to anchor on:
+ * `place/around` when it does, `place/text` when it does not. They are not
+ * interchangeable — `around` requires `location` and is the only one that
+ * accepts `radius`, while `place/text` rejects both. Sending the around
+ * parameters to text (or the v3 equivalents, `offset`/`page`/`extensions`,
+ * which v5 does not define at all) makes AMap answer `status: 0`, which the
+ * caller reads as "no AMap results" and degrades to the native providers.
+ *
+ * Optional detail — photos, rating, opening hours, phone — comes from
+ * `show_fields`; v5 returns nothing but base fields without it. Those fields
+ * arrive under `poi.business`, not v3's `poi.biz_ext`.
+ */
 export async function amapSearchPlaces(
   db: DatabaseService,
   query: string,
@@ -96,44 +110,58 @@ export async function amapSearchPlaces(
 ): Promise<AmapSearchPlace[]> {
   const key = getAmapKey(db);
   if (!key) return [];
+  const bias =
+    opts.locationBias && Number.isFinite(opts.locationBias.lat) && Number.isFinite(opts.locationBias.lng)
+      ? opts.locationBias
+      : null;
+  // v5 rejects page_size outside 1-25, so the caller's limit is clamped rather
+  // than forwarded as-is.
   const params = new URLSearchParams({
     keywords: query,
-    offset: String(opts.limit ?? 10),
-    page: '1',
-    extensions: 'all',
+    page_size: String(Math.min(Math.max(opts.limit ?? 10, 1), 25)),
+    page_num: '1',
+    show_fields: 'business,photos',
     output: 'JSON',
   });
-  if (opts.locationBias && Number.isFinite(opts.locationBias.lat) && Number.isFinite(opts.locationBias.lng)) {
-    const g = wgs84ToGcj02(opts.locationBias.lng, opts.locationBias.lat);
+  let path = '/v5/place/text';
+  if (bias) {
+    path = '/v5/place/around';
+    const g = wgs84ToGcj02(bias.lng, bias.lat);
     params.set('location', `${g.lng.toFixed(6)},${g.lat.toFixed(6)}`);
-    params.set('radius', String(Math.min(Math.max(opts.locationBias.radius ?? 50_000, 1000), 300_000)));
-    params.set('sortrule', 'distance');
+    // place/around caps its radius at 50 km.
+    params.set('radius', String(Math.min(Math.max(bias.radius ?? 10_000, 1000), 50_000)));
   }
-  const data = await amapFetchV3('/v5/place/text', params, key);
+  const data = await amapFetchV3(path, params, key);
   const pois: any[] = data.pois || [];
   return pois.map((poi) => {
     const [lngStr, latStr] = String(poi.location || '').split(',');
     const lng = Number.parseFloat(lngStr);
     const lat = Number.parseFloat(latStr);
     const wgs = Number.isFinite(lng) && Number.isFinite(lat) ? gcj02ToWgs84(lng, lat) : null;
+    const business = poi.business || {};
+    const rating = Number(business.rating);
     return {
       name: poi.name || '',
-      address: [poi.pname, poi.adname, poi.address].filter(Boolean).join(' · ') || String(poi.address || ''),
+      address:
+        [poi.pname, poi.cityname, poi.adname, poi.address].filter(Boolean).join(' · ') || String(poi.address || ''),
       lat: wgs ? wgs.lat : null,
       lng: wgs ? wgs.lng : null,
       amap_id: poi.id || null,
-      website: String(poi.website || poi.biz_ext?.website || '') || null,
-      phone: String(poi.tel || '') || null,
-      rating: Number.isFinite(Number(poi.biz_ext?.rating)) ? Number(poi.biz_ext.rating) : null,
-      rating_count: Number.isFinite(Number(poi.biz_ext?.rating_num)) ? Number(poi.biz_ext.rating_num) : null,
+      website: null,
+      phone: String(business.tel || '') || null,
+      rating: Number.isFinite(rating) ? rating : null,
+      // v5 returns no vote count. `business.cost` is a price per person, and the
+      // client renders this field in parentheses beside the star rating, so
+      // putting it here would read as a review count that AMap never reported.
+      rating_count: null,
       photos: Array.isArray(poi.photos)
         ? poi.photos
-            .map((photo: any) => String(photo.url || photo.title || '').trim())
+            .map((photo: any) => String(photo?.url || '').trim())
             .filter((url: string) => /^https?:\/\//i.test(url))
             .slice(0, 5)
         : [],
-      open_time: String(poi.biz_ext?.open_time || poi.business?.opentime || '') || null,
-      business_area: String(poi.biz_ext?.business_area || '') || null,
+      open_time: String(business.opentime_today || business.opentime_week || '') || null,
+      business_area: String(business.business_area || '') || null,
       source: 'amap' as const,
       amap_type: String(poi.type || '') || null,
     };
