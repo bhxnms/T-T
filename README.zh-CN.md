@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.2-blue?style=flat-square)
 
 ---
 
@@ -73,7 +73,31 @@
 
 ---
 
-## 🆕 v0.6.1 更新
+## 🆕 v0.6.2 更新
+
+### 高德分享链接现在能正确解析
+
+两个解析缺陷，均已用真实分享文本复现：
+
+- 分享链接会紧贴前面的中文粘贴（`…14层1401https://surl.amap.com/…`），中间没有任何分隔。原解析按空白切分后，又“从第一个中文字符起全部删除”，把 URL 一起删掉了，因此整条消息解析为空。现在改为直接在文本中搜索链接，遇到不能构成 URL 的字符即停止。
+- 位置口令消息末尾带着被破坏的 `\:高德地图:// a@amap.com`，`new URL()` 会把它解析为 host 为 `amap.com`、用户名为 `a` 的合法地址。它因此被当成有效链接，服务端据此抓取高德首页，并返回页面上恰好出现的某个无关地点——一个看起来完全可信的错误地址。现在带凭据的 URL 一律拒绝，服务端不再抓取任何页面正文查找编号，位置口令会被识别并明确说明无法解析，而不是拿数字去搜索。
+
+### 分享链接无需 Web 服务 Key 也能用
+
+高德分享链接跳转后的页面会把坐标直接放在链接里（`?p=<编号>,<纬度>,<经度>,<名称>,<地址>`），因此在完全未配置高德 Key 的实例上也能通过分享链接添加地点。坐标是 GCJ-02，会转换成应用存储使用的 WGS-84 坐标系。
+
+### 可发现性与导航
+
+- 地点搜索框下方现在会提示可以粘贴高德分享链接。该导入没有独立按钮——它跟随搜索按钮触发——此前界面上没有任何提示，实际上等于不可发现。
+- 地点详情卡片的导航菜单新增 **AMap（高德地图）** 入口，与 Google Maps、Waze、Apple Maps 并列。
+
+### 修复
+
+- 21 个非英文语言缺失 0.6.0 新增的 `system_notice.bootstrap_password` 文案，由 i18n parity 检查发现。
+
+---
+
+## v0.6.1（详情）
 
 ### 测试套件修复
 
@@ -181,7 +205,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.6.1
+IMAGE_TAG=0.6.2
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -221,7 +245,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.6.1
+docker pull ghcr.io/bhxnms/tt-planner:0.6.2
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -231,7 +255,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.6.1
+  ghcr.io/bhxnms/tt-planner:0.6.2
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

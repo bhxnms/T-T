@@ -12,6 +12,7 @@
  */
 import { db } from '../../../src/db/database';
 import { DatabaseService } from '../../../src/nest/database/database.service';
+import { gcj02ToWgs84 } from '../../../src/nest/geo/gcj02';
 import {
   parseOpeningHours,
   normalizeOpeningPeriods,
@@ -3318,5 +3319,92 @@ describe('resolveGoogleMapsUrl — AMap branch', () => {
     await expect(svc.resolveGoogleMapsUrl('https://www.amap.com/place/B000A83M61')).rejects.toMatchObject({
       status: 400,
     });
+  });
+});
+
+// ── AMap share links: the ?p= payload, and no page scraping ─────────────────
+//
+// A share short link redirects to `https://www.amap.com/?p=<id>,<lat>,<lng>,
+// <name>,<address>` (verified live). The payload carries the coordinates, which
+// is what makes a share link usable with no Web-Service key at all — and it is
+// why the resolver no longer reads any page body: scraping one is how a mangled
+// link used to return a confidently wrong place.
+
+describe('resolveGoogleMapsUrl — AMap ?p= payload', () => {
+  const shareUrl =
+    'https://www.amap.com/?p=B0MRJ44YYT,26.65037499661199,106.62117451429364,%E9%BE%99%E7%8C%AB%E7%B2%BE%E7%81%B5%E9%85%92%E5%BA%97,%E8%AF%9A%E4%BF%A1%E5%8C%97%E8%B7%AF81%E5%8F%B7';
+
+  afterEach(() => {
+    mockInstanceGet.mockReset();
+  });
+
+  it('MAPS-AMAP-005: reads id, name, address and converts GCJ-02 to WGS-84', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    const result = await svc.resolveGoogleMapsUrl(shareUrl);
+
+    expect(result.amap_id).toBe('B0MRJ44YYT');
+    expect(result.name).toBe('龙猫精灵酒店');
+    expect(result.address).toBe('诚信北路81号');
+    // Stored frame is WGS-84, so the GCJ-02 payload must come out converted.
+    // Asserted against the converter itself rather than a copied constant, so
+    // this pins "the payload went through the transform" (and with the right
+    // argument order) without duplicating numbers that could drift apart.
+    const expected = gcj02ToWgs84(106.62117451429364, 26.65037499661199);
+    expect(result.lng).toBeCloseTo(expected.lng, 9);
+    expect(result.lat).toBeCloseTo(expected.lat, 9);
+    // And it really is a different point, not a pass-through.
+    expect(result.lng).not.toBeCloseTo(106.62117451429364, 6);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('MAPS-AMAP-006: works with no AMap key configured at all', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: '' });
+
+    const result = await svc.resolveGoogleMapsUrl(shareUrl);
+
+    // The coordinates were in the link, so nothing had to be looked up.
+    expect(result.amap_id).toBe('B0MRJ44YYT');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('MAPS-AMAP-007: follows a share short link and reads the payload it lands on', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, url: shareUrl, arrayBuffer: async () => new ArrayBuffer(0) });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    const result = await svc.resolveGoogleMapsUrl('https://surl.amap.com/gXe3qqOFa56');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.amap_id).toBe('B0MRJ44YYT');
+    expect(result.name).toBe('龙猫精灵酒店');
+  });
+
+  it('MAPS-AMAP-008: never scrapes a page body for an id, so junk pages do not resolve', async () => {
+    // A mangled token that parses as an AMap host but carries no id anywhere.
+    const html = '<html><body>some unrelated page mentioning /place/B000A83M61</body></html>';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      url: 'https://www.amap.com/',
+      text: async () => html,
+      arrayBuffer: async () => new ArrayBuffer(0),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    mockInstanceGet.mockReturnValue({ value: 'amap-key' });
+
+    // The detail lookup must never be reached with a scraped id. Asserted first
+    // and on its own, because that is the behaviour being protected: when the
+    // scrape was present this call went out with B000A83M61 taken from the page
+    // body, and the caller got a real-looking place that had nothing to do with
+    // the link.
+    expect(fetchMock.mock.calls.some((c: unknown[]) => String(c[0]).includes('/v5/place/detail'))).toBe(false);
+    await expect(svc.resolveGoogleMapsUrl('https://www.amap.com/')).rejects.toMatchObject({ status: 400 });
   });
 });

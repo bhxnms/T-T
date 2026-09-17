@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Reservation',
   'places.reservationNotesPlaceholder': 'Reservation notes, confirmation number...',
   'places.mapsSearchPlaceholder': 'Search places...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.',
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.',
   'places.searchProvider': 'Search:',
   'places.searchProviderAmap': 'AMap',
   'places.searchProviderNative': 'TREK',

@@ -868,6 +868,78 @@ describe('PlaceFormModal', () => {
     delete window.__addToast;
   });
 
+  it('FE-PLANNER-PLACEFORM-073: a real AMap share message fills the form from the link inside it', async () => {
+    const addToast = vi.fn();
+    window.__addToast = addToast;
+    const user = userEvent.setup();
+    // The link is glued to the preceding Chinese, which is how the app copies it.
+    const shareText =
+      '龙猫精灵酒店(贵阳市政府林城西路地铁站店)\n经济型诚信北路81号大西南富力中心A4栋14层1401https://surl.amap.com/gXe3qqOFa56';
+    let resolveBody: unknown = null;
+    server.use(
+      http.post('/api/maps/resolve-url', async ({ request }) => {
+        resolveBody = await request.json();
+        return HttpResponse.json({
+          name: '龙猫精灵酒店',
+          address: '诚信北路81号',
+          lat: 26.6513,
+          lng: 106.6183,
+          amap_id: 'B0MRJ44YYT',
+        });
+      })
+    );
+
+    render(<PlaceFormModal {...defaultProps} />);
+    await user.type(screen.getByPlaceholderText('Search places...'), shareText);
+    await user.keyboard('{Enter}');
+
+    expect(await screen.findByDisplayValue('龙猫精灵酒店')).toBeInTheDocument();
+    // The URL actually forwarded is just the link, not the whole message.
+    expect(resolveBody).toEqual({ url: 'https://surl.amap.com/gXe3qqOFa56' });
+    expect(screen.getByDisplayValue('106.6183')).toBeInTheDocument();
+    expect(addToast).toHaveBeenCalledWith('Place imported from URL', 'success', undefined);
+
+    delete window.__addToast;
+  });
+
+  it('FE-PLANNER-PLACEFORM-074: an AMap position passcode is refused, never searched for', async () => {
+    const addToast = vi.fn();
+    window.__addToast = addToast;
+    const user = userEvent.setup();
+    const passcode =
+      '我的高德位置口令为006224，复制此消息，打开高德搜索位置口令006224即可快速找到准确位置 \\:高德地图:// a@amap.com';
+    let searched = false;
+    let resolved = false;
+    server.use(
+      http.post('/api/maps/search', () => {
+        searched = true;
+        return HttpResponse.json({ places: [] });
+      }),
+      http.post('/api/maps/resolve-url', () => {
+        resolved = true;
+        return HttpResponse.json({ name: 'x', lat: 1, lng: 1 });
+      })
+    );
+
+    render(<PlaceFormModal {...defaultProps} />);
+    await user.type(screen.getByPlaceholderText('Search places...'), passcode);
+    await user.keyboard('{Enter}');
+
+    // Neither the digit search nor the mangled a@amap.com link is acted on: the
+    // message explains the passcode cannot be opened here.
+    await waitFor(() =>
+      expect(addToast).toHaveBeenCalledWith(
+        'AMap position passcodes can only be opened in the AMap app. Use a share link instead.',
+        'error',
+        undefined
+      )
+    );
+    expect(searched).toBe(false);
+    expect(resolved).toBe(false);
+
+    delete window.__addToast;
+  });
+
   it('FE-PLANNER-PLACEFORM-048: an unresolvable Google Maps URL falls through to the text search', async () => {
     const user = userEvent.setup();
     server.use(

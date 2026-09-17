@@ -81,6 +81,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Reserva',
   'places.reservationNotesPlaceholder': 'Notes de reserva, número de confirmació...',
   'places.mapsSearchPlaceholder': 'Cerca llocs...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'La cerca de llocs ha fallat.',
   'places.loadingDetails': 'Carregant els detalls del lloc…',
   'places.osmHint':

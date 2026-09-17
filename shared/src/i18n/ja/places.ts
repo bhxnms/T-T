@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': '予約',
   'places.reservationNotesPlaceholder': '予約メモ、確認番号など…',
   'places.mapsSearchPlaceholder': '場所を検索…',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': '場所の検索に失敗しました。',
   'places.loadingDetails': '詳細を読み込み中…',
   'places.osmHint':

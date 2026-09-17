@@ -22,6 +22,7 @@ import type { BookingExpenseRequest } from './BookingCostsSection.types';
 import PlaceDetailsColumn, { type PlaceDetailsSelection } from './PlaceDetailsColumn';
 import {
   DEFAULT_FORM,
+  extractAmapPasscode,
   extractAmapPoiId,
   extractAmapUrl,
   isAmapShareInput,
@@ -309,7 +310,7 @@ function usePlaceFormModal(props: PlaceFormModalProps) {
   // Autocomplete fetch — aborts any in-flight request before starting a new one
   const fetchSuggestions = useCallback(
     async (query: string) => {
-      if (query.length < 2 || isGoogleMapsUrl(query)) {
+      if (query.length < 2 || isGoogleMapsUrl(query) || isAmapShareInput(query)) {
         setAcSuggestions([]);
         setAcHighlight(-1);
         return;
@@ -343,7 +344,7 @@ function usePlaceFormModal(props: PlaceFormModalProps) {
     if (acDebounceRef.current) clearTimeout(acDebounceRef.current);
 
     const trimmed = mapsSearch.trim();
-    if (trimmed.length < 2 || isGoogleMapsUrl(trimmed)) {
+    if (trimmed.length < 2 || isGoogleMapsUrl(trimmed) || isAmapShareInput(trimmed)) {
       setAcSuggestions([]);
       setAcHighlight(-1);
       placesSessionRef.current.end();
@@ -391,6 +392,14 @@ function usePlaceFormModal(props: PlaceFormModalProps) {
       // the keyword branch below because a pasted share paragraph is not a query.
       if (!isGoogleMapsUrl(trimmed) && isAmapShareInput(trimmed)) {
         const amapUrl = extractAmapUrl(trimmed) ?? extractAmapPoiId(trimmed);
+        // A 位置口令 looks like a short number and has no public resolver, so
+        // say that instead of searching for the digits and returning a
+        // confidently wrong place.
+        if (!amapUrl && extractAmapPasscode(trimmed)) {
+          toast.error(t('places.amapPasscodeUnsupported'));
+          setIsSearchingMaps(false);
+          return;
+        }
         if (amapUrl) {
           const resolved = await mapsApi.resolveUrl(amapUrl);
           if (resolved.lat && resolved.lng) {
@@ -893,6 +902,13 @@ export default function PlaceFormModal(props: PlaceFormModalProps) {
                   {isSearchingMaps ? '...' : <Search className="h-4 w-4" />}
                 </button>
               </div>
+
+              {/* The AMap import has no control of its own — it rides the search
+                  button — so this line is the only thing that makes it
+                  discoverable. Shown regardless of whether a Web-Service key is
+                  configured: a share link resolves from the coordinates AMap
+                  embeds in the link itself, so the common case needs no key. */}
+              <p className="mt-1.5 text-xs text-content-faint">{t('places.amapShareHint')}</p>
 
               {/* Autocomplete dropdown */}
               {acSuggestions.length > 0 && (

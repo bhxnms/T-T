@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Bokning',
   'places.reservationNotesPlaceholder': 'Bokningsinformation, bekräftelsenummer...',
   'places.mapsSearchPlaceholder': 'Sök efter platser...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Sökningen efter plats misslyckades.',
   'places.loadingDetails': 'Hämtar information om platsen…',
   'places.osmHint':

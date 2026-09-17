@@ -3,6 +3,7 @@ import { discardBody, exceedsDeclaredLength, readCappedText } from '../../utils/
 import { safeFetchFollow, SsrfBlockedError } from '../../utils/ssrfGuard';
 import { DatabaseService } from '../database/database.service';
 import { getAmapKey, isAmapSearchEnabled, amapSearchPlaces, amapPlaceDetail, amapRoute } from '../geo/amap.service';
+import { gcj02ToWgs84 } from '../geo/gcj02';
 import { nominatimFetch, type GeoLane } from '../geo/nominatim.client';
 import { photonSearch } from '../geo/photon.client';
 // ── Photo cache (disk-backed) ────────────────────────────────────────────────
@@ -385,12 +386,71 @@ function isAmapHost(hostname: string): boolean {
   return AMAP_PLACE_HOSTS.test(hostname);
 }
 
+/** The hostname of `value`, or '' when it cannot be parsed as a URL. */
+function safeHostname(value: string): string {
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return '';
+  }
+}
+
 /** AMap POI id inside a URL path or query (`/place/B000A83M61`, `?poiid=…`). */
 function amapPoiIdFrom(value: string): string | null {
   const path = value.match(/\/place\/([A-Za-z0-9]+)/);
   if (path) return path[1];
   const query = value.match(/[?&](?:poiid|id)=([A-Za-z0-9]{8,20})/);
   return query ? query[1] : null;
+}
+
+/**
+ * The payload AMap puts in `?p=` on the page its share links redirect to.
+ *
+ * Verified against a live short link, which landed on
+ * `https://www.amap.com/?p=B0MRJ44YYT,26.65037…,106.62117…,<name>,<address>`:
+ * POI id, LATITUDE, LONGITUDE, name, address, in that order.
+ *
+ * This is the format worth handling first, because it carries the coordinates
+ * inline — a place can be added from a share link with no Web-Service key
+ * configured at all. Latitude precedes longitude here, the reverse of AMap's own
+ * `position=lng,lat` convention, so the ranges are checked rather than assumed:
+ * a payload laid out the other way would put a longitude where a latitude must
+ * be, and that is declined instead of being silently used.
+ */
+export interface AmapSharePayload {
+  amapId: string | null;
+  lat: number;
+  lng: number;
+  name: string | null;
+  address: string | null;
+}
+
+export function parseAmapSharePayload(url: string): AmapSharePayload | null {
+  let raw: string | null = null;
+  try {
+    raw = new URL(url).searchParams.get('p');
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+  const parts = raw.split(',');
+  if (parts.length < 3) return null;
+  const [id, latPart, lngPart, namePart, addressPart] = parts;
+  const lat = Number.parseFloat(latPart);
+  const lng = Number.parseFloat(lngPart);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  const clean = (v?: string) => {
+    const decoded = v ? decodeURIComponent(v).trim() : '';
+    return decoded || null;
+  };
+  return {
+    amapId: /^[A-Za-z0-9]{8,20}$/.test(id) ? id : null,
+    lat,
+    lng,
+    name: clean(namePart),
+    address: clean(addressPart),
+  };
 }
 
 const WIKI_TIMEOUT_MS = 6000;
@@ -2315,8 +2375,20 @@ export class MapsService {
    * link that redirects somewhere unexpected is refused rather than fetched.
    *
    * Returns null when no POI id can be found or the lookup yields nothing —
-   * the caller turns that into a 400. Requires the instance's Web-Service key;
-   * without one an AMap link is unresolvable rather than silently wrong.
+   * the caller turns that into a 400.
+   *
+   * Order matters. A `?p=` payload is answered first because it carries the
+   * coordinates inline, so no key is needed and no provider round trip happens.
+   * A short link is then followed — every hop re-checked by the SSRF guard —
+   * and re-parsed, since that is exactly where a share link lands. Only a
+   * `/place/<id>` url needs the Web-Service detail call.
+   *
+   * The page BODY is deliberately never read. An earlier version scraped it for
+   * anything id-shaped when the URL itself carried no id, which meant a mangled
+   * link (or the `a@amap.com` tail of a passcode message) fetched amap.com's
+   * homepage and returned whichever place it happened to mention — a wrong
+   * answer presented with full confidence. Every supported format puts its id in
+   * the URL, so a url without one is now simply unresolvable.
    */
   private async resolveAmapUrl(url: string): Promise<{
     lat: number;
@@ -2327,8 +2399,6 @@ export class MapsService {
     amap_id: string | null;
     photos: string[];
   } | null> {
-    if (!getAmapKey(this.database)) return null;
-
     let target = url;
     let poiId = amapPoiIdFrom(target);
 
@@ -2337,9 +2407,11 @@ export class MapsService {
       poiId = target;
     }
 
-    if (!poiId) {
-      // Share short link: follow it to the place page and read the id from there.
-      // Redirects are followed manually so each hop is re-checked by the guard.
+    let inline = parseAmapSharePayload(target);
+
+    // Short link (surl/uri) — follow it to the page it points at. The final URL
+    // carries either `?p=` or `/place/<id>`, so both are re-read from there.
+    if (!poiId && !inline && isAmapHost(safeHostname(target))) {
       try {
         const res = await safeFetchFollow(
           target,
@@ -2348,17 +2420,10 @@ export class MapsService {
             bypassInternalIpAllowed: true,
           },
         );
+        discardBody(res); // only the redirect target is needed, never the body
         target = res.url || target;
+        inline = parseAmapSharePayload(target);
         poiId = amapPoiIdFrom(target);
-        if (!poiId && isAmapHost(new URL(target).hostname)) {
-          // The id can also sit in the page body for links that resolve client-side.
-          if (exceedsDeclaredLength(res, MAX_MAPS_PAGE_BYTES)) {
-            discardBody(res);
-          } else {
-            const { text } = await readCappedText(res, MAX_MAPS_PAGE_BYTES);
-            poiId = amapPoiIdFrom(text);
-          }
-        }
       } catch (err) {
         if (err instanceof SsrfBlockedError) {
           throw Object.assign(new Error('URL blocked by SSRF check'), { status: 403 });
@@ -2367,7 +2432,23 @@ export class MapsService {
       }
     }
 
+    // Inline payload: coordinates are already here, and they are GCJ-02 like
+    // every other AMap answer, so they convert before going out as WGS-84.
+    if (inline) {
+      const wgs = gcj02ToWgs84(inline.lng, inline.lat);
+      return {
+        lat: wgs.lat,
+        lng: wgs.lng,
+        name: inline.name,
+        address: inline.address,
+        google_ftid: null,
+        amap_id: inline.amapId,
+        photos: [],
+      };
+    }
+
     if (!poiId) return null;
+    if (!getAmapKey(this.database)) return null;
 
     const detail = await amapPlaceDetail(this.database, poiId);
     if (!detail || detail.lat == null || detail.lng == null) return null;

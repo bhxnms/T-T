@@ -55,33 +55,144 @@ const AMAP_PLACE_HOSTS = /^(www\.|ditu\.|surl\.|uri\.)?amap\.com$/i;
 const AMAP_POI_ID = /^[A-Z0-9]{8,20}$/;
 
 /**
- * The AMap place URL inside `input`, or the input itself when it is one.
+ * A URL as it appears inside share text.
  *
- * AMap's app "分享" produces a sentence with the link buried in the middle
- * ("我在高德地图发现了一个好地方… https://surl.amap.com/xxxx …"), so callers
- * paste a paragraph rather than a URL and a plain `new URL()` throws on it. The
- * link is lifted out by scanning for a candidate token instead, and each
- * candidate is then validated as a real AMap host — the shape check alone would
- * accept any text containing "amap.com" anywhere.
+ * The link is FOUND in the paragraph rather than the paragraph being split up
+ * and the pieces tested: AMap's share text glues the URL straight onto the
+ * preceding character ("…14层1401https://surl.amap.com/gXe3qqOFa56"), so a
+ * whitespace split leaves one token that is mostly Chinese and carries the URL
+ * at its end. A token-based scan has to strip that Chinese — and stripping
+ * "everything from the first CJK character" removes the URL with it, which is
+ * why pasting a real share message used to resolve to nothing.
+ *
+ * The match therefore starts at the scheme and runs until something that cannot
+ * be part of a URL: whitespace, a CJK character, or a CJK/fullwidth punctuation
+ * mark. Trailing ASCII punctuation (the sentence's comma, a closing bracket) is
+ * trimmed off afterwards.
+ */
+const URL_IN_TEXT = /https?:\/\/[^\s\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+/gi;
+
+/**
+ * A scheme-less AMap host, which people also paste ("www.amap.com/place/…").
+ *
+ * The lookbehind is what keeps this from re-opening the hole the credential
+ * check closes: in the mangled "\\:高德地图:// a@amap.com" the address is
+ * `a@amap.com`, and without the guard this pattern would match the `amap.com`
+ * part of it as a bare host. A preceding `@`, word character or dot means the
+ * token is part of something larger, so it is not a host standing on its own.
+ */
+const BARE_AMAP_HOST =
+  /(?<![\w@.])((?:www|ditu|surl|uri)\.amap\.com|amap\.com)(\/[^\s\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]*)?/gi;
+
+/**
+ * The AMap place URL inside `input`, or null when there is none.
+ *
+ * A URL carrying credentials is refused outright. AMap share links never have
+ * any, and the shape is exactly what a mangled share string produces: the
+ * position-passcode text ends with "\\:高德地图:// a@amap.com", which `new URL()`
+ * happily parses as host `amap.com` with username `a`. Letting that through sent
+ * the server off to fetch amap.com's homepage and return whatever place it found
+ * there — a confidently wrong address, which is worse than no result.
  */
 export function extractAmapUrl(input: string): string | null {
   const text = input.trim();
   if (!text) return null;
 
-  // Whitespace/punctuation separated candidates. Chinese share text often glues
-  // the link to the following character, so the trailing CJK run is stripped too.
-  for (const token of text.split(/[\s，。、；：！？"'()<>《》【】]+/)) {
-    const candidate = token.replace(/[.,;:!?]+$/, '').replace(/[\u4e00-\u9fff].*$/, '');
+  for (const match of text.matchAll(URL_IN_TEXT)) {
+    const candidate = match[0].replace(/[.,;:!?)\]}>"'，。、；：！？）】》]+$/, '');
     if (!candidate) continue;
-    const withScheme = /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`;
     try {
-      const { hostname } = new URL(withScheme);
-      if (AMAP_PLACE_HOSTS.test(hostname)) return withScheme;
+      const url = new URL(candidate);
+      if (url.username || url.password) continue; // mangled text, not a share link
+      if (AMAP_PLACE_HOSTS.test(url.hostname)) return url.toString();
     } catch {
-      /* not a URL — try the next token */
+      /* not a URL — try the next match */
+    }
+  }
+
+  // Nothing matched with a scheme. Fall back to a bare host, which is also
+  // pasted — but only when the text carries no scheme at all. A URL that was
+  // examined and rejected (a lookalike such as `amap.com.evil.test`, or one
+  // carrying credentials) must not be re-matched here by its inner `amap.com`
+  // substring, which is exactly what would let it through.
+  if (/[a-z][a-z0-9+.-]*:\/\//i.test(text)) return null;
+  const bare = BARE_AMAP_HOST.exec(text);
+  if (bare) {
+    const candidate = `${bare[1]}${bare[2] ?? ''}`.replace(/[.,;:!?)\]}>"'，。、；：！？）】》]+$/, '');
+    try {
+      return new URL(`https://${candidate}`).toString();
+    } catch {
+      return null;
     }
   }
   return null;
+}
+
+/**
+ * An AMap "位置口令" (position passcode), e.g. "我的高德位置口令为006224…".
+ *
+ * These are resolved by AMap's own app only; there is no public endpoint that
+ * turns a passcode into coordinates. Recognising one exists purely so the caller
+ * can say so, instead of forwarding the number as a keyword search or — much
+ * worse — letting the mangled `a@amap.com` tail inside the same message be read
+ * as a link.
+ */
+export function extractAmapPasscode(input: string): string | null {
+  const match = input.match(/位置口令[^0-9]{0,4}(\d{4,12})/);
+  return match ? match[1] : null;
+}
+
+/**
+ * The POI payload AMap puts in `?p=` on the page a share link redirects to.
+ *
+ * Verified against a live short link, which redirected to
+ * `https://www.amap.com/?p=B0MRJ44YYT,26.65037…,106.62117…,<name>,<address>` —
+ * POI id, LATITUDE, LONGITUDE, name, address, in that order. The lat-first order
+ * is the opposite of AMap's own `position=lng,lat` convention, so it is checked
+ * rather than assumed: a payload whose latitude falls outside ±90 is rejected as
+ * not-the-format-we-think-it-is instead of being silently used.
+ *
+ * Carrying the coordinates inline is what makes this worth parsing — a place can
+ * be added from a share link with no Web-Service key configured at all.
+ */
+export interface AmapPoiPayload {
+  amapId: string | null;
+  lat: number;
+  lng: number;
+  name: string | null;
+  address: string | null;
+}
+
+export function parseAmapPoiPayload(url: string): AmapPoiPayload | null {
+  let raw: string | null = null;
+  try {
+    raw = new URL(url).searchParams.get('p');
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+
+  const parts = raw.split(',');
+  if (parts.length < 3) return null;
+  const [id, latPart, lngPart, namePart, addressPart] = parts;
+  const lat = Number.parseFloat(latPart);
+  const lng = Number.parseFloat(lngPart);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  // Latitude first, as measured. A longitude sitting where the latitude should
+  // be means the payload is laid out differently than assumed, so decline it.
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+
+  const clean = (v?: string) => {
+    const decoded = v ? decodeURIComponent(v).trim() : '';
+    return decoded || null;
+  };
+  return {
+    amapId: AMAP_POI_ID.test(id) ? id : null,
+    lat,
+    lng,
+    name: clean(namePart),
+    address: clean(addressPart),
+  };
 }
 
 /**
@@ -97,10 +208,12 @@ export function extractAmapPoiId(input: string): string | null {
 
 /**
  * True when the search box content should go down the AMap-import path rather
- * than keyword search: an AMap link (bare or inside share text) or a bare POI id.
+ * than keyword search: an AMap link (bare or inside share text), a bare POI id,
+ * or a position passcode — the last so the caller can explain that a passcode
+ * cannot be resolved here instead of searching for the number.
  */
 export function isAmapShareInput(input: string): boolean {
-  return extractAmapUrl(input) !== null || extractAmapPoiId(input) !== null;
+  return extractAmapUrl(input) !== null || extractAmapPoiId(input) !== null || extractAmapPasscode(input) !== null;
 }
 
 export const DEFAULT_FORM: PlaceFormData = {

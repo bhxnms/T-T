@@ -82,6 +82,9 @@ const places: TranslationStrings = {
   'places.formReservation': '예약',
   'places.reservationNotesPlaceholder': '예약 메모, 확인 번호...',
   'places.mapsSearchPlaceholder': '장소 검색...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': '장소 검색 실패.',
   'places.loadingDetails': '장소 상세 정보 불러오는 중…',
   'places.osmHint':

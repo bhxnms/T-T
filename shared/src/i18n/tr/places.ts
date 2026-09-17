@@ -85,6 +85,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Rezervasyon',
   'places.reservationNotesPlaceholder': 'Rezervasyon notları, onay numarası...',
   'places.mapsSearchPlaceholder': 'Yerleri ara...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Yer arama başarısız oldu.',
   'places.loadingDetails': 'Yer ayrıntıları yükleniyor…',
   'places.osmHint':

@@ -82,6 +82,9 @@ const places: TranslationStrings = {
   'places.formReservation': '預訂',
   'places.reservationNotesPlaceholder': '預訂備註、確認號...',
   'places.mapsSearchPlaceholder': '搜尋地點...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': '地點搜尋失敗。',
   'places.loadingDetails': '正在載入地點詳情…',
   'places.osmHint': '使用 OpenStreetMap 搜尋（無照片、營業時間或評分）。在設定中新增 Google API 金鑰以獲取完整資訊。',

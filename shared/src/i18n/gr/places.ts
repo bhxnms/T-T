@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Κράτηση',
   'places.reservationNotesPlaceholder': 'Σημειώσεις κράτησης, αριθμός επιβεβαίωσης...',
   'places.mapsSearchPlaceholder': 'Αναζήτηση μερών...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Η αναζήτηση μέρους απέτυχε.',
   'places.loadingDetails': 'Φόρτωση λεπτομερειών μέρους…',
   'places.osmHint':

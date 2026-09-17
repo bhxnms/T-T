@@ -16,7 +16,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.2-blue?style=flat-square)
 
 ---
 
@@ -76,7 +76,49 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.6.1
+## 🆕 What's New in v0.6.2
+
+### AMap share links now actually resolve
+
+Two parsing bugs, both reproduced with real share messages:
+
+- A share link is pasted glued to the preceding Chinese text
+  (`…14层1401https://surl.amap.com/…`) with no separator. The parser split on
+  whitespace and then stripped everything from the first Chinese character —
+  which deleted the URL with it, so the message resolved to nothing. The link is
+  now found by scanning the text directly, stopping at the first character that
+  cannot be part of a URL.
+- A position passcode message ends with a mangled `\:高德地图:// a@amap.com`,
+  which `new URL()` accepts as host `amap.com` with username `a`. That was taken
+  as a valid link, the server fetched amap.com's homepage on the strength of it,
+  and returned whichever place the page happened to mention — a wrong address
+  presented with full confidence. URLs carrying credentials are now refused, the
+  server no longer scrapes any page body for a POI id, and a passcode is
+  recognised and declined with an explanation instead of being searched for.
+
+### AMap share links also work without a Web-Service key
+
+The page an AMap share link redirects to carries its coordinates directly in the
+link (`?p=<id>,<lat>,<lng>,<name>,<address>`), so a place can be added from a
+share link on an instance with no AMap key configured at all. The coordinates are
+GCJ-02 and are converted to the WGS-84 frame the app stores.
+
+### Discoverability and navigation
+
+- The place search box now says that an AMap share link can be pasted into it.
+  The import had no control of its own — it rides the search button — and with no
+  hint anywhere it was effectively invisible.
+- The place detail card's navigation menu gained an **AMap** entry, alongside
+  Google Maps, Waze and Apple Maps.
+
+### Fixed
+
+- The 21 non-English locales were missing the `system_notice.bootstrap_password`
+  strings added in 0.6.0, which the i18n parity check caught.
+
+---
+
+## 0.6.1 (detail)
 
 ### Test-suite fixes
 
@@ -209,7 +251,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.6.1`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.6.2`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -259,7 +301,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.6.1 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.6.2 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \

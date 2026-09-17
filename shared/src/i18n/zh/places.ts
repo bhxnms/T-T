@@ -82,6 +82,8 @@ const places: TranslationStrings = {
   'places.formReservation': '预订',
   'places.reservationNotesPlaceholder': '预订备注、确认号...',
   'places.mapsSearchPlaceholder': '搜索地点...',
+  'places.amapShareHint': '可粘贴高德分享链接直接添加该地点。',
+  'places.amapPasscodeUnsupported': '高德位置口令只能在高德 App 内打开，请改用分享链接。',
   'places.searchProvider': '搜索源：',
   'places.searchProviderAmap': '高德',
   'places.searchProviderNative': 'TREK',

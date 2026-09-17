@@ -2,6 +2,7 @@ import { ImageOff, Loader2, Search, Star } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mapsApi } from '../../../../api/client';
 import {
+  extractAmapPasscode,
   extractAmapPoiId,
   extractAmapUrl,
   isAmapShareInput,
@@ -149,7 +150,7 @@ export default function PlPlaceSearch({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const trimmed = query.trim();
-    if (trimmed.length < 2 || isGoogleMapsUrl(trimmed) || COORD_RE.test(trimmed)) {
+    if (trimmed.length < 2 || isGoogleMapsUrl(trimmed) || isAmapShareInput(trimmed) || COORD_RE.test(trimmed)) {
       setSuggestions([]);
       return;
     }
@@ -199,6 +200,11 @@ export default function PlPlaceSearch({
       // AMap share links/text resolve by POI id, so they never go to keyword search.
       if (!isGoogleMapsUrl(trimmed) && isAmapShareInput(trimmed)) {
         const amapUrl = extractAmapUrl(trimmed) ?? extractAmapPoiId(trimmed);
+        // A 位置口令 has no public resolver; say so rather than searching the digits.
+        if (!amapUrl && extractAmapPasscode(trimmed)) {
+          toast.error(t('places.amapPasscodeUnsupported'));
+          return;
+        }
         if (amapUrl) {
           const resolved = await mapsApi.resolveUrl(amapUrl);
           if (resolved.lat && resolved.lng) {
@@ -296,6 +302,10 @@ export default function PlPlaceSearch({
           )}
         </button>
       </div>
+
+      {/* The AMap import rides the search button, so nothing else on this sheet
+          would tell anyone a share link can be pasted here. */}
+      <p className="mt-1.5 text-[0.65625rem] text-m-muted">{t('places.amapShareHint')}</p>
 
       {onProviderChange && (
         <div className="mt-1.5 flex items-center gap-1.5 text-[0.6875rem] text-m-muted">

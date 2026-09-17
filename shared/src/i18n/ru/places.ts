@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Бронирование',
   'places.reservationNotesPlaceholder': 'Заметки о бронировании, номер подтверждения...',
   'places.mapsSearchPlaceholder': 'Поиск мест...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Ошибка поиска мест.',
   'places.loadingDetails': 'Загрузка данных о месте…',
   'places.osmHint':

@@ -82,6 +82,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Reservasi',
   'places.reservationNotesPlaceholder': 'Catatan reservasi, nomor konfirmasi...',
   'places.mapsSearchPlaceholder': 'Cari tempat...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Pencarian tempat gagal.',
   'places.loadingDetails': 'Memuat detail tempat…',
   'places.osmHint':

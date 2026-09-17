@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Foglalás',
   'places.reservationNotesPlaceholder': 'Foglalási jegyzetek, visszaigazolási szám...',
   'places.mapsSearchPlaceholder': 'Helyek keresése...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Helykeresés sikertelen.',
   'places.loadingDetails': 'Hely adatainak betöltése…',
   'places.osmHint':

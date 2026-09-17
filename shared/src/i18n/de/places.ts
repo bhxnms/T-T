@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Reservierung',
   'places.reservationNotesPlaceholder': 'Reservierungsnotizen, Bestätigungsnummer...',
   'places.mapsSearchPlaceholder': 'Ortssuche...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Ortssuche fehlgeschlagen.',
   'places.loadingDetails': 'Ortsdetails werden geladen…',
   'places.osmHint':

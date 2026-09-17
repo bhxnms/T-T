@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Sự đặt chỗ',
   'places.reservationNotesPlaceholder': 'Phiếu đặt chỗ, số xác nhận...',
   'places.mapsSearchPlaceholder': 'Tìm kiếm địa điểm...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Tìm kiếm địa điểm không thành công.',
   'places.loadingDetails': 'Đang tải chi tiết địa điểm…',
   'places.osmHint':

@@ -32,6 +32,9 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     'Uppgraderingen till version 3.0.14 upptäckte en eller flera konflikter mellan användarnamn eller e-postadresser som orsakades av blanksteg i början eller slutet av lagrade konton. De berörda kontona döptes om automatiskt. Kontrollera serverloggarna efter rader som börjar med **[migration] WHITESPACE COLLISION** för att identifiera vilka konton som behöver granskas.',
   'system_notice.welcome_v1.title': 'Välkommen till TREK',
+  'system_notice.bootstrap_password.title': 'Change the initial admin password', // en-fallback
+  'system_notice.bootstrap_password.body':
+    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.', // en-fallback
   'system_notice.welcome_v1.body':
     'Din allt-i-ett-resplanerare. Skapa resplaner, dela resor med vänner och håll ordning på allt – både online och offline.',
   'system_notice.welcome_v1.cta_label': 'Planera en resa',

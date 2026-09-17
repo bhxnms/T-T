@@ -464,7 +464,7 @@ export class AdminService {
   }
 
   async checkVersion(): Promise<VersionInfo> {
-    const currentVersion: string = readEnv().app.appVersion || '0.6.1';
+    const currentVersion: string = readEnv().app.appVersion || '0.6.2';
     const isPrerelease = currentVersion.includes('-pre.');
     const cached = readVersionCache();
     if (cached) return cached;

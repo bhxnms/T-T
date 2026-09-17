@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'حجز',
   'places.reservationNotesPlaceholder': 'ملاحظات الحجز، رقم التأكيد...',
   'places.mapsSearchPlaceholder': 'ابحث عن أماكن...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'فشل البحث عن المكان.',
   'places.loadingDetails': 'جارٍ تحميل تفاصيل المكان…',
   'places.osmHint':

@@ -32,6 +32,9 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     '3.0.14 업그레이드 중 저장된 계정의 앞뒤 공백으로 인한 사용자 이름 또는 이메일 충돌이 감지되었습니다. 영향받은 계정은 자동으로 이름이 변경되었습니다. 검토가 필요한 계정을 확인하려면 **[migration] WHITESPACE COLLISION**으로 시작하는 줄의 서버 로그를 확인하세요.',
   'system_notice.welcome_v1.title': 'TREK에 오신 것을 환영합니다',
+  'system_notice.bootstrap_password.title': 'Change the initial admin password', // en-fallback
+  'system_notice.bootstrap_password.body':
+    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.', // en-fallback
   'system_notice.welcome_v1.body':
     '올인원 여행 플래너. 일정을 만들고, 친구들과 여행을 공유하고, 온라인 또는 오프라인으로 체계적으로 유지하세요.',
   'system_notice.welcome_v1.cta_label': '여행 계획',

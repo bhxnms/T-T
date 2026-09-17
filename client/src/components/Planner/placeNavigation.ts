@@ -1,17 +1,21 @@
-import type { AssignmentPlace, Place } from '../../types'
-import { getCoMapsUrlForPlace } from './placeCoMaps'
-import { getGoogleMapsUrlForPlace } from './placeGoogleMaps'
-import { getOpenStreetMapUrlForPlace } from './placeOpenStreetMap'
+import type { AssignmentPlace, Place } from '../../types';
+import { getAmapUrlForPlace } from './placeAmap';
+import { getCoMapsUrlForPlace } from './placeCoMaps';
+import { getGoogleMapsUrlForPlace } from './placeGoogleMaps';
+import { getOpenStreetMapUrlForPlace } from './placeOpenStreetMap';
 
-type PlaceLike = Pick<Place | AssignmentPlace, 'name' | 'address' | 'lat' | 'lng' | 'google_place_id' | 'google_ftid'>
+type PlaceLike = Pick<
+  Place | AssignmentPlace,
+  'name' | 'address' | 'lat' | 'lng' | 'google_place_id' | 'google_ftid' | 'amap_id'
+>;
 
-export type NavigationAppId = 'google' | 'waze' | 'apple' | 'osm' | 'comaps'
+export type NavigationAppId = 'google' | 'waze' | 'apple' | 'amap' | 'osm' | 'comaps';
 
 export interface NavigationTarget {
-  id: NavigationAppId
+  id: NavigationAppId;
   /** Product name. Not translated in any language, so it carries no i18n key. */
-  label: string
-  url: string
+  label: string;
+  url: string;
 }
 
 /**
@@ -30,10 +34,10 @@ export interface NavigationTarget {
  * so both sides of that ambiguity are correct.
  */
 export function showsAppleMaps(): boolean {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent
-  if (/iPhone|iPad|iPod|Macintosh/.test(ua)) return true
-  return !/Android/i.test(ua)
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod|Macintosh/.test(ua)) return true;
+  return !/Android/i.test(ua);
 }
 
 /**
@@ -58,41 +62,49 @@ export function showsAppleMaps(): boolean {
  */
 export function getNavigationTargets(
   place: PlaceLike | null | undefined,
-  detailsUrl?: string | null,
+  detailsUrl?: string | null
 ): NavigationTarget[] {
-  if (!place) return []
-  const targets: NavigationTarget[] = []
-  const name = place.name?.trim()
+  if (!place) return [];
+  const targets: NavigationTarget[] = [];
+  const name = place.name?.trim();
 
-  const googleUrl = getGoogleMapsUrlForPlace(place, detailsUrl)
-  if (googleUrl) targets.push({ id: 'google', label: 'Google Maps', url: googleUrl })
+  const googleUrl = getGoogleMapsUrlForPlace(place, detailsUrl);
+  if (googleUrl) targets.push({ id: 'google', label: 'Google Maps', url: googleUrl });
 
   if (place.lat != null && place.lng != null) {
-    const ll = `${place.lat},${place.lng}`
-    const q = name ? `q=${encodeURIComponent(name)}&` : ''
+    const ll = `${place.lat},${place.lng}`;
+    const q = name ? `q=${encodeURIComponent(name)}&` : '';
     targets.push({
       id: 'waze',
       label: 'Waze',
       url: `https://waze.com/ul?${q}ll=${ll}&navigate=yes`,
-    })
+    });
     if (showsAppleMaps()) {
       targets.push({
         id: 'apple',
         label: 'Apple Maps',
         url: `https://maps.apple.com/?${q}ll=${ll}`,
-      })
+      });
     }
   }
 
-  const osmUrl = getOpenStreetMapUrlForPlace(place)
-  if (osmUrl) targets.push({ id: 'osm', label: 'OpenStreetMap', url: osmUrl })
+  // Grouped with the consumer map apps above, ahead of the OSM pair below: it is
+  // the app a traveller in China actually has. Offered to everyone rather than
+  // gated on region, the same way Waze and Apple Maps already are — a link that
+  // opens a map is never wrong, and a region check would hide it from the people
+  // most likely to want it while travelling.
+  const amapUrl = getAmapUrlForPlace(place);
+  if (amapUrl) targets.push({ id: 'amap', label: 'AMap', url: amapUrl });
+
+  const osmUrl = getOpenStreetMapUrlForPlace(place);
+  if (osmUrl) targets.push({ id: 'osm', label: 'OpenStreetMap', url: osmUrl });
 
   // Last, beside the OSM entry it shares a map source with: CoMaps is the offline
   // end of this list, the one that still works with no signal.
-  const coMapsUrl = getCoMapsUrlForPlace(place)
-  if (coMapsUrl) targets.push({ id: 'comaps', label: 'CoMaps', url: coMapsUrl })
+  const coMapsUrl = getCoMapsUrlForPlace(place);
+  if (coMapsUrl) targets.push({ id: 'comaps', label: 'CoMaps', url: coMapsUrl });
 
-  return targets
+  return targets;
 }
 
 /**
@@ -107,16 +119,16 @@ export function getNavigationTargets(
  * shell was never replaced by the time the platform switched away.
  */
 export function openNavigationTarget(target: NavigationTarget): void {
-  if (isInstalledApp()) window.location.href = target.url
-  else window.open(target.url, '_blank', 'noopener,noreferrer')
+  if (isInstalledApp()) window.location.href = target.url;
+  else window.open(target.url, '_blank', 'noopener,noreferrer');
 }
 
 /** True in a display mode that has no tab strip to close a stray window from. */
 function isInstalledApp(): boolean {
-  if (typeof window === 'undefined') return false
+  if (typeof window === 'undefined') return false;
   const standalone = ['standalone', 'fullscreen', 'minimal-ui'].some(
-    mode => window.matchMedia?.(`(display-mode: ${mode})`).matches,
-  )
+    (mode) => window.matchMedia?.(`(display-mode: ${mode})`).matches
+  );
   // iOS predates the display-mode query for home-screen apps.
-  return standalone || (window.navigator as { standalone?: boolean }).standalone === true
+  return standalone || (window.navigator as { standalone?: boolean }).standalone === true;
 }

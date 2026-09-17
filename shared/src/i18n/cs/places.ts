@@ -83,6 +83,9 @@ const places: TranslationStrings = {
   'places.formReservation': 'Rezervace',
   'places.reservationNotesPlaceholder': 'Poznámky k rezervaci, potvrzovací kód...',
   'places.mapsSearchPlaceholder': 'Hledat místa...',
+  'places.amapShareHint': 'Paste an AMap share link to add that place directly.', // en-fallback
+  'places.amapPasscodeUnsupported':
+    'AMap position passcodes can only be opened in the AMap app. Use a share link instead.', // en-fallback
   'places.mapsSearchError': 'Hledání místa se nezdařilo.',
   'places.loadingDetails': 'Načítání podrobností místa…',
   'places.osmHint':
