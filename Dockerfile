@@ -25,6 +25,14 @@ RUN npm run build --workspace=shared
 
 # ── Stage 2: client ──────────────────────────────────────────────────────────
 FROM node:24-alpine AS client-builder
+ARG NPM_CONFIG_FETCH_RETRIES=5
+ARG NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
+ARG NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=300000
+ARG NPM_CONFIG_FETCH_TIMEOUT=300000
+ENV NPM_CONFIG_FETCH_RETRIES=$NPM_CONFIG_FETCH_RETRIES \
+    NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=$NPM_CONFIG_FETCH_RETRY_MINTIMEOUT \
+    NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=$NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT \
+    NPM_CONFIG_FETCH_TIMEOUT=$NPM_CONFIG_FETCH_TIMEOUT
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY shared/package.json ./shared/
@@ -37,6 +45,14 @@ RUN npm run build --workspace=client
 # ── Stage 3: server ──────────────────────────────────────────────────────────
 # --ignore-scripts skips native builds (better-sqlite3); they happen in the production stage.
 FROM node:24-alpine AS server-builder
+ARG NPM_CONFIG_FETCH_RETRIES=5
+ARG NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
+ARG NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=300000
+ARG NPM_CONFIG_FETCH_TIMEOUT=300000
+ENV NPM_CONFIG_FETCH_RETRIES=$NPM_CONFIG_FETCH_RETRIES \
+    NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=$NPM_CONFIG_FETCH_RETRY_MINTIMEOUT \
+    NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=$NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT \
+    NPM_CONFIG_FETCH_TIMEOUT=$NPM_CONFIG_FETCH_TIMEOUT
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY shared/package.json ./shared/
