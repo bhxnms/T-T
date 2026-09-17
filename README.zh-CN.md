@@ -16,7 +16,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.1-blue?style=flat-square)
 
 ---
 
@@ -73,7 +73,24 @@
 
 ---
 
-## 🆕 v0.6.0 更新
+## 🆕 v0.6.1 更新
+
+### 测试套件修复
+
+- `MapViewAMap.test.tsx` 有四个用例失败：其 store mock 忽略 selector，每次都返回一个新建的对象，导致组件读取的高德 Key 在每次渲染时都是新值。这会让地图生命周期 effect 反复重建，`ready` 始终无法稳定，标记也就永远画不出来。现在 mock 会正确响应 selector，六个用例全部通过，每个约 60 毫秒，而不再是 3 秒超时。
+- 移动端 Atlas 中断言“不存在任何开关”的用例，改为针对它真正要验证的“计划国家开关”。预设地标开关是刻意始终渲染的，原来的宽泛查询本身就不正确。
+- places e2e 测试自行手写建表语句，缺少新增的 `amap_id` 列，导致该套件中所有地点写入都返回 500。
+- 两处断言按 POI 接口现在接收的 provider 参数更新（`mapsApi.pois` / `MapsService.pois`）。
+
+### 0.6.0 已有功能
+
+- 通过高德搜索添加的地点会获取该 POI 的图片并作为缩略图，由服务端下载后存入现有照片代理缓存。
+- 地点搜索框支持高德分享链接与 App 的“分享”文本。
+- `amap_js_api_key` 现已纳入加密密钥轮换。
+
+---
+
+## v0.6.0（详情）
 
 ### 高德地点自动带上图片
 
@@ -164,7 +181,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.6.0
+IMAGE_TAG=0.6.1
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -204,7 +221,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.6.0
+docker pull ghcr.io/bhxnms/tt-planner:0.6.1
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -214,7 +231,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.6.0
+  ghcr.io/bhxnms/tt-planner:0.6.1
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

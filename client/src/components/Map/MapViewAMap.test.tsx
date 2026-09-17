@@ -1,13 +1,25 @@
 import { render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock stores to avoid localStorage access during module initialization
+// Mock stores to avoid localStorage access during module initialization.
+//
+// The selector has to be honoured, not ignored: the component reads its AMap key
+// through `useSettingsStore((s) => s.settings.amap_js_api_key)`, and a mock that
+// answers every call with a freshly built object hands the map-lifecycle effect a
+// new dependency on each render. The effect then tears the map down and rebuilds
+// it forever, so `ready` never settles and no markers are ever drawn — which is
+// exactly what these tests looked like when the mock returned a literal.
+const settingsState = {
+  language: 'en',
+  temperature_unit: 'celsius',
+  distance_unit: 'metric',
+  settings: { amap_js_api_key: 'test-amap-key' },
+};
+
 vi.mock('../../store/settingsStore', () => ({
-  useSettingsStore: vi.fn(() => ({
-    language: 'en',
-    temperature_unit: 'celsius',
-    distance_unit: 'metric',
-  })),
+  useSettingsStore: vi.fn((selector?: (s: typeof settingsState) => unknown) =>
+    typeof selector === 'function' ? selector(settingsState) : settingsState
+  ),
 }));
 
 // Mock Leaflet before importing the component to prevent window access errors

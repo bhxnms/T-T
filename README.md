@@ -16,7 +16,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.1-blue?style=flat-square)
 
 ---
 
@@ -76,7 +76,34 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.6.0
+## 🆕 What's New in v0.6.1
+
+### Test-suite fixes
+
+- `MapViewAMap.test.tsx` left four cases failing: the store mock answered every
+  call with a freshly built object and ignored the selector, so the AMap key the
+  component reads was a new value on each render. That restarted the
+  map-lifecycle effect endlessly, `ready` never settled and no marker was ever
+  drawn. The mock now honours the selector, and all six cases pass in ~60 ms each
+  instead of timing out at 3 s.
+- The mobile Atlas case that asserted “no switch is present” now asserts on the
+  planned-countries switch it is actually about. The preset-landmark switch is
+  deliberately always rendered, so the blanket query was the wrong check.
+- The places e2e harness builds its schema by hand; it was missing the new
+  `amap_id` column, which made every place write in that suite answer 500.
+- Two assertions were updated for the provider argument the POI endpoints now
+  take (`mapsApi.pois` / `MapsService.pois`).
+
+### Existing 0.6.0 features
+
+- A place added from AMap (高德) search gets that POI's photo as its thumbnail,
+  fetched and cached server-side behind the existing photo proxy.
+- The place search box accepts AMap share links and the app's 分享 text.
+- `amap_js_api_key` is now included in the encryption-key rotation.
+
+---
+
+## 0.6.0 (detail)
 
 ### AMap places now come with their photo
 
@@ -182,7 +209,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.6.0`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.6.1`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -232,7 +259,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.6.0 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.6.1 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \

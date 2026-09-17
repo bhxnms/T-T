@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '../../../helpers/render';
-import { buildAtlasController, buildAtlasData, buildBucketItem, buildCountryDetail } from '../../../helpers/atlas';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AtlasController } from '../../../../src/mobile/screens/atlas/atlasController';
-import type { CountryDetail } from '../../../../src/pages/atlas/atlasModel';
 import MAtlas from '../../../../src/mobile/screens/atlas/MAtlas';
+import type { CountryDetail } from '../../../../src/pages/atlas/atlasModel';
+import { buildAtlasController, buildAtlasData, buildBucketItem, buildCountryDetail } from '../../../helpers/atlas';
+import { fireEvent, render, screen, waitFor } from '../../../helpers/render';
 
 // FE-MOB-ATLASSCR-001 to FE-MOB-ATLASSCR-020
 
@@ -33,7 +33,9 @@ describe('MAtlas', () => {
 
   it('FE-MOB-ATLASSCR-002: renders the map container, the bucket header and the stats card', () => {
     setAtlas({
-      data: buildAtlasData({ stats: { totalTrips: 4, totalPlaces: 21, totalCountries: 7, totalDays: 30, totalCities: 9 } }),
+      data: buildAtlasData({
+        stats: { totalTrips: 4, totalPlaces: 21, totalCountries: 7, totalDays: 30, totalCities: 9 },
+      }),
     });
     render(<MAtlas />);
 
@@ -74,7 +76,10 @@ describe('MAtlas', () => {
 
   it('FE-MOB-ATLASSCR-006: picking a country from the search flies the map there and closes the overlay', async () => {
     const atlas = setAtlas({
-      atlas_country_options: [{ code: 'JP', label: 'Japan' }, { code: 'FR', label: 'France' }],
+      atlas_country_options: [
+        { code: 'JP', label: 'Japan' },
+        { code: 'FR', label: 'France' },
+      ],
     });
     render(<MAtlas />, { initialEntries: ['/atlas?search=1'] });
 
@@ -112,7 +117,10 @@ describe('MAtlas', () => {
     setAtlas({
       data: buildAtlasData({
         countries: ['FR', 'JP', 'IT', 'ES', 'DE', 'US'].map((code, i) => ({
-          code, tripCount: 1, placeCount: 1, lastVisit: `202${i}-01-01`,
+          code,
+          tripCount: 1,
+          placeCount: 1,
+          lastVisit: `202${i}-01-01`,
         })),
       }),
     });
@@ -127,7 +135,10 @@ describe('MAtlas', () => {
       selectedCountry: 'JP',
       countryDetail: buildCountryDetail({
         places: [{ id: 1 }, { id: 2 }] as unknown as CountryDetail['places'],
-        trips: [{ id: 11, title: 'Kansai' }, { id: 12, title: 'Hokkaido' }],
+        trips: [
+          { id: 11, title: 'Kansai' },
+          { id: 12, title: 'Hokkaido' },
+        ],
       }),
     });
     render(<MAtlas />);
@@ -224,14 +235,26 @@ describe('MAtlas', () => {
   it('FE-MOB-ATLASSCR-017: the planned pill stays away while nothing is planned', () => {
     render(<MAtlas />);
 
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    // Asserted against the planned switch itself rather than "any switch at all":
+    // the landmark toggle is deliberately always present, so a blanket
+    // queryByRole('switch') would fail for a reason unrelated to this rule.
+    expect(screen.queryByRole('switch', { name: 'atlas.showPlanned' })).not.toBeInTheDocument();
     expect(screen.queryByText('atlas.planned')).not.toBeInTheDocument();
+    // The landmark layer defaults to on, so its switch is not gated the same way.
+    expect(screen.getByRole('switch', { name: 'atlas.showLandmarks' })).toBeInTheDocument();
   });
 
   it('FE-MOB-ATLASSCR-018: a planned country brings up the pill and its switch flips the layer', () => {
     const atlas = setAtlas({
       data: buildAtlasData({
-        stats: { totalTrips: 4, totalPlaces: 21, totalCountries: 7, totalDays: 30, totalCities: 9, totalCountriesPlanned: 2 },
+        stats: {
+          totalTrips: 4,
+          totalPlaces: 21,
+          totalCountries: 7,
+          totalDays: 30,
+          totalCities: 9,
+          totalCountriesPlanned: 2,
+        },
       }),
     });
     render(<MAtlas />);
