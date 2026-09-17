@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image tag to publish (without the leading v)'
+        description: "Image tag to publish (without the leading v)"
         required: true
-        default: '0.6.2'
+        default: "0.6.2"
         type: string
 
 permissions:
@@ -17,13 +17,15 @@ env:
   IMAGE_NAME: ghcr.io/bhxnms/tt-planner
 
 jobs:
-  publish:
-    name: Build and publish multi-architecture image
+  # One place resolves the version, so the per-architecture builds and the
+  # manifest merge cannot disagree about what they are publishing.
+  prepare:
+    name: Resolve image tags
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tags.outputs.version }}
+      major: ${{ steps.tags.outputs.major }}
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
       - name: Resolve image tags
         id: tags
         env:
@@ -49,6 +51,37 @@ jobs:
             echo "major=$MAJOR"
           } >> "$GITHUB_OUTPUT"
 
+  # Each architecture is built on a runner of that architecture, so the arm64
+  # half runs natively instead of under QEMU emulation.
+  #
+  # This is the fix for a build that hung twice: `RUN npm ci --workspace=client`
+  # in the arm64 client-builder stage sat with no output at all until the step
+  # timeout killed it (once for six hours, once for one). Emulated npm installs
+  # are slow enough that a stall is indistinguishable from progress, and nothing
+  # in the process was retrying — it had simply stopped. On a native runner the
+  # same layer runs at full speed and finishes.
+  #
+  # Every release rewrites the workspace versions inside package-lock.json, which
+  # busts the layer cache above `npm ci` and forces the install to run again, so
+  # this was not a one-off: it would have recurred on each release.
+  build:
+    name: Build ${{ matrix.arch }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -59,33 +92,86 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # A hung npm registry request inside the arm64 emulated build once stalled
-      # this step for nearly six hours until the run was cancelled, so the step
-      # now carries its own ceiling: a build that cannot finish in an hour is
-      # not going to finish, and failing fast leaves the runner free.
-      - name: Build and push image
+      # Pushed by digest: this job publishes no tag of its own, only the digest
+      # the merge job turns into the multi-architecture manifest. Pushing a tag
+      # from both jobs would race, and the loser's manifest would be the one
+      # left visible.
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v6
         timeout-minutes: 60
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
+          platforms: ${{ matrix.platform }}
+          # No `push: true` alongside this: that input IS shorthand for
+          # `--output=type=registry`, and passing both would emit two
+          # contradictory output destinations. push=true belongs inside the
+          # outputs string below.
+          outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
           build-args: |
-            APP_VERSION=${{ steps.tags.outputs.version }}
+            APP_VERSION=${{ needs.prepare.outputs.version }}
             NPM_CONFIG_FETCH_RETRIES=5
             NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
             NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=300000
             NPM_CONFIG_FETCH_TIMEOUT=300000
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.version }}
-            ${{ env.IMAGE_NAME }}:${{ steps.tags.outputs.major }}
-            ${{ env.IMAGE_NAME }}:latest
           labels: |
             org.opencontainers.image.source=https://github.com/bhxnms/T-T
-            org.opencontainers.image.version=${{ steps.tags.outputs.version }}
+            org.opencontainers.image.version=${{ needs.prepare.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Scoped per architecture: one shared scope would have the two runners
+          # evicting each other's cache entries on every build.
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          retention-days: 1
+          if-no-files-found: error
+
+  # One manifest list over both digests, published under the real tags. Doing
+  # this in a single job is what keeps the tags from being written twice.
+  merge:
+    name: Publish multi-architecture manifest
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          set -euo pipefail
+          # Every digest on its own --tag, then the three release tags all point
+          # at one manifest list.
+          docker buildx imagetools create \
+            --tag "${IMAGE_NAME}:${{ needs.prepare.outputs.version }}" \
+            --tag "${IMAGE_NAME}:${{ needs.prepare.outputs.major }}" \
+            --tag "${IMAGE_NAME}:latest" \
+            $(printf "${IMAGE_NAME}@sha256:%s " *)
 
       - name: Inspect published image
-        run: docker buildx imagetools inspect "${IMAGE_NAME}:${{ steps.tags.outputs.version }}"
+        run: docker buildx imagetools inspect "${IMAGE_NAME}:${{ needs.prepare.outputs.version }}"
