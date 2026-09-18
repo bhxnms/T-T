@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const cs: NotificationLocale = {
   email: {
-    footer: 'Toto jsi obdržel/a, protože máš povoleny upozornění v TREK.',
+    footer: 'Toto jsi obdržel/a, protože máš povoleny upozornění v Tourism-Team.',
     manage: 'Spravovat předvolby v nastavení',
     madeWith: 'Made with',
-    openTrek: 'Otevřít TREK',
+    openTrek: 'Otevřít Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const cs: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Pozvánka Vacay Fusion',
-      body: `${p.actor} vás pozval ke spojení dovolenkových plánů. Otevřete TREK pro přijetí nebo odmítnutí.`,
+      body: `${p.actor} vás pozval ke spojení dovolenkových plánů. Otevřete Tourism-Team pro přijetí nebo odmítnutí.`,
     }),
     vacay_share: (p) => ({
       title: 'Kalendář Vacay sdílen',
-      body: `${p.actor} s vámi sdílel svůj kalendář dovolených. Otevřete TREK pro zobrazení.`,
+      body: `${p.actor} s vámi sdílel svůj kalendář dovolených. Otevřete Tourism-Team pro zobrazení.`,
     }),
     collection_invite: (p) => ({
       title: 'Pozvánka do sbírky',
-      body: `${p.actor} vás pozval ke sdílení sbírky. Otevřete TREK pro přijetí nebo odmítnutí.`,
+      body: `${p.actor} vás pozval ke sdílení sbírky. Otevřete Tourism-Team pro přijetí nebo odmítnutí.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} sdílených fotek`,
@@ -49,8 +49,8 @@ const cs: NotificationLocale = {
       body: `${p.actor} vás přiřadil do kategorie "${p.category}" v "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Nová verze TREK dostupná',
-      body: `TREK ${p.version} je nyní dostupný. Navštivte administrátorský panel pro aktualizaci.`,
+      title: 'Nová verze Tourism-Team dostupná',
+      body: `Tourism-Team ${p.version} je nyní dostupný. Navštivte administrátorský panel pro aktualizaci.`,
     }),
     replica_failure: (p) => ({
       title: 'Selhání repliky úložiště',
@@ -67,7 +67,7 @@ const cs: NotificationLocale = {
   passwordReset: {
     subject: 'Obnovení hesla',
     greeting: 'Ahoj',
-    body: 'Obdrželi jsme žádost o obnovení hesla k tvému účtu TREK. Klikni na tlačítko níže a nastav nové heslo.',
+    body: 'Obdrželi jsme žádost o obnovení hesla k tvému účtu Tourism-Team. Klikni na tlačítko níže a nastav nové heslo.',
     ctaIntro: 'Obnovit heslo',
     expiry: 'Odkaz vyprší za 60 minut.',
     ignore: 'Pokud jsi o obnovení nežádal/a, tento e-mail ignoruj — heslo zůstane beze změny.',

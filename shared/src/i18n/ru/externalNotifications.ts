@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const ru: NotificationLocale = {
   email: {
-    footer: 'Вы получили это, потому что у вас включены уведомления в TREK.',
+    footer: 'Вы получили это, потому что у вас включены уведомления в Tourism-Team.',
     manage: 'Управление настройками',
     madeWith: 'Made with',
-    openTrek: 'Открыть TREK',
+    openTrek: 'Открыть Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const ru: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Приглашение Vacay Fusion',
-      body: `${p.actor} приглашает вас объединить планы отпуска. Откройте TREK для подтверждения.`,
+      body: `${p.actor} приглашает вас объединить планы отпуска. Откройте Tourism-Team для подтверждения.`,
     }),
     vacay_share: (p) => ({
       title: 'Календарь Vacay предоставлен',
-      body: `${p.actor} поделился с вами своим календарём отпусков. Откройте TREK, чтобы посмотреть.`,
+      body: `${p.actor} поделился с вами своим календарём отпусков. Откройте Tourism-Team, чтобы посмотреть.`,
     }),
     collection_invite: (p) => ({
       title: 'Приглашение в коллекцию',
-      body: `${p.actor} приглашает вас поделиться коллекцией. Откройте TREK для подтверждения.`,
+      body: `${p.actor} приглашает вас поделиться коллекцией. Откройте Tourism-Team для подтверждения.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} фото`,
@@ -49,8 +49,8 @@ const ru: NotificationLocale = {
       body: `${p.actor} назначил вас в категорию "${p.category}" в "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Доступна новая версия TREK',
-      body: `TREK ${p.version} теперь доступен. Перейдите в панель администратора для обновления.`,
+      title: 'Доступна новая версия Tourism-Team',
+      body: `Tourism-Team ${p.version} теперь доступен. Перейдите в панель администратора для обновления.`,
     }),
     replica_failure: (p) => ({
       title: 'Сбой реплики хранилища',
@@ -67,7 +67,7 @@ const ru: NotificationLocale = {
   passwordReset: {
     subject: 'Сброс пароля',
     greeting: 'Здравствуйте',
-    body: 'Мы получили запрос на сброс пароля вашего аккаунта TREK. Нажмите кнопку ниже, чтобы установить новый пароль.',
+    body: 'Мы получили запрос на сброс пароля вашего аккаунта Tourism-Team. Нажмите кнопку ниже, чтобы установить новый пароль.',
     ctaIntro: 'Сбросить пароль',
     expiry: 'Ссылка действительна 60 минут.',
     ignore: 'Если вы не запрашивали сброс — просто проигнорируйте это письмо, пароль останется прежним.',

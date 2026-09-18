@@ -13,7 +13,7 @@ interface Category {
 }
 
 interface PlaceAvatarUploadProps {
-  place: Pick<Place, 'id' | 'name' | 'image_url' | 'google_place_id' | 'osm_id' | 'lat' | 'lng'>;
+  place: Pick<Place, 'id' | 'name' | 'image_url' | 'google_place_id' | 'osm_id' | 'amap_id' | 'lat' | 'lng'>;
   category?: Category | null;
   size?: number;
   onUpload: (file: File) => Promise<void>;

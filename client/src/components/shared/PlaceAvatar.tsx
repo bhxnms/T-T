@@ -10,7 +10,7 @@ interface Category {
 }
 
 interface PlaceAvatarProps {
-  place: Pick<Place, 'id' | 'name' | 'image_url' | 'google_place_id' | 'osm_id' | 'lat' | 'lng'>;
+  place: Pick<Place, 'id' | 'name' | 'image_url' | 'google_place_id' | 'osm_id' | 'amap_id' | 'lat' | 'lng'>;
   size?: number;
   category?: Category | null;
 }
@@ -32,7 +32,7 @@ export default React.memo(function PlaceAvatar({ place, size = 32, category }: P
     const el = ref.current;
     if (!el) return;
     // Check if already cached — show immediately without waiting for intersection
-    const photoId = place.google_place_id || place.osm_id;
+    const photoId = place.google_place_id || place.osm_id || (place.amap_id ? `amap:${place.amap_id}` : null);
     const cacheKey = photoId || `${place.lat},${place.lng}`;
     if (cacheKey && getCached(cacheKey)) {
       setVisible(true);
@@ -59,7 +59,7 @@ export default React.memo(function PlaceAvatar({ place, size = 32, category }: P
       return;
     }
     if (!placesPhotosEnabled) return;
-    const photoId = place.google_place_id || place.osm_id;
+    const photoId = place.google_place_id || place.osm_id || (place.amap_id ? `amap:${place.amap_id}` : null);
     if (!photoId && !(place.lat && place.lng)) {
       setPhotoSrc(null);
       return;
@@ -84,7 +84,7 @@ export default React.memo(function PlaceAvatar({ place, size = 32, category }: P
       setPhotoSrc(entry.thumbDataUrl || entry.photoUrl);
     });
     return onThumbReady(cacheKey, (thumb) => setPhotoSrc(thumb));
-  }, [visible, place.id, place.image_url, place.google_place_id, place.osm_id]);
+  }, [visible, place.id, place.image_url, place.google_place_id, place.osm_id, place.amap_id]);
 
   const bgColor = category?.color || '#6366f1';
   const IconComp = getCategoryIcon(category?.icon);
@@ -111,9 +111,13 @@ export default React.memo(function PlaceAvatar({ place, size = 32, category }: P
           decoding="async"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           onError={() => {
-            if (!imageUrlFailed.current && photoSrc === place.image_url && (place.google_place_id || place.osm_id)) {
+            // Self-heal: image_url can go stale (a proxy entry the cache sweep
+            // dropped, a legacy hot-linked URL). Refetch once through the
+            // provider-id chain — amap_id included, or an AMap place would have
+            // no fallback and stay a bare category icon forever.
+            const photoId = place.google_place_id || place.osm_id || (place.amap_id ? `amap:${place.amap_id}` : null);
+            if (!imageUrlFailed.current && photoSrc === place.image_url && photoId) {
               imageUrlFailed.current = true;
-              const photoId = place.google_place_id || place.osm_id!;
               const cacheKey = `refetch:${photoId}`;
               fetchPhoto(cacheKey, photoId, place.lat ?? undefined, place.lng ?? undefined, place.name, (entry) => {
                 setPhotoSrc(entry.thumbDataUrl || entry.photoUrl);

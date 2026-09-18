@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const pl: NotificationLocale = {
   email: {
-    footer: 'Otrzymałeś/aś tę wiadomość, ponieważ masz włączone powiadomienia w TREK.',
+    footer: 'Otrzymałeś/aś tę wiadomość, ponieważ masz włączone powiadomienia w Tourism-Team.',
     manage: 'Zarządzaj preferencjami w ustawieniach',
     madeWith: 'Made with',
-    openTrek: 'Otwórz TREK',
+    openTrek: 'Otwórz Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const pl: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Zaproszenie Vacay Fusion',
-      body: `${p.actor} zaprosił Cię do połączenia planów urlopowych. Otwórz TREK, aby zaakceptować lub odrzucić.`,
+      body: `${p.actor} zaprosił Cię do połączenia planów urlopowych. Otwórz Tourism-Team, aby zaakceptować lub odrzucić.`,
     }),
     vacay_share: (p) => ({
       title: 'Kalendarz Vacay udostępniony',
-      body: `${p.actor} udostępnił Ci swój kalendarz urlopów. Otwórz TREK, aby go zobaczyć.`,
+      body: `${p.actor} udostępnił Ci swój kalendarz urlopów. Otwórz Tourism-Team, aby go zobaczyć.`,
     }),
     collection_invite: (p) => ({
       title: 'Zaproszenie do kolekcji',
-      body: `${p.actor} zaprosił Cię do udostępnienia kolekcji. Otwórz TREK, aby zaakceptować lub odrzucić.`,
+      body: `${p.actor} zaprosił Cię do udostępnienia kolekcji. Otwórz Tourism-Team, aby zaakceptować lub odrzucić.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} zdjęć udostępnionych`,
@@ -49,8 +49,8 @@ const pl: NotificationLocale = {
       body: `${p.actor} przypisał Cię do kategorii "${p.category}" w "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Nowa wersja TREK dostępna',
-      body: `TREK ${p.version} jest teraz dostępny. Odwiedź panel administracyjny, aby zaktualizować.`,
+      title: 'Nowa wersja Tourism-Team dostępna',
+      body: `Tourism-Team ${p.version} jest teraz dostępny. Odwiedź panel administracyjny, aby zaktualizować.`,
     }),
     replica_failure: (p) => ({
       title: 'Awaria repliki magazynu',
@@ -67,7 +67,7 @@ const pl: NotificationLocale = {
   passwordReset: {
     subject: 'Zresetuj hasło',
     greeting: 'Cześć',
-    body: 'Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta TREK. Kliknij przycisk poniżej, aby ustawić nowe hasło.',
+    body: 'Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta Tourism-Team. Kliknij przycisk poniżej, aby ustawić nowe hasło.',
     ctaIntro: 'Zresetuj hasło',
     expiry: 'Link wygaśnie za 60 minut.',
     ignore: 'Jeśli to nie Ty, zignoruj tę wiadomość — Twoje hasło pozostanie bez zmian.',

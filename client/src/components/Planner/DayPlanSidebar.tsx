@@ -127,7 +127,7 @@ import { type PickedPlace } from './TransitSearchPanel';
 import { resolveLegMode } from './legMode';
 import { noteSurface } from './noteSurface';
 import { getNavigationTargets, openNavigationTarget } from './placeNavigation';
-import { findTodayDayId } from './today';
+import { findEntryDayId } from './today';
 import { TransitItineraryInline, TransitLegChips, TransitTitle } from './transitDisplay';
 
 export interface DayPlanSidebarProps {
@@ -360,37 +360,37 @@ function useDayPlanSidebar(props: DayPlanSidebarProps) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const dayRefs = useRef<Map<number, HTMLElement>>(new Map());
 
-  /** The day that is today, or null when the trip is not running right now. */
-  const todayDayId = useMemo(() => findTodayDayId(days), [days]);
-
   const scrollToDay = useCallback((dayId: number) => {
     const el = dayRefs.current.get(dayId);
     const container = scrollContainerRef.current;
     if (!el || !container) return;
-    // Positioned against the container, not scrollIntoView: the sidebar sits in
-    // a page that also scrolls, and scrollIntoView would drag the whole layout
+    // Positioned against the container, not scrollIntoView: the sidebar sits in a
+    // page that also scrolls, and scrollIntoView would drag the whole layout
     // around to satisfy a scroll inside one column.
     container.scrollTo({ top: el.offsetTop - container.offsetTop - 8, behavior: 'smooth' });
   }, []);
 
-  const jumpToToday = useCallback(() => {
-    if (todayDayId == null) return;
-    onSelectDay(todayDayId, true);
-    setExpandedDays((prev) => new Set(prev).add(todayDayId));
-    // After the expand has rendered, or the target is measured at its old height.
-    requestAnimationFrame(() => scrollToDay(todayDayId));
-  }, [todayDayId, onSelectDay, scrollToDay]);
-
-  // On opening a trip that is running, land on today rather than on day 1 (#1567).
-  // Once per mount, and only while nothing is selected yet: a deep link into a
-  // specific day, or a day the user picked before switching tabs, must win.
+  // Land on a day with something in it when a trip is opened (#1567 broadened):
+  // today while the trip is running AND today has content, otherwise the first
+  // day that has any — opening straight into "No places planned for this day"
+  // forced a click before anything was visible. Once per mount, and only while
+  // nothing is selected yet: a deep link into a specific day, or a day the user
+  // picked before switching tabs, must win.
   const autoJumpedRef = useRef(false);
   useEffect(() => {
-    if (autoJumpedRef.current || todayDayId == null || selectedDayId != null || days.length === 0) return;
+    if (autoJumpedRef.current || selectedDayId != null || days.length === 0) return;
+    const tripStore = useTripStore.getState();
+    const entryDayId = findEntryDayId(
+      days,
+      { assignments: tripStore.assignments, dayNotes: tripStore.dayNotes, reservations: tripStore.reservations },
+    );
+    if (entryDayId == null) return;
     autoJumpedRef.current = true;
-    jumpToToday();
+    onSelectDay(entryDayId, true);
+    setExpandedDays((prev) => new Set(prev).add(entryDayId));
+    requestAnimationFrame(() => scrollToDay(entryDayId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayDayId, days.length]);
+  }, [days.length, assignments, dayNotes, reservations]);
   useLayoutEffect(() => {
     if (scrollContainerRef.current && initialScrollTop) {
       scrollContainerRef.current.scrollTop = initialScrollTop;

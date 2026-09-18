@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const fr: NotificationLocale = {
   email: {
-    footer: 'Vous recevez cet e-mail car les notifications sont activées dans TREK.',
+    footer: 'Vous recevez cet e-mail car les notifications sont activées dans Tourism-Team.',
     manage: 'Gérer les préférences',
     madeWith: 'Made with',
-    openTrek: 'Ouvrir TREK',
+    openTrek: 'Ouvrir Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const fr: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Invitation Vacay Fusion',
-      body: `${p.actor} vous invite à fusionner les plans de vacances. Ouvrez TREK pour accepter ou refuser.`,
+      body: `${p.actor} vous invite à fusionner les plans de vacances. Ouvrez Tourism-Team pour accepter ou refuser.`,
     }),
     vacay_share: (p) => ({
       title: 'Calendrier Vacay partagé',
-      body: `${p.actor} a partagé son calendrier de vacances avec vous. Ouvrez TREK pour le consulter.`,
+      body: `${p.actor} a partagé son calendrier de vacances avec vous. Ouvrez Tourism-Team pour le consulter.`,
     }),
     collection_invite: (p) => ({
       title: 'Invitation à une collection',
-      body: `${p.actor} vous invite à partager une collection. Ouvrez TREK pour accepter ou refuser.`,
+      body: `${p.actor} vous invite à partager une collection. Ouvrez Tourism-Team pour accepter ou refuser.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} photos partagées`,
@@ -49,8 +49,8 @@ const fr: NotificationLocale = {
       body: `${p.actor} vous a assigné à la catégorie "${p.category}" dans "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Nouvelle version TREK disponible',
-      body: `TREK ${p.version} est maintenant disponible. Rendez-vous dans le panneau d'administration pour mettre à jour.`,
+      title: 'Nouvelle version Tourism-Team disponible',
+      body: `Tourism-Team ${p.version} est maintenant disponible. Rendez-vous dans le panneau d'administration pour mettre à jour.`,
     }),
     replica_failure: (p) => ({
       title: 'Échec de réplique de stockage',
@@ -69,7 +69,7 @@ const fr: NotificationLocale = {
   passwordReset: {
     subject: 'Réinitialisez votre mot de passe',
     greeting: 'Bonjour',
-    body: 'Nous avons reçu une demande de réinitialisation du mot de passe de votre compte TREK. Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe.',
+    body: 'Nous avons reçu une demande de réinitialisation du mot de passe de votre compte Tourism-Team. Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe.',
     ctaIntro: 'Réinitialiser le mot de passe',
     expiry: 'Ce lien expire dans 60 minutes.',
     ignore: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail — votre mot de passe ne changera pas.",

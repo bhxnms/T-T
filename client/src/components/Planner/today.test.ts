@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findFocusDayId, findTodayDayId, localToday } from './today'
+import { findEntryDayId, findFocusDayId, findTodayDayId, localToday } from './today'
 
 describe('localToday', () => {
   it('FE-TODAY-001: reads the date off the local clock, not UTC', () => {
@@ -78,5 +78,49 @@ describe('findFocusDayId', () => {
     ]
     expect(findFocusDayId(unordered, at(2026, 8, 11))).toBe(2)
     expect(unordered.map(d => d.id)).toEqual([2, 1])
+  })
+})
+
+describe('findEntryDayId', () => {
+  const days = [
+    { id: 1, day_number: 1, date: '2026-08-10' },
+    { id: 2, day_number: 2, date: '2026-08-11' },
+    { id: 3, day_number: 3, date: '2026-08-12' },
+  ]
+  const at = (y: number, m: number, d: number) => new Date(y, m - 1, d, 10, 0, 0)
+  const noContent = { assignments: {}, dayNotes: {}, reservations: [] }
+
+  it('FE-TODAY-012: picks today when today has content', () => {
+    const content = { ...noContent, assignments: { '2': [{ id: 1 }] } }
+    expect(findEntryDayId(days, content, at(2026, 8, 11))).toBe(2)
+  })
+
+  it('FE-TODAY-013: skips an empty today to the next day with content, not to day one', () => {
+    const content = { ...noContent, assignments: { '3': [{ id: 1 }] } }
+    expect(findEntryDayId(days, content, at(2026, 8, 11))).toBe(3)
+  })
+
+  it('FE-TODAY-014: falls back to the next dated day ahead when no day has content', () => {
+    expect(findEntryDayId(days, noContent, at(2026, 8, 9))).toBe(1)
+  })
+
+  it('FE-TODAY-015: a day with only a note or a reservation counts as content', () => {
+    const withNote = { ...noContent, dayNotes: { '3': [{ id: 1 }] } }
+    expect(findEntryDayId(days, withNote, at(2026, 8, 11))).toBe(3)
+
+    const withReservation = { ...noContent, reservations: [{ type: 'flight', day_id: 1 }] }
+    expect(findEntryDayId(days, withReservation, at(2026, 8, 11))).toBe(1)
+  })
+
+  it('FE-TODAY-016: hotels never count as day content', () => {
+    // A hotel-only day is empty to the traveller, so it must not be picked as
+    // "the day with content". With nothing else planned the pick falls through
+    // to the dated-day fallback, which is null once the whole trip is over.
+    const content = { ...noContent, reservations: [{ type: 'hotel', day_id: 2 }] }
+    expect(findEntryDayId(days, content, at(2026, 8, 15))).toBeNull()
+  })
+
+  it('FE-TODAY-017: nothing to pick without days', () => {
+    expect(findEntryDayId([], noContent, at(2026, 8, 11))).toBeNull()
   })
 })

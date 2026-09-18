@@ -14,15 +14,21 @@ export function isCustomPlaceImage(url: string | null | undefined): boolean {
  * id when there is one, otherwise the coordinates. A place with neither has no
  * identity to cache under, so it gets the empty string — callers skip it rather
  * than filing every coordinate-less place under one shared entry.
+ *
+ * amap_id becomes 'amap:<id>' — the exact placeId form the server's photo
+ * endpoint expects — so an AMap place caches and refetches under its own id
+ * instead of its coordinates, which two nearby POIs could share.
  */
 export function photoCacheKey(place: {
   google_place_id?: string | null
   osm_id?: string | null
+  amap_id?: string | null
   lat?: number | null
   lng?: number | null
 }): string {
   if (place.google_place_id) return place.google_place_id
   if (place.osm_id) return place.osm_id
+  if (place.amap_id) return `amap:${place.amap_id}`
   if (place.lat == null || place.lng == null) return ''
   return `${place.lat},${place.lng}`
 }

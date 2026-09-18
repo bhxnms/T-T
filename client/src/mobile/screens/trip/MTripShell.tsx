@@ -19,9 +19,10 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import { findFocusDayId } from '../../../components/Planner/today';
+import { findEntryDayId, findFocusDayId } from '../../../components/Planner/today';
 import { dayTintBackground, usePluginDayTints } from '../../../components/Plugins/PluginDaySchedule';
 import { useTripPlanner } from '../../../pages/tripPlanner/useTripPlanner';
+import { useTripStore } from '../../../store/tripStore';
 import type { Day } from '../../../types';
 import MIconBtn from '../../components/MIconBtn';
 import MMapArea from './map/MMapArea';
@@ -216,10 +217,12 @@ export default function MTripShell({
 
   // The mobile plan is single-day: make sure a day is active once days arrive.
   // Only seed once so an intentional deselect elsewhere is not fought. Open on
-  // today while the trip is running, otherwise on the next day that is still
-  // ahead — a gap in the dates should not throw you back to day 1 — and fall
-  // back to the first day once the whole trip is behind us.
+  // today while the trip is running AND today has content, otherwise on the
+  // first day that has any — opening straight into "no places planned" forces a
+  // tap before anything is visible — falling back to the next dated day ahead,
+  // then to day 1 for a trip with nothing planned at all.
   const seededDayRef = useRef(false);
+  const store = useTripStore();
   useEffect(() => {
     if (seededDayRef.current) return;
     // A day that is already active counts as seeded: a later deselect is the
@@ -233,8 +236,11 @@ export default function MTripShell({
     seededDayRef.current = true;
     // Off the same helper file as the desktop day plan (#1567), so the two
     // cannot drift on what "today" means.
-    planner.tripActions.setSelectedDay(findFocusDayId(days) ?? days[0].id);
-  }, [planner.selectedDayId, days, planner.tripActions]);
+    planner.tripActions.setSelectedDay(
+      findEntryDayId(days, { assignments: store.assignments, dayNotes: store.dayNotes, reservations: store.reservations }) ?? days[0].id,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planner.selectedDayId, days.length, store.assignments, store.dayNotes, store.reservations]);
 
   // Swiping the day panel (#2051) can move the day well past the chips on
   // screen — the rail overflows from roughly six days on — so the active chip

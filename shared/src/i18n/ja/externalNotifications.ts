@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const ja: NotificationLocale = {
   email: {
-    footer: 'TREKで通知を有効にしているため、このメールが届きました。',
+    footer: 'Tourism-Teamで通知を有効にしているため、このメールが届きました。',
     manage: '設定で通知設定を管理',
     madeWith: 'Made with',
-    openTrek: 'TREKを開く',
+    openTrek: 'Tourism-Teamを開く',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const ja: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Vacay Fusion招待',
-      body: `${p.actor}が休暇プランの統合に招待しています。TREKを開いて承認または拒否してください。`,
+      body: `${p.actor}が休暇プランの統合に招待しています。Tourism-Teamを開いて承認または拒否してください。`,
     }),
     vacay_share: (p) => ({
       title: 'Vacayカレンダーが共有されました',
-      body: `${p.actor}が休暇カレンダーを共有しました。TREKを開いて確認してください。`,
+      body: `${p.actor}が休暇カレンダーを共有しました。Tourism-Teamを開いて確認してください。`,
     }),
     collection_invite: (p) => ({
       title: 'コレクション招待',
-      body: `${p.actor}がコレクションの共有に招待しています。TREKを開いて承認または拒否してください。`,
+      body: `${p.actor}がコレクションの共有に招待しています。Tourism-Teamを開いて承認または拒否してください。`,
     }),
     photos_shared: (p) => ({
       title: `${p.count}枚の写真が共有されました`,
@@ -49,8 +49,8 @@ const ja: NotificationLocale = {
       body: `${p.actor}が「${p.trip}」の「${p.category}」カテゴリにあなたを割り当てました。`,
     }),
     version_available: (p) => ({
-      title: '新しいTREKバージョンが利用可能',
-      body: `TREK ${p.version}が利用可能になりました。管理パネルからアップデートしてください。`,
+      title: '新しいTourism-Teamバージョンが利用可能',
+      body: `Tourism-Team ${p.version}が利用可能になりました。管理パネルからアップデートしてください。`,
     }),
     replica_failure: (p) => ({
       title: 'ストレージレプリカの障害',
@@ -67,7 +67,7 @@ const ja: NotificationLocale = {
   passwordReset: {
     subject: 'パスワードをリセット',
     greeting: 'こんにちは',
-    body: 'TREKアカウントのパスワードリセットリクエストを受け付けました。以下のボタンをクリックして新しいパスワードを設定してください。',
+    body: 'Tourism-Teamアカウントのパスワードリセットリクエストを受け付けました。以下のボタンをクリックして新しいパスワードを設定してください。',
     ctaIntro: 'パスワードをリセット',
     expiry: 'このリンクは60分後に期限切れになります。',
     ignore: 'このリクエストをご自身でしていない場合は、このメールを無視してください — パスワードは変更されません。',

@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const ar: NotificationLocale = {
   email: {
-    footer: 'تلقيت هذا لأنك قمت بتفعيل الإشعارات في TREK.',
+    footer: 'تلقيت هذا لأنك قمت بتفعيل الإشعارات في Tourism-Team.',
     manage: 'إدارة التفضيلات',
     madeWith: 'Made with',
-    openTrek: 'فتح TREK',
+    openTrek: 'فتح Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const ar: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'دعوة دمج الإجازة',
-      body: `${p.actor} يدعوك لدمج خطط الإجازة. افتح TREK للقبول أو الرفض.`,
+      body: `${p.actor} يدعوك لدمج خطط الإجازة. افتح Tourism-Team للقبول أو الرفض.`,
     }),
     vacay_share: (p) => ({
       title: 'تمت مشاركة تقويم Vacay',
-      body: `${p.actor} شارك تقويم إجازاته معك. افتح TREK لعرضه.`,
+      body: `${p.actor} شارك تقويم إجازاته معك. افتح Tourism-Team لعرضه.`,
     }),
     collection_invite: (p) => ({
       title: 'دعوة إلى مجموعة',
-      body: `${p.actor} يدعوك لمشاركة مجموعة. افتح TREK للقبول أو الرفض.`,
+      body: `${p.actor} يدعوك لمشاركة مجموعة. افتح Tourism-Team للقبول أو الرفض.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} صور مشتركة`,
@@ -49,8 +49,8 @@ const ar: NotificationLocale = {
       body: `${p.actor} عيّنك في فئة "${p.category}" في "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'إصدار TREK جديد متاح',
-      body: `TREK ${p.version} متاح الآن. تفضل بزيارة لوحة الإدارة للتحديث.`,
+      title: 'إصدار Tourism-Team جديد متاح',
+      body: `Tourism-Team ${p.version} متاح الآن. تفضل بزيارة لوحة الإدارة للتحديث.`,
     }),
     replica_failure: (p) => ({
       title: 'فشل النسخة المتماثلة للتخزين',
@@ -67,7 +67,7 @@ const ar: NotificationLocale = {
   passwordReset: {
     subject: 'إعادة تعيين كلمة المرور',
     greeting: 'مرحبا',
-    body: 'تلقينا طلبًا لإعادة تعيين كلمة المرور لحسابك في TREK. انقر على الزر أدناه لتعيين كلمة مرور جديدة.',
+    body: 'تلقينا طلبًا لإعادة تعيين كلمة المرور لحسابك في Tourism-Team. انقر على الزر أدناه لتعيين كلمة مرور جديدة.',
     ctaIntro: 'إعادة تعيين كلمة المرور',
     expiry: 'تنتهي صلاحية هذا الرابط خلال 60 دقيقة.',
     ignore: 'إذا لم تطلب هذا، يمكنك تجاهل هذه الرسالة — لن تتغير كلمة المرور الخاصة بك.',

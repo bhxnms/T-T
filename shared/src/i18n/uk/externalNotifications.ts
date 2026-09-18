@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const uk: NotificationLocale = {
   email: {
-    footer: 'Ви отримали це, оскільки увімкнули сповіщення в TREK.',
+    footer: 'Ви отримали це, оскільки увімкнули сповіщення в Tourism-Team.',
     manage: 'Керувати налаштуваннями у Налаштуваннях',
     madeWith: 'Made with',
-    openTrek: 'Відкрити TREK',
+    openTrek: 'Відкрити Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const uk: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Запрошення Vacay Fusion',
-      body: `${p.actor} запрошує вас об'єднати плани відпустки. Відкрийте TREK, щоб прийняти або відхилити.`,
+      body: `${p.actor} запрошує вас об'єднати плани відпустки. Відкрийте Tourism-Team, щоб прийняти або відхилити.`,
     }),
     vacay_share: (p) => ({
       title: 'Календар Vacay надано',
-      body: `${p.actor} поділився з вами своїм календарем відпусток. Відкрийте TREK, щоб переглянути.`,
+      body: `${p.actor} поділився з вами своїм календарем відпусток. Відкрийте Tourism-Team, щоб переглянути.`,
     }),
     collection_invite: (p) => ({
       title: 'Запрошення до колекції',
-      body: `${p.actor} запрошує вас поділитися колекцією. Відкрийте TREK, щоб прийняти або відхилити.`,
+      body: `${p.actor} запрошує вас поділитися колекцією. Відкрийте Tourism-Team, щоб прийняти або відхилити.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} фото поділились`,
@@ -49,8 +49,8 @@ const uk: NotificationLocale = {
       body: `${p.actor} призначив вас до категорії "${p.category}" у "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Доступна нова версія TREK',
-      body: `TREK ${p.version} тепер доступний. Перейдіть до панелі адміністратора для оновлення.`,
+      title: 'Доступна нова версія Tourism-Team',
+      body: `Tourism-Team ${p.version} тепер доступний. Перейдіть до панелі адміністратора для оновлення.`,
     }),
     replica_failure: (p) => ({
       title: 'Збій репліки сховища',
@@ -67,7 +67,7 @@ const uk: NotificationLocale = {
   passwordReset: {
     subject: 'Скидання пароля',
     greeting: 'Привіт',
-    body: 'Ми отримали запит на скидання пароля вашого облікового запису TREK. Натисніть кнопку нижче, щоб встановити новий пароль.',
+    body: 'Ми отримали запит на скидання пароля вашого облікового запису Tourism-Team. Натисніть кнопку нижче, щоб встановити новий пароль.',
     ctaIntro: 'Скинути пароль',
     expiry: 'Це посилання дійсне протягом 60 хвилин.',
     ignore: 'Якщо ви не надсилали цей запит, просто проігноруйте цей лист — ваш пароль залишиться незмінним.',

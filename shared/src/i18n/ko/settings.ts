@@ -235,7 +235,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'TREK은 첫 아이디어부터 마지막 추억까지 여행을 체계적으로 관리하는 자체 호스팅 여행 플래너입니다. 일별 계획, 예산, 짐 목록, 사진 등 모든 것이 하나의 서버에 담겨 있습니다.',
   'settings.about.madeWith': '으로 만들어졌습니다',
-  'settings.about.madeBy': 'Maurice와 성장하는 오픈 소스 커뮤니티가 함께',
+  'settings.about.madeBy': '성장하는 오픈 소스 커뮤니티와 함께',
   'settings.username': '사용자 이름',
   'settings.email': '이메일',
   'settings.role': '역할',

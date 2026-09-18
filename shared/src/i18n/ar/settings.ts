@@ -215,7 +215,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'TREK هو مخطط سفر مستضاف ذاتيًا يساعدك على تنظيم رحلاتك من أول فكرة حتى آخر ذكرى. تخطيط يومي، ميزانية، قوائم تعبئة، صور والمزيد — كل شيء في مكان واحد، على خادمك الخاص.',
   'settings.about.madeWith': 'صُنع بـ',
-  'settings.about.madeBy': 'بواسطة موريس ومجتمع مفتوح المصدر متنامٍ.',
+  'settings.about.madeBy': 'بواسطة مجتمع مفتوح المصدر متنامٍ.',
   'settings.username': 'اسم المستخدم',
   'settings.email': 'البريد الإلكتروني',
   'settings.role': 'الدور',

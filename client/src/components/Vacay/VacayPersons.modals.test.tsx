@@ -81,7 +81,7 @@ describe('VacayPersons modals', () => {
     render(<VacayPersons />);
 
     openInvite();
-    const modal = await screen.findByText('Invite another TREK user to share a combined vacation calendar.');
+    const modal = await screen.findByText('Invite another Tourism-Team user to share a combined vacation calendar.');
     fireEvent.click(modal.closest('.fixed') as HTMLElement);
     expect(screen.queryByRole('button', { name: 'Send Invite' })).not.toBeInTheDocument();
 

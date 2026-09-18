@@ -47,7 +47,7 @@ describe('MVacayInviteSheet', () => {
     renderSheet();
 
     expect(await screen.findByRole('button', { name: 'Select user' })).toBeInTheDocument();
-    expect(screen.getByText('Invite another TREK user to share a combined vacation calendar.')).toBeInTheDocument();
+    expect(screen.getByText('Invite another Tourism-Team user to share a combined vacation calendar.')).toBeInTheDocument();
     expect(screen.queryByText('No users available')).not.toBeInTheDocument();
   });
 

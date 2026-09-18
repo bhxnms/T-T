@@ -220,7 +220,7 @@ const settings: TranslationStrings = {
   'settings.about.supporter.tier.hostelBunkmate': 'ホステル仲間',
   'settings.about.description': 'TREKはセルフホスト型の旅行プランナーです。',
   'settings.about.madeWith': 'Made with',
-  'settings.about.madeBy': 'by Maurice とオープンソースコミュニティ。',
+  'settings.about.madeBy': 'オープンソースコミュニティによる。',
   'settings.username': 'ユーザー名',
   'settings.email': 'メール',
   'settings.role': '役割',

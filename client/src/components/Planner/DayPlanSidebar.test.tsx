@@ -238,7 +238,7 @@ beforeEach(() => {
   mockDayNotesState.noteUi = {};
   mockDayNotesState.dayNotes = {};
   seedStore(useAuthStore, { user: buildUser(), isAuthenticated: true });
-  seedStore(useTripStore, { trip: buildTrip({ id: 1 }) });
+  seedStore(useTripStore, { trip: buildTrip({ id: 1 }), assignments: {} });
   seedStore(useSettingsStore, { settings: { time_format: '24h', temperature_unit: 'celsius' } } as any);
 });
 
@@ -1609,13 +1609,34 @@ describe('DayPlanSidebar', () => {
       await waitFor(() => expect(onSelectDay).toHaveBeenCalledWith(days[1].id, true));
     });
 
-    it('FE-PLANNER-DAYPLAN-196: a trip that is not running is left alone', async () => {
+    it('FE-PLANNER-DAYPLAN-196: a future trip with nothing planned yet opens on its first day', async () => {
       const onSelectDay = vi.fn();
       const days = isoDaysAround([5, 6, 7]);
       render(<DayPlanSidebar {...makeDefaultProps({ days, onSelectDay })} />);
 
-      await new Promise((r) => setTimeout(r, 30));
-      expect(onSelectDay).not.toHaveBeenCalled();
+      // Nothing is planned anywhere, but landing on a day anyway beats the old
+      // behaviour of selecting nothing until the user clicked one.
+      await waitFor(() => expect(onSelectDay).toHaveBeenCalledWith(days[0].id, true));
+    });
+
+    it('FE-PLANNER-DAYPLAN-196b: a future trip selects the first day that has content', async () => {
+      const onSelectDay = vi.fn();
+      const days = isoDaysAround([5, 6, 7]);
+      // The entry pick reads the store, not the props, so the day's content
+      // has to be seeded there.
+      seedStore(useTripStore, { assignments: { [String(days[2].id)]: [{ id: 1, order_index: 0 }] } });
+      render(<DayPlanSidebar {...makeDefaultProps({ days, onSelectDay })} />);
+
+      await waitFor(() => expect(onSelectDay).toHaveBeenCalledWith(days[2].id, true));
+    });
+
+    it('FE-PLANNER-DAYPLAN-196c: a running trip whose today is empty falls to the next day with content', async () => {
+      const onSelectDay = vi.fn();
+      const days = isoDaysAround([-1, 0, 1]);
+      seedStore(useTripStore, { assignments: { [String(days[0].id)]: [{ id: 1, order_index: 0 }] } });
+      render(<DayPlanSidebar {...makeDefaultProps({ days, onSelectDay })} />);
+
+      await waitFor(() => expect(onSelectDay).toHaveBeenCalledWith(days[0].id, true));
     });
 
     it('FE-PLANNER-DAYPLAN-197: a day the user already picked wins over the jump', async () => {

@@ -411,11 +411,11 @@ function usePlaceFormModal(props: PlaceFormModalProps) {
               lng: String(resolved.lng),
               amap_id: resolved.amap_id || prev.amap_id,
             }));
-            // The POI's own picture, when it has one. No picture leaves the field
-            // as it was rather than clearing a hero the user already picked.
-            if (resolved.photos?.[0] && !form.image_url) {
-              setForm((prev) => ({ ...prev, image_url: resolved.photos![0] }));
-            }
+            // No image_url here on purpose: resolved.photos[0] is the AMap CDN
+            // address, which expires and is referer-checked — hot-linking it is
+            // exactly what made thumbnails vanish later. The amap_id above lets
+            // attachAmapPhoto fetch the picture server-side into the photo
+            // proxy cache and persist the stable /api/maps/place-photo/ URL.
             setMapsResults([]);
             setMapsSearch('');
             toast.success(t('places.urlResolved'));

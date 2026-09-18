@@ -251,7 +251,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'TREK là công cụ lập kế hoạch du lịch tự lưu trữ giúp bạn tổ chức các chuyến đi của mình từ ý tưởng đầu tiên đến kỷ niệm cuối cùng. Lập kế hoạch trong ngày, ngân sách, danh sách đóng gói, ảnh và nhiều nội dung khác — tất cả đều ở cùng một nơi, trên máy chủ của riêng bạn.',
   'settings.about.madeWith': 'Được làm bằng',
-  'settings.about.madeBy': 'của Maurice và cộng đồng nguồn mở đang phát triển.',
+  'settings.about.madeBy': 'của cộng đồng nguồn mở đang phát triển.',
   'settings.username': 'Tên người dùng',
   'settings.email': 'Email',
   'settings.role': 'Vai trò',

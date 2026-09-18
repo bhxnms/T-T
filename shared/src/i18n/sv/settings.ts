@@ -250,7 +250,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'TREK är en resplanerare som du själv kan driva och som hjälper dig att organisera dina resor från den första idén till det sista minnet. Dagsplanering, budget, packlistor, foton och mycket mer – allt på ett och samma ställe, på din egen server.',
   'settings.about.madeWith': 'Gjord med',
-  'settings.about.madeBy': 'av Maurice och en växande open source-gemenskap.',
+  'settings.about.madeBy': 'av en växande open source-gemenskap.',
   'settings.username': 'Användarnamn',
   'settings.email': 'E-post',
   'settings.role': 'Roll',

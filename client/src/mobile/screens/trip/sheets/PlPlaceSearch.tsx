@@ -214,7 +214,10 @@ export default function PlPlaceSearch({
               lat: String(resolved.lat),
               lng: String(resolved.lng),
               amap_id: resolved.amap_id || undefined,
-              image_url: resolved.photos?.[0],
+              // No image_url on purpose: resolved.photos[0] is the AMap CDN
+              // address, which expires and is referer-checked. The amap_id
+              // lets attachAmapPhoto fetch the picture server-side into the
+              // photo proxy cache and persist the stable proxy URL.
             });
             setQuery('');
             toast.success(t('places.urlResolved'));

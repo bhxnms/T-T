@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const ca: NotificationLocale = {
   email: {
-    footer: 'Has rebut això perquè tens les notificacions activades a TREK.',
+    footer: 'Has rebut això perquè tens les notificacions activades a Tourism-Team.',
     manage: 'Gestiona les preferències',
     madeWith: 'Fet amb',
-    openTrek: 'Obre TREK',
+    openTrek: 'Obre Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,11 +26,11 @@ const ca: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Invitació a Vacay Fusion',
-      body: `${p.actor} et va convidar a fusionar plans de vacances. Obre TREK per acceptar o rebutjar.`,
+      body: `${p.actor} et va convidar a fusionar plans de vacances. Obre Tourism-Team per acceptar o rebutjar.`,
     }),
     vacay_share: (p) => ({
       title: 'Calendari de Vacay compartit',
-      body: `${p.actor} va compartir el seu calendari de vacances amb tu. Obre TREK per veure'l.`,
+      body: `${p.actor} va compartir el seu calendari de vacances amb tu. Obre Tourism-Team per veure'l.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} fotos compartides`,
@@ -45,8 +45,8 @@ const ca: NotificationLocale = {
       body: `${p.actor} et va assignar a la categoria "${p.category}" a "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Versió nova de TREK disponible',
-      body: `TREK ${p.version} ja està disponible. Visita el panell d'administració per actualitzar.`,
+      title: 'Versió nova de Tourism-Team disponible',
+      body: `Tourism-Team ${p.version} ja està disponible. Visita el panell d'administració per actualitzar.`,
     }),
     replica_failure: (p) => ({
       title: "Error de rèplica d'emmagatzematge",
@@ -60,14 +60,14 @@ const ca: NotificationLocale = {
     }),
     collection_invite: (p) => ({
       title: 'Invitació a una col·lecció',
-      body: `${p.actor} t'ha convidat a compartir una col·lecció. Obre TREK per acceptar-la o rebutjar-la.`,
+      body: `${p.actor} t'ha convidat a compartir una col·lecció. Obre Tourism-Team per acceptar-la o rebutjar-la.`,
     }),
     plugin_notification: (p) => ({ title: p.title ?? '', body: p.body ?? '' }),
   },
   passwordReset: {
     subject: 'Restableix la teva contrasenya',
     greeting: 'Hola',
-    body: 'Vam rebre una sol·licitud per restablir la contrasenya del teu compte de TREK. Fes clic al botó de sota per establir una contrasenya nova.',
+    body: 'Vam rebre una sol·licitud per restablir la contrasenya del teu compte de Tourism-Team. Fes clic al botó de sota per establir una contrasenya nova.',
     ctaIntro: 'Restableix la contrasenya',
     expiry: 'Aquest enllaç caduca en 60 minuts.',
     ignore: 'Si no ho vas sol·licitar tu, pots ignorar aquest correu — la teva contrasenya no canviarà.',

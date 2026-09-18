@@ -196,7 +196,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'Tourism-Team 是一款基于 TREK 的个人旅行规划 fork，帮助你从最初的想法到最后的回忆，全程组织旅行。日程规划、预算、行李清单、照片等——一切尽在一处，在你自己的服务器上。',
   'settings.about.madeWith': '用',
-  'settings.about.madeBy': '由 Maurice 和不断壮大的开源社区打造。',
+  'settings.about.madeBy': '由不断壮大的开源社区打造。',
   'settings.username': '用户名',
   'settings.email': '邮箱',
   'settings.role': '角色',

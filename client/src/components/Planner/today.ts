@@ -51,3 +51,30 @@ export function findFocusDayId(days: Array<{ id: number; date?: string | null }>
     .sort((a, b) => a.date.localeCompare(b.date))
   return ahead[0]?.id ?? null
 }
+
+/**
+ * The day to open a trip on: today while the trip is running AND today has
+ * content, otherwise the first day that actually has any, so a trip is never
+ * opened on an empty "No places planned for this day" view. When no day has
+ * content the caller's own fallback applies (first day / next dated day).
+ *
+ * "Has content" is deliberately coarse — any assignment, note or day-linked
+ * reservation counts — because this runs on trip entry, where the goal is only
+ * that something is visible, not that the day is rendered identically to the
+ * timeline. Day order follows the array (the server orders by day_number).
+ */
+export function findEntryDayId(
+  days: Array<{ id: number; day_number?: number; date?: string | null }>,
+  content: { assignments: Record<string, unknown[]>; dayNotes: Record<string, unknown[]>; reservations: Array<{ type?: string | null; day_id?: number | null }> },
+  now?: Date,
+): number | null {
+  const hasContent = (dayId: number) =>
+    (content.assignments[String(dayId)]?.length ?? 0) > 0 ||
+    (content.dayNotes[String(dayId)]?.length ?? 0) > 0 ||
+    content.reservations.some(r => r.type !== 'hotel' && r.day_id === dayId)
+
+  const ordered = [...days].sort((a, b) => (a.day_number ?? 0) - (b.day_number ?? 0))
+  const todayId = findTodayDayId(ordered, now)
+  if (todayId != null && hasContent(todayId)) return todayId
+  return ordered.find(d => hasContent(d.id))?.id ?? findFocusDayId(ordered, now)
+}

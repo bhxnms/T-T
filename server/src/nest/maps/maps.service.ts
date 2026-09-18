@@ -2284,6 +2284,25 @@ export class MapsService {
               return null;
             }
             const cached = await this.photoCache.put(placeId, bytes, null);
+
+            // Persist the stable proxy URL, mirroring the Google branch above.
+            // Without it the place keeps an empty image_url, so the nightly
+            // isReferenced() sweep — which only knows google_place_id and the
+            // proxy URL — sees an unreferenced cache entry and deletes the
+            // object the place is still showing (#1081 shape, AMap half).
+            // amap_id is its own column, never google_place_id, so the WHERE
+            // matches on it directly. Never overwrites: a place that grew a
+            // picture in between keeps it.
+            try {
+              this.database.run(
+                "UPDATE places SET image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE amap_id = ? AND (image_url IS NULL OR image_url = '')",
+                cached.photoUrl,
+                placeId.slice('amap:'.length),
+              );
+            } catch (dbErr) {
+              console.error('Failed to persist AMap photo URL to database:', dbErr);
+            }
+
             return { attribution: cached.attribution };
           } catch {
             providerFailed = true;

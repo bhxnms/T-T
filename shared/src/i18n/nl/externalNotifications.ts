@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const nl: NotificationLocale = {
   email: {
-    footer: 'Je ontvangt dit omdat je meldingen hebt ingeschakeld in TREK.',
+    footer: 'Je ontvangt dit omdat je meldingen hebt ingeschakeld in Tourism-Team.',
     manage: 'Voorkeuren beheren',
     madeWith: 'Made with',
-    openTrek: 'TREK openen',
+    openTrek: 'Tourism-Team openen',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const nl: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Vacay Fusion uitnodiging',
-      body: `${p.actor} nodigt je uit om vakantieplannen te fuseren. Open TREK om te accepteren of af te wijzen.`,
+      body: `${p.actor} nodigt je uit om vakantieplannen te fuseren. Open Tourism-Team om te accepteren of af te wijzen.`,
     }),
     vacay_share: (p) => ({
       title: 'Vacay-kalender gedeeld',
-      body: `${p.actor} heeft zijn/haar vakantiekalender met je gedeeld. Open TREK om deze te bekijken.`,
+      body: `${p.actor} heeft zijn/haar vakantiekalender met je gedeeld. Open Tourism-Team om deze te bekijken.`,
     }),
     collection_invite: (p) => ({
       title: 'Collectie-uitnodiging',
-      body: `${p.actor} nodigt je uit om een collectie te delen. Open TREK om te accepteren of af te wijzen.`,
+      body: `${p.actor} nodigt je uit om een collectie te delen. Open Tourism-Team om te accepteren of af te wijzen.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} foto's gedeeld`,
@@ -49,8 +49,8 @@ const nl: NotificationLocale = {
       body: `${p.actor} heeft je toegewezen aan de categorie "${p.category}" in "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Nieuwe TREK-versie beschikbaar',
-      body: `TREK ${p.version} is nu beschikbaar. Bezoek het beheerderspaneel om bij te werken.`,
+      title: 'Nieuwe Tourism-Team-versie beschikbaar',
+      body: `Tourism-Team ${p.version} is nu beschikbaar. Bezoek het beheerderspaneel om bij te werken.`,
     }),
     replica_failure: (p) => ({
       title: 'Opslagreplica mislukt',
@@ -67,7 +67,7 @@ const nl: NotificationLocale = {
   passwordReset: {
     subject: 'Reset je wachtwoord',
     greeting: 'Hallo',
-    body: 'We hebben een verzoek ontvangen om het wachtwoord voor je TREK-account te resetten. Klik op de knop hieronder om een nieuw wachtwoord in te stellen.',
+    body: 'We hebben een verzoek ontvangen om het wachtwoord voor je Tourism-Team-account te resetten. Klik op de knop hieronder om een nieuw wachtwoord in te stellen.',
     ctaIntro: 'Wachtwoord resetten',
     expiry: 'Deze link verloopt over 60 minuten.',
     ignore: 'Als jij dit niet hebt aangevraagd, kun je deze e-mail negeren — je wachtwoord blijft ongewijzigd.',

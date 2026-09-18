@@ -190,7 +190,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     "TREK és un planificador de viatges autoallotjat que t'ajuda a organitzar els teus viatges des de la primera idea fins al darrer record. Planificació diària, pressupost, llistes d'equipatge, fotos i molt més — tot en un sol lloc, al teu propi servidor.",
   'settings.about.madeWith': 'Fet amb',
-  'settings.about.madeBy': 'per Maurice i una creixent comunitat de codi obert.',
+  'settings.about.madeBy': 'per una creixent comunitat de codi obert.',
   'settings.username': 'Usuari',
   'settings.email': 'Correu',
   'settings.role': 'Rol',

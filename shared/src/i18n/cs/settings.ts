@@ -204,7 +204,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'TREK je samohostovaný plánovač cest, který vám pomůže organizovat výlety od prvního nápadu po poslední vzpomínku. Denní plánování, rozpočet, balicí seznamy, fotky a mnoho dalšího — vše na jednom místě, na vašem vlastním serveru.',
   'settings.about.madeWith': 'Vytvořeno s',
-  'settings.about.madeBy': 'Mauricem a rostoucí open-source komunitou.',
+  'settings.about.madeBy': 'rostoucí open-source komunitou.',
   'settings.username': 'Uživatelské jméno',
   'settings.email': 'E-mail',
   'settings.role': 'Role',

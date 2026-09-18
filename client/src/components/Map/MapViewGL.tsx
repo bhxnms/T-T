@@ -1179,6 +1179,7 @@ export function MapViewGL({
           (place.image_url?.startsWith('/api/maps/place-photo/') ? place.image_url : null) ||
           place.google_place_id ||
           place.osm_id ||
+          (place.amap_id ? `amap:${place.amap_id}` : null) ||
           place.image_url;
         if (photoId || (place.lat && place.lng)) {
           fetchPhoto(cacheKey, photoId || `coords:${place.lat}:${place.lng}`, place.lat, place.lng, place.name);

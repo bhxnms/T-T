@@ -4382,6 +4382,32 @@ function runMigrations(db: Database.Database): void {
         db.exec('ALTER TABLE places ADD COLUMN amap_id TEXT');
       }
     },
+
+    /**
+     * TT: Clear hotlinked AMap CDN image_url so photos repopulate via the proxy cache.
+     *
+     * Versions 0.6.0–0.6.3 wrote AMap share-link photos as direct CDN URLs
+     * (https://store.is.autonavi.com/...) into image_url. These URLs expire or
+     * hit referer blocks, so images disappear after a while. This migration clears
+     * them so the next render triggers a server-side download and proxy cache,
+     * giving a stable /api/maps/place-photo/<amap:id>/bytes URL instead.
+     *
+     * Deliberately selective: only autonavi.com URLs on places that have amap_id
+     * are cleared. User-uploaded images and Google/OSM photos are untouched.
+     */
+    () => {
+      const cleared = db
+        .prepare(
+          `UPDATE places 
+           SET image_url = NULL, updated_at = CURRENT_TIMESTAMP 
+           WHERE amap_id IS NOT NULL 
+             AND image_url LIKE '%autonavi.com%'`,
+        )
+        .run();
+      if (cleared.changes > 0) {
+        console.log(`[DB] Cleared ${cleared.changes} hotlinked AMap CDN image_url(s)`);
+      }
+    },
   ];
 
   if (currentVersion < migrations.length) {

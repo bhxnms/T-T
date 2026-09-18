@@ -236,7 +236,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'TREK, seyahatlerinizi ilk fikirden son anıya kadar organize etmenize yardımcı olan, kendi kendine barındırılan bir seyahat planlayıcıdır. Gün planlaması, bütçe, paketleme listeleri, fotoğraflar ve çok daha fazlası; hepsi tek bir yerde, kendi sunucunuzda.',
   'settings.about.madeWith': 'İle yapıldı',
-  'settings.about.madeBy': 'Maurice ve büyüyen bir açık kaynak topluluğu tarafından.',
+  'settings.about.madeBy': 'büyüyen bir açık kaynak topluluğu tarafından.',
   'settings.username': 'Kullanıcı adı',
   'settings.email': 'E-posta',
   'settings.role': 'Rol',

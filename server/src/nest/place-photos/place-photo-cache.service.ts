@@ -205,17 +205,39 @@ export class PlacePhotoCacheService {
    * the google_place_id itself, so collection_places must count as a referencing
    * table — otherwise the nightly sweep + trip-place delete would evict a photo
    * still shown on a collection thumbnail (#1081 photo-cache pitfall).
+   *
+   * AMap photos cache under 'amap:<id>', so when placeId has that prefix we also
+   * check places.amap_id and collection_places.amap_id against the bare id.
    */
   private isReferenced(placeId: string): boolean {
+    const proxyUrl = this.proxyUrl(placeId);
+    const isAmap = placeId.startsWith('amap:');
+    const amapId = isAmap ? placeId.slice('amap:'.length) : null;
+
+    if (!isAmap) {
+      const row = this.db.get(
+        `SELECT 1 FROM places WHERE google_place_id = ? OR image_url = ?
+         UNION ALL
+         SELECT 1 FROM collection_places WHERE google_place_id = ? OR image_url = ?
+         LIMIT 1`,
+        placeId,
+        proxyUrl,
+        placeId,
+        proxyUrl,
+      );
+      return !!row;
+    }
+
+    // AMap path: check amap_id = bare id OR image_url = proxy URL
     const row = this.db.get(
-      `SELECT 1 FROM places WHERE google_place_id = ? OR image_url = ?
+      `SELECT 1 FROM places WHERE amap_id = ? OR image_url = ?
        UNION ALL
-       SELECT 1 FROM collection_places WHERE google_place_id = ? OR image_url = ?
+       SELECT 1 FROM collection_places WHERE amap_id = ? OR image_url = ?
        LIMIT 1`,
-      placeId,
-      this.proxyUrl(placeId),
-      placeId,
-      this.proxyUrl(placeId),
+      amapId,
+      proxyUrl,
+      amapId,
+      proxyUrl,
     );
     return !!row;
   }

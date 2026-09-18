@@ -2,10 +2,10 @@ import type { NotificationLocale } from '../externalNotifications/types';
 
 const br: NotificationLocale = {
   email: {
-    footer: 'Você recebeu isso porque tem as notificações ativadas no TREK.',
+    footer: 'Você recebeu isso porque tem as notificações ativadas no Tourism-Team.',
     manage: 'Gerenciar preferências nas configurações',
     madeWith: 'Made with',
-    openTrek: 'Abrir TREK',
+    openTrek: 'Abrir Tourism-Team',
   },
   events: {
     trip_invite: (p) => ({
@@ -26,15 +26,15 @@ const br: NotificationLocale = {
     }),
     vacay_invite: (p) => ({
       title: 'Convite Vacay Fusion',
-      body: `${p.actor} convidou você para fundir planos de férias. Abra o TREK para aceitar ou recusar.`,
+      body: `${p.actor} convidou você para fundir planos de férias. Abra o Tourism-Team para aceitar ou recusar.`,
     }),
     vacay_share: (p) => ({
       title: 'Calendário Vacay compartilhado',
-      body: `${p.actor} compartilhou o calendário de férias com você. Abra o TREK para visualizar.`,
+      body: `${p.actor} compartilhou o calendário de férias com você. Abra o Tourism-Team para visualizar.`,
     }),
     collection_invite: (p) => ({
       title: 'Convite para coleção',
-      body: `${p.actor} convidou você para compartilhar uma coleção. Abra o TREK para aceitar ou recusar.`,
+      body: `${p.actor} convidou você para compartilhar uma coleção. Abra o Tourism-Team para aceitar ou recusar.`,
     }),
     photos_shared: (p) => ({
       title: `${p.count} fotos compartilhadas`,
@@ -49,8 +49,8 @@ const br: NotificationLocale = {
       body: `${p.actor} atribuiu você à categoria "${p.category}" em "${p.trip}".`,
     }),
     version_available: (p) => ({
-      title: 'Nova versão do TREK disponível',
-      body: `O TREK ${p.version} está disponível. Acesse o painel de administração para atualizar.`,
+      title: 'Nova versão do Tourism-Team disponível',
+      body: `O Tourism-Team ${p.version} está disponível. Acesse o painel de administração para atualizar.`,
     }),
     replica_failure: (p) => ({
       title: 'Falha na réplica de armazenamento',
@@ -67,7 +67,7 @@ const br: NotificationLocale = {
   passwordReset: {
     subject: 'Redefinir sua senha',
     greeting: 'Olá',
-    body: 'Recebemos um pedido para redefinir a senha da sua conta TREK. Clique no botão abaixo para definir uma nova senha.',
+    body: 'Recebemos um pedido para redefinir a senha da sua conta Tourism-Team. Clique no botão abaixo para definir uma nova senha.',
     ctaIntro: 'Redefinir senha',
     expiry: 'Este link expira em 60 minutos.',
     ignore: 'Se você não solicitou isto, pode ignorar este e-mail — sua senha não será alterada.',

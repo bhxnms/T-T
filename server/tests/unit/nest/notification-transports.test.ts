@@ -242,19 +242,19 @@ describe('buildEmailHtml', () => {
 
   it('uses English i18n strings for lang=en', () => {
     const html = buildEmailHtml('Subject', 'Body', 'en');
-    expect(html).toContain('notifications enabled in TREK');
+    expect(html).toContain('notifications enabled in Tourism-Team');
   });
 
   it('uses German i18n strings for lang=de', () => {
     const html = buildEmailHtml('Subject', 'Body', 'de');
-    expect(html).toContain('TREK aktiviert');
+    expect(html).toContain('Tourism-Team aktiviert');
   });
 
   it('falls back to English i18n for unknown language', () => {
     const en = buildEmailHtml('Subject', 'Body', 'en');
     const unknown = buildEmailHtml('Subject', 'Body', 'xx');
     // Both should have the same footer text
-    expect(unknown).toContain('notifications enabled in TREK');
+    expect(unknown).toContain('notifications enabled in Tourism-Team');
   });
 });
 

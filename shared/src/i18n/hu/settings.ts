@@ -207,7 +207,7 @@ const settings: TranslationStrings = {
   'settings.about.description':
     'A TREK egy saját szerveren üzemeltetett útitervező, amely segít az utazásaid megszervezésében az első ötlettől az utolsó emlékig. Napi tervezés, költségvetés, csomagolási listák, fotók és még sok más — minden egy helyen, a saját szervereden.',
   'settings.about.madeWith': 'Készítve',
-  'settings.about.madeBy': 'Maurice és egy növekvő nyílt forráskódú közösség által.',
+  'settings.about.madeBy': 'egy növekvő nyílt forráskódú közösség által.',
   'settings.username': 'Felhasználónév',
   'settings.email': 'E-mail',
   'settings.role': 'Szerepkör',
