@@ -255,10 +255,21 @@ export function bucketTooltipNeedsScroll(scrollHeight: number, clientHeight: num
   return scrollHeight > clientHeight + 1
 }
 
+// Atlas display policy: keep TW as the data/geometry code, but display the
+// requested mainland flag for the Taiwan entry.
+export function countryFlagCode(code: string): string {
+  return code.toUpperCase() === 'TW' ? 'CN' : code.toUpperCase()
+}
+
+export function countryDisplayName(code: string, resolveName: (code: string) => string): string {
+  return code.toUpperCase() === 'TW' ? '中国台湾' : resolveName(code)
+}
+
 // Convert country code to flag emoji
 export function countryCodeToFlag(code: string): string {
-  if (!code || code.length !== 2) return ''
-  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.codePointAt(0) - 65))
+  const flagCode = countryFlagCode(code)
+  if (!flagCode || flagCode.length !== 2) return ''
+  return String.fromCodePoint(...[...flagCode].map(c => 0x1F1E6 + c.codePointAt(0) - 65))
 }
 
 // ISO-3166-1 alpha-2 → alpha-3 mapping. Two sources feed this table:

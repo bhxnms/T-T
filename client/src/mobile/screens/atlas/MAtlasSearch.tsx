@@ -1,5 +1,6 @@
 import { ChevronRight, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { countryFlagCode } from '../../../pages/atlas/atlasModel';
 import { useTranslation } from '../../../i18n';
 
 interface CountryOption {
@@ -103,7 +104,7 @@ export default function MAtlasSearch({
               className="flex w-full items-center gap-3 px-4 py-[14px] text-left active:bg-[color:var(--m-ic)]"
             >
               <img
-                src={`https://flagcdn.com/w40/${r.code.toLowerCase()}.png`}
+                src={`https://flagcdn.com/w40/${countryFlagCode(r.code).toLowerCase()}.png`}
                 alt=""
                 className="h-6 w-[34px] flex-none rounded-[5px] object-cover shadow-[0_1px_3px_rgba(0,0,0,.25)]"
               />

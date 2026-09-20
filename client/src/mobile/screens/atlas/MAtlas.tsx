@@ -1,7 +1,7 @@
 import { CheckCircle2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { countryStatus } from '../../../pages/atlas/atlasModel';
+import { countryDisplayName, countryFlagCode, countryStatus } from '../../../pages/atlas/atlasModel';
 import LandmarkPopup from '../../../pages/atlas/LandmarkPopup';
 import { useAtlas } from '../../../pages/atlas/useAtlas';
 import { getLandmarkVisitedAt, isLandmarkVisited } from '../../../utils/landmarkStorage';
@@ -86,13 +86,13 @@ export default function MAtlas() {
     for (const c of visited) {
       if (seen.has(c.code)) continue;
       seen.add(c.code);
-      list.push({ code: c.code, label: resolveName(c.code) });
+      list.push({ code: c.code, label: countryDisplayName(c.code, resolveName) });
     }
     for (const item of bucketList) {
       const code = item.country_code;
       if (!code || code.length !== 2 || seen.has(code)) continue;
       seen.add(code);
-      list.push({ code, label: resolveName(code) });
+      list.push({ code, label: countryDisplayName(code, resolveName) });
     }
     return list.slice(0, 5);
   }, [countries, bucketList, resolveName]);
@@ -175,19 +175,19 @@ export default function MAtlas() {
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         variant="card"
-        ariaLabel={selectedCountry ? resolveName(selectedCountry) : undefined}
+        ariaLabel={selectedCountry ? countryDisplayName(selectedCountry, resolveName) : undefined}
       >
         {selectedCountry && countryDetail && (
           <div className="p-5">
             <div className="flex items-center gap-3">
               <img
-                src={`https://flagcdn.com/w80/${selectedCountry.toLowerCase()}.png`}
+                src={`https://flagcdn.com/w80/${countryFlagCode(selectedCountry).toLowerCase()}.png`}
                 alt=""
                 className="h-[30px] w-[42px] flex-none rounded-[6px] object-cover shadow-[0_1px_3px_rgba(0,0,0,.25)]"
               />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[1.0625rem] font-extrabold text-m-ink">
-                  {resolveName(selectedCountry)}
+                  {countryDisplayName(selectedCountry, resolveName)}
                 </div>
                 <div className="mt-[2px] font-geist text-[0.6875rem] text-m-muted">
                   {countryDetail.places.length} {t('atlas.places')} · {countryDetail.trips.length} {t('atlas.trips')}

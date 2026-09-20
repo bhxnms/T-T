@@ -19,6 +19,7 @@ import AtlasLayerToggle from './atlas/AtlasLayerToggle';
 import {
   A2_TO_A3,
   countryCodeToFlag,
+  countryDisplayName,
   findBucketDuplicate,
   isBucketDuplicateError,
   withCountryMarkedVisited,
@@ -1695,7 +1696,7 @@ function SidebarContent({
                   <span className="text-3xl">{countryCodeToFlag(selectedCountry)}</span>
                   <div>
                     <p className="text-sm font-bold" style={{ color: tp }}>
-                      {resolveName(selectedCountry)}
+                      {countryDisplayName(selectedCountry, resolveName)}
                       {countryDetail.status && countryDetail.status !== 'visited' && (
                         <span className="ml-2 text-[9px] font-semibold uppercase tracking-wide" style={{ color: tf }}>
                           {t('atlas.planned')}

@@ -1,5 +1,6 @@
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, MapPin, Plus, Search, Star, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+import { countryDisplayName } from '../../../pages/atlas/atlasModel';
 import type { BucketItem } from '../../../pages/atlas/atlasModel';
 import { A2_TO_A3 } from '../../../pages/atlas/atlasModel';
 import MIconBtn from '../../components/MIconBtn';
@@ -80,7 +81,7 @@ export default function MAtlasBucketSheet({ atlas, open, onClose }: MAtlasBucket
   const itemSub = (item: BucketItem): string => {
     const a2 = itemCountryA2(item);
     return [
-      a2 ? resolveName(a2) : null,
+      a2 ? countryDisplayName(a2, resolveName) : null,
       item.target_date ? fmtTarget(item.target_date) : null,
       item.lat != null && item.lng != null ? `${item.lat.toFixed(2)}, ${item.lng.toFixed(2)}` : null,
       item.notes || null,

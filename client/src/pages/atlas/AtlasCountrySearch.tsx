@@ -1,7 +1,7 @@
 import { ChevronRight, Loader2, MapPin, Search, X } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 import type { TranslationFn } from '../../types';
-import type { AtlasPlaceHit } from './atlasModel';
+import { countryFlagCode, type AtlasPlaceHit } from './atlasModel';
 
 type CountryOption = { code: string; label: string };
 
@@ -188,7 +188,7 @@ export default function AtlasCountrySearch({
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <img
-                    src={`https://flagcdn.com/w40/${r.code.toLowerCase()}.png`}
+                    src={`https://flagcdn.com/w40/${countryFlagCode(r.code).toLowerCase()}.png`}
                     alt={r.code}
                     style={{ width: 28, height: 20, borderRadius: 4, objectFit: 'cover' }}
                   />

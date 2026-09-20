@@ -23,6 +23,7 @@ import {
   bucketTooltipPlacement,
   bucketTooltipWidth,
   countryColor,
+  countryDisplayName,
   countryStatus,
   findBucketDuplicate,
   isBucketDuplicateError,
@@ -323,7 +324,7 @@ export function useAtlas() {
       }
       if (!resolvedA2 || seen.has(resolvedA2)) continue;
       seen.add(resolvedA2);
-      const label = String(resolveName(resolvedA2) || f?.properties?.NAME || f?.properties?.ADMIN || resolvedA2);
+      const label = String(countryDisplayName(resolvedA2, resolveName) || f?.properties?.NAME || f?.properties?.ADMIN || resolvedA2);
       opts.push({ code: resolvedA2, label });
     }
     opts.sort((a, b) => a.label.localeCompare(b.label));
@@ -956,7 +957,7 @@ export function useAtlas() {
         const c = countryMap[a3];
         if (c) {
           country_layer_by_a2_ref.current[c.code] = layer;
-          const name = resolveName(c.code);
+          const name = countryDisplayName(c.code, resolveName);
           const formatDate = (d) => {
             if (!d) return '—';
             const dt = new Date(d);
@@ -1026,7 +1027,7 @@ export function useAtlas() {
           if (countryCode && countryCode !== '-99') {
             country_layer_by_a2_ref.current[countryCode] = layer;
             const name =
-              resolveName(countryCode) || feature.properties?.NAME || feature.properties?.ADMIN || countryCode;
+              countryDisplayName(countryCode, resolveName) || feature.properties?.NAME || feature.properties?.ADMIN || countryCode;
             layer.bindTooltip(`<div style="font-size:12px;font-weight:600">${escapeTooltipHtml(name)}</div>`, {
               sticky: true,
               className: 'atlas-tooltip',
@@ -1339,7 +1340,7 @@ export function useAtlas() {
   setConfirmActionRef.current = setConfirmAction;
 
   const handleUnmarkCountry = (code: string): void => {
-    setConfirmAction({ type: 'unmark', code, name: resolveName(code) });
+    setConfirmAction({ type: 'unmark', code, name: countryDisplayName(code, resolveName) });
   };
 
   /** Debounced forward geocode for the atlas search box. Runs through the same
@@ -1421,7 +1422,7 @@ export function useAtlas() {
       return;
     }
 
-    const countryName = resolveName(info.country_code);
+      const countryName = countryDisplayName(info.country_code, resolveName);
     const alreadyVisited = (visitedRegions[info.country_code] || []).some((r) => r.code === info.region_code);
     setConfirmAction({
       type: alreadyVisited ? 'unmark-region' : 'choose-region',
@@ -1433,7 +1434,7 @@ export function useAtlas() {
   };
 
   const select_country_from_search = (country_code: string): void => {
-    const country_label = resolveName(country_code);
+    const country_label = countryDisplayName(country_code, resolveName);
     set_atlas_country_search(country_label);
     set_atlas_country_open(false);
     set_atlas_country_results([]);

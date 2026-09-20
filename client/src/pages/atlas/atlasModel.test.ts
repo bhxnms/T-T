@@ -14,6 +14,9 @@ import {
   withCountryMarkedVisited,
   wishlistA3Codes,
   countryColor,
+  countryDisplayName,
+  countryFlagCode,
+  countryCodeToFlag,
   COUNTRY_COLORS,
   REGION_CACHE_MAX,
   type AtlasData,
@@ -381,5 +384,18 @@ describe('bucketTooltipNeedsScroll (#2153)', () => {
 
   it('tolerates a 1px measurement rounding difference without enabling scroll', () => {
     expect(bucketTooltipNeedsScroll(201, 200)).toBe(false);
+  });
+});
+
+describe('Atlas Taiwan display policy', () => {
+  it('keeps TW as the data code but displays China for the flag and name', () => {
+    expect(countryFlagCode('TW')).toBe('CN');
+    expect(countryDisplayName('TW', () => 'Taiwan')).toBe('中国台湾');
+    expect(countryCodeToFlag('TW')).toBe(countryCodeToFlag('CN'));
+  });
+
+  it('does not alter ordinary country display', () => {
+    expect(countryFlagCode('JP')).toBe('JP');
+    expect(countryDisplayName('JP', () => 'Japan')).toBe('Japan');
   });
 });
