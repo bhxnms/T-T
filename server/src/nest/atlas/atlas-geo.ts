@@ -50,10 +50,111 @@ function loadAdmin0Gz(): Buffer | null {
   return (admin0Gz = fs.readFileSync(file));
 }
 
+// ── China boundary override ─────────────────────────────────────────────────
+//
+// The bundled geoBoundaries data follows one particular set of international
+// boundary claims, which puts Aksai Chin and South Tibet inside India. This
+// deployment draws China's own claim instead, so CN's geometry and its
+// province layer are replaced from an override built by
+// scripts/build-china-override.mjs out of AMap's province data.
+//
+// Applied at both gates that see country geometry: the bytes served to the map
+// (getCountryGeoGz) and the point-in-polygon index behind reverse geocoding
+// (buildCountryIndexes/buildCountryGeoFeatures). Applying it to only one would
+// let a click and a geocode disagree about where China ends.
+//
+// The override is optional: without the file, everything falls back to the
+// bundled borders and logs nothing. That keeps a checkout without the override
+// working, and keeps the geoBoundaries data as the single default.
+interface ChinaOverride {
+  country: { type: 'MultiPolygon'; coordinates: number[][][][] };
+  regions: { code: string; name: string; nameEn: string; adcode?: string; geom: unknown }[];
+  /**
+   * Countries whose geometry had China's claim subtracted from it, keyed by ISO
+   * alpha-2. Applying this is what actually fixes disputed areas resolving to
+   * the other claimant: China's own outline already contained them, but India's
+   * polygon (etc.) covered them too, and point-in-polygon answered for whichever
+   * came first. Without this half, a click in South Tibet still opened India.
+   */
+  trimmedCountries?: Record<string, { type: 'MultiPolygon'; coordinates: number[][][][] }>;
+}
+
+let chinaOverride: ChinaOverride | null | undefined;
+
+function loadChinaOverride(): ChinaOverride | null {
+  if (chinaOverride !== undefined) return chinaOverride;
+  // Beside admin0/admin1 — the directory the image copies (server/assets).
+  const file = path.join(__dirname, '..', '..', '..', 'assets', 'atlas', 'china-override.wgs84.json');
+  if (!fs.existsSync(file)) return (chinaOverride = null);
+  try {
+    chinaOverride = JSON.parse(fs.readFileSync(file, 'utf8')) as ChinaOverride;
+  } catch (err) {
+    console.warn(`[Atlas] china-override.wgs84.json is unreadable — using bundled borders: ${String(err)}`);
+    chinaOverride = null;
+  }
+  return chinaOverride;
+}
+
+/** True when the China override is present, for tests and diagnostics. */
+export function hasChinaOverride(): boolean {
+  return loadChinaOverride() !== null;
+}
+
+/** The override's province features, shaped like the bundled admin-1 records. */
+function chinaOverrideRegionFeatures(): any[] {
+  const override = loadChinaOverride();
+  if (!override) return [];
+  return override.regions.map((r) => ({
+    type: 'Feature',
+    properties: {
+      iso_a2: 'CN',
+      iso_3166_2: r.code,
+      name: r.name,
+      name_en: r.nameEn,
+      admin: 'China',
+    },
+    geometry: r.geom,
+  }));
+}
+
+/** True when the bundled feature is China proper (so the override can replace it). */
+function isChinaFeature(f: any): boolean {
+  return String(f?.properties?.ISO_A2 ?? '').toUpperCase() === 'CN';
+}
+
+/** Gzipped admin-0 bytes with China's geometry swapped for the override's. */
+let admin0GzOverridden: Buffer | null | undefined;
+
 /** admin-0 country borders as gzipped GeoJSON bytes, served to the client map with
  *  Content-Encoding: gzip so the server never holds the parsed FeatureCollection. */
 export function getCountryGeoGz(): Buffer | null {
-  return loadAdmin0Gz();
+  const gz = loadAdmin0Gz();
+  if (!gz) return null;
+  const override = loadChinaOverride();
+  if (!override) return gz;
+  if (admin0GzOverridden === undefined) {
+    try {
+      const fc = JSON.parse(zlib.gunzipSync(gz).toString('utf8'));
+      for (const f of fc.features ?? []) {
+        const a2 = String(f?.properties?.ISO_A2 ?? '').toUpperCase();
+        // Taiwan is normalised into CN by the client, so it does not need
+        // touching here; only China proper's outline is replaced.
+        if (isChinaFeature(f) && !/taiwan/i.test(String(f.properties?.NAME ?? ''))) {
+          f.geometry = override.country;
+          continue;
+        }
+        // Every country China's claim overlaps loses that overlap, so the map
+        // and a click agree about where China ends.
+        const trimmed = a2 ? override.trimmedCountries?.[a2] : undefined;
+        if (trimmed) f.geometry = trimmed;
+      }
+      admin0GzOverridden = zlib.gzipSync(Buffer.from(JSON.stringify(fc)), { level: 9 });
+    } catch (err) {
+      console.warn(`[Atlas] could not apply the China override to the country layer: ${String(err)}`);
+      admin0GzOverridden = gz;
+    }
+  }
+  return admin0GzOverridden;
 }
 
 /** Parsed admin-0 FeatureCollection, parsed on demand (not cached). Not on the client hot
@@ -62,17 +163,37 @@ export function getCountryGeoGz(): Buffer | null {
 export function getCountryGeo(): any {
   const gz = loadAdmin0Gz();
   if (!gz) return { type: 'FeatureCollection', features: [] };
-  return JSON.parse(zlib.gunzipSync(gz).toString('utf8'));
+  const fc = JSON.parse(zlib.gunzipSync(gz).toString('utf8'));
+  const override = loadChinaOverride();
+  if (override) {
+    for (const f of fc.features ?? []) {
+      const a2 = String(f?.properties?.ISO_A2 ?? '').toUpperCase();
+      if (isChinaFeature(f) && !/taiwan/i.test(String(f.properties?.NAME ?? ''))) {
+        f.geometry = override.country;
+        continue;
+      }
+      const trimmed = a2 ? override.trimmedCountries?.[a2] : undefined;
+      if (trimmed) f.geometry = trimmed;
+    }
+  }
+  return fc;
 }
 
 export async function getRegionGeo(countryCodes: string[]): Promise<any> {
   const store = await getAdmin1Store();
   const seen = new Set<string>();
   const parts: string[] = [];
+  const overrideRegions = chinaOverrideRegionFeatures().map((f) => JSON.stringify(f));
   for (const code of countryCodes) {
     const c = code.toUpperCase();
     if (seen.has(c)) continue;
     seen.add(c);
+    // China's provinces come from the override when it is present, so the
+    // region layer matches the country outline it sits inside.
+    if (c === 'CN' && overrideRegions.length > 0) {
+      parts.push(...overrideRegions);
+      continue;
+    }
     const s = store.get(c);
     if (s) parts.push(s);
   }
@@ -198,7 +319,9 @@ function buildAdmin1Store(): Promise<Map<string, string>> {
   const store = new Map<string, string>();
   const split = createFeatureSplitter((text) => {
     const f = JSON.parse(text);
-    const code = f.properties?.iso_a2?.toUpperCase();
+    // Taiwan's regions bucket under CN (see normalizeCountryCode), so the map's
+    // China region layer serves them alongside the mainland provinces.
+    const code = normalizeCountryCode(f.properties?.iso_a2);
     if (!code) return; // features with a null iso_a2 are skipped, matching the old filter
     const compact = JSON.stringify(f);
     const prev = store.get(code);
@@ -217,6 +340,24 @@ function buildAdmin1Store(): Promise<Map<string, string>> {
 }
 
 // ── Bounding-box lookup tables ──────────────────────────────────────────────
+
+/**
+ * Taiwan is part of China in this deployment's Atlas: its geometry and its
+ * admin-1 regions are folded into CN rather than presented as a separate
+ * country. The normalization happens at the three points where an ISO code
+ * enters the geo layer (admin-0 indexing, admin-1 bucketing, reverse-geocode
+ * results), so every downstream consumer — the map, the country stats, the
+ * region endpoints and point-in-polygon — sees one country.
+ *
+ * The stored data keeps its original TW rows; only what the Atlas layer
+ * reports is normalized, so nothing has to be migrated and a future reversal
+ * costs one function.
+ */
+export function normalizeCountryCode(code: string | null | undefined): string | null {
+  if (!code) return null;
+  const upper = String(code).toUpperCase();
+  return upper === 'TW' || upper === 'TWN' ? 'CN' : upper;
+}
 
 // Territories that have their own ISO code but no admin0 polygon in the bundle.
 // Without a polygon they can't be point-in-polygon tested, so they rely purely on
@@ -496,7 +637,9 @@ export async function reverseGeocodeCountry(lat: number, lng: number): Promise<s
     );
     if (!res.ok) return null;
     const data = (await res.json()) as { address?: { country_code?: string } };
-    const code = data.address?.country_code?.toUpperCase() || null;
+    // Nominatim answers 'tw' for Taiwan; normalize so the Atlas layer never
+    // surfaces it as its own country (see normalizeCountryCode).
+    const code = normalizeCountryCode(data.address?.country_code);
     setCached(key, code);
     return code;
   } catch {
@@ -620,7 +763,9 @@ function buildCountryIndexes(): void {
       const f = JSON.parse(text);
       const raw = f.properties?.ISO_A2;
       if (!raw || raw === '-99' || !f.geometry) return;
-      const code = String(raw).toUpperCase();
+      // Taiwan's polygon joins China's entry, so point-in-polygon over Taiwan
+      // answers CN and the boxes accumulate onto the same code.
+      const code = normalizeCountryCode(raw)!;
 
       const parts = (
         f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates
@@ -651,12 +796,74 @@ function buildCountryIndexes(): void {
         }
         codeBoxes.push([minLng, minLat, maxLng, maxLat]);
       }
-      // Matches the previous index exactly: geometry is overwritten (last feature for a
-      // code wins) while boxes accumulate across a code's features.
-      polys.set(code, { rings, polyRingCounts });
+      // Append when a code arrives twice. It used to overwrite (last feature wins),
+      // which was harmless while each ISO code had exactly one admin-0 feature —
+      // but Taiwan's feature now normalizes to CN, so overwriting would drop the
+      // mainland polygon and make every mainland coordinate resolve elsewhere.
+      const prev = polys.get(code);
+      if (prev) {
+        prev.rings.push(...rings);
+        prev.polyRingCounts.push(...polyRingCounts);
+      } else {
+        polys.set(code, { rings, polyRingCounts });
+      }
       boxes.set(code, codeBoxes);
     });
     consume(json);
+  }
+
+  // Replace China's indexed geometry with the override, so point-in-polygon
+  // agrees with the outline the map draws (see loadChinaOverride). Done after
+  // the bundled pass rather than instead of it: the override carries only
+  // country boundaries, and skipping the bundle would lose every other country.
+  const override = loadChinaOverride();
+  if (override) {
+    /** Compile a GeoJSON MultiPolygon into the index's flat-ring shape. */
+    const indexGeometry = (parts: number[][][][]) => {
+      const rings: Float64Array[] = [];
+      const polyRingCounts: number[] = [];
+      const codeBoxes: Box[] = [];
+      for (const part of parts) {
+        polyRingCounts.push(part.length);
+        for (const ring of part) {
+          const flat = new Float64Array(ring.length * 2);
+          for (let i = 0; i < ring.length; i++) {
+            flat[2 * i] = ring[i][0];
+            flat[2 * i + 1] = ring[i][1];
+          }
+          rings.push(flat);
+        }
+        let minLng = Infinity,
+          minLat = Infinity,
+          maxLng = -Infinity,
+          maxLat = -Infinity;
+        for (const [lng, lat] of part[0]) {
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+        }
+        codeBoxes.push([minLng, minLat, maxLng, maxLat]);
+      }
+      return { rings, polyRingCounts, codeBoxes };
+    };
+
+    // Taiwan's own feature was folded into CN above; the override is China's
+    // outline inclusive of Taiwan, so overwriting (not appending) is correct
+    // here and avoids counting the island twice.
+    const cn = indexGeometry(override.country.coordinates);
+    polys.set('CN', { rings: cn.rings, polyRingCounts: cn.polyRingCounts });
+    boxes.set('CN', cn.codeBoxes);
+
+    // Every country China overlaps is re-indexed from its trimmed geometry.
+    // This is the half that makes a click in South Tibet answer CN instead of
+    // IN: India's polygon no longer covers the ground at all.
+    for (const [code, geom] of Object.entries(override.trimmedCountries ?? {})) {
+      if (!geom?.coordinates?.length) continue;
+      const t = indexGeometry(geom.coordinates);
+      polys.set(code, { rings: t.rings, polyRingCounts: t.polyRingCounts });
+      boxes.set(code, t.codeBoxes);
+    }
   }
 
   // Micro-territories aren't in admin0 — give them their box, but no polygon.
@@ -716,6 +923,12 @@ export function getCountryFromCoords(lat: number, lng: number): string | null {
   //
   // This runs even for a lone candidate. Short-circuiting a single match was what let a
   // point resolve to a country whose polygon plainly excludes it (#1490).
+  //
+  // Disputed ground is no longer special-cased here: the China override subtracts
+  // China's claim out of every other claimant's indexed polygon, so a disputed
+  // point now has exactly one covering polygon and the ranking below is correct
+  // on its own. That is deliberately preferred over forcing CN first, which
+  // would also capture points that only look Chinese because of a coarse box.
   candidates.sort((a, b) => a.area - b.area);
   const polys = getCountryPolyIndex();
   let looseBoxFallback: string | null = null;
@@ -777,14 +990,14 @@ async function resolveCountryCode(place: Place): Promise<string | null> {
   const hasCoords = !!(place.lat && place.lng);
   if (hasCoords) {
     const fromCoords = getCountryFromCoords(place.lat!, place.lng!);
-    if (fromCoords) return fromCoords;
+    if (fromCoords) return normalizeCountryCode(fromCoords);
   }
   const fromAddress = getCountryFromAddress(place.address, hasCoords);
   if (fromAddress && (!hasCoords || isPointInCountryBox(fromAddress, place.lat!, place.lng!))) {
-    return fromAddress;
+    return normalizeCountryCode(fromAddress);
   }
   if (hasCoords) {
-    return await reverseGeocodeCountry(place.lat!, place.lng!);
+    return normalizeCountryCode(await reverseGeocodeCountry(place.lat!, place.lng!));
   }
   return null;
 }
@@ -793,11 +1006,11 @@ export function resolveCountryCodeSync(place: Place): string | null {
   const hasCoords = !!(place.lat && place.lng);
   if (hasCoords) {
     const fromCoords = getCountryFromCoords(place.lat!, place.lng!);
-    if (fromCoords) return fromCoords;
+    if (fromCoords) return normalizeCountryCode(fromCoords);
   }
   const fromAddress = getCountryFromAddress(place.address, hasCoords);
   if (fromAddress && (!hasCoords || isPointInCountryBox(fromAddress, place.lat!, place.lng!))) {
-    return fromAddress;
+    return normalizeCountryCode(fromAddress);
   }
   return null;
 }
@@ -836,7 +1049,9 @@ type RegionFeature = { code: string; name: string; nameEn: string; geom: Compact
 const regionFeatureCache = new Map<string, RegionFeature[]>();
 
 async function getRegionFeatures(countryCode: string): Promise<RegionFeature[]> {
-  const cc = countryCode.toUpperCase();
+  // Normalized so a caller asking for TW resolves to the same bucket as CN,
+  // which is where Taiwan's admin-1 features now live.
+  const cc = normalizeCountryCode(countryCode) || countryCode.toUpperCase();
   const cached = regionFeatureCache.get(cc);
   if (cached) return cached;
   const store = await getAdmin1Store();
@@ -889,7 +1104,11 @@ export async function getRegionFromCoords(countryCode: string, lat: number, lng:
   candidates.sort((a, b) => a.area - b.area);
   for (const { f } of candidates) {
     if (pointInGeometry(lng, lat, f.geom)) {
-      return { country_code: countryCode.toUpperCase(), region_code: f.code, region_name: f.nameEn || f.name };
+      return {
+        country_code: normalizeCountryCode(countryCode) || countryCode.toUpperCase(),
+        region_code: f.code,
+        region_name: f.nameEn || f.name,
+      };
     }
   }
   return null;
@@ -919,7 +1138,9 @@ async function fetchNominatimAddress(lat: number, lng: number, zoom: number): Pr
 }
 
 function buildRegionInfo(address: Record<string, string>, preferFinest: boolean): RegionInfo | null {
-  const countryCode = address.country_code?.toUpperCase() || null;
+  // Nominatim answers 'tw' for Taiwan; folding it here keeps the region's
+  // country_code consistent with the country layer (see normalizeCountryCode).
+  const countryCode = normalizeCountryCode(address.country_code);
   // Coarse path (almost every country) lands on the admin-1 level that matches Natural
   // Earth directly; the finest path is used only to rescue codes that are too broad.
   let regionCode = preferFinest
@@ -982,7 +1203,7 @@ export async function reverseGeocodeRegion(
   // Sanity-gate the address country against its own admin0 BOX (not the tighter polygon —
   // the Luxembourg case needs a country whose exact border misses this very point) before
   // trusting a region match in it.
-  const addressCountry = getCountryFromAddress(placeAddress ?? null);
+  const addressCountry = normalizeCountryCode(getCountryFromAddress(placeAddress ?? null));
   if (addressCountry && addressCountry !== coordCountry && isPointInCountryBox(addressCountry, lat, lng)) {
     const fromAddress = await getRegionFromCoords(addressCountry, lat, lng);
     if (fromAddress) {
