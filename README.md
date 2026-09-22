@@ -7,6 +7,8 @@
 
 </div>
 
+<p align="center"><strong>Special thanks: DeepSeek · GLM · GPT · A/</strong></p>
+
 <p align="center">
   <a href="README.zh-CN.md">简体中文</a> · <strong>English</strong>
 </p>
@@ -153,12 +155,6 @@ up a tunnel before, covering what each step produces and what has to be running.
   the wiki is reachable on a phone.
 - **Wiki and demo-mode wording** no longer leaks the upstream project's branding
   into user-facing text or documentation.
-- **Demo accounts now use `@tt.local`.** Earlier builds seeded `demo@trek.app` /
-  `admin@trek.app` (and `demo@nomad.app` before that); those addresses are still
-  recognised, so an instance that upgraded in place keeps working without a reset.
-  The seeder and the hourly reset also shared a mismatch in their default admin
-  address, which silently dropped the admin's password and API keys on every
-  reset when `DEMO_ADMIN_EMAIL` was unset — both now resolve through one list.
 
 ---
 
