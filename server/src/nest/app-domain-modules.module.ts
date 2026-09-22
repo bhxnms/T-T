@@ -47,6 +47,7 @@ import { TodoModule } from './todo/todo.module';
 import { TransitModule } from './transit/transit.module';
 import { TripInviteModule } from './trip-invite/trip-invite.module';
 import { TripsModule } from './trips/trips.module';
+import { TunnelModule } from './tunnel/tunnel.module';
 import { VacayModule } from './vacay/vacay.module';
 import { WeatherModule } from './weather/weather.module';
 import { Module } from '@nestjs/common';
@@ -104,6 +105,7 @@ import { Module } from '@nestjs/common';
     LlmParseModule,
     ActivitiesModule,
     ManagedExtModule,
+    TunnelModule,
   ],
 })
 export class AppDomainModules {}

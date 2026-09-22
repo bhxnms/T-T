@@ -1,6 +1,6 @@
 # Admin: Storage
 
-The **Storage** tab (Admin Panel → Storage) controls where TREK stores each
+The **Storage** tab (Admin Panel → Storage) controls where Tourism-Team stores each
 kind of content: which storage backends exist, which content category writes
 to which backend, and whether writes are replicated to additional backends.
 On managed/hosted instances this tab is hidden — storage is the operator's
@@ -72,7 +72,7 @@ you save.
 
 ## Categories
 
-Every kind of content TREK stores belongs to one of eight categories, each
+Every kind of content Tourism-Team stores belongs to one of eight categories, each
 assigned to exactly one backend:
 
 | Category | Id | What it stores |
@@ -83,7 +83,7 @@ assigned to exactly one backend:
 | Profile pictures | `avatars` | User account profile pictures |
 | Place images | `places` | Images attached to places and collection places — uploaded or imported |
 | Google photo cache | `photos-google` | Cached copies of Google Places photos — re-fetchable, safe to lose |
-| TREK photo cache | `photos-trek` | Cached photos from the TREK photo service used by Memories — re-fetchable, safe to lose |
+| Tourism-Team photo cache | `photos-trek` | Cached photos from the Tourism-Team photo service used by Memories — re-fetchable, safe to lose |
 | Backups | `backups` | Server backup archives created by the Backup panel or schedule |
 
 Reassigning a category changes where **new** objects go. If the category
@@ -95,7 +95,7 @@ served from wherever they already are. Replicating the Google photo cache or
 Place images is flagged as not recommended — both hold content that is
 re-fetchable or provider-derived.
 
-The legacy `/uploads/photos` directory written by older TREK versions is not
+The legacy `/uploads/photos` directory written by older Tourism-Team versions is not
 a category: its files are still served and included in backups, but nothing
 writes there anymore and it cannot be reassigned.
 

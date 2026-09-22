@@ -1,4 +1,4 @@
-import { test, clearNotices, expect, readSeed } from './shot'
+import { test, clearNotices, expect, readSeed, SHOT_LANG, tabLabel, tripTab } from './shot'
 
 /**
  * Detail pages and the surfaces that need a couple of clicks to reach.
@@ -28,7 +28,7 @@ test('journey detail', async ({ page, shot }) => {
 test('mcp access — admin', async ({ page, shot }) => {
   await page.goto('/admin')
   await clearNotices(page)
-  await page.getByRole('button', { name: 'MCP Access', exact: true }).first().click()
+  await page.getByRole('button', { name: tabLabel('MCP Access'), exact: true }).first().click()
   await page.waitForTimeout(700)
   await shot.page_('MCPAccess')
 })
@@ -36,11 +36,12 @@ test('mcp access — admin', async ({ page, shot }) => {
 test('two-factor setup', async ({ page, shot }) => {
   await page.goto('/settings')
   await clearNotices(page)
-  await page.getByRole('button', { name: 'Account', exact: true }).first().click()
+  await page.getByRole('button', { name: tabLabel('Account'), exact: true }).first().click()
   await page.waitForTimeout(600)
   // The enrolment flow is behind a button whose label varies with state; match
   // loosely and fall back to capturing the tab itself.
-  const enable = page.getByRole('button', { name: /two-factor|2fa|authenticator/i }).first()
+  // settings.mfa.setup: "Set up authenticator" / 「设置身份验证器」
+  const enable = page.getByRole('button', { name: /two-factor|2fa|authenticator|身份验证器/i }).first()
   if (await enable.isVisible().catch(() => false)) {
     await enable.click()
     await page.waitForTimeout(900)
@@ -64,10 +65,26 @@ test('two-factor setup', async ({ page, shot }) => {
 test('costs — record a settle-up payment', async ({ page, shot }) => {
   await page.goto(`/trips/${seed().tripId}`)
   await clearNotices(page)
-  await page.getByRole('button', { name: 'Costs', exact: true }).first().click()
-  await page.waitForTimeout(800)
+  // The notice modal is dismissed here, and while it is still fading out its
+  // backdrop swallows clicks — which is why an immediate tab click lands on
+  // nothing and the test then looks for the payment button on the Plan tab.
+  // Wait for the planner AND for the backdrop to be gone.
+  const costsTab = page.getByRole('button', { name: tripTab('Costs'), exact: true }).first()
+  await costsTab.waitFor({ timeout: 15_000 })
+  await page.locator('.trek-modal-backdrop').waitFor({ state: 'detached', timeout: 10_000 }).catch(() => {})
+  await page.waitForTimeout(600)
+  await costsTab.click()
+  await page.waitForTimeout(2500)
 
-  const addPayment = page.getByRole('button', { name: /add payment/i }).first()
+  // `costs.addExpense` ("Add expense" / 添加支出) opens the expense modal.
+  //
+  // Deliberately NOT the neighbouring "Settle up" button: that one calls
+  // settleAll and mutates the balances, which this spec's own header forbids —
+  // and it opens no dialog, so asserting on a modal after clicking it is what
+  // left this capture permanently skipped.
+  const addPayment = page
+    .getByRole('button', { name: SHOT_LANG === 'zh' ? /添加支出|添加付款/ : /add expense|add payment/i })
+    .first()
   test.skip(!(await addPayment.isVisible().catch(() => false)), 'no add-payment entry point rendered')
   await addPayment.click()
   await page.waitForTimeout(700)

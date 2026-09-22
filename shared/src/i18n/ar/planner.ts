@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': 'المسار',
   'planner.optimize': 'تحسين',
   'planner.openGoogleMaps': 'فتح في Google Maps',
+  'planner.openAmapMaps': 'فتح في AMap',
   'planner.openCoMaps': 'فتح في CoMaps',
   'planner.selectDayHint': 'اختر يومًا من القائمة اليسرى لعرض خطة اليوم',
   'planner.noPlacesForDay': 'لا توجد أماكن لهذا اليوم بعد',

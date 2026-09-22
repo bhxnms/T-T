@@ -1,10 +1,10 @@
 # Contributing
 
-Thanks for your interest in contributing to TREK! Here are the guidelines for submitting pull requests.
+Thanks for your interest in contributing to Tourism-Team! Here are the guidelines for submitting pull requests.
 
 ## Before You Start
 
-- **Ask in Discord first** — Before writing any code, pitch your idea in the `#github-pr` channel on our [Discord server](https://discord.gg/NhZBDSd4qW). We'll let you know if the PR is wanted and give direction. PRs without prior approval will be closed
+- **Check the repository discussions first** — Before writing code, look for an existing issue or discussion that covers the idea. Explain the intended change and its scope there so maintainers can confirm the direction before implementation. PRs that bypass the project’s issue/discussion process may be closed
 - **Check existing issues** — Look for open issues or discussions before starting work
 - **Target the `dev` branch** — All PRs must be opened against `dev`, not `main`. Exception: PRs that only modify files under `wiki/` may target any branch
 - **One thing per PR** — Keep PRs focused on a single change. Don't bundle unrelated fixes
@@ -40,7 +40,7 @@ Follow the template provided by default (.github/PULL_REQUEST_TEMPLATE.md).
 
 ### What Will Get Your PR Closed
 
-- PRs that weren't discussed and approved in `#github-pr` on Discord first
+- PRs that did not first go through the project’s issue/discussion process
 - PRs that add unnecessary complexity (e.g. a redo button when undo already exists)
 - PRs with breaking changes
 - PRs that change code style or formatting across unrelated files

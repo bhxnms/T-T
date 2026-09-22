@@ -57,6 +57,7 @@ const atlas: TranslationStrings = {
   'atlas.bucketWhen': 'Коли ви плануєте поїхати?',
   'atlas.bucketDuplicate': 'Вже у вашому списку бажань',
   'atlas.planned': 'Заплановано',
+  'atlas.showLandmarks': 'Показувати орієнтири',
   'atlas.showPlanned': 'Показати заплановані країни',
   'atlas.plannedFor': 'Заплановано на',
   'atlas.antarctica': 'Антарктида',

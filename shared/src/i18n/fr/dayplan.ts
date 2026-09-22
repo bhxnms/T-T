@@ -2,6 +2,8 @@ import type { TranslationStrings } from '../types';
 
 const dayplan: TranslationStrings = {
   'dayplan.icsTooltip': 'Exporter le calendrier (ICS)',
+  'dayplan.classicView': 'Vue classique',
+  'dayplan.activitiesView': 'Vue des activités',
   'dayplan.emptyDay': 'Aucun lieu prévu pour ce jour',
   'dayplan.addNote': 'Ajouter une note',
   'dayplan.editNote': 'Modifier la note',

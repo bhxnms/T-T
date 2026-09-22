@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': 'Rutt',
   'planner.optimize': 'Optimera',
   'planner.openGoogleMaps': 'Öppna i Google Maps',
+  'planner.openAmapMaps': 'Öppna i AMap',
   'planner.openCoMaps': 'Öppna i CoMaps',
   'planner.selectDayHint': 'Välj en dag i listan till vänster för att se dagsplanen',
   'planner.noPlacesForDay': 'Det finns inga platser för denna dagen ännu',

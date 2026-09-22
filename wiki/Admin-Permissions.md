@@ -6,7 +6,7 @@ The Permissions panel, located at the bottom of the **Users** tab, controls whic
 
 ## Role model
 
-TREK uses four permission levels, ordered from most to least privileged:
+Tourism-Team uses four permission levels, ordered from most to least privileged:
 
 | Level | Who it includes |
 |-------|----------------|

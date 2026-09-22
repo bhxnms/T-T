@@ -2,6 +2,8 @@ import type { TranslationStrings } from '../types';
 
 const dayplan: TranslationStrings = {
   'dayplan.icsTooltip': 'カレンダーを書き出し（ICS）',
+  'dayplan.classicView': 'クラシック表示',
+  'dayplan.activitiesView': 'アクティビティ表示',
   'dayplan.emptyDay': 'この日の予定はありません',
   'dayplan.cannotReorderTransport': '時刻が固定された予約は並び替えできません',
   'dayplan.confirmRemoveTimeTitle': '時刻を削除しますか？',

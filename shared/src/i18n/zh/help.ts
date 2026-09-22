@@ -2,6 +2,7 @@ import type { TranslationStrings } from '../types';
 
 const help: TranslationStrings = {
   'help.title': '帮助与文档',
+  'help.language': '文档语言',
   'help.search': '搜索文档…',
   'help.contents': '目录',
   'help.noResults': '没有匹配的页面。',

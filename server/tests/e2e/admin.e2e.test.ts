@@ -172,7 +172,9 @@ describe('Admin e2e (real auth + admin guard + temp SQLite)', () => {
       .set('Cookie', sessionCookie(1))
       .send({ username: 'weak', email: 'weak@x.y', password: 'short' });
     expect(res.status).toBe(400);
-    expect(res.body).toEqual({ error: 'Password must be at least 8 characters' });
+    // The `code` rides along so the client can localize the rejection instead of
+    // showing the English server sentence.
+    expect(res.body).toEqual({ error: 'Password must be at least 8 characters', code: 'tooShort' });
   });
 
   it('409 on a duplicate email', async () => {

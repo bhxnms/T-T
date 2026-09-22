@@ -1,4 +1,5 @@
 import { readEnv } from '../app-config';
+import { demoAdminEmailCandidates } from '../nest/common/demo';
 
 import fs from 'fs';
 import path from 'path';
@@ -26,9 +27,13 @@ function resetDemoUser(): void {
     return;
   }
 
-  // Save admin's current credentials and API keys (these should survive the reset)
-  // NOTE: different default than demo-seed (admin@trek.app) — pinned legacy quirk.
-  const adminEmail = readEnv().demo.adminEmailRaw || 'admin@nomad.app';
+  // Save admin's current credentials and API keys (these should survive the reset).
+  //
+  // The address is resolved rather than assumed: the reset restores the database
+  // file from a baseline written at seed time, so the row it carries may still
+  // have the address the build that seeded it used. Reading one address and
+  // writing back to another would silently drop the carry-over — the admin's
+  // changed password and API keys — on every hourly reset.
   interface AdminData {
     password_hash: string;
     maps_api_key: string | null;
@@ -37,12 +42,20 @@ function resetDemoUser(): void {
     avatar: string | null;
   }
   let adminData: AdminData | undefined = undefined;
+  let adminEmail: string | undefined;
   try {
-    adminData = db
-      .prepare(
-        'SELECT password_hash, maps_api_key, openweather_api_key, unsplash_api_key, avatar FROM users WHERE email = ?',
-      )
-      .get(adminEmail) as AdminData | undefined;
+    for (const candidate of demoAdminEmailCandidates(readEnv().demo.adminEmailRaw)) {
+      const row = db
+        .prepare(
+          'SELECT password_hash, maps_api_key, openweather_api_key, unsplash_api_key, avatar FROM users WHERE email = ?',
+        )
+        .get(candidate) as AdminData | undefined;
+      if (row) {
+        adminData = row;
+        adminEmail = candidate;
+        break;
+      }
+    }
   } catch (e: unknown) {
     console.error('[Demo Reset] Failed to read admin data:', e instanceof Error ? e.message : e);
   }
@@ -91,7 +104,7 @@ function resetDemoUser(): void {
   reinitialize();
 
   // Restore admin's latest credentials (in case admin changed password/API keys after baseline was saved)
-  if (adminData) {
+  if (adminData && adminEmail) {
     try {
       const { db: freshDb } = require('../db/database');
       freshDb

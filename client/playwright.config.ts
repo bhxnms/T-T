@@ -54,6 +54,11 @@ export default defineConfig({
         storageState: 'e2e/.tmp/state.json',
         viewport: { width: 1440, height: 900 },
         deviceScaleFactor: 2,
+        // Kept for the animated walkthroughs (Shot.walkthrough). Playwright only
+        // writes the file when the context closes, so capture specs copy it out
+        // themselves; promote.mjs then transcodes WebM → MP4. Still images are
+        // unaffected — they are taken as PNGs and the video is discarded.
+        video: { mode: 'on', size: { width: 1440, height: 900 } },
       },
       dependencies: ['seed'],
     },

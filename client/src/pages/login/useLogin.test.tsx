@@ -268,6 +268,54 @@ describe('useLogin — redirect target', () => {
 
     expect(sessionStorage.getItem('oidc_redirect')).toBe('/trips/9?tab=finanzplan');
   });
+
+  it('FE-LOGIN-HOOK-058: a wiki ?redirect does not decide where the next login lands', async () => {
+    // A session that expired while somebody was reading the docs used to send
+    // the *next* sign-in back to /help, which reads as "the app opens on the
+    // wiki". A doc page is not work in progress and must not be resumed.
+    for (const target of ['/help', '/help/Home', '/help/Home?lang=zh']) {
+      setSearch(`?redirect=${encodeURIComponent(target)}`);
+      const { result, unmount } = renderLogin();
+      await ready(result);
+
+      expect(sessionStorage.getItem('oidc_redirect'), target).toBeNull();
+      unmount();
+    }
+  });
+
+  it('FE-LOGIN-HOOK-059: the wiki exception is narrow — every other path still resumes', async () => {
+    setSearch('?redirect=%2Fsettings%3Ftab%3Dgeneral');
+    const { result } = renderLogin();
+    await ready(result);
+
+    expect(sessionStorage.getItem('oidc_redirect')).toBe('/settings?tab=general');
+  });
+
+  it('FE-LOGIN-HOOK-060: a wiki target already stashed for the IdP round trip is not resumed', async () => {
+    // The value outlives the code that wrote it: an entry stashed by a build
+    // that predates the wiki exception is still in sessionStorage when the IdP
+    // sends the user back, so the read path has to ask too.
+    sessionStorage.setItem('oidc_redirect', '/help/Home?lang=zh');
+    setSearch('?oidc_code=code-wiki');
+    server.use(http.get('/api/auth/oidc/exchange', () => HttpResponse.json({ token: 'tok' })));
+
+    renderLogin();
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(START_DESTINATION_ROUTE, { replace: true }));
+    expect(mockNavigate).not.toHaveBeenCalledWith('/help/Home?lang=zh', { replace: true });
+    expect(sessionStorage.getItem('oidc_redirect')).toBeNull();
+  });
+
+  it('FE-LOGIN-HOOK-061: a stashed target that is not a safe in-app path is dropped', async () => {
+    sessionStorage.setItem('oidc_redirect', '//evil.example.com/steal');
+    setSearch('?oidc_code=code-evil');
+    server.use(http.get('/api/auth/oidc/exchange', () => HttpResponse.json({ token: 'tok' })));
+
+    renderLogin();
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(START_DESTINATION_ROUTE, { replace: true }));
+    expect(mockNavigate).not.toHaveBeenCalledWith('//evil.example.com/steal', { replace: true });
+  });
 });
 
 describe('useLogin — invite links', () => {

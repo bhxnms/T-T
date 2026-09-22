@@ -72,5 +72,9 @@ const login: TranslationStrings = {
   'login.insecureCookie.body':
     'Bạn đang kết nối qua HTTP thuần, nên trình duyệt loại bỏ cookie phiên bảo mật của TREK — yêu cầu tiếp theo sẽ thất bại với "Access token required". Cách khắc phục: dùng HTTPS, hoặc với máy chủ tại nhà hãy đặt COOKIE_SECURE=false.',
   'login.insecureCookie.link': 'Mở hướng dẫn khắc phục sự cố',
+  'login.bootstrap.title': "First deployment administrator account",
+  'login.bootstrap.email': "Email",
+  'login.bootstrap.password': "Initial password",
+  'login.bootstrap.hint': "Sign in with these credentials, then choose a new password when prompted. This password will not be shown again after you change it.",
 };
 export default login;

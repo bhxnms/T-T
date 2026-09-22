@@ -3,6 +3,7 @@ import type { TranslationStrings } from '../types';
 // English fallback until 'ko' is translated.
 const help: TranslationStrings = {
   'help.title': 'Help & Docs',
+  'help.language': '문서 언어',
   'help.search': 'Search docs…',
   'help.contents': 'Contents',
   'help.noResults': 'No matching pages.',

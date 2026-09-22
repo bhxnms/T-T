@@ -631,4 +631,70 @@ describe('LoginPage', () => {
       });
     });
   });
+
+  // The first-deploy credentials can only reach the operator here. They used to
+  // ride a post-login system notice, which is unreachable: signing in requires
+  // the password the notice was meant to deliver.
+  describe('FE-PAGE-LOGIN-022: first-deploy credentials on the login page', () => {
+    const withBootstrap = (bootstrap: unknown) =>
+      server.use(
+        http.get('/api/auth/app-config', () =>
+          HttpResponse.json({
+            has_users: true,
+            allow_registration: false,
+            setup_complete: false,
+            demo_mode: false,
+            oidc_configured: false,
+            oidc_only_mode: false,
+            password_login: true,
+            password_registration: false,
+            oidc_login: false,
+            oidc_registration: false,
+            bootstrap_admin: bootstrap,
+          })
+        )
+      );
+
+    it('shows the generated admin credentials before the first sign-in', async () => {
+      withBootstrap({ email: 'admin@tt.local', password: 'generated-pw-1' });
+
+      render(<LoginPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('admin@tt.local')).toBeInTheDocument();
+      });
+      expect(screen.getByText('generated-pw-1')).toBeInTheDocument();
+      // The credentials must be readable while the login form is still up —
+      // the point of the card is that it precedes authentication.
+      expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+    });
+
+    it('renders no card once the server stops publishing the pair', async () => {
+      withBootstrap(null);
+
+      render(<LoginPage />);
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(EMAIL_PLACEHOLDER)).toBeInTheDocument();
+      });
+      expect(screen.queryByText(/admin@tt\.local/)).not.toBeInTheDocument();
+    });
+
+    it('never persists the one-time password to localStorage', async () => {
+      withBootstrap({ email: 'admin@tt.local', password: 'generated-pw-1' });
+
+      render(<LoginPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('generated-pw-1')).toBeInTheDocument();
+      });
+
+      // The app-config cache outlives the forced password change, so a copy of
+      // the secret there would keep resurfacing on later visits.
+      const cached = Object.keys(localStorage)
+        .map((key) => localStorage.getItem(key) ?? '')
+        .join('\n');
+      expect(cached).not.toContain('generated-pw-1');
+    });
+  });
 });

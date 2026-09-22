@@ -32,7 +32,7 @@ Archived trips are kept out of the default list. The trips section header carrie
 
 ## Mobile Header
 
-On mobile, the header is a floating glass bar: the TREK logo on the left (tap it to scroll back to the top), a **Notifications** button (bell icon, with a dot when something is unread) that navigates to `/notifications`, and your avatar on the right. The avatar opens the user menu — settings, the admin panel for admins, the dark/light/auto theme cycle, and sign out.
+On mobile, the header is a floating glass bar: the Tourism-Team logo on the left (tap it to scroll back to the top), a **Notifications** button (bell icon, with a dot when something is unread) that navigates to `/notifications`, and your avatar on the right. The avatar opens the user menu — settings, the admin panel for admins, the dark/light/auto theme cycle, and sign out.
 
 ## Dashboard Widgets Sidebar
 
@@ -57,7 +57,7 @@ Which actions appear depends on layout and archive state, not on your role — t
 
 ## Empty State
 
-When you have no trips, the dashboard shows the TREK mascot with the caption **No trips yet**. Start one from the **New Trip** button in the bottom-right corner or the dashed **New Trip** tile at the end of the grid; both open the [Creating-a-Trip](Creating-a-Trip) dialog. On mobile the empty state itself carries a **Create First Trip** button.
+When you have no trips, the dashboard shows the Tourism-Team mascot with the caption **No trips yet**. Start one from the **New Trip** button in the bottom-right corner or the dashed **New Trip** tile at the end of the grid; both open the [Creating-a-Trip](Creating-a-Trip) dialog. On mobile the empty state itself carries a **Create First Trip** button.
 
 ## Related Pages
 

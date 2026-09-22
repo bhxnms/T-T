@@ -1,14 +1,14 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '../../tests/helpers/render';
+import { fireEvent, render, screen, within } from '../../tests/helpers/render';
 import type { HelpNavSection, HelpPageData } from '../api/client';
 import HelpPage from './HelpPage';
 
-// FE-PAGE-HELPUI-001 to FE-PAGE-HELPUI-014
+// FE-PAGE-HELPUI-001 to FE-PAGE-HELPUI-018
 //
 // HelpPage is a wiring container over useHelp (covered in help/useHelp.test.ts):
 // the hook is mocked here so every render branch — loading, error, markdown,
-// search, mobile drawer — can be driven directly.
+// search, mobile drawer, language switcher — can be driven directly.
 
 type HelpState = ReturnType<typeof buildHelp>;
 
@@ -21,6 +21,7 @@ vi.mock('../components/Layout/Navbar', () => ({
 
 const setQuery = vi.fn((_v: string) => {});
 const setNavOpen = vi.fn((_v: boolean) => {});
+const setLang = vi.fn((_v: 'en' | 'zh') => {});
 
 const SECTIONS: HelpNavSection[] = [
   {
@@ -31,6 +32,13 @@ const SECTIONS: HelpNavSection[] = [
     ],
   },
   { title: '', pages: [{ slug: 'FAQ', title: 'FAQ' }] },
+];
+
+// Mirrors WIKI_LANGS in api/client.ts — the switcher renders from this, and a
+// one-entry list must render nothing at all.
+const LANGS = [
+  { value: 'en' as const, label: 'English' },
+  { value: 'zh' as const, label: '简体中文' },
 ];
 
 function buildHelp(over: Record<string, unknown> = {}) {
@@ -45,6 +53,9 @@ function buildHelp(over: Record<string, unknown> = {}) {
     contentRef: { current: null } as React.RefObject<HTMLDivElement | null>,
     activeSlug: 'Home',
     filtered: SECTIONS,
+    lang: 'en' as const,
+    setLang,
+    availableLangs: LANGS,
     ...over,
   };
 }
@@ -61,6 +72,7 @@ function page(markdown: string): HelpPageData {
 beforeEach(() => {
   setQuery.mockClear();
   setNavOpen.mockClear();
+  setLang.mockClear();
   setHelp();
 });
 
@@ -180,6 +192,22 @@ describe('HelpPage', () => {
     expect(screen.getByRole('heading', { level: 4 }).id).toBe('deep-heading');
   });
 
+  it('FE-PAGE-HELPUI-019: Chinese headings get usable ids, not empty ones', () => {
+    // `\w` in a JS regex is ASCII-only, so the original slug stripped a CJK
+    // heading down to "". Every Chinese heading then collided on id="" and every
+    // in-page anchor (#core-feature-names and friends) pointed at nothing.
+    setHelp({
+      page: page(['# 核心功能名', '', '## 通用界面词', '', '### 安装：Docker'].join('\n')),
+    });
+    render(<HelpPage />);
+
+    // Scoped by name: the sidebar renders its own h3 section titles.
+    expect(screen.getByRole('heading', { name: '核心功能名' }).id).toBe('核心功能名');
+    expect(screen.getByRole('heading', { name: '通用界面词' }).id).toBe('通用界面词');
+    // Punctuation still drops, and the ASCII part survives.
+    expect(screen.getByRole('heading', { name: '安装：Docker' }).id).toBe('安装docker');
+  });
+
   it('FE-PAGE-HELPUI-011: a heading built from inline markup drops the non-text children from its id', () => {
     setHelp({ page: page('## Trip **Planner** 2') });
     render(<HelpPage />);
@@ -273,5 +301,42 @@ describe('HelpPage', () => {
     const img = screen.getByRole('img', { name: 'alt only' });
     expect(img.className).toContain('border-edge');
     expect(img.getAttribute('src')).toBeFalsy();
+  });
+
+  it('FE-PAGE-HELPUI-016: an .mp4 reference renders a looping muted video, not an image', () => {
+    // Animated walkthroughs ship as MP4 rather than GIF. Authors keep writing
+    // plain markdown image syntax; the extension picks the element.
+    setHelp({ page: page('![drag a place onto a day](assets/DayItineraryAddPlaceDragging.mp4)') });
+    render(<HelpPage />);
+
+    const video = document.querySelector('video');
+    expect(video).toBeTruthy();
+    expect(video?.getAttribute('src')).toContain('DayItineraryAddPlaceDragging.mp4');
+    // Behaves like the GIF it replaced: no controls, no sound, loops forever.
+    expect(video?.hasAttribute('controls')).toBe(false);
+    expect(video?.muted).toBe(true);
+    expect(video?.loop).toBe(true);
+    expect(screen.queryByRole('img', { name: /drag a place/i })).toBeNull();
+  });
+
+  it('FE-PAGE-HELPUI-017: the language switcher shows every shipped translation and reports the pick', () => {
+    setHelp({ lang: 'en' });
+    render(<HelpPage />);
+
+    const group = screen.getByRole('group', { name: 'Wiki language' });
+    const zh = within(group).getByRole('button', { name: '简体中文' });
+    expect(within(group).getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true');
+    expect(zh).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(zh);
+    expect(setLang).toHaveBeenCalledWith('zh');
+  });
+
+  it('FE-PAGE-HELPUI-018: a single-language wiki renders no switcher at all', () => {
+    // A monolingual install must not show a dead control.
+    setHelp({ availableLangs: [{ value: 'en', label: 'English' }] });
+    render(<HelpPage />);
+
+    expect(screen.queryByRole('group', { name: 'Wiki language' })).toBeNull();
   });
 });

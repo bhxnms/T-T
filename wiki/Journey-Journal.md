@@ -61,15 +61,15 @@ The journey detail page includes a map on the right (desktop) or an integrated m
 
 **GPX tracks are drawn too.** Any route you imported into one of the journey's linked trips, from a `.gpx`, `.kml` or `.kmz` file, appears on the journey map as well, in the same colour it has in the trip planner and with a white casing so it stays readable on satellite tiles. Nothing to switch on: the tracks belong to the trips your entries came from, so importing the file while planning is all it takes. Hovering a track shows its name.
 
-The thin dashed line connecting entries in date order is something else and stays as it is: that one is drawn by TREK, while a track is the route you actually recorded.
+The thin dashed line connecting entries in date order is something else and stays as it is: that one is drawn by Tourism-Team, while a track is the route you actually recorded.
 
 ![Journey detail page for "Autumn in Japan" with its cover header and day/place/entry/photo counts, the day-by-day timeline with Add Entry actions on the left, and the entry map on the right](assets/JourneyDetail.png)
 
-## TREK Studio
+## Tourism-Team Studio
 
 A journey can also be laid out as a printable photo book. Open a journey and click **Studio** in the header. The designer opens on top of the journey at `/journey/:id/studio`, so the journey stays open underneath and **Back to the journey** drops you straight back into it. Studio is marked **Beta**.
 
-![The TREK Studio editor with the pages rail on the left, a spread on the workbench and the properties inspector on the right](assets/TREK-Studio-Editor.png)
+![The Tourism-Team Studio editor with the pages rail on the left, a spread on the workbench and the properties inspector on the right](assets/TREK-Studio-Editor.png)
 
 - **Page format** — Square 21 × 21 cm (the default), Square 30 × 30 cm, A4 landscape, A4 portrait, A5 landscape, or a custom width × height in millimetres. Everything is drawn as a spread (two pages side by side) with 3 mm bleed and a 5 mm safe margin.
 - **Auto layout** has two entries. **This spread** builds the spread on screen again from the journal entry it came from, and is only offered on a spread that came from one. **The whole book** replaces every page, keeping your title and page setup. Both are ordinary undo steps, so you can press one, look at it, and undo.
@@ -79,7 +79,7 @@ A journey can also be laid out as a printable photo book. Open a journey and cli
 - **Spreads travel between books.** Download the spread you are on as a design file and import it into another book. The file carries the design only, not the photographs.
 - **Several people can design at once.** Everyone in the same book sees the others' pointers with their names on them, and a save is pushed to the rest live. A save that lands on a version somebody else has already changed comes back as a conflict, with the other version alongside it, rather than quietly overwriting their work.
 
-![Frame styles and frame shapes in TREK Studio, with a photo's crop, look and frame options in the inspector](assets/TREK-Studio-Frames.png)
+![Frame styles and frame shapes in Tourism-Team Studio, with a photo's crop, look and frame options in the inspector](assets/TREK-Studio-Frames.png)
 
 The book belongs to its journey and inherits its access exactly: anyone who may read the journey may open its book, and only those who may edit the journey may save or delete it. There is no second set of permissions to keep in step.
 
@@ -87,13 +87,13 @@ Studio is desktop only: it needs a viewport at least 1024 px wide. Below that �
 
 ## Plugin entry rows
 
-Installed plugins can add extra rows to a journal entry card via the `journalEntryProvider` hook. A plugin returns rows (`label`, optional `value`, optional `url`) and TREK renders them natively under the entry — no iframe. Rows are additive and fail-safe: they require the Journey addon, the entry's journey is access-checked the same way as reading it, only http/https/mailto links are allowed, and a provider that errors or is slow is simply skipped.
+Installed plugins can add extra rows to a journal entry card via the `journalEntryProvider` hook. A plugin returns rows (`label`, optional `value`, optional `url`) and Tourism-Team renders them natively under the entry — no iframe. Rows are additive and fail-safe: they require the Journey addon, the entry's journey is access-checked the same way as reading it, only http/https/mailto links are allowed, and a provider that errors or is slow is simply skipped.
 
 > **Plugins:** requires the `hook:journal-entry-provider` permission. See [Plugin-Development](Plugin-Development) for the hook contract.
 
 ## Public sharing
 
-You can share a journey with a read-only public link. When creating the link you can independently toggle which sections are visible to visitors: **Timeline** (entries and stories), **Gallery** (photos), and **Map**. Visitors can only see the sections you have enabled, and no TREK account is required. See [Public-Share-Links](Public-Share-Links) for details on the separate journey share token mechanism.
+You can share a journey with a read-only public link. When creating the link you can independently toggle which sections are visible to visitors: **Timeline** (entries and stories), **Gallery** (photos), and **Map**. Visitors can only see the sections you have enabled, and no Tourism-Team account is required. See [Public-Share-Links](Public-Share-Links) for details on the separate journey share token mechanism.
 
 **Photos appear on the public map too**, as long as **Gallery** and **Map** are both on. A gallery photo that knows where it was taken becomes a thumbnail pin, clustered into one pin where several were taken close together, and sitting below the entry pins so the itinerary stays the point of the map. The location comes from the file's own EXIF for uploads and from Immich or Synology for provider photos, and a photo that carries none simply stays off the map (see the HEIC note above — that conversion drops GPS, so iPhone uploads usually arrive without a location).
 

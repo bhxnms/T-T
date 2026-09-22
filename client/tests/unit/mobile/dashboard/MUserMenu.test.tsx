@@ -34,7 +34,18 @@ describe('MUserMenu', () => {
     render(<MUserMenu open onClose={() => {}} />);
 
     expect(screen.getByRole('button', { name: 'Admin Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument();
     expect(screen.getByText('Admin')).toBeInTheDocument();
+  });
+
+  it('FE-MOB-MENU-002a: shows Help for regular users and navigates there', () => {
+    const onClose = vi.fn();
+    render(<MUserMenu open onClose={onClose} />);
+
+    const help = screen.getByRole('button', { name: 'Help' });
+    expect(help).toBeInTheDocument();
+    fireEvent.click(help);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('FE-MOB-MENU-003: the theme row cycles dark → light → auto', () => {

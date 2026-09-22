@@ -521,7 +521,8 @@ export function parseWikipediaTag(tag: string | undefined | null): { lang: strin
 // cache keys of the form "<placeId>~p3" that enrichment mints for the picker.
 // Google answers those with a billable 400 INVALID_ARGUMENT, so every lookup
 // sorts them out before the call and uses the OSM/Wikimedia path instead.
-const NON_GOOGLE_PLACE_ID = /^(?:coords|node|way|relation|amap):|^https?:\/\/|^-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?$|~p\d+$/i;
+const NON_GOOGLE_PLACE_ID =
+  /^(?:coords|node|way|relation|amap):|^https?:\/\/|^-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?$|~p\d+$/i;
 // The subset that still has a provider behind it — Overpass for details,
 // Wikimedia for photos.
 export const OSM_PLACE_ID = /^(?:node|way|relation):/i;

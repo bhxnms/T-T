@@ -45,7 +45,7 @@ Matching is by the place's provider id, its coordinates, or the link a place sav
 
 ## Categories
 
-Places can be assigned a **category** from the same admin-defined set used across TREK (see [Admin: Categories](Admin-Categories)). Category colours and icons show on the place avatar, the place detail and the list rows, and you can filter a list by category.
+Places can be assigned a **category** from the same admin-defined set used across Tourism-Team (see [Admin: Categories](Admin-Categories)). Category colours and icons show on the place avatar, the place detail and the list rows, and you can filter a list by category.
 
 ## Adding places
 

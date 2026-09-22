@@ -1,6 +1,6 @@
-# TREK Wiki
+# Tourism-Team Wiki
 
-TREK is a self-hosted, real-time collaborative travel planner licensed under AGPL-3.0.
+Tourism-Team is a self-hosted, real-time collaborative travel planner licensed under AGPL-3.0.
 
 ![Dashboard](assets/DashboardWidgets.png)
 
@@ -9,9 +9,9 @@ TREK is a self-hosted, real-time collaborative travel planner licensed under AGP
 ### Planning
 - **Drag & Drop Planner** — organize places into day plans with reordering and cross-day moves
 - **Interactive Map** — Leaflet map with photo markers, clustering, route visualization, and customizable tile sources
-- **Place Search** — Google Places (photos, ratings, hours) or OpenStreetMap (free, no API key needed)
+- **Place Search** — AMap (高德地图) for China-focused search, Google Places (photos, ratings, hours), or OpenStreetMap (free, no API key needed); see [Places and Search](Places-and-Search)
 - **Day Notes** — timestamped, icon-tagged notes per day
-- **Route Optimization** — auto-optimize place order and export to Google Maps
+- **Route Optimization** — auto-optimize place order and export to Google Maps or AMap
 - **Weather Forecasts** — 16-day forecasts via Open-Meteo (no API key required), historical climate averages as fallback
 
 ### Travel Management
@@ -40,7 +40,7 @@ TREK is a self-hosted, real-time collaborative travel planner licensed under AGP
 - **Collections** — personal place library: save places across trips into named lists, copy them into any trip, share with per-member roles (see [Collections](Collections))
 - **Journey** — magazine-style travel journal with entries, photos (via Immich/Synology Photos), maps, and moods
 - **Naver List Import** — import places from shared Naver Maps lists
-- **MCP** — expose TREK to AI assistants via the Model Context Protocol (OAuth 2.1)
+- **MCP** — expose Tourism-Team to AI assistants via the Model Context Protocol (OAuth 2.1)
 - **AirTrail** — sync flights from your self-hosted AirTrail instance into trips
 - **AI Parsing** — LLM fallback that extracts bookings from confirmation files KDE Itinerary cannot read (see [AI-Booking-Import](AI-Booking-Import))
 
@@ -64,7 +64,7 @@ TREK is a self-hosted, real-time collaborative travel planner licensed under AGP
 - Addon management, API key storage, scheduled auto-backups
 - System notices for onboarding and announcements
 
-> **Admin:** Most configuration lives in the Admin Panel. On first boot TREK seeds an admin account automatically — credentials come from `ADMIN_EMAIL` / `ADMIN_PASSWORD` if set, otherwise a random password is printed to the container log.
+> **Admin:** Most configuration lives in the Admin Panel. On first boot Tourism-Team seeds an admin account automatically — credentials come from `ADMIN_EMAIL` / `ADMIN_PASSWORD` if set, otherwise a random password is printed to the container log.
 
 ## Get Started
 

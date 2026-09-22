@@ -1,4 +1,4 @@
-import { test, clearNotices, readSeed } from './shot'
+import { test, clearNotices, readSeed, tripTab } from './shot'
 
 /**
  * Trip-planner tabs and dialogs.
@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 async function openTab(page: import('@playwright/test').Page, label: string) {
-  await page.getByRole('button', { name: label, exact: true }).first().click()
+  await page.getByRole('button', { name: tripTab(label), exact: true }).first().click()
   await page.waitForTimeout(700)
 }
 

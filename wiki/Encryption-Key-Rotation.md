@@ -2,7 +2,7 @@
 
 ## What the encryption key protects
 
-TREK encrypts sensitive settings at rest using AES-256-GCM. The following values are stored encrypted in the database:
+Tourism-Team encrypts sensitive settings at rest using AES-256-GCM. The following values are stored encrypted in the database:
 
 - Google Maps API key (instance-wide, in `app_settings`; the per-user column is still read as a fallback)
 - Unsplash access key (instance-wide, in `app_settings`; the per-user column is still read as a fallback)
@@ -25,7 +25,7 @@ The encryption derives a key from `ENCRYPTION_KEY` using SHA-256 (with a domain 
 
 ## Key resolution order
 
-On startup, TREK resolves the encryption key in this order:
+On startup, Tourism-Team resolves the encryption key in this order:
 
 1. **`ENCRYPTION_KEY` environment variable** — explicit, always takes priority. When set, the value is also written to `./data/.encryption_key` so it survives container restarts if the env var is later removed.
 2. **`./data/.encryption_key` file** — present on any install that has started at least once.
@@ -34,7 +34,7 @@ On startup, TREK resolves the encryption key in this order:
 
 ## What happens if the key is lost
 
-All encrypted settings (API keys, SMTP password, OIDC secret, MFA secrets, notification tokens, etc.) become unreadable — TREK cannot decrypt them. They must be re-entered manually after the key is restored or replaced. Unencrypted data (trips, places, users, etc.) is unaffected.
+All encrypted settings (API keys, SMTP password, OIDC secret, MFA secrets, notification tokens, etc.) become unreadable — Tourism-Team cannot decrypt them. They must be re-entered manually after the key is restored or replaced. Unencrypted data (trips, places, users, etc.) is unaffected.
 
 ## Backing up the key
 
@@ -79,7 +79,7 @@ The script:
 After a successful migration:
 
 1. Update `ENCRYPTION_KEY` in your environment to the new value.
-2. Restart TREK.
+2. Restart Tourism-Team.
 
 If any secrets could not be migrated, the script exits with a non-zero status and the original database backup is retained.
 

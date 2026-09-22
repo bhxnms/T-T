@@ -54,7 +54,16 @@ vi.mock('leaflet', () => {
         return layer;
       }),
       setStyle: vi.fn(),
-      getBounds: vi.fn(() => ({ isValid: vi.fn(() => true) })),
+      // Real numeric bounds, like Leaflet's LatLngBounds: production unions these
+      // per ISO code and compares them against the viewport numerically, so a
+      // code-only stub could not drive countryInView.
+      getBounds: vi.fn(() => ({
+        isValid: vi.fn(() => true),
+        getSouth: () => 40,
+        getWest: () => 0,
+        getNorth: () => 50,
+        getEast: () => 10,
+      })),
       resetStyle: vi.fn(),
       removeFrom: vi.fn(),
     };
@@ -100,8 +109,14 @@ vi.mock('leaflet', () => {
     getZoom: vi.fn(() => 4),
     createPane: vi.fn(),
     getPane: vi.fn(() => ({ style: {} })),
-    // intersects=true so loadRegionsForViewport can fetch region geo data
-    getBounds: vi.fn(() => ({ intersects: vi.fn(() => true) })),
+    // A viewport that overlaps every country's stub bounds, so
+    // loadRegionsForViewport fetches region geo data.
+    getBounds: vi.fn(() => ({
+      getSouth: () => -90,
+      getWest: () => -180,
+      getNorth: () => 90,
+      getEast: () => 180,
+    })),
     hasLayer: vi.fn(() => false),
     getCenter: vi.fn(() => ({ lat: 25, lng: 0 })),
   };

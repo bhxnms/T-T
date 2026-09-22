@@ -569,14 +569,19 @@ describe('authStore', () => {
     });
   });
 
-  describe('FE-STORE-AUTH-024: system notices are skipped for a forced password change', () => {
+  describe('FE-STORE-AUTH-024: system notices are fetched even for a forced password change', () => {
     const stubNoticeFetch = () => {
       const fetch = vi.fn(async () => {});
       useSystemNoticeStore.setState({ fetch });
       return fetch;
     };
 
-    it('login skips the notice fetch when must_change_password is set', async () => {
+    // must_change_password marks a first-deploy admin, whose bootstrap notice is
+    // the ONLY place the generated admin password is ever shown — and the
+    // change-password flow deletes it. Skipping the fetch here (the previous
+    // behaviour, which these two cases used to pin) made those credentials
+    // unreachable on every install.
+    it('login fetches notices when must_change_password is set', async () => {
       const user = buildUser({ must_change_password: true });
       server.use(http.post('/api/auth/login', () => HttpResponse.json({ user, token: 'tok' })));
       const noticeFetch = stubNoticeFetch();
@@ -584,10 +589,10 @@ describe('authStore', () => {
       await useAuthStore.getState().login(user.email, 'password');
 
       expect(useAuthStore.getState().isAuthenticated).toBe(true);
-      expect(noticeFetch).not.toHaveBeenCalled();
+      expect(noticeFetch).toHaveBeenCalled();
     });
 
-    it('completeMfaLogin skips the notice fetch when must_change_password is set', async () => {
+    it('completeMfaLogin fetches notices when must_change_password is set', async () => {
       const user = buildUser({ must_change_password: true });
       server.use(http.post('/api/auth/mfa/verify-login', () => HttpResponse.json({ user, token: 'tok' })));
       const noticeFetch = stubNoticeFetch();
@@ -595,7 +600,7 @@ describe('authStore', () => {
       await useAuthStore.getState().completeMfaLogin('mfa-tok', '123 456');
 
       expect(useAuthStore.getState().isAuthenticated).toBe(true);
-      expect(noticeFetch).not.toHaveBeenCalled();
+      expect(noticeFetch).toHaveBeenCalled();
     });
   });
 

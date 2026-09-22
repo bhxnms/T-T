@@ -224,8 +224,16 @@ describe('ModalRenderer', () => {
     expect(dismissSpy).toHaveBeenCalledWith('test-notice-1');
   });
 
+  // A non-dismissible notice is only locked when it carries a CTA to satisfy the
+  // lock (see FE-SN-MODAL-060: a CTA-less one is treated as dismissible, because it
+  // would otherwise have no exit at all). The tests below are about the lock, so
+  // they must supply the action that justifies it.
   it('FE-SN-MODAL-003: non-dismissible critical notice hides dismiss affordance', async () => {
-    const notice = makeNotice({ severity: 'critical', dismissible: false });
+    const notice = makeNotice({
+      severity: 'critical',
+      dismissible: false,
+        cta: { kind: 'nav', labelKey: 'Take me there', href: '/settings' },
+    });
     render(<ModalRenderer notices={[notice]} />);
 
     await flushGraceDelay();
@@ -235,7 +243,11 @@ describe('ModalRenderer', () => {
   });
 
   it('FE-SN-MODAL-004: ESC key does not close non-dismissible notice', async () => {
-    const notice = makeNotice({ severity: 'critical', dismissible: false });
+    const notice = makeNotice({
+      severity: 'critical',
+      dismissible: false,
+        cta: { kind: 'nav', labelKey: 'Take me there', href: '/settings' },
+    });
     useSystemNoticeStore.setState({ notices: [notice], loaded: true });
 
     const dismissSpy = vi.spyOn(useSystemNoticeStore.getState(), 'dismiss');
@@ -425,7 +437,12 @@ describe('ModalRenderer', () => {
 
   it('FE-SN-MODAL-014: non-dismissible notice locks the pager (prev/next/dots disabled)', async () => {
     const notices = [
-      makeNotice({ id: 'n1', titleKey: 'Notice A', dismissible: false }),
+      makeNotice({
+        id: 'n1',
+        titleKey: 'Notice A',
+        dismissible: false,
+        cta: { kind: 'nav', labelKey: 'Take me there', href: '/settings' },
+      }),
       makeNotice({ id: 'n2', titleKey: 'Notice B' }),
     ];
     render(<ModalRenderer notices={notices} />);
@@ -891,7 +908,12 @@ describe('ModalRenderer', () => {
 
   it('FE-SN-MODAL-035: a locked pager ignores its enabled current dot', async () => {
     const notices = [
-      makeNotice({ id: 'n1', titleKey: 'Notice A', dismissible: false }),
+      makeNotice({
+        id: 'n1',
+        titleKey: 'Notice A',
+        dismissible: false,
+        cta: { kind: 'nav', labelKey: 'Take me there', href: '/settings' },
+      }),
       makeNotice({ id: 'n2', titleKey: 'Notice B' }),
     ];
     render(<ModalRenderer notices={notices} />);
@@ -1305,7 +1327,11 @@ describe('ModalRenderer', () => {
 
   it('FE-SN-MODAL-055: a non-dismissible sheet ignores the backdrop tap and the drag', async () => {
     stubMatchMedia({ mobile: true });
-    const notice = makeNotice({ id: 'n-a', dismissible: false });
+    const notice = makeNotice({
+      id: 'n-a',
+      dismissible: false,
+        cta: { kind: 'nav', labelKey: 'Take me there', href: '/settings' },
+    });
     useSystemNoticeStore.setState({ notices: [notice], loaded: true });
     const dismissSpy = vi.spyOn(useSystemNoticeStore.getState(), 'dismiss');
 
@@ -1372,5 +1398,66 @@ describe('ModalRenderer', () => {
     await flushGraceDelay();
 
     expect(sheetParts().centerSlot.textContent).toContain('Notice C');
+  });
+
+  // A notice that cannot be dismissed must still be escapable.
+  //
+  // The first-deploy credentials notice was `dismissible: false` with no CTA,
+  // which is a dead end: that flag hides the close button AND the OK button
+  // (which renders only when `dismissible || isLastPage`) while also locking the
+  // pager. It was the only notice, so it was never the "last page" either, and a
+  // real install was stuck on it with the app behind. The renderer now treats a
+  // CTA-less notice as dismissible, so the trap cannot be expressed.
+  describe('FE-SN-MODAL-060: a CTA-less non-dismissible notice cannot trap the user', () => {
+    it('offers a way out when it is NOT the last page (the shape that deadlocked)', async () => {
+      // Two notices, the trap first. This matters: with a single notice
+      // `isLastPage` is true, so the OK button renders anyway and the deadlock
+      // does not reproduce. On the real install the credentials notice sat in
+      // front of a second one, which is what made it a dead end.
+      const trap = makeNotice({ id: 'trap', titleKey: 'Trap', dismissible: false });
+      const other = makeNotice({ id: 'other', titleKey: 'Other' });
+      useSystemNoticeStore.setState({ notices: [trap, other], loaded: true });
+
+      render(<ModalRenderer notices={[trap, other]} />);
+      await flushGraceDelay();
+
+      // The escape hatch must exist while the trap notice is on screen. Without
+      // the guard: no close button (dismissible false), no OK button (not the
+      // last page), pager locked (dismissible false) — no exit at all.
+      // The escape hatch. On a non-last page this button advances the pager (the
+      // dismiss-all lives on the last page), which is exactly what the locked
+      // pager refused to do — so advancing is the assertion that matters.
+      expect(screen.getByText('Trap')).toBeInTheDocument();
+      const ok = screen.getByRole('button', { name: /ok/i });
+      await act(async () => {
+        fireEvent.click(ok);
+      });
+      await flushGraceDelay();
+
+      expect(screen.getByText('Other')).toBeInTheDocument();
+      expect(screen.queryByText('Trap')).toBeNull();
+    });
+
+    it('still locks a non-dismissible notice that DOES carry a CTA', async () => {
+      // The guard must not weaken the intended behaviour: a notice with an action
+      // to take still demands it.
+      const notice = makeNotice({
+        id: 'locked',
+        dismissible: false,
+        cta: { kind: 'nav', labelKey: 'Go', href: '/somewhere' },
+      });
+      useSystemNoticeStore.setState({ notices: [notice], loaded: true });
+
+      render(<ModalRenderer notices={[notice]} />);
+      await flushGraceDelay();
+
+      // Locked: no dismiss button, and the backdrop tap does nothing.
+      expect(screen.queryByRole('button', { name: /^ok$/i })).toBeNull();
+      const dismissSpy = vi.spyOn(useSystemNoticeStore.getState(), 'dismiss');
+      await act(async () => {
+        fireEvent.click(screen.getAllByRole('presentation')[1] as HTMLElement);
+      });
+      expect(dismissSpy).not.toHaveBeenCalled();
+    });
   });
 });

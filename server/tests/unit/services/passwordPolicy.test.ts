@@ -6,8 +6,8 @@ describe('validatePassword', () => {
   // AUTH-006 — Registration with weak password
   describe('length requirement', () => {
     it('AUTH-006: rejects passwords shorter than 8 characters', () => {
-      expect(validatePassword('Ab1!')).toEqual({ ok: false, reason: expect.stringContaining('8 characters') });
-      expect(validatePassword('Ab1!456')).toEqual({ ok: false, reason: expect.stringContaining('8 characters') });
+      expect(validatePassword('Ab1!')).toMatchObject({ ok: false, code: 'tooShort', reason: expect.stringContaining('8 characters') });
+      expect(validatePassword('Ab1!456')).toMatchObject({ ok: false, code: 'tooShort', reason: expect.stringContaining('8 characters') });
     });
 
     it('accepts passwords of exactly 8 characters that meet all requirements', () => {
@@ -63,16 +63,18 @@ describe('validatePassword', () => {
       // The blocklist check happens BEFORE complexity checks, after length + repetitive checks.
       // So any 8+ char string whose lowercase is in the blocklist gets caught first.
       // 'Password1' lowercased = 'password1' → in blocklist! ✓ (length ok, not repetitive)
-      expect(validatePassword('Password1')).toEqual({
+      expect(validatePassword('Password1')).toMatchObject({
         ok: false,
+        code: 'tooCommon',
         reason: expect.stringContaining('common'),
       });
     });
 
     it('AUTH-007: rejects "Changeme" whose lowercase is in the blocklist', () => {
       // 'changeme' is in the set; 'Changeme'.toLowerCase() === 'changeme' ✓
-      expect(validatePassword('Changeme')).toEqual({
+      expect(validatePassword('Changeme')).toMatchObject({
         ok: false,
+        code: 'tooCommon',
         reason: expect.stringContaining('common'),
       });
     });

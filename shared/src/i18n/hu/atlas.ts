@@ -57,6 +57,7 @@ const atlas: TranslationStrings = {
   'atlas.placeVisited': 'Meglátogatott hely',
   'atlas.placesVisited': 'Meglátogatott helyek',
   'atlas.planned': 'Tervezett',
+  'atlas.showLandmarks': 'Show landmarks',
   'atlas.showPlanned': 'Tervezett országok megjelenítése',
   'atlas.plannedFor': 'Tervezve erre',
   'atlas.antarctica': 'Antarktisz',

@@ -1,6 +1,6 @@
 # Public Share Links
 
-Share a read-only view of your trip with people who do not have a TREK account. The viewer opens in a browser without logging in.
+Share a read-only view of your trip with people who do not have a Tourism-Team account. The viewer opens in a browser without logging in.
 
 ![Public share link](assets/Share.png)
 
@@ -16,7 +16,7 @@ The share URL takes the form:
 <your-instance>/shared/<token>
 ```
 
-Copy this URL and send it to anyone you want to share the trip with. No TREK account is required to view it.
+Copy this URL and send it to anyone you want to share the trip with. No Tourism-Team account is required to view it.
 
 ### How long a link lives
 
@@ -26,7 +26,7 @@ Once the 90 days are up, visitors get **Link expired or invalid**. The share sec
 
 To revive a lapsed link, flip one of the unlocked toggles — **Bookings**, **Packing**, **Costs** or **Chat** — and flip it back if you did not mean to change anything. **Map & Plan** is locked, so clicking it sends no request and will not revive the link. Flipping an unlocked toggle re-saves the **same** token for another 90 days and the old URL starts working again. If you want a genuinely different URL, because the old one leaked for instance, use **Delete link** and then **Create link**.
 
-Links created before TREK added the expiry carry no expiry at all and work indefinitely. The first time you change one of their toggles, that save puts them on the 90-day clock like every other link.
+Links created before Tourism-Team added the expiry carry no expiry at all and work indefinitely. The first time you change one of their toggles, that save puts them on the 90-day clock like every other link.
 
 ## Permission toggles
 
@@ -50,7 +50,7 @@ A public viewer has no account, so there is no "their" display currency to use. 
 
 The shared trip page renders a branded read-only interface with a dark hero header showing the trip title, description, and date range. A tab bar at the top provides access to the sections you enabled. The viewer can switch the display language using a language picker in the top-right corner.
 
-The Plan tab appears whenever **Map & Plan** is on — which is every link created through the share UI, since that toggle is locked on there. A link whose `share_map` flag was turned off outside the UI (through the REST API or the `create_share_link` MCP tool, both of which take it as a plain boolean) has no Plan tab at all: the server withholds the days, places, assignments and notes entirely, and the viewer opens on the first section the owner did share. A **day picker** sits directly above the map — an **All** pill plus one pill per day (**Day 1**, **Day 2**, …) — and drives the same selection as the day cards below it, so the map and the expanded day never disagree. Pick a day and its stops are numbered on the map in visiting order (a place the day returns to shows both positions on one marker, e.g. `1 · 3`) and joined by a dashed connector. That connector is a straight line showing sequence, not a driving route: TREK will not send a shared itinerary to a third-party routing service on an anonymous visitor's behalf. On **All** the map shows every geocoded place as an unnumbered pin with no connector. Below the map sits a collapsible day-by-day itinerary (with places, notes, and transport inline when Bookings is enabled) and accommodation badges per day.
+The Plan tab appears whenever **Map & Plan** is on — which is every link created through the share UI, since that toggle is locked on there. A link whose `share_map` flag was turned off outside the UI (through the REST API or the `create_share_link` MCP tool, both of which take it as a plain boolean) has no Plan tab at all: the server withholds the days, places, assignments and notes entirely, and the viewer opens on the first section the owner did share. A **day picker** sits directly above the map — an **All** pill plus one pill per day (**Day 1**, **Day 2**, …) — and drives the same selection as the day cards below it, so the map and the expanded day never disagree. Pick a day and its stops are numbered on the map in visiting order (a place the day returns to shows both positions on one marker, e.g. `1 · 3`) and joined by a dashed connector. That connector is a straight line showing sequence, not a driving route: Tourism-Team will not send a shared itinerary to a third-party routing service on an anonymous visitor's behalf. On **All** the map shows every geocoded place as an unnumbered pin with no connector. Below the map sits a collapsible day-by-day itinerary (with places, notes, and transport inline when Bookings is enabled) and accommodation badges per day.
 
 The Chat tab (when enabled via `share_collab`) shows chat messages grouped by date with sender avatars. Viewers cannot send messages.
 

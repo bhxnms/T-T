@@ -23,6 +23,9 @@ const ACTION_LABELS: Record<string, string> = {
   'admin.storage_backfill': 'started a storage sync',
   'admin.storage_backfill_cancel': 'cancelled a storage sync',
   'admin.storage_stats_refresh': 'refreshed storage usage stats',
+  'admin.tunnel_update': 'updated the Cloudflare tunnel configuration',
+  'admin.tunnel_test': 'tested the Cloudflare tunnel credentials',
+  'admin.tunnel_provision': 'created the Cloudflare tunnel',
   'immich.private_ip_configured': 'configured Immich with private IP',
 };
 

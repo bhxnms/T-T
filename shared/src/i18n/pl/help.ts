@@ -3,6 +3,7 @@ import type { TranslationStrings } from '../types';
 // English fallback until 'pl' is translated.
 const help: TranslationStrings = {
   'help.title': 'Help & Docs',
+  'help.language': 'Język wiki',
   'help.search': 'Search docs…',
   'help.contents': 'Contents',
   'help.noResults': 'No matching pages.',

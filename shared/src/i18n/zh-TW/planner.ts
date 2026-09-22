@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': '路線',
   'planner.optimize': '最佳化',
   'planner.openGoogleMaps': '在 Google Maps 中開啟',
+  'planner.openAmapMaps': '在 AMap 中開啟',
   'planner.openCoMaps': '在 CoMaps 中開啟',
   'planner.selectDayHint': '從左側列表選擇一天以檢視日程計劃',
   'planner.noPlacesForDay': '當天暫無地點',

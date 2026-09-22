@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': 'ルート',
   'planner.optimize': '最適化',
   'planner.openGoogleMaps': 'Googleマップで開く',
+  'planner.openAmapMaps': 'AMapで開く',
   'planner.openCoMaps': 'CoMapsで開く',
   'planner.selectDayHint': '左の一覧から日を選択すると、日別計画が表示されます',
   'planner.noPlacesForDay': 'この日の場所はまだありません',

@@ -1,4 +1,4 @@
-import { test, clearNotices, expect, readSeed } from './shot'
+import { test, clearNotices, expect, readSeed, SHOT_LANG } from './shot'
 
 /**
  * Modals and dialogs.
@@ -25,7 +25,7 @@ function dialog(page: import('@playwright/test').Page) {
 test('create trip modal — with the new currency field', async ({ page, shot }) => {
   await page.goto('/dashboard')
   await clearNotices(page)
-  await page.getByRole('button', { name: /new trip/i }).first().click()
+  await page.getByRole('button', { name: SHOT_LANG === 'zh' ? /新建旅行/ : /new trip/i }).first().click()
   await expect(dialog(page)).toBeVisible()
   await shot.element('TripCreate', dialog(page))
 })
@@ -33,7 +33,7 @@ test('create trip modal — with the new currency field', async ({ page, shot })
 test('share dialog', async ({ page, shot }) => {
   await page.goto(`/trips/${seed().tripId}`)
   await clearNotices(page)
-  await page.getByRole('button', { name: /share/i }).first().click()
+  await page.getByRole('button', { name: SHOT_LANG === 'zh' ? /分享/ : /share/i }).first().click()
   await expect(dialog(page)).toBeVisible()
   await shot.element('Share', dialog(page))
 })

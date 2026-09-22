@@ -1,7 +1,7 @@
 import { ChevronRight, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { countryFlagCode } from '../../../pages/atlas/atlasModel';
 import { useTranslation } from '../../../i18n';
+import { countryFlagCode } from '../../../pages/atlas/atlasModel';
 
 interface CountryOption {
   code: string;

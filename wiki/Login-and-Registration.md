@@ -1,6 +1,6 @@
 # Login and Registration
 
-![TREK login page: the product splash panel on the left and the Sign In card on the right with email and password fields, a Remember me switch, a Forgot password? link and a Register link](assets/Registration.png)
+![Tourism-Team login page: the product splash panel on the left and the Sign In card on the right with email and password fields, a Remember me switch, a Forgot password? link and a Register link](assets/Registration.png)
 
 ## Signing in
 
@@ -19,13 +19,13 @@ The **Remember me** switch below the password field decides how long the session
 - **Off** (the default) — a browser-session cookie with no `maxAge`, cleared when you close the browser, backed by a token valid for `SESSION_DURATION` (default `24h`).
 - **On** — a persistent cookie matching a token valid for `SESSION_DURATION_REMEMBER` (default `30d`), so the session survives browser restarts.
 
-Both durations are configurable per instance, see [Environment-Variables](Environment-Variables). Your choice is carried through the MFA step, through a password change, and through SSO sign-in. While you keep using TREK the cookie is silently re-issued once the token is past half its lifetime, with the same Remember me semantics, so an active session never expires mid-use. Only cookie sessions are renewed this way — API and MCP clients authenticating with a bearer token are not.
+Both durations are configurable per instance, see [Environment-Variables](Environment-Variables). Your choice is carried through the MFA step, through a password change, and through SSO sign-in. While you keep using Tourism-Team the cookie is silently re-issued once the token is past half its lifetime, with the same Remember me semantics, so an active session never expires mid-use. Only cookie sessions are renewed this way — API and MCP clients authenticating with a bearer token are not.
 
 Sign-ins that never pass through this switch — registration, the demo button and passkey sign-in — get the historical default instead: a persistent cookie lasting `SESSION_DURATION`.
 
 ### Forced password change
 
-Some accounts are flagged as needing a new password: the admin account TREK seeds on first boot always is, and so is an account restored with the `reset-admin.js` recovery script (see [Troubleshooting](Troubleshooting)). For those accounts a **Set new password** form is shown immediately after a successful login (or after the MFA step). The session cookie has already been issued at that point — the app simply keeps you on the form until the new password is saved, and saving it re-issues the cookie and signs your other sessions out.
+Some accounts are flagged as needing a new password: the admin account Tourism-Team seeds on first boot always is, and so is an account restored with the `reset-admin.js` recovery script (see [Troubleshooting](Troubleshooting)). For those accounts a **Set new password** form is shown immediately after a successful login (or after the MFA step). The session cookie has already been issued at that point — the app simply keeps you on the form until the new password is saved, and saving it re-issues the cookie and signs your other sessions out.
 
 There is no control in the Admin Panel that flags an existing account. An admin-set password (see [Admin-Users-and-Invites](Admin-Users-and-Invites)) neither raises the flag nor clears it, so a user who already carries it is still asked to choose their own password at the next sign-in.
 
@@ -35,7 +35,7 @@ The Register form appears under one of these conditions:
 
 - **Open registration** — the admin has enabled password registration for the instance (`password_registration` setting).
 - **Valid invite link** — you visited `/register?invite=TOKEN` with a valid token (see below).
-- **No accounts at all** — nobody has signed up yet; the registration form is shown automatically and the first account created becomes an admin. On a normal install this never happens, because TREK seeds an admin on first boot (see [First run](#first-run) below).
+- **No accounts at all** — nobody has signed up yet; the registration form is shown automatically and the first account created becomes an admin. On a normal install this never happens, because Tourism-Team seeds an admin on first boot (see [First run](#first-run) below).
 
 Registration fields: **username**, **email**, and **password**.
 
@@ -65,7 +65,7 @@ If the token is invalid, expired, or exhausted, an error is shown.
 
 ## First run
 
-On a normal install TREK seeds an admin account on first boot, before anyone can register, so the login page opens in Sign In mode and the Register link is hidden. The credentials depend on how you start the container:
+On a normal install Tourism-Team seeds an admin account on first boot, before anyone can register, so the login page opens in Sign In mode and the Register link is hidden. The credentials depend on how you start the container:
 
 - With **both** `ADMIN_EMAIL` and `ADMIN_PASSWORD` set, those values are used.
 - With only one of the two set, both are ignored (a warning is logged) and the generated credentials below are used instead.
@@ -89,7 +89,7 @@ Forgot-password requests are rate-limited to **3 attempts per 15-minute window**
 
 ## Demo mode
 
-When the server is started with `DEMO_MODE=true`, a **"Try the demo — no registration needed"** button appears below the login form. Clicking it signs you in as the demo user without entering credentials. The demo credentials (`demo@trek.app` / `demo12345`) are also displayed in the app config for reference, but the one-click button is the intended entry point.
+When the server is started with `DEMO_MODE=true`, a **"Try the demo — no registration needed"** button appears below the login form. Clicking it signs you in as the demo user without entering credentials — the visitor never has to see or type an address. See [Demo-Mode](Demo-Mode) for the seeded accounts and how an instance that upgraded in place keeps working.
 
 ## SSO
 

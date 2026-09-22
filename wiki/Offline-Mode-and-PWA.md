@@ -1,28 +1,28 @@
 # Offline Mode and PWA
 
-TREK can be installed as a Progressive Web App (PWA) and used without an internet connection for previously synced trips.
+Tourism-Team can be installed as a Progressive Web App (PWA) and used without an internet connection for previously synced trips.
 
 ## Install as an app (PWA)
 
-TREK must be served over **HTTPS** — the install prompt does not appear on plain HTTP.
+Tourism-Team must be served over **HTTPS** — the install prompt does not appear on plain HTTP.
 
 **iOS (Safari):**
-1. Open TREK in Safari.
+1. Open Tourism-Team in Safari.
 2. Tap the Share button.
 3. Select **Add to Home Screen**.
 
 **Android (Chrome / Edge):**
-1. Open TREK in the browser.
+1. Open Tourism-Team in the browser.
 2. Tap the browser menu.
 3. Select **Install app** or **Add to Home Screen**.
 
-Once installed, TREK launches in **standalone** mode (fullscreen, no browser UI) using the TREK icon.
+Once installed, Tourism-Team launches in **standalone** mode (fullscreen, no browser UI) using the Tourism-Team icon.
 
 The installed app starts at the app root, so the **Start page** setting decides what you see when you tap the icon — the dashboard, or straight into your active trip on a tab of your choice. See [Display-Settings](Display-Settings).
 
 ## What works offline
 
-TREK uses Workbox service-worker caching plus an IndexedDB database (Dexie) for structured trip data. The following content is available offline after the first sync:
+Tourism-Team uses Workbox service-worker caching plus an IndexedDB database (Dexie) for structured trip data. The following content is available offline after the first sync:
 
 **Service-worker cache (Workbox)**
 
@@ -41,7 +41,7 @@ TREK uses Workbox service-worker caching plus an IndexedDB database (Dexie) for 
 
 **IndexedDB (Dexie) — structured trip data**
 
-On login, when the browser comes back online, and when you lift **Force offline mode**, TREK runs a background sync that writes full trip bundles into IndexedDB — you can also start one by hand with **Re-sync now**, with **Download for offline use** for a progress-tracked run, or by re-enabling a trip's offline toggle:
+On login, when the browser comes back online, and when you lift **Force offline mode**, Tourism-Team runs a background sync that writes full trip bundles into IndexedDB — you can also start one by hand with **Re-sync now**, with **Download for offline use** for a progress-tracked run, or by re-enabling a trip's offline toggle:
 
 - Trips, days, places, packing items, to-dos, budget items, reservations, accommodations, trip members, tags, and categories.
 - File attachments that are neither photos nor videos (PDFs, documents, etc.) are downloaded and stored as blobs in IndexedDB. Videos are deliberately skipped — a single clip can be hundreds of megabytes and would evict the trip's real documents.

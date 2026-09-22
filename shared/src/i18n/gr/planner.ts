@@ -48,6 +48,7 @@ const planner: TranslationStrings = {
   'planner.route': 'Διαδρομή',
   'planner.optimize': 'Βελτιστοποίηση',
   'planner.openGoogleMaps': 'Άνοιγμα στο Google Maps',
+  'planner.openAmapMaps': 'Άνοιγμα στο AMap',
   'planner.openCoMaps': 'Άνοιγμα στο CoMaps',
   'planner.selectDayHint': 'Επιλέξτε μια ημέρα από την αριστερή λίστα για να δείτε το πρόγραμμα',
   'planner.noPlacesForDay': 'Δεν υπάρχουν τοποθεσίες για αυτή την ημέρα ακόμη',

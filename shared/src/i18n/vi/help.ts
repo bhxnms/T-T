@@ -2,6 +2,7 @@ import type { TranslationStrings } from '../types';
 
 const help: TranslationStrings = {
   'help.title': 'Trợ giúp & Tài liệu',
+  'help.language': 'Wiki language',
   'help.search': 'Tìm trong tài liệu…',
   'help.contents': 'Nội dung',
   'help.noResults': 'Không có trang nào phù hợp.',

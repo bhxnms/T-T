@@ -97,6 +97,24 @@ export type SettingsUpdateRequest = z.infer<typeof settingsUpdateRequestSchema>;
 export const appSettingsUpdateRequestSchema = z.record(z.string(), z.unknown());
 export type AppSettingsUpdateRequest = z.infer<typeof appSettingsUpdateRequestSchema>;
 
+/** Credentials shown on the public login screen only during first deployment.
+ * The server removes the backing rows immediately after the forced password
+ * change, so this never becomes a standing secret-delivery endpoint. */
+export const bootstrapAdminCredentialsSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+});
+export type BootstrapAdminCredentials = z.infer<typeof bootstrapAdminCredentialsSchema>;
+
+export const appConfigResponseSchema = z
+  .object({
+    has_users: z.boolean(),
+    setup_complete: z.boolean(),
+    bootstrap_admin: bootstrapAdminCredentialsSchema.nullable().optional(),
+  })
+  .passthrough();
+export type AppConfigResponse = z.infer<typeof appConfigResponseSchema>;
+
 export const mfaDisableRequestSchema = z.object({
   password: z.string(),
   code: z.string(),

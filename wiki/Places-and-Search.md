@@ -15,17 +15,21 @@ Type in the search box at the top of the form. After 2 or more characters, with 
 - Use **↑ / ↓** to navigate results, **Enter** to select, **Esc** to dismiss.
 - Search results are biased toward the geographic center of your existing trip places. When those places span more than ~500 km, the bias is skipped.
 
-### With a Google Maps API key
+## With AMap (高德地图)
+
+When an administrator stores an AMap Web Service key and enables **Use AMap for place search**, the form queries AMap first. This is the recommended provider for Chinese addresses, names, POIs, opening hours, photos and China-focused routing. The form's provider toggle can switch one search back to the native providers without changing the instance default. See [AMap](AMap) for keys, coordinate conversion and limits.
+
+## With a Google Maps API key
 
 > **Admin:** The Google Maps API key is instance-wide, set in **Admin → Settings → API Keys**. It is stored encrypted at rest and used for every member of the instance; on managed instances the operator supplies it and the panel is hidden.
 
 When a key is present, the autocomplete uses the Google Places API, which can return ratings, opening hours, photos, and phone numbers from Google's database.
 
-> **API key restrictions:** TREK calls the Google Places API from the server, not the browser. If you apply **HTTP referrers** restrictions to your key in Google Cloud Console, you must also set `APP_URL` in your environment — TREK sends it as the `Referer` header on every outbound Google API request. Without it, Google will reject all server-side calls with `REQUEST_DENIED`. For server-side deployments, **IP address** restrictions are simpler and require no extra configuration. See [Troubleshooting](Troubleshooting) if photos are missing after adding a key.
+> **API key restrictions:** Tourism-Team calls the Google Places API from the server, not the browser. If you apply **HTTP referrers** restrictions to your key in Google Cloud Console, you must also set `APP_URL` in your environment — Tourism-Team sends it as the `Referer` header on every outbound Google API request. Without it, Google will reject all server-side calls with `REQUEST_DENIED`. For server-side deployments, **IP address** restrictions are simpler and require no extra configuration. See [Troubleshooting](Troubleshooting) if photos are missing after adding a key.
 
 ### Without a Google Maps API key
 
-TREK falls back to OpenStreetMap (Nominatim) automatically — no API key needed. A notice appears above the search box — *Using OpenStreetMap. A Google API key adds ratings and opening hours.* Results include name, address, and coordinates.
+Tourism-Team falls back to OpenStreetMap (Nominatim) automatically — no API key needed. A notice appears above the search box — *Using OpenStreetMap. A Google API key adds ratings and opening hours.* Results include name, address, and coordinates.
 
 ## Place details while searching
 
@@ -43,7 +47,7 @@ One credit line sits under the picture grid, and it belongs to the picture in pl
 Wikipedia and OpenStreetMap are always used and need no configuration:
 
 - Pictures from **Wikimedia Commons**, resolved from the place's own tags first — the Wikidata image, the lead image of its Wikipedia article, its Commons category — and falling back to a search by coordinate only when those turn up too few.
-- Descriptions from the OpenStreetMap `description` tag, or from the Wikipedia article the place is tagged with. TREK resolves the article from that tag rather than guessing it from the name, so an ambiguous name never pulls in the wrong article. A place with no such tag simply gets no description.
+- Descriptions from the OpenStreetMap `description` tag, or from the Wikipedia article the place is tagged with. Tourism-Team resolves the article from that tag rather than guessing it from the name, so an ambiguous name never pulls in the wrong article. A place with no such tag simply gets no description.
 
 With a Google Maps API key, and only if the matching admin switches are on, up to three **Google Places** photos and Google's editorial summary are added on top.
 
@@ -55,11 +59,11 @@ The column is desktop-only; the mobile place sheet is unchanged.
 
 ## Pasting a Google Maps URL
 
-Paste a `maps.app.goo.gl/…`, `goo.gl/maps/…`, or `maps.google.*/…` URL directly into the search box and press the search button. TREK resolves it server-side and populates the name, address, and coordinates.
+Paste a `maps.app.goo.gl/…`, `goo.gl/maps/…`, or `maps.google.*/…` URL directly into the search box and press the search button. Tourism-Team resolves it server-side and populates the name, address, and coordinates.
 
 ## Entering coordinates manually
 
-**Paste** a `lat, lng` pair (e.g. `48.8566, 2.3522`) into the **Latitude** field — comma, semicolon or space separated. TREK detects the pair and fills both coordinate fields at once. This works on paste only: the coordinate fields accept digits, a decimal point and a leading minus, so typing a pair by hand drops the separator and leaves a single invalid number (`48.85662.3522`) behind. Type the two values into their own fields instead.
+**Paste** a `lat, lng` pair (e.g. `48.8566, 2.3522`) into the **Latitude** field — comma, semicolon or space separated. Tourism-Team detects the pair and fills both coordinate fields at once. This works on paste only: the coordinate fields accept digits, a decimal point and a leading minus, so typing a pair by hand drops the separator and leaves a single invalid number (`48.85662.3522`) behind. Type the two values into their own fields instead.
 
 ## Place fields
 
@@ -77,6 +81,8 @@ Paste a `maps.app.goo.gl/…`, `goo.gl/maps/…`, or `maps.google.*/…` URL dir
 | File attachments | Click the Paperclip icon to attach a file, or paste an image or PDF from the clipboard. The Paperclip takes anything on the instance's **Allowed File Types** list — by default jpg, jpeg, png, gif, webp, heic, pdf, doc, docx, xls, xlsx, txt, csv, pkpass, pkpasses, md and markdown — plus video, which is exempt from that list. See [Documents-and-Files](Documents-and-Files) |
 
 Two inline warnings are shown when editing times: one if the end time is set to a value before or equal to the start time, and one if the times overlap with another place already assigned to the same day.
+
+> **Check in:** the place details panel has a **Check in** button for recording that you have actually been to this place. It then shows up in [Atlas](Atlas#check-ins)'s check-in list and on the map, and marks the country/region it sits in as visited.
 
 ## Costs for a place
 
@@ -98,7 +104,7 @@ Drag a `.gpx`, `.kml`, or `.kmz` file onto the Places sidebar to import all wayp
 
 Imported tracks each get their own line colour so multiple routes stay apart on the map; you can override it per track from the place details. See [Map Features](Map-Features) for the details.
 
-Importing the same list again does not duplicate what is already in the trip. A place is recognised by the provider id it was imported with (Google place id, Google feature id, or OSM id) before its name or its coordinates are considered, so renaming a place in TREK — or moving its pin — does not make it come back as a second copy on the next import.
+Importing the same list again does not duplicate what is already in the trip. A place is recognised by the provider id it was imported with (Google place id, Google feature id, or OSM id) before its name or its coordinates are considered, so renaming a place in Tourism-Team — or moving its pin — does not make it come back as a second copy on the next import.
 
 > **Admin:** The Google Maps API key is set instance-wide in **Admin → Settings → API Keys**. Without it, OSM search is used automatically.
 

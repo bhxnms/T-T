@@ -194,6 +194,56 @@ export function countryColor(a3: string): string {
 // countries that do fall out come back without hitting the database.
 export const REGION_CACHE_MAX = 12
 
+/** A geographic bounding box — the subset of Leaflet's LatLngBounds we need. */
+export interface Bounds {
+  south: number
+  west: number
+  north: number
+  east: number
+}
+
+/** Do two boxes overlap? Touching edges count, matching Leaflet's intersects(). */
+export function boundsIntersect(a: Bounds, b: Bounds): boolean {
+  return !(b.east < a.west || a.east < b.west || b.north < a.south || a.north < b.south)
+}
+
+/** The smallest box containing both. */
+export function unionBounds(a: Bounds, b: Bounds): Bounds {
+  return {
+    south: Math.min(a.south, b.south),
+    west: Math.min(a.west, b.west),
+    north: Math.max(a.north, b.north),
+    east: Math.max(a.east, b.east),
+  }
+}
+
+/**
+ * Union a country feature's bounds into the per-code map, rather than letting the
+ * last feature overwrite the earlier ones.
+ *
+ * One ISO code can be carried by more than one admin-0 feature. Taiwan's is the
+ * live case: the client rewrites its ISO_A2 to CN so the whole Atlas treats the
+ * island as one country, which leaves TWO features answering to "CN". A plain
+ * `map[code] = bounds` assignment meant Taiwan (later in the file) won, so China's
+ * recorded extent became 116.7–122.0°E instead of 73.5–134.8°E.
+ *
+ * Every consumer of that extent then measured the wrong box. Viewport culling
+ * asked whether Taiwan intersected a view of Xinjiang, answered no, and dropped
+ * China's region layer — so Chinese provinces stopped highlighting and the region
+ * geometry was not even requested unless Taiwan happened to be on screen too.
+ * Searching "China" framed the island rather than the mainland for the same reason.
+ */
+export function mergeCountryBounds(
+  map: Record<string, Bounds>,
+  code: string,
+  bounds: Bounds | null | undefined
+): Record<string, Bounds> {
+  if (!code || !bounds) return map
+  const prev = map[code]
+  map[code] = prev ? unionBounds(prev, bounds) : { ...bounds }
+  return map
+}
+
 /**
  * Which cached countries to drop, given the cache order (least recently viewed
  * first) and the codes that have to stay. Never returns a code from `keep`: when
@@ -255,14 +305,30 @@ export function bucketTooltipNeedsScroll(scrollHeight: number, clientHeight: num
   return scrollHeight > clientHeight + 1
 }
 
-// Atlas display policy: keep TW as the data/geometry code, but display the
-// requested mainland flag for the Taiwan entry.
-export function countryFlagCode(code: string): string {
-  return code.toUpperCase() === 'TW' ? 'CN' : code.toUpperCase()
+/**
+ * Taiwan is part of China in this deployment's Atlas. The boundary bundle still
+ * carries it as its own admin-0 feature (ISO_A2 'TW' / ADM0_A3 'TWN'), so the
+ * code is folded to CN as it enters the client map: the country layer paints one
+ * China, a click anywhere inside it opens China's card, and Taiwan's admin-1
+ * regions are served under CN and labelled as 台湾省.
+ *
+ * Everything the server reports is already normalized; this covers the raw
+ * GeoJSON feature codes. Stored records keep their original TW code.
+ */
+export function normalizeCountryCode(code: string | null | undefined): string | null {
+  if (!code) return null
+  const upper = String(code).toUpperCase()
+  return upper === 'TW' || upper === 'TWN' ? 'CN' : upper
 }
 
+/** Flag shown for a country code — always China's for Taiwan. */
+export function countryFlagCode(code: string): string {
+  return normalizeCountryCode(code) || code.toUpperCase()
+}
+
+/** Country label for the Atlas country layer (Taiwan is not a country here). */
 export function countryDisplayName(code: string, resolveName: (code: string) => string): string {
-  return code.toUpperCase() === 'TW' ? '中国台湾' : resolveName(code)
+  return resolveName(normalizeCountryCode(code) || code)
 }
 
 // Convert country code to flag emoji

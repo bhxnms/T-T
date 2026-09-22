@@ -221,3 +221,76 @@ describe('wiki — default path resolution', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * Language selection. The fixture tree deliberately has a zh/ directory holding
+ * Home but NOT Sample, so the fallback has a real gap to exercise: a partially
+ * translated wiki must still read end to end.
+ */
+describe('wiki — language selection', () => {
+  it('serves the translated page when the language has one', async () => {
+    const wiki = await loadWiki(FIXTURE_WIKI);
+
+    const zh = await wiki.getWikiPage('Home', 'zh');
+    expect(zh.title).toBe('示例首页');
+    expect(zh.markdown).toContain('这是中文首页');
+
+    const en = await wiki.getWikiPage('Home');
+    expect(en.title).toBe('Fixture Home');
+  });
+
+  it('falls back to English for a page the language has not translated', async () => {
+    const wiki = await loadWiki(FIXTURE_WIKI);
+
+    // Sample.md exists in the root tree and is absent from zh/ — the exact state
+    // a partially translated wiki is in, and the reason the fallback exists.
+    const zh = await wiki.getWikiPage('Sample', 'zh');
+    expect(zh.title).toBe(await wiki.getWikiPage('Sample').then((p) => p.title));
+    expect(zh.markdown).toContain('Sample Page');
+  });
+
+  it('falls back to English for the whole tree when the language directory is absent', async () => {
+    // TREK_WIKI_DIR is a tree with no zh/ at all (an image built before the
+    // translation shipped). Every request must still answer, in English.
+    const wiki = await loadWiki(MISSING_WIKI);
+
+    // No sidebar anywhere -> the GitHub path, which the stub fetch fails, so this
+    // is the honest "nothing at all" case and must still 404 rather than hang.
+    await expect(wiki.getWikiPage('Home', 'zh')).rejects.toBeInstanceOf(wiki.WikiNotFound);
+  });
+
+  it('carries the language on rewritten links and images, and omits it for English', async () => {
+    const wiki = await loadWiki(FIXTURE_WIKI);
+
+    const zh = await wiki.getWikiPage('Home', 'zh');
+    expect(zh.markdown).not.toMatch(/\]\(\/help\/[A-Za-z-]+\)/); // none without the param
+    if (/\]\(\/help\//.test(zh.markdown)) expect(zh.markdown).toMatch(/\?lang=zh/);
+
+    const en = await wiki.getWikiPage('Home');
+    expect(en.markdown).not.toMatch(/\?lang=/);
+  });
+
+  it('normalizes an unknown or missing language to English', async () => {
+    const wiki = await loadWiki(FIXTURE_WIKI);
+    const en = await wiki.getWikiPage('Home');
+
+    for (const input of ['fr', 'klingon', '', undefined, null, 'ZH ']) {
+      const page = await wiki.getWikiPage('Home', wiki.normalizeWikiLang(input));
+      if (String(input).trim().toLowerCase() === 'zh') expect(page.title).toBe('示例首页');
+      else expect(page.title).toBe(en.title);
+    }
+  });
+
+  it('falls back to the English asset when the translated one is missing', async () => {
+    const wiki = await loadWiki(FIXTURE_WIKI);
+
+    // zh/assets holds pic.png but not notes.txt' sibling png set; the language-
+    // neutral images (Portainer's UI, in the real wiki) exist only in English.
+    const viaZh = await wiki.getWikiAsset('assets/pic.png', 'zh');
+    expect(viaZh.buf.length).toBeGreaterThan(0);
+    expect(viaZh.type).toBe('image/png');
+
+    // notes.txt is not an image, so it is refused regardless of language.
+    await expect(wiki.getWikiAsset('assets/notes.txt', 'zh')).rejects.toBeInstanceOf(wiki.WikiNotFound);
+  });
+});

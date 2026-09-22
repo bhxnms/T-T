@@ -1,10 +1,10 @@
 # MCP Overview
 
-TREK includes a built-in [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server. MCP is an open standard that lets AI assistants read and modify data in external services through a structured API. When the MCP addon is enabled on your TREK instance, AI clients such as Claude.ai, Claude Desktop, Cursor, VS Code, and others can connect directly to your trips.
+Tourism-Team includes a built-in [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server. MCP is an open standard that lets AI assistants read and modify data in external services through a structured API. When the MCP addon is enabled on your Tourism-Team instance, AI clients such as Claude.ai, Claude Desktop, Cursor, VS Code, and others can connect directly to your trips.
 
 ## What you can do
 
-Once connected, an AI assistant can work with your TREK data in a single conversation:
+Once connected, an AI assistant can work with your Tourism-Team data in a single conversation:
 
 - Create and update trips, days, and itineraries
 - Search for real-world places and add them to your trip
@@ -22,7 +22,7 @@ Changes made through MCP are broadcast to all connected clients in real-time —
 
 | Use case | Method |
 |---|---|
-| Interactive client (Claude.ai, Cursor, VS Code…) | OAuth 2.1 with browser consent — TREK issues tokens after you approve scopes in a consent screen |
+| Interactive client (Claude.ai, Cursor, VS Code…) | OAuth 2.1 with browser consent — Tourism-Team issues tokens after you approve scopes in a consent screen |
 | AI agent or script running unattended | Machine client (client_credentials) — token obtained directly via `client_id` + `client_secret`, no browser ever opened |
 | Legacy setups | Static API token — deprecated, full access, no scopes |
 
@@ -31,7 +31,7 @@ See [MCP-Setup](MCP-Setup) for step-by-step instructions for each method.
 ## Requirements
 
 - **MCP addon enabled** — an administrator must enable the MCP addon (`mcp`) from the Admin Panel before the `/mcp` endpoint becomes available and the MCP section appears in user settings.
-- **`APP_URL` set** — set the `APP_URL` environment variable to your TREK instance's public URL so OAuth discovery advertises the right issuer and endpoints. If it is unset or not a valid URL, TREK falls back to the first entry of `ALLOWED_ORIGINS`, and then to `http://localhost:{PORT}`. Only an `https://` origin or `localhost` / `127.0.0.1` is accepted as the issuer — anything else is replaced by `http://localhost:{PORT}`, which remote OAuth clients cannot reach.
+- **`APP_URL` set** — set the `APP_URL` environment variable to your Tourism-Team instance's public URL so OAuth discovery advertises the right issuer and endpoints. If it is unset or not a valid URL, Tourism-Team falls back to the first entry of `ALLOWED_ORIGINS`, and then to `http://localhost:{PORT}`. Only an `https://` origin or `localhost` / `127.0.0.1` is accepted as the issuer — anything else is replaced by `http://localhost:{PORT}`, which remote OAuth clients cannot reach.
 
 ## Rate limits and session limits
 
@@ -53,7 +53,7 @@ Reaching `MCP_MAX_SESSION_PER_USER` does not refuse the request: the server clos
 ## Endpoint
 
 ```
-https://<your-trek-instance>/mcp
+https://<your-tt-instance>/mcp
 ```
 
 If the MCP addon is not enabled, this endpoint returns `403`. If authentication fails, it returns `401`.

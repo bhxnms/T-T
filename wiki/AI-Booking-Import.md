@@ -1,6 +1,6 @@
 # AI Booking Import
 
-The **AI Parsing** addon adds a large-language-model fallback to TREK's booking import. When [KDE Itinerary](Reservations-and-Bookings#import-from-booking-confirmation) can't read a confirmation — a plain-text email, an unusual PDF layout, a vendor whose format it doesn't recognise — TREK can hand the document to an AI model and turn it into a reservation you review before saving.
+The **AI Parsing** addon adds a large-language-model fallback to Tourism-Team's booking import. When [KDE Itinerary](Reservations-and-Bookings#import-from-booking-confirmation) can't read a confirmation — a plain-text email, an unusual PDF layout, a vendor whose format it doesn't recognise — Tourism-Team can hand the document to an AI model and turn it into a reservation you review before saving.
 
 It is an **opt-in addon, disabled by default**, and it works with a self-hosted local model, so no booking data has to leave your server.
 
@@ -68,7 +68,7 @@ The upload flow is the normal booking import — the AI simply runs behind it:
 
 1. In the trip planner, open the **Bookings** tab and click **Import from file**.
 2. Drop your files (EML, PDF, PKPass, HTML, TXT — up to 5 files, 10 MB each) onto the upload area.
-3. The upload dialog closes right away and a **background widget** (bottom-right) shows *Parsing files…* with a running count. You can keep navigating TREK while it works; the widget survives a page reload and even follows you to other pages.
+3. The upload dialog closes right away and a **background widget** (bottom-right) shows *Parsing files…* with a running count. You can keep navigating Tourism-Team while it works; the widget survives a page reload and even follows you to other pages.
 4. When parsing finishes, click the widget's **Import** button to start the review.
 5. Each parsed booking opens **pre-filled in the normal reservation (or transport) editor**, one at a time. Nothing is saved until you confirm each one.
 
@@ -80,7 +80,7 @@ It is a retry, not a different route — on a normal import the model has alread
 
 ### What gets filled in and created
 
-The model is asked to capture the full booking — including **every leg of a multi-segment flight** — and, on save, TREK wires each item into the trip:
+The model is asked to capture the full booking — including **every leg of a multi-segment flight** — and, on save, Tourism-Team wires each item into the trip:
 
 - **Fields** — booking/confirmation code, dates and times, and per type: seat, class, platform, total price and currency; hotels bring their address, rental cars their company, restaurants and events their venue with phone and website.
 - **Places** — only a **hotel** booking becomes a trip place. On save the review editor reuses an existing trip place whose name matches; otherwise the reviewed address is geocoded and a new place is created and linked, so the map pin appears. Transport stops are geocoded while the files are parsed, but they are stored on the booking as its **From → To endpoints**, not as trip places — a stop that could not be located is listed as a warning on the parse result and is dropped when you save, so fix it in the review editor first. Restaurant and event venues arrive only as the booking's location text: the editor can link a place that already exists in the trip, but it never creates one for you.
@@ -91,7 +91,7 @@ The model is asked to capture the full booking — including **every leg of a mu
 ## Good to know
 
 - **No manual migration**, and the addon is configured in the UI. The one environment variable it reads is `LLM_TIMEOUT_MS` (see [Environment-Variables](Environment-Variables)).
-- **Local inference can be slow.** On a CPU-only host a single booking can take tens of seconds to a couple of minutes; TREK allows a model 15 minutes per document by default, which `LLM_TIMEOUT_MS` raises or lowers. Uploads are parsed **one at a time** per user, so several files queue rather than run in parallel.
+- **Local inference can be slow.** On a CPU-only host a single booking can take tens of seconds to a couple of minutes; Tourism-Team allows a model 15 minutes per document by default, which `LLM_TIMEOUT_MS` raises or lowers. Uploads are parsed **one at a time** per user, so several files queue rather than run in parallel.
 - **Parse jobs are kept for about 10 minutes** after they finish. Start the review within that window.
 - **Privacy** — with the Local provider nothing leaves your network. With OpenAI or Anthropic, the document's text (or, for Anthropic, the PDF itself) is sent to that provider for extraction.
 - **API keys are never returned in plaintext** — they are encrypted at rest and only ever shown masked.

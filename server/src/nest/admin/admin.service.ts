@@ -118,7 +118,7 @@ export class AdminService {
     }
 
     const pwCheck = validatePassword(password);
-    if (!pwCheck.ok) return { error: pwCheck.reason, status: 400 };
+    if (!pwCheck.ok) return { error: pwCheck.reason, code: pwCheck.code, status: 400 };
 
     if (data.role && !['user', 'admin'].includes(data.role)) {
       return { error: 'Invalid role', status: 400 };
@@ -192,7 +192,7 @@ export class AdminService {
 
     if (password) {
       const pwCheck = validatePassword(password);
-      if (!pwCheck.ok) return { error: pwCheck.reason, status: 400 };
+      if (!pwCheck.ok) return { error: pwCheck.reason, code: pwCheck.code, status: 400 };
     }
     const passwordHash = password ? bcrypt.hashSync(password, BCRYPT_COST) : null;
 
@@ -464,7 +464,7 @@ export class AdminService {
   }
 
   async checkVersion(): Promise<VersionInfo> {
-    const currentVersion: string = readEnv().app.appVersion || '0.6.5';
+    const currentVersion: string = readEnv().app.appVersion || '0.7.0';
     const isPrerelease = currentVersion.includes('-pre.');
     const cached = readVersionCache();
     if (cached) return cached;

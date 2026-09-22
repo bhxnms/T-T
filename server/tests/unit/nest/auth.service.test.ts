@@ -14,6 +14,7 @@ import { WebauthnConfigService } from '../../../src/nest/auth/webauthn-config.se
 import { BudgetService } from '../../../src/nest/budget/budget.service';
 import { ExchangeRatesService } from '../../../src/nest/budget/exchange-rates.service';
 import { DatabaseService } from '../../../src/nest/database/database.service';
+import { DEMO_EMAIL_PRIMARY } from '../../../src/nest/common/demo';
 import { AllowedFileTypesService } from '../../../src/nest/files/allowed-file-types.service';
 import { DEFAULT_ALLOWED_EXTENSIONS } from '../../../src/nest/files/files.constants';
 import { MailerService } from '../../../src/nest/notifications/mailer/mailer.service';
@@ -587,6 +588,26 @@ describe('getAppConfig', () => {
     vi.unstubAllEnvs();
   });
 
+  it('AUTH-DB-050a: anonymous first-deploy config includes bootstrap credentials only while password change is pending', () => {
+    const password = 'generated-first-password';
+    const admin = createAdmin(testDb, { email: 'admin@tt.local', password });
+    // The test crypto mock is identity, but the production code path still has
+    // to unwrap the app_settings row before calling decrypt_api_key — this test
+    // catches the row-vs-string bug that previously hid the credentials.
+    testDb
+      .prepare("INSERT INTO app_settings (key, value) VALUES ('bootstrap_admin_email', ?), ('bootstrap_admin_password', ?)")
+      .run('admin@tt.local', password);
+    testDb.prepare('UPDATE users SET must_change_password = 1 WHERE id = ?').run(admin.user.id);
+
+    const pending = svc.getAppConfig(null) as any;
+    expect(pending.bootstrap_admin).toEqual({ email: 'admin@tt.local', password });
+
+    testDb.prepare('DELETE FROM app_settings WHERE key LIKE \'bootstrap_admin_%\'').run();
+    testDb.prepare('UPDATE users SET must_change_password = 0 WHERE id = ?').run(admin.user.id);
+    const complete = svc.getAppConfig(null) as any;
+    expect(complete.bootstrap_admin).toBeNull();
+  });
+
   it('AUTH-DB-050b: fresh-install fallback matches DEFAULT_ALLOWED_EXTENSIONS (pkpass/md included)', () => {
     // No allowed_file_types row: the config payload must advertise the same
     // default list the upload filters actually enforce — the historical
@@ -685,8 +706,19 @@ describe('demoLogin', () => {
   it('AUTH-DB-054: 500 when the demo user row is missing; token + safe user when present', () => {
     vi.stubEnv('DEMO_MODE', 'true');
     expect(svc.demoLogin()).toEqual({ error: 'Demo user not found', status: 500 });
-    // demoLogin looks up DEMO_EMAIL_PRIMARY specifically (not any demo alias).
-    createUser(testDb, { email: 'demo@trek.app' });
+    createUser(testDb, { email: DEMO_EMAIL_PRIMARY });
+    const result = svc.demoLogin();
+    expect(typeof result.token).toBe('string');
+    expect(result.user).not.toHaveProperty('password_hash');
+    vi.unstubAllEnvs();
+  });
+
+  it('AUTH-DB-054b: an instance seeded by an older build still logs in', () => {
+    // The hourly reset restores the DB file from a baseline written at seed
+    // time, so the demo row can still carry an address an older build used.
+    // Looking up only the current address made the demo button answer 500.
+    vi.stubEnv('DEMO_MODE', 'true');
+    createUser(testDb, { email: 'demo@nomad.app' });
     const result = svc.demoLogin();
     expect(typeof result.token).toBe('string');
     expect(result.user).not.toHaveProperty('password_hash');

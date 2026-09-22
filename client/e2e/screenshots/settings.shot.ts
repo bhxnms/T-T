@@ -1,4 +1,4 @@
-import { test, clearNotices } from './shot'
+import { test, clearNotices, tabLabel } from './shot'
 import type { Page } from '@playwright/test'
 
 /**
@@ -11,7 +11,7 @@ import type { Page } from '@playwright/test'
  */
 
 async function openSidebarTab(page: Page, label: string) {
-  await page.getByRole('button', { name: label, exact: true }).first().click()
+  await page.getByRole('button', { name: tabLabel(label), exact: true }).first().click()
   await page.waitForTimeout(600)
 }
 

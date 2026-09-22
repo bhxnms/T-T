@@ -57,6 +57,7 @@ const atlas: TranslationStrings = {
   'atlas.bucketWhen': "Quand prévoyez-vous d'y aller ?",
   'atlas.bucketDuplicate': 'Déjà dans votre bucket list',
   'atlas.planned': 'Prévu',
+  'atlas.showLandmarks': 'Afficher les repères',
   'atlas.showPlanned': 'Afficher les pays prévus',
   'atlas.plannedFor': 'Prévu pour',
   'atlas.antarctica': 'Antarctique',

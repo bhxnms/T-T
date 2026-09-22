@@ -7,6 +7,7 @@ import {
   Bug,
   ChevronDown,
   ChevronLeft,
+  Cloud,
   Database,
   FileText,
   Github,
@@ -26,6 +27,7 @@ import { useState } from 'react';
 import { adminApi } from '../../../api/client';
 import { useCountUp } from '../../../hooks/useCountUp';
 import { useTranslation } from '../../../i18n';
+import AdminTunnelTab from '../../../pages/admin/AdminTunnelTab';
 import { useAdmin } from '../../../pages/admin/useAdmin';
 import MAdminAddonManager from './MAdminAddonManager';
 import MAdminAuditLogPanel from './MAdminAuditLogPanel';
@@ -100,6 +102,8 @@ export default function MAdmin() {
     { id: 'addons', label: t('admin.tabs.addons'), icon: Blocks },
     { id: 'plugins', label: t('admin.tabs.plugins'), icon: Puzzle },
     ...(managed ? [] : [{ id: 'storage', label: t('admin.tabs.storage'), icon: HardDrive }]),
+    // Same as the desktop list: operator-level, refused server-side in managed mode.
+    ...(managed ? [] : [{ id: 'tunnel', label: t('admin.tabs.tunnel'), icon: Cloud }]),
     { id: 'notifications', label: t('admin.tabs.notifications'), icon: Bell },
     ...(mcpEnabled ? [{ id: 'mcp-tokens', label: t('admin.tabs.mcpTokens'), icon: Plug }] : []),
     // Same two the desktop list drops: releases and backup schedule belong to
@@ -255,6 +259,9 @@ export default function MAdmin() {
       )}
       {activeTab === 'plugins' && <MAdminPluginsPanel />}
       {activeTab === 'storage' && <MAdminStoragePanel />}
+      {/* Reuses the responsive desktop panel: its form is already a single
+          column on narrow screens, so a mobile twin would be a copy. */}
+      {activeTab === 'tunnel' && <AdminTunnelTab t={t} />}
       {activeTab === 'mcp-tokens' && <MAdminMcpTokensPanel />}
       {activeTab === 'github' && <MAdminGitHubPanel isPrerelease={updateInfo?.is_prerelease ?? false} />}
       {activeTab === 'backup' && <MAdminBackupPanel />}

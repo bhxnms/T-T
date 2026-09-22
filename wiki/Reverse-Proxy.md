@@ -1,8 +1,8 @@
 # Reverse Proxy
 
-Putting TREK behind a TLS-terminating reverse proxy is strongly recommended for production.
+Putting Tourism-Team behind a TLS-terminating reverse proxy is strongly recommended for production.
 
-## Why HTTPS Matters for TREK
+## Why HTTPS Matters for Tourism-Team
 
 - **PWA install** requires HTTPS — browsers block "Add to Home Screen" on plain HTTP.
 - **Session cookies** — the `trek_session` cookie is marked `secure` in production, so it won't be sent over HTTP.
@@ -13,7 +13,7 @@ Putting TREK behind a TLS-terminating reverse proxy is strongly recommended for 
 
 Whatever proxy you use, it must satisfy three constraints:
 
-1. **WebSocket upgrades on `/ws`** — TREK uses WebSockets for real-time sync. Set `proxy_read_timeout 86400` (Nginx) or rely on Caddy's automatic upgrade handling.
+1. **WebSocket upgrades on `/ws`** — Tourism-Team uses WebSockets for real-time sync. Set `proxy_read_timeout 86400` (Nginx) or rely on Caddy's automatic upgrade handling.
 2. **Body size ≥ 500 MB** — backup restore ZIPs can include the full uploads directory. Set `client_max_body_size 500m` (Nginx); Caddy imposes no request-body limit of its own, so it already passes them — just keep any `request_body { max_size … }` block you have at `500mb` or more.
 3. **Pass the `Mcp-Session-Id` header through on `/mcp`** — if you use MCP. See below.
 
@@ -22,13 +22,13 @@ Whatever proxy you use, it must satisfy three constraints:
 ```nginx
 server {
     listen 80;
-    server_name trek.yourdomain.com;
+    server_name tt.yourdomain.com;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name trek.yourdomain.com;
+    server_name tt.yourdomain.com;
 
     ssl_certificate /path/to/fullchain.pem;
     ssl_certificate_key /path/to/privkey.pem;
@@ -66,14 +66,14 @@ server {
 Key lines:
 - `proxy_read_timeout 86400` — keeps WebSocket connections alive (86400 s = 24 h).
 - `client_max_body_size 500m` — allows large backup restore uploads; set in both locations.
-- `X-Forwarded-Proto $scheme` — tells TREK whether the original request was HTTPS; required for `FORCE_HTTPS` redirect and cookie security to work correctly.
+- `X-Forwarded-Proto $scheme` — tells Tourism-Team whether the original request was HTTPS; required for `FORCE_HTTPS` redirect and cookie security to work correctly.
 
 ## Caddy
 
 Caddy handles WebSocket upgrades automatically:
 
 ```
-trek.yourdomain.com {
+tt.yourdomain.com {
     reverse_proxy localhost:3000
 }
 ```
@@ -81,13 +81,110 @@ trek.yourdomain.com {
 Caddy applies no request-body limit by default, so large backup restores already pass through the config above. Only add `request_body` if you want to cap uploads deliberately — and then keep the cap at 500 MB or more. It is a block, not a one-line directive:
 
 ```
-trek.yourdomain.com {
+tt.yourdomain.com {
     request_body {
         max_size 500mb
     }
     reverse_proxy localhost:3000
 }
 ```
+
+## Cloudflare Tunnel
+
+A Cloudflare Tunnel reaches your instance without opening a port or getting a
+certificate yourself: `cloudflared` dials out to Cloudflare's edge and the
+public hostname is served from there.
+
+There are two ways to set one up, and they are independent — use whichever fits.
+
+### Option A: run cloudflared yourself (recommended)
+
+This is the normal path and needs nothing from Tourism-Team beyond the proxy variables
+below. Add the connector as a second Compose service:
+
+```yaml
+services:
+  app:
+    # ... your existing app service, unchanged ...
+    ports: []          # optional: with a tunnel you no longer need to publish 3000
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - app
+```
+
+Get `CLOUDFLARE_TUNNEL_TOKEN` from Zero Trust → Networks → Tunnels → your tunnel
+→ *Install connector*. Point the tunnel's public hostname at `http://app:3000`
+(the service name and container port, not `localhost`).
+
+Then set on the **app** service:
+
+```yaml
+environment:
+  - APP_URL=https://tt.example.com     # your tunnel hostname
+  - TRUST_PROXY=1                      # Cloudflare is the only hop
+```
+
+The **three hard requirements** at the top of this page apply to a tunnel too:
+WebSocket upgrades on `/ws`, request bodies of at least 500 MB, and
+`Mcp-Session-Id` passing through unchanged. Cloudflare's defaults already allow
+all three; only change them if you have added WAF rules.
+
+> **Bot Fight Mode / WAF:** if you enable Bot Fight Mode on the zone, it
+> challenges the MCP endpoints and API clients. Add a WAF exception (or a
+> bypass rule) for the paths you connect programmatically. See
+> [Troubleshooting](Troubleshooting).
+
+### Option B: let the admin panel do it for you
+
+**Admin → Cloudflare Tunnel** is for operators who would rather not assemble the
+above by hand. It stores a Cloudflare API token, then — with one click — creates
+the tunnel, writes its ingress rules and points the hostname's DNS at it. You
+copy the connector token it hands back into the sidecar, and that is the whole
+setup.
+
+What it needs from you:
+
+1. A Cloudflare **API token** with the *Account → Cloudflare Tunnel → Edit* and
+   *Zone → DNS → Edit* permissions, and your **Account ID** (both on the tab).
+2. The **hostname** you want and a **tunnel name** (any label you like).
+3. After creating the tunnel: the **connector token** it displays. Copy it right
+   away — it is shown once and the app does not keep a copy.
+
+Then run the sidecar the panel renders:
+
+```yaml
+tunnel:
+  image: cloudflare/cloudflared:latest
+  restart: unless-stopped
+  command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+  depends_on:
+    - app
+```
+
+Two things to know about it:
+
+- **It is off by default, and while it is off it does nothing.** Nothing is
+  stored, nothing is applied, and an existing setup of your own keeps working
+  exactly as before. Turn it on only if you want the help.
+- **It does not run the connector.** The shipped container mounts its filesystem
+  read-only and drops its capabilities, so `cloudflared` runs as a separate
+  process — the sidecar above, a systemd unit, or a host service. The panel's
+  job ends at creating the tunnel and handing you the token.
+
+Because the tunnel is created as *remotely managed*, there is no `config.yml` and
+no credentials file: the ingress rules live in Cloudflare's configuration, which
+is what the panel wrote. Changing the hostname later means editing it on the tab
+and creating the tunnel again — the panel will not silently leave a stale rule.
+
+The panel is admin-only and withheld on a managed (hosted) instance, because a
+tunnel fronts the whole install and belongs to whoever operates it.
+
+After changing `APP_URL` or `TRUST_PROXY`, restart the app container — those are
+read from the environment at boot and the panel cannot change them for you.
 
 ## MCP behind a proxy
 
@@ -104,10 +201,10 @@ the client (check that your reverse proxy forwards it).
 Nginx and Caddy both forward custom headers in both directions by default, so **the standard configs above already work**. You only need to act if you have deliberately restricted headers:
 
 - Don't list `/mcp` under a `proxy_hide_header` directive, and don't run it through a response-header allowlist that omits `Mcp-Session-Id`.
-- If your proxy rewrites or lowercases headers, that's fine — HTTP header names are case-insensitive and both TREK and MCP clients treat them as such.
-- The browser-facing `Access-Control-Expose-Headers: Mcp-Session-Id` response header is what permits browser-based clients (Claude.ai, Claude Desktop connectors, MCP Inspector) to *read* the session id at all. TREK sends it automatically — don't strip or overwrite it in the proxy.
+- If your proxy rewrites or lowercases headers, that's fine — HTTP header names are case-insensitive and both Tourism-Team and MCP clients treat them as such.
+- The browser-facing `Access-Control-Expose-Headers: Mcp-Session-Id` response header is what permits browser-based clients (Claude.ai, Claude Desktop connectors, MCP Inspector) to *read* the session id at all. Tourism-Team sends it automatically — don't strip or overwrite it in the proxy.
 
-TREK 3.3.0 and earlier did not send `Access-Control-Expose-Headers` at all, which caused exactly the symptom above regardless of proxy configuration. If you are on an older version and see a new session per tool call, upgrade — no proxy change will fix it.
+Tourism-Team 3.3.0 and earlier did not send `Access-Control-Expose-Headers` at all, which caused exactly the symptom above regardless of proxy configuration. If you are on an older version and see a new session per tool call, upgrade — no proxy change will fix it.
 
 ### Streaming responses
 
@@ -125,11 +222,11 @@ location /mcp {
 }
 ```
 
-TREK sends an SSE keep-alive comment every 25 seconds (`MCP_SSE_KEEPALIVE`) precisely so proxies with a short idle timeout — nginx defaults to 60 s — don't drop an idle stream between tool calls. Lower the interval if your proxy's timeout is tighter than that.
+Tourism-Team sends an SSE keep-alive comment every 25 seconds (`MCP_SSE_KEEPALIVE`) precisely so proxies with a short idle timeout — nginx defaults to 60 s — don't drop an idle stream between tool calls. Lower the interval if your proxy's timeout is tighter than that.
 
 ## HTTPS Environment Variables
 
-Five variables control how TREK behaves behind a proxy. They work as a group:
+Five variables control how Tourism-Team behaves behind a proxy. They work as a group:
 
 | Variable | Purpose | Default |
 |---|---|---|
@@ -137,13 +234,13 @@ Five variables control how TREK behaves behind a proxy. They work as a group:
 | `HSTS_INCLUDE_SUBDOMAINS` | When `true`: adds the `includeSubDomains` directive to the HSTS header, extending HTTPS enforcement to all subdomains. Only effective while HSTS is active. Leave `false` if you run other services on sibling subdomains over plain HTTP. | `false` |
 | `TRUST_PROXY` | Number of trusted proxy hops. Lets Express read the real client IP from `X-Forwarded-For`. Automatically set to `1` in production even if not explicitly configured. | `1` (production), off (development) |
 | `COOKIE_SECURE` | Controls the `secure` flag on `trek_session`. Auto-derived as `true` when `NODE_ENV=production`, when `FORCE_HTTPS=true`, or when the request itself arrived over TLS — Express sets `req.secure` once your proxy sends `X-Forwarded-Proto: https` and `TRUST_PROXY` is configured. Set to `false` explicitly to allow cookies over plain HTTP (e.g. LAN testing without TLS). | auto |
-| `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins (e.g. `https://trek.example.com`). In production without this set, all cross-origin requests are blocked. In development without this set, all origins are allowed. | blocked in prod, open in dev |
+| `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins (e.g. `https://tt.example.com`). In production without this set, all cross-origin requests are blocked. In development without this set, all origins are allowed. | blocked in prod, open in dev |
 
 > **Note on HSTS:** The `max-age=31536000` header goes out whenever `FORCE_HTTPS=true` **or** `NODE_ENV=production`, and `NODE_ENV=production` is the default in the Docker image, the compose file and the Helm chart — so a standard install sends HSTS even with `FORCE_HTTPS` unset. Browsers ignore the header on a plain-HTTP response, so an instance you only ever reach over HTTP is unaffected. Once a browser has seen it over HTTPS, though, it refuses plain HTTP to that hostname for a year, so don't plan on falling back to `http://` for a hostname you have already served over HTTPS.
 
 > **Note on `FORCE_HTTPS` and proxy headers:** The HTTPS redirect reads `X-Forwarded-Proto` directly from the incoming headers — it does not depend on Express's `trust proxy` setting. If you set `FORCE_HTTPS=true` and your reverse proxy correctly sends `X-Forwarded-Proto: https`, the redirect will work regardless of `TRUST_PROXY`. However, you still need `TRUST_PROXY` set so Express resolves the correct client IP from `X-Forwarded-For`.
 
-If you access TREK directly on `http://<host>:3000` without a proxy, leave `FORCE_HTTPS` unset and do not set `TRUST_PROXY`.
+If you access Tourism-Team directly on `http://<host>:3000` without a proxy, leave `FORCE_HTTPS` unset and do not set `TRUST_PROXY`.
 
 See [Environment-Variables](Environment-Variables) for full documentation of these and all other variables.
 

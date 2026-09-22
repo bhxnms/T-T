@@ -28,6 +28,96 @@ const TRIP = {
   reminder_days: 3,
 }
 
+/**
+ * Chinese overrides for the user-visible demo strings, for the zh screenshots.
+ *
+ * A Chinese UI showing an English trip name reads as half-finished, so the
+ * `wiki/zh/` captures use a Chinese trip throughout. Real-world place names stay
+ * as a user would actually type or see them (nobody translates "teamLab
+ * Planets"), which is the same split the app itself makes; everything the demo
+ * author invented — the trip, its notes, expense labels, packing and todo items —
+ * is translated.
+ *
+ * Keyed by the English string, so `zh(...)` degrades to English on a miss and a
+ * newly added seed string can never silently go missing in Chinese.
+ */
+const ZH: Record<string, string> = {
+  'Autumn in Japan': '日本秋季之旅',
+  'Two weeks chasing momiji season from Tokyo down to Kyoto.': '两周追着红叶季，从东京一路南下到京都。',
+  'Go before 08:00 — the gate is empty and the light is better.': '8 点前去，人少而且光线更好。',
+  'Immersive digital art museum you walk through barefoot.': '沉浸式数字艺术馆，需要赤脚参观。',
+  'Timed entry — book at least a week ahead.': '分时段入场，至少提前一周预约。',
+  'The scramble. Best viewed from the Shibuya Sky observation deck.': '著名的十字路口，从 SHIBUYA SKY 观景台看最好。',
+  'Forest shrine in the middle of the city.': '闹市中的森林神社。',
+  'Thousands of vermilion torii gates climbing Mount Inari.': '成千上万的朱红鸟居沿稻荷山而上。',
+  'The crowds thin out after the first 20 minutes of climbing.': '爬过前 20 分钟人就少了。',
+  'Bamboo path leading to the Okochi Sanso villa gardens.': '竹林小径，通往大河内山庄庭园。',
+  "Five covered blocks of food stalls — 'Kyoto's kitchen'.": '五条带顶棚的美食街，号称「京都的厨房」。',
+  'Come hungry. Try the tamagoyaki.': '空着肚子来，尝尝玉子烧。',
+  // Expenses
+  'Flights FRA → HND': '机票 FRA → HND',
+  'Booked with miles, taxes only.': '里程兑换，只付了税费。',
+  'Ryokan in Hakone': '箱根温泉旅馆',
+  '2 nights, kaiseki dinner included.': '两晚，含怀石料理晚餐。',
+  'JR Pass (14 days)': 'JR Pass（14 天）',
+  'Green car, activated on arrival.': '绿色车厢，抵达后激活。',
+  'teamLab Planets tickets': 'teamLab Planets 门票',
+  'Dinner at Nishiki': '锦市场晚餐',
+  // Packing
+  Documents: '证件',
+  Passport: '护照',
+  'JR Pass voucher': 'JR Pass 兑换券',
+  'Travel insurance': '旅行保险',
+  Clothing: '衣物',
+  'Rain jacket': '雨衣',
+  'Walking shoes': '步行鞋',
+  'Light layers': '轻薄外套',
+  Electronics: '电子设备',
+  'Type-A adapter': 'A 型转换插头',
+  'Power bank': '充电宝',
+  Camera: '相机',
+  // Todos
+  'Book teamLab Planets slot': '预约 teamLab Planets 时段',
+  'Before departure': '出发前',
+  'Activate JR Pass': '激活 JR Pass',
+  'On arrival': '抵达后',
+  'Reserve ryokan dinner': '预订旅馆晚餐',
+  // Collab notes
+  'The 14-day JR Pass covers the Tokyo–Kyoto legs. Activate it at the airport counter on arrival, not before.':
+    '14 天的 JR Pass 覆盖东京到京都这一段。抵达后在机场柜台激活，不要提前激活。',
+  'Shoes off at the entrance, yukata for dinner. Dinner is served at 18:30 sharp — being late is genuinely rude.':
+    '进门脱鞋，晚餐穿浴衣。晚餐 18:30 准点开席 —— 迟到真的很失礼。',
+  'teamLab Planets, the Kyoto Railway Museum and Nishiki Market all work in bad weather.':
+    '下雨天可以去 teamLab Planets、京都铁道博物馆和锦市场。',
+  // Polls
+  'Which day should we keep free for Nara?': '哪天留给奈良比较合适？',
+  'Wed, Sep 16': '9 月 16 日（周三）',
+  'Thu, Sep 17': '9 月 17 日（周四）',
+  'Sat, Sep 19': '9 月 19 日（周六）',
+  'Ryokan or city hotel in Hakone?': '箱根住温泉旅馆还是市区酒店？',
+  'Ryokan with onsen': '带温泉的旅馆',
+  'City hotel': '市区酒店',
+  // Chat
+  'Flights are booked — we land at Haneda 08:25 on the 13th.': '机票订好了 —— 13 号早上 8:25 落地羽田。',
+  'Nice. Should we go straight to the hotel or drop bags and head out?': '好。先去酒店，还是放下行李就出门？',
+  'Drop bags. I want to be at Senso-ji before the crowds.': '先放行李。我想赶在人流之前到浅草寺。',
+  "Agreed. I've put it on day 1 with a note to go before 08:00.": '同意。已经放到第一天了，备注写了 8 点前去。',
+  'Booked the teamLab slot for the 13th, 14:00. Tickets are in the Files tab.': 'teamLab 约到 13 号 14:00 了。票在「文件」标签页里。',
+  'Do we need to reserve the ryokan dinner separately?': '旅馆晚餐要另外预订吗？',
+  "It's included — kaiseki, 18:30. Added it to the to-dos so we don't forget to confirm.":
+    '含在房费里了 —— 怀石料理，18:30。加进待办事项了，免得忘了确认。',
+  // Journey / collections
+  'Kyoto shortlist': '京都备选清单',
+  'Places we want to reach on the second week.': '第二周想去的地点。',
+  'Momiji season, Tokyo to Kyoto': '红叶季，东京到京都',
+  'Rail passes': '铁路通票',
+  Transport: '交通',
+  'Ryokan etiquette': '温泉旅馆礼仪',
+  Accommodation: '住宿',
+  'Rainy-day alternatives': '雨天备选',
+  Ideas: '灵感',
+}
+
 const MEMBERS = [
   { username: 'mira', email: 'mira@example.com', password: 'DemoSeed12345!', role: 'user' },
   { username: 'jonas', email: 'jonas@example.com', password: 'DemoSeed12345!', role: 'user' },
@@ -109,6 +199,39 @@ async function call<T>(api: APIRequestContext, method: 'post' | 'put' | 'get' | 
 
 export type ContextFactory = (token?: string) => Promise<APIRequestContext>
 
+/**
+ * The seed language, from the environment rather than a module-level constant:
+ * Playwright imports this file in every worker, and the screenshot project sets
+ * SHOT_LANG per run (see shot.ts). Reading it lazily keeps one build of this
+ * module usable for both the English and Chinese capture passes.
+ */
+function lang(): 'en' | 'zh' {
+  return process.env.SHOT_LANG === 'zh' ? 'zh' : 'en'
+}
+
+/** Translate one demo string, falling back to the English original. */
+function zh(en: string): string {
+  return lang() === 'zh' ? (ZH[en] ?? en) : en
+}
+
+/**
+ * Rebuild a seed object with every translatable string run through `zh()`.
+ *
+ * Shallow-walking the literal rather than hand-writing a second dataset keeps
+ * the coordinates, dates, prices and category ids — the parts that must stay
+ * identical for the captures to be comparable — in exactly one place.
+ */
+function localize<T>(value: T): T {
+  if (typeof value === 'string') return zh(value) as unknown as T
+  if (Array.isArray(value)) return value.map(localize) as unknown as T
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = localize(v)
+    return out as T
+  }
+  return value
+}
+
 export async function seedDemoData(
   api: APIRequestContext,
   newContext?: ContextFactory,
@@ -125,7 +248,16 @@ export async function seedDemoData(
   //     celsius/metric/24h consistent across the store and the settings UI) —
   //     stating them here keeps the captures reproducible either way.
   await call(api, 'post', '/api/settings/bulk', {
-    settings: { temperature_unit: 'celsius', distance_unit: 'metric' },
+    settings: {
+      temperature_unit: 'celsius',
+      distance_unit: 'metric',
+      // The ACCOUNT's language, which is what actually drives the UI here.
+      // localStorage.app_language alone is not enough: settingsStore's
+      // loadSettings spreads the server's record over local state
+      // (settingsStore.ts:125-129), so the saved account language wins and an
+      // English account would render English no matter what the browser holds.
+      language: lang(),
+    },
   })
 
   // 2. Extra members. Ignore 409 so a re-run against a warm DB still works.
@@ -140,8 +272,17 @@ export async function seedDemoData(
     }
   }
 
-  // 3. The trip, in JPY.
-  const { trip } = await call<{ trip: { id: number } }>(api, 'post', '/api/trips', TRIP)
+  // 3. The trip, in JPY. Every demo string is localized once, here, so the rest
+  //    of this function posts data that is already in the right language and the
+  //    two capture passes exercise identical code.
+  const tripSpec = localize(TRIP)
+  const places = localize(PLACES)
+  const expenses = localize(EXPENSES)
+  const packing = localize(PACKING)
+  const todos = localize(TODOS)
+  const tripName = tripSpec.title
+
+  const { trip } = await call<{ trip: { id: number } }>(api, 'post', '/api/trips', tripSpec)
   const tripId = trip.id
 
   for (const m of MEMBERS) {
@@ -155,7 +296,7 @@ export async function seedDemoData(
 
   // 5. Places, then pin each onto its day.
   const placeIds: number[] = []
-  for (const p of PLACES) {
+  for (const p of places) {
     const { day, ...payload } = p
     const { place } = await call<{ place: { id: number } }>(
       api, 'post', `/api/trips/${tripId}/places`, payload)
@@ -179,7 +320,7 @@ export async function seedDemoData(
   //    NOTE: never send exchange_rate — the server freezes the FX rate itself,
   //    and a hand-supplied one fights the settlement maths.
   const allMembers = [1, ...memberIds]
-  for (const e of EXPENSES) {
+  for (const e of expenses) {
     await call(api, 'post', `/api/trips/${tripId}/budget`, {
       ...e,
       payers: [{ user_id: 1, amount: e.total_price }],
@@ -195,7 +336,7 @@ export async function seedDemoData(
   }
 
   // 8. Packing — category is free text on the item, there is no category resource.
-  for (const group of PACKING) {
+  for (const group of packing) {
     for (const name of group.items) {
       await call(api, 'post', `/api/trips/${tripId}/packing`, {
         name, category: group.category, visibility: 'common',
@@ -203,7 +344,7 @@ export async function seedDemoData(
     }
   }
 
-  for (const t of TODOS) {
+  for (const t of todos) {
     await call(api, 'post', `/api/trips/${tripId}/todo`, t).catch(() => {})
   }
 
@@ -234,7 +375,7 @@ export async function seedDemoData(
   try {
     const created = await call<{ id: number } | { collection: { id: number } }>(
       api, 'post', '/api/addons/collections',
-      { name: 'Kyoto shortlist', description: 'Places we want to reach on the second week.',
+      { name: zh('Kyoto shortlist'), description: zh('Places we want to reach on the second week.'),
         color: '#ef4444', icon: 'MapPin' })
     collectionId = 'id' in created ? created.id : created.collection.id
     for (const placeId of placeIds.slice(4)) {
@@ -249,7 +390,7 @@ export async function seedDemoData(
   try {
     const j = await call<{ id: number } | { journey: { id: number } }>(
       api, 'post', '/api/journeys',
-      { title: 'Autumn in Japan', subtitle: 'Momiji season, Tokyo to Kyoto', trip_ids: [tripId] })
+      { title: tripName, subtitle: zh('Momiji season, Tokyo to Kyoto'), trip_ids: [tripId] })
     journeyId = 'id' in j ? j.id : j.journey.id
   } catch { /* journey addon unavailable */ }
 
@@ -287,15 +428,15 @@ export async function seedDemoData(
     { title: 'Rainy-day alternatives', category: 'Ideas', color: '#22c55e',
       content: 'teamLab Planets, the Kyoto Railway Museum and Nishiki Market all work in bad weather.' },
   ]) {
-    await api.post(`${collab}/notes`, { data: n }).catch(() => {})
+    await api.post(`${collab}/notes`, { data: localize(n) }).catch(() => {})
   }
 
   const pollRes = await api.post(`${collab}/polls`, {
-    data: {
+    data: localize({
       question: 'Which day should we keep free for Nara?',
       options: ['Wed, Sep 16', 'Thu, Sep 17', 'Sat, Sep 19'],
       multiple: false,
-    },
+    }),
   })
   if (pollRes.ok()) {
     const { poll } = (await pollRes.json()) as { poll: { id: number | string } }
@@ -304,7 +445,7 @@ export async function seedDemoData(
     await as('jonas').post(`${collab}/polls/${poll.id}/vote`, { data: { option_index: 2 } }).catch(() => {})
   }
   await api.post(`${collab}/polls`, {
-    data: { question: 'Ryokan or city hotel in Hakone?', options: ['Ryokan with onsen', 'City hotel'], multiple: false },
+    data: localize({ question: 'Ryokan or city hotel in Hakone?', options: ['Ryokan with onsen', 'City hotel'], multiple: false }),
   }).catch(() => {})
 
   const conversation: Array<[string, string]> = [
@@ -318,7 +459,7 @@ export async function seedDemoData(
   ]
   for (const [who, text] of conversation) {
     const ctx = who === 'admin' ? api : as(who)
-    await ctx.post(`${collab}/messages`, { data: { text } }).catch(() => {})
+    await ctx.post(`${collab}/messages`, { data: { text: zh(text) } }).catch(() => {})
   }
 
   for (const ctx of Object.values(members)) await ctx.dispose()

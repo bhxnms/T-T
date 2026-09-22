@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { authApi } from '../../api/client'
 import { getApiErrorMessage } from '../../types'
+import { passwordPolicyMessages } from '../../utils/apiError'
 import { useTranslation } from '../../i18n'
 
 /**
@@ -52,7 +53,7 @@ export function useResetPassword() {
         setSuccess(true)
       }
     } catch (err) {
-      setError(getApiErrorMessage(err, t('login.resetPasswordFailed')))
+      setError(getApiErrorMessage(err, t('login.resetPasswordFailed'), passwordPolicyMessages(t)))
     }
     setIsLoading(false)
   }

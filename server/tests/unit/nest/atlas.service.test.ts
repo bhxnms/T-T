@@ -512,6 +512,166 @@ describe('getCountryFromCoords', () => {
     expect(getCountryFromCoords(42.0106, 20.9714)).toBe('MK'); // Tetovo
     expect(getCountryFromCoords(42.6629, 21.1655)).toBe('XK'); // Pristina
   });
+
+  it('ATLAS-SVC-005m: Taiwan resolves to CN, not a country of its own', () => {
+    // Taipei, Kaohsiung and Taichung all sit in the bundle's TW admin-0 feature,
+    // which the Atlas folds into China.
+    expect(getCountryFromCoords(25.033, 121.5654)).toBe('CN'); // Taipei
+    expect(getCountryFromCoords(22.6273, 120.3014)).toBe('CN'); // Kaohsiung
+    expect(getCountryFromCoords(24.1477, 120.6736)).toBe('CN'); // Taichung
+  });
+
+  it('ATLAS-SVC-005n: folding Taiwan into CN leaves the mainland resolving correctly', () => {
+    // The TW polygon is appended to CN's entry; if it had overwritten it (the old
+    // "last feature wins" behaviour) these mainland points would fall through.
+    expect(getCountryFromCoords(39.9042, 116.4074)).toBe('CN'); // Beijing
+    expect(getCountryFromCoords(31.2304, 121.4737)).toBe('CN'); // Shanghai
+    expect(getCountryFromCoords(23.1291, 113.2644)).toBe('CN'); // Guangzhou
+  });
+
+  it('ATLAS-SVC-005o: the China override puts the disputed border areas inside China', () => {
+    // The bundled geoBoundaries data draws Aksai Chin and South Tibet inside
+    // India; the override (built from AMap province data) restores China's own
+    // claim. Without it these four points all answered IN.
+    expect(getCountryFromCoords(35.0, 79.5)).toBe('CN'); // Aksai Chin
+    expect(getCountryFromCoords(35.5, 79.0)).toBe('CN'); // Aksai Chin, north
+    expect(getCountryFromCoords(28.2, 94.0)).toBe('CN'); // South Tibet
+    expect(getCountryFromCoords(27.7, 91.9)).toBe('CN'); // Tawang
+    expect(getCountryFromCoords(32.7, 79.4)).toBe('CN'); // Demchok
+  });
+
+  it('ATLAS-SVC-005p: the China override does not swallow India proper', () => {
+    // The override is consulted before the box ranking, so this is the guard
+    // that it stops at the claimed line rather than at India's box.
+    expect(getCountryFromCoords(28.6139, 77.209)).toBe('IN'); // Delhi
+    expect(getCountryFromCoords(19.076, 72.8777)).toBe('IN'); // Mumbai
+    expect(getCountryFromCoords(13.0827, 80.2707)).toBe('IN'); // Chennai
+  });
+
+  it('ATLAS-SVC-005q: the override carries Chinese province names', async () => {
+    const geo = await getRegionGeo(['CN']);
+    const names = (geo.features ?? []).map((f: any) => f.properties?.name).filter(Boolean);
+    // 34 provincial-level units, named in Chinese rather than transliterated.
+    expect(names.length).toBe(34);
+    expect(names).toContain('北京市');
+    expect(names).toContain('西藏自治区');
+    expect(names).toContain('新疆维吾尔自治区');
+    expect(names).toContain('台湾省');
+  });
+});
+
+// ── The province layer over disputed ground ─────────────────────────────────
+//
+// Replacing China's own outlines fixed the country layer, but the map draws a
+// REGION layer on top of it from admin1, and India's provinces kept their full
+// geoBoundaries geometry there. Hovering or clicking South Tibet or Aksai Chin
+// therefore highlighted and named an Indian province over Chinese ground — the
+// country outline agreed with China while the province drawn on top of it did
+// not. These tests pin the province half.
+//
+// The first attempt at this filtered admin1 by NAME. It matched nothing at all:
+// the bundle spells these "Arunāchal Pradesh" and "Ladākh", with macrons, so a
+// plain-ASCII comparison was always false and the code silently changed no
+// geometry. The replacement is geometric, which is why there is nothing left to
+// name-match here.
+describe('getRegionGeo — disputed ground in the province layer', () => {
+  beforeAll(async () => {
+    await getRegionGeo(['ZZ']);
+  }, 60_000);
+
+  /** Even-odd point-in-ring, sufficient for these province outlines. */
+  function inRing(lng: number, lat: number, ring: number[][]): boolean {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i];
+      const [xj, yj] = ring[j];
+      if (yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+
+  function inGeometry(lng: number, lat: number, geom: any): boolean {
+    const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+    for (const poly of polys) {
+      if (!inRing(lng, lat, poly[0])) continue;
+      let hole = false;
+      for (let k = 1; k < poly.length; k++) {
+        if (inRing(lng, lat, poly[k])) {
+          hole = true;
+          break;
+        }
+      }
+      if (!hole) return true;
+    }
+    return false;
+  }
+
+  const disputedPoints: [string, number, number][] = [
+    ['Aksai Chin', 35.0, 79.5],
+    ['South Tibet (Tawang)', 27.7, 91.9],
+    ['South Tibet (east)', 28.2, 94.0],
+    ['Demchok', 32.7, 79.4],
+  ];
+
+  it("ATLAS-SVC-005r: India's served provinces no longer cover Aksai Chin or South Tibet", async () => {
+    const geo = await getRegionGeo(['IN']);
+    expect(geo.features.length).toBeGreaterThan(0);
+    for (const [label, lat, lng] of disputedPoints) {
+      const covering = (geo.features as any[]).filter((f) => f.geometry && inGeometry(lng, lat, f.geometry));
+      expect(
+        covering.map((f) => f.properties?.iso_3166_2),
+        `${label} is still inside an Indian province`,
+      ).toEqual([]);
+    }
+  });
+
+  it('ATLAS-SVC-005s: an Indian place outside the claim still resolves to its own province', async () => {
+    // The guard on 005r: cutting the polygons must not have deleted the provinces.
+    // Delhi must keep resolving, and the two disputed provinces must still be
+    // served (trimmed), not dropped.
+    const geo = await getRegionGeo(['IN']);
+    const codes = (geo.features as any[]).map((f) => f.properties?.iso_3166_2);
+    expect(codes).toContain('IN-DL'); // Delhi
+    expect(codes).toContain('IN-MH'); // Mahārāshtra
+    expect(codes).toContain('IN-AR'); // Arunāchal Pradesh — trimmed, not removed
+    expect(codes).toContain('IN-LA'); // Ladākh — trimmed, not removed
+
+    const delhi = (geo.features as any[]).find((f) => f.properties?.iso_3166_2 === 'IN-DL');
+    expect(inGeometry(77.209, 28.6139, delhi.geometry)).toBe(true);
+
+    // Arunāchal must still hold the ground south of the claim — Tezu sits outside
+    // China's outline (005t proves the partition), so it stays Indian. Deliberately
+    // NOT asserted for towns like Along or Bomdila: those are inside the claim
+    // under this deployment's map, so their removal is the intended behaviour.
+    const ar = (geo.features as any[]).find((f) => f.properties?.iso_3166_2 === 'IN-AR');
+    expect(inGeometry(96.13, 27.92, ar.geometry), 'Tezu should remain Indian').toBe(true);
+  });
+
+  it("ATLAS-SVC-005t: a province and China's outline never both claim the same point", async () => {
+    // The independent check: rather than re-asserting the file we just built,
+    // compare the served province against the COUNTRY outline the map already
+    // draws. The two layers must partition the ground — if both covered a point
+    // the darker one would win visually and the two would disagree on hover.
+    const cn = await getRegionGeo(['CN']);
+    const inOverrideChina = (lng: number, lat: number) =>
+      (cn.features as any[]).some((f) => f.geometry && inGeometry(lng, lat, f.geometry));
+
+    const in_ = await getRegionGeo(['IN']);
+    const ar = (in_.features as any[]).find((f) => f.properties?.iso_3166_2 === 'IN-AR');
+
+    const samples: [string, number, number][] = [
+      ['Tezu', 96.13, 27.92],
+      ['Along', 94.8, 28.17],
+      ['Tawang', 91.87, 27.59],
+      ['Bomdila', 92.4, 27.26],
+      ['Ziro', 93.83, 27.55],
+    ];
+    for (const [label, lng, lat] of samples) {
+      const chinaHolds = inOverrideChina(lng, lat);
+      const indiaHolds = inGeometry(lng, lat, ar.geometry);
+      expect(indiaHolds, `${label}: both China and India claim it (or neither)`).toBe(!chinaHolds);
+    }
+  });
 });
 
 // ── isPointInCountryBox — sanity gate for the address-derived region fallback ──────
@@ -1204,6 +1364,39 @@ describe('getVisitedRegions', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1); // fell through to Nominatim, not a fabricated JP match
     expect(result.regions['JP']).toBeUndefined();
+
+    vi.useRealTimers();
+  });
+
+  it('ATLAS-UNIT-026b: a place on disputed ground resolves to a CHINESE province, not an Indian one', async () => {
+    // The user-visible consequence of the province-layer fix. A place dropped in
+    // South Tibet or Aksai Chin used to resolve to India's Arunāchal Pradesh /
+    // Ladākh (the bundle's polygons covered it), so the Atlas coloured and named
+    // an Indian province over ground this map draws as Chinese. Resolution is
+    // offline against the bundled polygons, so no fetch is involved — but it is
+    // stubbed to fail loudly if the code ever falls through to Nominatim here.
+    vi.useFakeTimers();
+    const mockFetch = vi.fn().mockRejectedValue(new Error('resolution must not need the network'));
+    vi.stubGlobal('fetch', mockFetch);
+
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id, { title: 'Border trip' });
+    insertPlaceWithCoords(testDb, trip.id, 'Tawang', 27.7, 91.9);
+    insertPlaceWithCoords(testDb, trip.id, 'Aksai Chin camp', 35.0, 79.5);
+
+    await atlas.visitedRegions(user.id);
+    await vi.runAllTimersAsync();
+    const result = await atlas.visitedRegions(user.id);
+
+    const cn = result.regions['CN'] ?? [];
+    const codes = cn.map((r: any) => r.code);
+    // Tawang is in the override's Tibet, Aksai Chin in its Xinjiang. The codes are
+    // the override's ISO-3166-2 ones — the same scheme getRegionGeo serves, so the
+    // map can actually highlight what was resolved (the bundled codes used to
+    // disagree with the served layer, so the region never lit up).
+    expect(codes).toContain('CN-XZ');
+    expect(codes).toContain('CN-XJ');
+    expect(result.regions['IN']).toBeUndefined();
 
     vi.useRealTimers();
   });

@@ -567,6 +567,30 @@ export default function LoginPage(): React.ReactElement {
                     </div>
                   )}
 
+                  {/* First-deploy credentials must be shown BEFORE login: the
+                      user cannot reach a post-login notice without the password.
+                      The server only sends this while the generated admin still
+                      has must_change_password=1, and deletes it after the change. */}
+                  {appConfig?.bootstrap_admin && mode === 'login' && !passwordChangeStep && !mfaStep && (
+                    <div
+                      style={{
+                        padding: '12px 14px',
+                        background: '#fffbeb',
+                        border: '1px solid #fde68a',
+                        borderRadius: 10,
+                        fontSize: 'calc(13px * var(--fs-scale-body, 1))',
+                        color: '#92400e',
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('login.bootstrap.title')}</div>
+                      <div style={{ lineHeight: 1.65 }}>
+                        <div><strong>{t('login.bootstrap.email')}:</strong> {appConfig.bootstrap_admin.email}</div>
+                        <div><strong>{t('login.bootstrap.password')}:</strong> <code>{appConfig.bootstrap_admin.password}</code></div>
+                      </div>
+                      <div style={{ marginTop: 6, lineHeight: 1.5 }}>{t('login.bootstrap.hint')}</div>
+                    </div>
+                  )}
+
                   {insecureCookie && !appConfig?.managed && (
                     <div
                       style={{

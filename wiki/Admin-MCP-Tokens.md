@@ -8,7 +8,7 @@ This panel is only visible when the **MCP addon** is enabled in the [Admin-Addon
 
 ## OAuth Sessions
 
-OAuth sessions are created when a user authorizes an MCP client via the OAuth 2.1 flow. These are the recommended way to connect MCP clients to TREK.
+OAuth sessions are created when a user authorizes an MCP client via the OAuth 2.1 flow. These are the recommended way to connect MCP clients to Tourism-Team.
 
 **Columns:**
 

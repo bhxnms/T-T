@@ -57,6 +57,7 @@ const atlas: TranslationStrings = {
   'atlas.searchCountry': 'Hledat zemi...',
   'atlas.searchPlaces': 'Místa',
   'atlas.planned': 'Plánováno',
+  'atlas.showLandmarks': 'Show landmarks',
   'atlas.showPlanned': 'Zobrazit plánované země',
   'atlas.plannedFor': 'Plánováno na',
   'atlas.antarctica': 'Antarktida',

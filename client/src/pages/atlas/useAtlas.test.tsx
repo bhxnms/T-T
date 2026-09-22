@@ -53,6 +53,11 @@ const lf = vi.hoisted(() => ({
   // The country codes the viewport is over, when a test needs to be selective about it.
   // null falls back to the blanket `intersects` answer.
   intersectsOnly: null as string[] | null,
+  /** Query strings the region endpoint was asked for, in order. */
+  regionRequests: [] as string[],
+  // An exact viewport box, for tests that model real geography rather than the
+  // synthetic per-code cells. null falls back to the code list / blanket flag.
+  viewport: null as { south: number; west: number; north: number; east: number } | null,
   hasLayer: true,
   boundsThrows: false,
   mapsCreated: 0,
@@ -74,6 +79,8 @@ const lf = vi.hoisted(() => ({
     this.zoom = 3;
     this.intersects = true;
     this.intersectsOnly = null;
+    this.regionRequests = [];
+    this.viewport = null;
     this.hasLayer = true;
     this.boundsThrows = false;
     this.mapsCreated = 0;
@@ -109,10 +116,32 @@ vi.mock('@maplibre/maplibre-gl-leaflet', () => ({
 vi.mock('../../components/Map/engines/maplibre', () => ({ default: {} }));
 
 vi.mock('leaflet', () => {
-  // The bounds a country layer reports carry its own code, so the map's bounds can
-  // answer `intersects` per country instead of all-or-nothing.
+  // Country layers report REAL numeric bounds, like Leaflet's LatLngBounds. The
+  // production code unions these per ISO code (a code can be carried by more than
+  // one admin-0 feature) and compares them against the viewport numerically, so a
+  // fake carrying only a code could not exercise it.
+  //
+  // Each code gets its own one-degree band, laid out on a single axis so the cells
+  // are guaranteed DISJOINT (a 2-D letter grid would let e.g. ES and FR touch, and
+  // a view over one would then also match the other). Disjointness is what lets a
+  // test say "the view is over exactly these countries" by naming their codes —
+  // see `intersectsOnly` on the map double below.
+  const cellForCode = (code: string | null) => {
+    if (!code) return { south: -1, west: 0, north: -0.5, east: 1 };
+    const a = code.charCodeAt(0) - 65; // 'A' -> 0
+    const b = code.charCodeAt(1) - 65;
+    const index = a * 26 + b; // injective over two-letter codes
+    return { south: index, west: 0, north: index + 0.5, east: 1 };
+  };
+
   const makeLayer = (feature?: { properties?: Record<string, unknown> }) => {
-    const code = typeof feature?.properties?.ISO_A2 === 'string' ? feature.properties.ISO_A2 : null;
+    const props = feature?.properties;
+    const code = typeof props?.ISO_A2 === 'string' ? props.ISO_A2 : null;
+    // A feature may pin its own box, which is how a fixture models a country
+    // carried by two features with different extents (China + Taiwan).
+    const pinned = Array.isArray(props?.__bounds)
+      ? { south: Number(props.__bounds[0]), west: Number(props.__bounds[1]), north: Number(props.__bounds[2]), east: Number(props.__bounds[3]) }
+      : null;
     const handlers: Record<string, (e: unknown) => void> = {};
     const layer = {
       handlers,
@@ -124,7 +153,15 @@ vi.mock('leaflet', () => {
       setStyle: vi.fn(),
       getBounds: vi.fn(() => {
         if (lf.boundsThrows) throw new Error('no bounds');
-        return { isValid: () => true, code };
+        const cell = pinned ?? cellForCode(code);
+        return {
+          isValid: () => true,
+          code,
+          getSouth: () => cell.south,
+          getWest: () => cell.west,
+          getNorth: () => cell.north,
+          getEast: () => cell.east,
+        };
       }),
     };
     return layer;
@@ -149,10 +186,37 @@ vi.mock('leaflet', () => {
     }),
     getZoom: vi.fn(() => lf.zoom),
     getCenter: vi.fn(() => ({ lat: 25, lng: 0 })),
-    getBounds: vi.fn(() => ({
-      intersects: (other?: { code?: string | null }) =>
-        lf.intersectsOnly ? !!other?.code && lf.intersectsOnly.includes(other.code) : lf.intersects,
-    })),
+    // The viewport box. `intersectsOnly` names the countries the view sits over, so
+    // the box is their union; otherwise a blanket flag decides (all or nothing).
+    getBounds: vi.fn(() => {
+      if (lf.viewport) {
+        const v = lf.viewport;
+        return {
+          getSouth: () => v.south,
+          getWest: () => v.west,
+          getNorth: () => v.north,
+          getEast: () => v.east,
+        };
+      }
+      const named = lf.intersectsOnly;
+      const cells = named && named.length ? named.map(cellForCode) : null;
+      const box = cells
+        ? {
+            south: Math.min(...cells.map((c) => c.south)),
+            west: Math.min(...cells.map((c) => c.west)),
+            north: Math.max(...cells.map((c) => c.north)),
+            east: Math.max(...cells.map((c) => c.east)),
+          }
+        : lf.intersects
+          ? { south: -1000, west: -1000, north: 1000, east: 1000 }
+          : { south: 5000, west: 5000, north: 5001, east: 5001 };
+      return {
+        getSouth: () => box.south,
+        getWest: () => box.west,
+        getNorth: () => box.north,
+        getEast: () => box.east,
+      };
+    }),
     hasLayer: vi.fn(() => lf.hasLayer),
     createPane: vi.fn((name: string) => {
       lf.panes[name] = { style: {} };
@@ -321,7 +385,12 @@ function useAtlasHandlers(over: Partial<Record<string, unknown>> = {}) {
     http.get('/api/addons/atlas/countries/geo', () =>
       HttpResponse.json(over.geo ?? { type: 'FeatureCollection', features: [] })
     ),
-    http.get('/api/addons/atlas/regions/geo', () => HttpResponse.json(over.regionGeo ?? { features: [] })),
+    http.get('/api/addons/atlas/regions/geo', ({ request }) => {
+      // Recorded so a test can prove the fetch happened at all — the two-feature
+      // case below needs that, because a culled country is never even requested.
+      lf.regionRequests.push(new URL(request.url).searchParams.get('countries') ?? '');
+      return HttpResponse.json(over.regionGeo ?? { features: [] });
+    }),
     http.get('/api/atlas-layers', () => HttpResponse.json({ layers: over.layers ?? [] }))
   );
 }
@@ -1203,6 +1272,53 @@ describe('useAtlas', () => {
       await panTo('IT');
       expect(regionLayers().length).toBe(2);
       expect(regionCodesOf(newestRegionLayer())).toEqual(['IT-62']);
+    });
+
+    // ── A country carried by two admin-0 features ───────────────────────────────────
+    //
+    // Taiwan's feature is folded into China (its ISO_A2 is rewritten to CN), so TWO
+    // features answer to "CN". Registering country bounds with a plain assignment let
+    // the later feature — Taiwan — win, and every viewport question was then asked of
+    // the island: a view over Xinjiang or Tibet concluded China was off screen, so the
+    // province layer was dropped (and its geometry not even requested) unless Taiwan
+    // happened to be visible too. That is the "provinces only highlight when most of
+    // the screen is China" report.
+    it('FE-HOOK-ATLAS-042: a country whose code is carried by two features keeps the union of both extents', async () => {
+      // China's mainland box and Taiwan's island box, as real numbers.
+      const MAINLAND = [18.2, 73.5, 53.6, 134.8]; // S, W, N, E
+      const ISLAND = [20.7, 116.7, 26.4, 122.0];
+      const geo = {
+        type: 'FeatureCollection',
+        features: [
+          feature({ ISO_A2: 'CN', ADM0_A3: 'CHN', ISO_A3: 'CHN', NAME: 'China', ADMIN: 'China', __bounds: MAINLAND }),
+          // Later in the list, so a last-wins assignment would pick this one.
+          feature({ ISO_A2: 'CN', ADM0_A3: 'CHN', ISO_A3: 'CHN', NAME: 'Taiwan', ADMIN: 'China', __bounds: ISLAND }),
+        ],
+      };
+      const regionGeo = {
+        type: 'FeatureCollection',
+        features: [
+          feature({ iso_a2: 'cn', iso_3166_2: 'CN-XJ', name: 'Xinjiang', name_en: 'Xinjiang', admin: 'China' }),
+          feature({ iso_a2: 'cn', iso_3166_2: 'CN-XZ', name: 'Tibet', name_en: 'Tibet', admin: 'China' }),
+        ],
+      };
+
+      await mountAtlas({ geo, regionGeo });
+      await waitFor(() => expect(lf.mapHandlers.zoomend?.length).toBeGreaterThan(0));
+
+      // A view over Xinjiang alone — nowhere near Taiwan.
+      lf.zoom = 6;
+      lf.viewport = { south: 35, west: 79, north: 45, east: 90 };
+      await act(async () => {
+        lf.mapHandlers.zoomend?.forEach((cb) => cb());
+      });
+
+      // The regions must be requested at all…
+      await waitFor(() =>
+        expect(lf.regionRequests.some((q) => q.includes('CN'))).toBe(true)
+      );
+      // …and drawn, which is what hovering a province needs.
+      await waitFor(() => expect(regionCodesOf(newestRegionLayer()).length).toBeGreaterThan(0));
     });
 
     it('FE-HOOK-ATLAS-041: the cache stops at a dozen countries and reloads what fell out (#1950)', async () => {

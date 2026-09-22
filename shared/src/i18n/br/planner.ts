@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': 'Rota',
   'planner.optimize': 'Otimizar',
   'planner.openGoogleMaps': 'Abrir no Google Maps',
+  'planner.openAmapMaps': 'Abrir no AMap',
   'planner.openCoMaps': 'Abrir no CoMaps',
   'planner.selectDayHint': 'Selecione um dia na lista à esquerda para ver o plano do dia',
   'planner.noPlacesForDay': 'Nenhum lugar neste dia ainda',

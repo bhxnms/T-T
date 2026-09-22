@@ -69,31 +69,60 @@ export function loadAmap(apiKey?: string): Promise<AMapModule> {
   return promise;
 }
 
+/**
+ * The Krasovsky-ellipsoid GCJ-02 transform — the full standard series, matching
+ * server/src/nest/geo/gcj02.ts term for term.
+ *
+ * The sine terms below are not decoration. Dropping them (as this once did) still
+ * produces a "plausible" offset and still round-trips, so nothing failed, but it
+ * lands 170–330 m from where AMap puts the same point. Verified against AMap's
+ * own conversion of 116.478346,39.997361 → 116.484444,39.998649: this
+ * implementation agrees within 0.06 m, the truncated one was 273 m out.
+ */
+function outOfChina(lng: number, lat: number): boolean {
+  return !(lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55);
+}
+
+function transformLat(x: number, y: number): number {
+  let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+  ret += ((20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0) / 3.0;
+  ret += ((20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin((y / 3.0) * Math.PI)) * 2.0) / 3.0;
+  ret += ((160.0 * Math.sin((y / 12.0) * Math.PI) + 320 * Math.sin((y * Math.PI) / 30.0)) * 2.0) / 3.0;
+  return ret;
+}
+
+function transformLng(x: number, y: number): number {
+  let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+  ret += ((20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0) / 3.0;
+  ret += ((20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin((x / 3.0) * Math.PI)) * 2.0) / 3.0;
+  ret += ((150.0 * Math.sin((x / 12.0) * Math.PI) + 300.0 * Math.sin((x / 30.0) * Math.PI)) * 2.0) / 3.0;
+  return ret;
+}
+
 export function wgs84ToGcj02(lng: number, lat: number): { lng: number; lat: number } {
-  // Same Krasovsky transform as the server adapter, kept in a browser-safe
-  // module so markers, routes and click coordinates share one contract.
-  if (!(lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55)) return { lng, lat };
+  if (outOfChina(lng, lat)) return { lng, lat };
   const PI = Math.PI,
-    A = 6378245,
+    A = 6378245.0,
     EE = 0.006693421622965943;
-  const tLat = -100 + 2 * (lng - 105) + 3 * (lat - 35) + 0.2 * (lat - 35) ** 2;
-  const tLng = 300 + (lng - 105) + 2 * (lat - 35) + 0.1 * (lng - 105) ** 2;
-  const r = (lat * PI) / 180,
-    m = 1 - EE * Math.sin(r) ** 2,
-    s = Math.sqrt(m);
-  return {
-    lng: lng + (tLng * 180) / ((A / s) * Math.cos(r) * PI),
-    lat: lat + (tLat * 180) / (((A * (1 - EE)) / (m * s)) * PI),
-  };
+  let dLat = transformLat(lng - 105.0, lat - 35.0);
+  let dLng = transformLng(lng - 105.0, lat - 35.0);
+  const radLat = (lat / 180.0) * PI;
+  let magic = Math.sin(radLat);
+  magic = 1 - EE * magic * magic;
+  const sqrtMagic = Math.sqrt(magic);
+  dLat = (dLat * 180.0) / (((A * (1 - EE)) / (magic * sqrtMagic)) * PI);
+  dLng = (dLng * 180.0) / ((A / sqrtMagic) * Math.cos(radLat) * PI);
+  return { lng: lng + dLng, lat: lat + dLat };
 }
 
 export function gcj02ToWgs84(lng: number, lat: number): { lng: number; lat: number } {
-  if (!(lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55)) return { lng, lat };
-  const target = { lng, lat };
-  let guess = { lng, lat };
+  if (outOfChina(lng, lat)) return { lng, lat };
+  let wLng = lng;
+  let wLat = lat;
   for (let i = 0; i < 3; i++) {
-    const g = wgs84ToGcj02(guess.lng, guess.lat);
-    guess = { lng: guess.lng + target.lng - g.lng, lat: guess.lat + target.lat - g.lat };
+    const g = wgs84ToGcj02(wLng, wLat);
+    wLng += lng - g.lng;
+    wLat += lat - g.lat;
   }
-  return guess;
+  return { lng: wLng, lat: wLat };
 }

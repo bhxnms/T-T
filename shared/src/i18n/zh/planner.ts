@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': '路线',
   'planner.optimize': '优化',
   'planner.openGoogleMaps': '在 Google Maps 中打开',
+  'planner.openAmapMaps': '在高德地图中打开',
   'planner.openCoMaps': '在 CoMaps 中打开',
   'planner.selectDayHint': '从左侧列表选择一天以查看日程计划',
   'planner.noPlacesForDay': '当天暂无地点',

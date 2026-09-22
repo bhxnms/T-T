@@ -2,6 +2,8 @@ import type { TranslationStrings } from '../types';
 
 const dayplan: TranslationStrings = {
   'dayplan.icsTooltip': 'Xuất lịch (ICS)',
+  'dayplan.classicView': 'Classic view',
+  'dayplan.activitiesView': 'Activities view',
   'dayplan.emptyDay': 'Không có địa điểm nào được lên kế hoạch cho ngày này',
   'dayplan.cannotReorderTransport': 'Đặt chỗ với thời gian cố định không thể được sắp xếp lại',
   'dayplan.confirmRemoveTimeTitle': 'Xóa thời gian?',

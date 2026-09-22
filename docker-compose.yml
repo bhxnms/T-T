@@ -78,3 +78,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+
+  # Optional: Cloudflare Tunnel for external access without opening a port.
+  # Uncomment this service, set CLOUDFLARE_TUNNEL_TOKEN, and point the tunnel's
+  # public hostname at http://app:3000. Then add APP_URL (your tunnel hostname)
+  # and TRUST_PROXY=1 to the app service's environment above.
+  #
+  # The admin panel (Admin → Cloudflare Tunnel) can generate the connector config
+  # and those two variables for you; it does not run the connector itself, which
+  # is why it lives here. See wiki/Reverse-Proxy.md.
+#  tunnel:
+#    image: cloudflare/cloudflared:latest
+#    container_name: tt-planner-tunnel
+#    restart: unless-stopped
+#    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+#    depends_on:
+#      - app

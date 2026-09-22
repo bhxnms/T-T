@@ -1,6 +1,6 @@
 # MCP Tools and Resources
 
-TREK exposes **tools** (read and write actions) and **resources** (read-only `trek://` URIs). Tools are registered per-session based on OAuth scopes and enabled addons.
+Tourism-Team exposes **tools** (read and write actions) and **resources** (read-only `trek://` URIs). Tools are registered per-session based on OAuth scopes and enabled addons.
 
 For addon-gated tools (Packing, To-Dos, Atlas, Collab, Collections, Vacay, Journey) and their resources, see [MCP-Addon-Tools](MCP-Addon-Tools).
 
@@ -37,7 +37,7 @@ Requires `trips:read` or `trips:write` scope.
 | `list_trip_members` | List the owner and all collaborators of a trip. |
 | `add_trip_member` | Add a user to a trip by username or email. Owner only. |
 | `remove_trip_member` | Remove a collaborator from a trip. Owner only. |
-| `create_trip_guest` | Add a travelling companion who has no TREK account. Assignable to budget splits, packing and day participants; never signs in, never emailed. Owner only. |
+| `create_trip_guest` | Add a travelling companion who has no Tourism-Team account. Assignable to budget splits, packing and day participants; never signs in, never emailed. Owner only. |
 | `rename_trip_guest` | Rename a guest on a trip. Owner only. |
 | `delete_trip_guest` | Delete a guest and re-split the expenses they were part of. Owner only. |
 | `copy_trip` | Duplicate a trip (days, places, itinerary, packing, budget, reservations). Packing items reset to unchecked. |
@@ -259,7 +259,7 @@ Photo bytes are never returned: those are image URLs the app renders.
 
 | Tool | Description |
 |---|---|
-| `list_help_topics` | List the bundled help pages. Answers "how do I do X in TREK?" without guessing. |
+| `list_help_topics` | List the bundled help pages. Answers "how do I do X in Tourism-Team?" without guessing. |
 | `get_help_page` | Read one help page. |
 | `list_addons` | Which addons and collaboration features this instance has enabled. Worth calling when a tool you expected is not in the list: an addon that is off removes its tools exactly the way a missing scope does. |
 | `get_trip_warnings` | Warnings plugins have raised about a trip. A plugin raising one is telling the user something is wrong, so it is worth reading before reviewing an itinerary. |

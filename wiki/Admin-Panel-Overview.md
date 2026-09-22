@@ -1,6 +1,6 @@
 # Admin Panel Overview
 
-The Admin Panel is the central control surface for TREK instance operators. It is only accessible to users with the `admin` role.
+The Admin Panel is the central control surface for Tourism-Team instance operators. It is only accessible to users with the `admin` role.
 
 ## Accessing the Admin Panel
 

@@ -1,6 +1,6 @@
 # Admin — GitHub Releases
 
-The **GitHub** tab shows the TREK release history fetched from GitHub and provides links to community resources and support options.
+The **GitHub** tab shows the Tourism-Team release history fetched from GitHub and provides links to community resources and support options.
 
 ![GitHub tab](assets/GithubReleases.png)
 
@@ -12,14 +12,13 @@ Six cards at the top of the tab link to external resources:
 |------|------|
 | **Ko-fi** | Support the project financially |
 | **Buy Me a Coffee** | Alternative support link |
-| **Discord** | Join the TREK community |
 | **Report a Bug** | Open a GitHub issue with the bug report template |
 | **Feature Request** | Open a GitHub Discussion in the feature requests category |
 | **Wiki** | Open the GitHub Wiki |
 
 ## Release timeline
 
-Below the support cards, a chronological timeline lists GitHub releases for the `liketrek/TREK` repository. Each entry shows:
+Below the support cards, a chronological timeline lists GitHub releases for the `bhxnms/T-T` repository. Each entry shows:
 
 - **Version tag** (e.g., `v2.9.14`)
 - A **Latest** badge on the first (most recent) entry in the displayed list

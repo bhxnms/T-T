@@ -33,9 +33,6 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     'Η αναβάθμιση 3.0.14 εντόπισε μία ή περισσότερες συγκρούσεις ονομάτων χρήστη ή email που προκλήθηκαν από κενά στην αρχή/τέλος αποθηκευμένων λογαριασμών. Οι επηρεαζόμενοι λογαριασμοί μετονομάστηκαν αυτόματα. Ελέγξτε τα logs του server για γραμμές που ξεκινούν με **[migration] WHITESPACE COLLISION** για να εντοπίσετε ποιοι λογαριασμοί χρειάζονται έλεγχο.',
   'system_notice.welcome_v1.title': 'Καλώς ήρθατε στο TREK',
-  'system_notice.bootstrap_password.title': 'Change the initial admin password', // en-fallback
-  'system_notice.bootstrap_password.body':
-    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.', // en-fallback
   'system_notice.welcome_v1.body':
     'Ο πλήρης ταξιδιωτικός σας σχεδιαστής. Δημιουργήστε δρομολόγια, μοιραστείτε ταξίδια με φίλους και μείνετε οργανωμένοι — συνδεδεμένοι ή εκτός σύνδεσης.',
   'system_notice.welcome_v1.cta_label': 'Σχεδιάστε ένα ταξίδι',

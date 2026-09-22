@@ -1,12 +1,12 @@
 # Addons Overview
 
-Addons are optional features that an admin can enable or disable for the entire TREK instance. When an addon is disabled, its navigation tabs, menu items, and API routes are hidden from all users.
+Addons are optional features that an admin can enable or disable for the entire Tourism-Team instance. When an addon is disabled, its navigation tabs, menu items, and API routes are hidden from all users.
 
 ![Addon overview](assets/Addons-Overview.png)
 
 ## What addons are
 
-Each addon extends TREK with functionality beyond the core trip-planning features. Addons are managed globally — you cannot enable an addon for one user only. Once enabled, the feature becomes available to all users on the instance.
+Each addon extends Tourism-Team with functionality beyond the core trip-planning features. Addons are managed globally — you cannot enable an addon for one user only. Once enabled, the feature becomes available to all users on the instance.
 
 ## Addon list
 
@@ -14,7 +14,7 @@ The following addons are registered in the system (defined in `server/src/db/see
 
 | Addon ID | Type | Description |
 |---|---|---|
-| `mcp` | integration | Exposes TREK data and actions through the Model Context Protocol for AI assistant integrations. |
+| `mcp` | integration | Exposes Tourism-Team data and actions through the Model Context Protocol for AI assistant integrations. |
 | `packing` | trip | **Lists** — packing lists and to-do tasks for your trips. See [Packing-Lists](Packing-Lists). |
 | `budget` | trip | **Costs** — track and split trip expenses. See [Budget-Tracking](Budget-Tracking). |
 | `documents` | trip | Document and file attachments for trips — store itineraries, visa copies, and other files. See [Documents-and-Files](Documents-and-Files). |

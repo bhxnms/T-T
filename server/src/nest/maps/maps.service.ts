@@ -428,7 +428,7 @@ export interface AmapSharePayload {
 }
 
 export function parseAmapSharePayload(url: string): AmapSharePayload | null {
-  let raw: string | null = null;
+  let raw: string | null;
   try {
     raw = new URL(url).searchParams.get('p');
   } catch {

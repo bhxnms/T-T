@@ -53,6 +53,10 @@ import {
   type StorageConfigPut,
   type StorageTestResponse,
   type StorageUsage,
+  type CloudflareTunnelState,
+  type CloudflareTunnelConfigPut,
+  type CloudflareTunnelTestResult,
+  type CloudflareTunnelProvisionResult,
   type PluginSettingsField,
   type PluginInstanceConfigResponse,
   type PluginInstanceConfigUpdated,
@@ -726,6 +730,20 @@ export const adminApi = {
   // A full scan of a large install can exceed the 8s instance timeout.
   refreshStorageStats: (): Promise<StorageUsage> =>
     apiClient.post('/admin/storage/stats/refresh', undefined, { timeout: 120_000 }).then(r => r.data),
+  // Cloudflare tunnel (opt-in operator convenience). The probe talks to
+  // Cloudflare's API through the server, so it gets a ceiling above the 8s
+  // instance default.
+  getTunnel: (): Promise<CloudflareTunnelState> => apiClient.get('/admin/tunnel').then(r => r.data),
+  updateTunnel: (config: CloudflareTunnelConfigPut): Promise<CloudflareTunnelState> =>
+    apiClient.put('/admin/tunnel', config).then(r => r.data),
+  testTunnel: (input: { account_id?: string; api_token?: string }): Promise<CloudflareTunnelTestResult> =>
+    apiClient.post('/admin/tunnel/test', input, { timeout: 30_000 }).then(r => r.data),
+  // Creates the tunnel, writes its ingress rules and points DNS at it. Several
+  // Cloudflare round trips, so it gets a ceiling well above the 8s default.
+  provisionTunnel: (): Promise<CloudflareTunnelProvisionResult> =>
+    apiClient.post('/admin/tunnel/provision', undefined, { timeout: 60_000 }).then(r => r.data),
+  getTunnelConnector: (): Promise<{ available: boolean; compose?: string; command?: string; env?: string }> =>
+    apiClient.get('/admin/tunnel/connector').then(r => r.data),
 }
 
 export const addonsApi = {
@@ -1182,11 +1200,24 @@ export interface HelpNavItem { title: string; slug: string }
 export interface HelpNavSection { title: string; pages: HelpNavItem[] }
 export interface HelpPageData { slug: string; title: string; markdown: string }
 
+/** Wiki languages, mirroring WIKI_LANGS in server/src/nest/help/wiki.ts. */
+export type WikiLang = 'en' | 'zh'
+
+export const WIKI_LANGS: { value: WikiLang; label: string }[] = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: '简体中文' },
+]
+
 export const helpApi = {
-  index: (): Promise<{ sections: HelpNavSection[] }> =>
-    apiClient.get('/help/index').then(r => r.data),
-  page: (slug: string): Promise<HelpPageData> =>
-    apiClient.get(`/help/page/${encodeURIComponent(slug)}`).then(r => r.data),
+  // `lang` is omitted for English so the URL stays the plain, cacheable one; the
+  // server treats a missing lang as en and falls back to English for any page a
+  // translation does not cover yet.
+  index: (lang?: WikiLang): Promise<{ sections: HelpNavSection[] }> =>
+    apiClient.get('/help/index', { params: lang && lang !== 'en' ? { lang } : undefined }).then(r => r.data),
+  page: (slug: string, lang?: WikiLang): Promise<HelpPageData> =>
+    apiClient
+      .get(`/help/page/${encodeURIComponent(slug)}`, { params: lang && lang !== 'en' ? { lang } : undefined })
+      .then(r => r.data),
 }
 
 export const settingsApi = {

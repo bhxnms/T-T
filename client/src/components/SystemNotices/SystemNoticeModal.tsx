@@ -1,6 +1,6 @@
 import * as LucideIcons from 'lucide-react';
 import { AlertOctagon, AlertTriangle, ChevronLeft, ChevronRight, Coffee, Info, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router';
 import rehypeSanitize from 'rehype-sanitize';
@@ -414,6 +414,25 @@ function useSystemNoticeModal(notices: SystemNoticeDTO[]) {
   const { dismiss } = useSystemNoticeStore();
   const { t, language } = useTranslation();
 
+  // Normalize the dismissible flag ONCE, here, so every downstream check (close
+  // button, OK button, pager lock, ESC, swipe-to-dismiss) reads a value that can
+  // never describe a trap.
+  //
+  // A notice that cannot be dismissed must give the user something to press.
+  // `dismissible: false` hides the close button AND the OK button (which renders
+  // only when `dismissible || isLastPage`) while the same flag locks the pager,
+  // so a non-dismissible notice with no CTA has no exit at all and the app is
+  // stuck behind the overlay. The first-deploy credentials notice shipped that
+  // way and deadlocked a real install — it was also the only notice, so it was
+  // never the "last page" either.
+  //
+  // Treating a CTA-less notice as dismissible makes that state unrepresentable
+  // rather than guarding the one entry that hit it.
+  const safeNotices = useMemo(
+    () => notices.map((n) => (n.dismissible === false && !n.cta && !n.secondaryCta ? { ...n, dismissible: true } : n)),
+    [notices]
+  );
+
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== 'undefined' && (window.matchMedia?.('(max-width: 639px)')?.matches ?? false)
   );
@@ -425,9 +444,10 @@ function useSystemNoticeModal(notices: SystemNoticeDTO[]) {
   const prefersReducedMotion =
     typeof window !== 'undefined' && (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false);
 
-  const notice = notices[idx] ?? null;
+  const notice = safeNotices[idx] ?? null;
 
   // Non-dismissible notices lock the pager so users must act before advancing.
+  // After the normalization above this is simply the flag.
   const canPage = notice?.dismissible !== false;
 
   const touchStartX = useRef<number | null>(null);
@@ -670,7 +690,11 @@ function useSystemNoticeModal(notices: SystemNoticeDTO[]) {
   const ease = visible ? 'ease-out' : 'ease-in';
 
   return {
-    notices,
+    // The normalized list, not the raw prop: downstream components read
+    // `notice.dismissible` to decide whether the close button, the OK button and
+    // the swipe-to-dismiss gesture are available. Handing them the raw value
+    // would put the trap back.
+    notices: safeNotices,
     idx,
     setIdx,
     visible,

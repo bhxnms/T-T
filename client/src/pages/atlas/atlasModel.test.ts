@@ -17,10 +17,15 @@ import {
   countryDisplayName,
   countryFlagCode,
   countryCodeToFlag,
+  normalizeCountryCode,
   COUNTRY_COLORS,
   REGION_CACHE_MAX,
+  boundsIntersect,
+  mergeCountryBounds,
+  unionBounds,
   type AtlasData,
   type BucketItem,
+  type Bounds,
 } from './atlasModel';
 
 describe('normalizeRegionName', () => {
@@ -387,15 +392,120 @@ describe('bucketTooltipNeedsScroll (#2153)', () => {
   });
 });
 
-describe('Atlas Taiwan display policy', () => {
-  it('keeps TW as the data code but displays China for the flag and name', () => {
+describe('Atlas Taiwan normalization', () => {
+  it('folds TW/TWN into China at the country level', () => {
+    expect(normalizeCountryCode('TW')).toBe('CN');
+    expect(normalizeCountryCode('tw')).toBe('CN');
+    expect(normalizeCountryCode('TWN')).toBe('CN');
+    expect(normalizeCountryCode('CN')).toBe('CN');
+  });
+
+  it('shows China and its flag for a TW code', () => {
     expect(countryFlagCode('TW')).toBe('CN');
-    expect(countryDisplayName('TW', () => 'Taiwan')).toBe('中国台湾');
+    expect(countryDisplayName('TW', () => 'China')).toBe('China');
     expect(countryCodeToFlag('TW')).toBe(countryCodeToFlag('CN'));
   });
 
-  it('does not alter ordinary country display', () => {
+  it('leaves ordinary countries and empty input alone', () => {
+    expect(normalizeCountryCode('JP')).toBe('JP');
+    expect(normalizeCountryCode(null)).toBeNull();
     expect(countryFlagCode('JP')).toBe('JP');
     expect(countryDisplayName('JP', () => 'Japan')).toBe('Japan');
+  });
+});
+
+// Taiwan's admin-0 feature is folded into China (its ISO_A2 is rewritten to CN),
+// which leaves TWO features answering to "CN". A plain `map[code] = bounds`
+// assignment let the later one — Taiwan — win, so China's recorded extent became
+// the island's. Viewport culling then asked whether Taiwan overlapped a view of
+// Xinjiang, answered no, and dropped China's region layer: provinces stopped
+// highlighting, and their geometry was not even requested, unless Taiwan happened
+// to be in view too. Searching "China" framed the island for the same reason.
+describe('mergeCountryBounds — one code, several features', () => {
+  // Real extents from the shipped admin-0 bundle.
+  const MAINLAND: Bounds = { south: 18.2, west: 73.5, north: 53.6, east: 134.8 };
+  const TAIWAN: Bounds = { south: 20.7, west: 116.7, north: 26.4, east: 122.0 };
+
+  it('unions the second feature instead of replacing the first', () => {
+    const map: Record<string, Bounds> = {};
+    mergeCountryBounds(map, 'CN', MAINLAND);
+    mergeCountryBounds(map, 'CN', TAIWAN);
+
+    // Taiwan is inside the mainland box, so the union is the mainland box.
+    expect(map.CN).toEqual(MAINLAND);
+  });
+
+  it('keeps a genuinely disjoint second feature in the extent', () => {
+    // Not China's case, but the reason a union is right rather than "first wins":
+    // a country with an outlying island must still be considered on screen when
+    // only that island is in view.
+    const map: Record<string, Bounds> = {};
+    mergeCountryBounds(map, 'FR', { south: 41.3, west: -5.2, north: 51.1, east: 9.6 });
+    mergeCountryBounds(map, 'FR', { south: -21.4, west: 55.2, north: -20.9, east: 55.8 }); // Réunion
+    expect(map.FR.south).toBe(-21.4);
+    expect(map.FR.east).toBe(55.8);
+  });
+
+  it('does not mutate the bounds object it was handed', () => {
+    // The caller passes a clone of Leaflet's cached bounds; growing that cache in
+    // place would inflate the layer's own reported extent.
+    const map: Record<string, Bounds> = {};
+    const first = { ...MAINLAND };
+    mergeCountryBounds(map, 'CN', first);
+    mergeCountryBounds(map, 'CN', { south: -40, west: -60, north: -30, east: -50 });
+    expect(first).toEqual(MAINLAND);
+  });
+
+  it('ignores a missing code or bounds', () => {
+    const map: Record<string, Bounds> = {};
+    mergeCountryBounds(map, 'CN', null);
+    mergeCountryBounds(map, '', MAINLAND);
+    expect(map).toEqual({});
+  });
+
+  it('countryInView sees mainland China from a view over Xinjiang or Tibet', () => {
+    // The user-visible failure: with Taiwan's box recorded, these views all
+    // concluded China was off screen and dropped the province layer.
+    const map: Record<string, Bounds> = {};
+    mergeCountryBounds(map, 'CN', MAINLAND);
+    mergeCountryBounds(map, 'CN', TAIWAN);
+
+    const views: [string, Bounds][] = [
+      ['Xinjiang', { south: 35, west: 79, north: 45, east: 90 }],
+      ['Tibet', { south: 28, west: 80, north: 36, east: 95 }],
+      ['NE China', { south: 42, west: 120, north: 50, east: 130 }],
+      ['Beijing', { south: 38, west: 115, north: 42, east: 118 }],
+    ];
+    for (const [label, view] of views) {
+      expect(boundsIntersect(map.CN, view), `${label} should see China`).toBe(true);
+    }
+  });
+
+  it('the Taiwan-only box would have failed those same views (the old behaviour)', () => {
+    // Pins the defect itself, so the union above cannot be quietly reverted to an
+    // assignment: Taiwan's own extent does NOT reach Xinjiang or Tibet.
+    const views: [string, Bounds][] = [
+      ['Xinjiang', { south: 35, west: 79, north: 45, east: 90 }],
+      ['Tibet', { south: 28, west: 80, north: 36, east: 95 }],
+    ];
+    for (const [label, view] of views) {
+      expect(boundsIntersect(TAIWAN, view), `${label} would be culled`).toBe(false);
+    }
+  });
+});
+
+describe('unionBounds / boundsIntersect', () => {
+  it('spans both boxes', () => {
+    expect(unionBounds({ south: 0, west: 0, north: 1, east: 1 }, { south: -1, west: 2, north: 0.5, east: 3 })).toEqual({
+      south: -1,
+      west: 0,
+      north: 1,
+      east: 3,
+    });
+  });
+
+  it('counts touching edges as overlapping, matching Leaflet', () => {
+    expect(boundsIntersect({ south: 0, west: 0, north: 1, east: 1 }, { south: 1, west: 1, north: 2, east: 2 })).toBe(true);
+    expect(boundsIntersect({ south: 0, west: 0, north: 1, east: 1 }, { south: 1.1, west: 1.1, north: 2, east: 2 })).toBe(false);
   });
 });

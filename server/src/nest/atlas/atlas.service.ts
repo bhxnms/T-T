@@ -7,6 +7,7 @@ import {
   getRegionFromCoords,
   getRegionGeo,
   geocodingInFlight,
+  normalizeCountryCode,
   resolveCountryCodeSync,
   reverseGeocodeRegion,
 } from './atlas-geo';
@@ -223,7 +224,11 @@ export class AtlasService {
     const placeCountries = this.resolvePlaceCountries(places);
     const countrySet = new Map<string, CountryEntry>();
     for (const place of places) {
-      const code = placeCountries.get(place.id);
+      const rawCode = placeCountries.get(place.id);
+      // Fold Taiwan into China at the aggregation point, so a place geocoded to
+      // TW and another to CN pile into one country entry instead of two — the
+      // Atlas presents Taiwan as a Chinese province, not a country.
+      const code = normalizeCountryCode(rawCode);
       if (code) {
         const status = tripStatus.get(place.trip_id) ?? 'idea';
         const entry = countrySet.get(code);
@@ -302,15 +307,18 @@ export class AtlasService {
       country_code: string;
     }[];
     for (const mc of manualCountries) {
-      if (hidden.has(mc.country_code)) continue;
-      const existing = countries.find((c) => c.code === mc.country_code);
+      // Already-normalized: a stored TW mark reads as CN, matching the country
+      // list built above and the map's single China.
+      const manualCode = normalizeCountryCode(mc.country_code);
+      if (!manualCode || hidden.has(manualCode) || hidden.has(mc.country_code)) continue;
+      const existing = countries.find((c) => c.code === manualCode);
       if (existing) {
         // Marking a country by hand is a statement of fact and outranks the dates of a
         // trip that happens to go there later (#1048).
         existing.status = 'visited';
       } else {
         countries.push({
-          code: mc.country_code,
+          code: manualCode,
           placeCount: 0,
           tripCount: 0,
           firstVisit: null,
@@ -363,7 +371,9 @@ export class AtlasService {
       else endpointStatus.set(key, { lat: e.lat, lng: e.lng, status });
     }
     for (const e of endpointStatus.values()) {
-      const code = getCountryFromCoords(e.lat, e.lng);
+      // getCountryFromCoords already normalizes, but keep the fold explicit here
+      // so this pass can never reintroduce a separate TW entry.
+      const code = normalizeCountryCode(getCountryFromCoords(e.lat, e.lng));
       if (!code || hidden.has(code)) continue;
       const existing = countries.find((c) => c.code === code);
       if (existing) existing.status = strongerVisitStatus(existing.status, e.status);

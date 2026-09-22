@@ -1,7 +1,8 @@
 import {
-  generateCoMapsUrl, generateGoogleMapsUrl, optimizeRoute,
+  generateAmapMapsUrl, generateCoMapsUrl, generateGoogleMapsUrl, optimizeRoute,
   type NamedWaypoint, type RouteProfileKey,
 } from '../../../../components/Map/RouteCalculator'
+import { openAmapMaps } from '../../../../components/Map/amapHandover'
 import {
   getAccommodationAnchors, getDayBookendHotels, shouldDrawEveningLeg, shouldDrawMorningLeg,
 } from '../../../../utils/dayOrder'
@@ -107,6 +108,37 @@ export function dayGoogleMapsUrl(
   return generateGoogleMapsUrl(
     dayExportStops(day, days, dayAssignments, accommodations, bookendFromAccommodation, dayHasCarrier),
   ) || null
+}
+
+/** AMap (高德地图) directions URL over the day's bookended stops. */
+export function dayAmapMapsUrl(
+  day: Day,
+  days: Day[],
+  dayAssignments: Assignment[],
+  accommodations: Accommodation[],
+  bookendFromAccommodation: boolean,
+  dayHasCarrier?: boolean,
+): string | null {
+  return generateAmapMapsUrl(
+    dayExportStops(day, days, dayAssignments, accommodations, bookendFromAccommodation, dayHasCarrier),
+  ) || null
+}
+
+/**
+ * Hand the day to AMap: the installed app when this device has one, the web
+ * route otherwise. Both mobile surfaces go through here so the app-first
+ * behaviour cannot drift between the plan timeline and the day sheet.
+ */
+export function openDayInAmapMaps(
+  day: Day,
+  days: Day[],
+  dayAssignments: Assignment[],
+  accommodations: Accommodation[],
+  bookendFromAccommodation: boolean,
+  dayHasCarrier?: boolean,
+): void {
+  const stops = dayExportStops(day, days, dayAssignments, accommodations, bookendFromAccommodation, dayHasCarrier)
+  openAmapMaps(stops, generateAmapMapsUrl(stops) || null)
 }
 
 /** The same stops handed to CoMaps for offline navigation, in the day's travel mode (#1904). */

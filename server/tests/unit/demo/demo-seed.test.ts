@@ -6,6 +6,7 @@
  * demo-seed itself, so the seeder has to say so out loud.
  */
 import { seedDemoData } from '../../../src/demo/demo-seed';
+import { DEMO_EMAIL_PRIMARY } from '../../../src/nest/common/demo';
 import { createTestDb } from '../../helpers/test-db';
 
 import type Database from 'better-sqlite3';
@@ -60,5 +61,47 @@ describe('demo seeding', () => {
     seedDemoData(db);
 
     expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('DEMO_ADMIN_PASS is not set'));
+  });
+
+  it('DEMOSEED-004: recognises accounts seeded by an older build instead of duplicating them', () => {
+    // An instance that upgraded in place already holds rows under the addresses
+    // an earlier build seeded, and the hourly reset keeps restoring them from
+    // that baseline. Seeding has to find those rows and leave them alone: the
+    // address is the account's identity, and username is UNIQUE, so a second
+    // INSERT for 'demo' would abort the whole seed — example trips included.
+    for (const legacy of [
+      ['demo@trek.app', 'admin@trek.app'],
+      ['demo@nomad.app', 'admin@nomad.app'],
+    ]) {
+      const [demoEmail, adminEmail] = legacy;
+      const fresh = createTestDb();
+      const insert = fresh.prepare(
+        'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      );
+      insert.run('demo', demoEmail, 'x', 'user');
+      insert.run('admin', adminEmail, 'x', 'admin');
+
+      seedDemoData(fresh);
+
+      const users = fresh.prepare('SELECT username, email FROM users ORDER BY id').all() as Array<{
+        username: string;
+        email: string;
+      }>;
+      expect(users, `upgrading from ${demoEmail}`).toEqual([
+        { username: 'demo', email: demoEmail },
+        { username: 'admin', email: adminEmail },
+      ]);
+      fresh.close();
+    }
+  });
+
+  it('DEMOSEED-005: a fresh database still gets the current addresses', () => {
+    seedDemoData(db);
+
+    const emails = (db.prepare('SELECT email FROM users ORDER BY id').all() as Array<{ email: string }>).map(
+      (u) => u.email,
+    );
+    expect(emails).toContain(DEMO_EMAIL_PRIMARY);
+    expect(emails).toContain('admin@tt.local');
   });
 });

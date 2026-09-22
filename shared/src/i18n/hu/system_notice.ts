@@ -2,9 +2,6 @@ import type { TranslationStrings } from '../types';
 
 const system_notice: TranslationStrings = {
   'system_notice.welcome_v1.title': 'Üdvözöl a TREK',
-  'system_notice.bootstrap_password.title': 'Change the initial admin password', // en-fallback
-  'system_notice.bootstrap_password.body':
-    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.', // en-fallback
   'system_notice.welcome_v1.body':
     'Az összes az egyben utazástervező. Készítsen útvonalakat, ossza meg az utakat barátaival, és maradjon szervezett — online és offline.',
   'system_notice.welcome_v1.cta_label': 'Utazás tervezése',

@@ -36,17 +36,23 @@ export const RETIRED_NOTICE_IDS = [
 ] as const;
 
 export const SYSTEM_NOTICES: SystemNotice[] = [
-  {
-    id: 'tt-bootstrap-password',
-    display: 'modal',
-    severity: 'critical',
-    titleKey: 'system_notice.bootstrap_password.title',
-    bodyKey: 'system_notice.bootstrap_password.body',
-    dismissible: false,
-    conditions: [{ kind: 'mustChangePassword' }, { kind: 'role', roles: ['admin'] }],
-    publishedAt: '2026-09-17T00:00:00Z',
-    priority: 1000,
-  },
+  // The first-deploy credentials used to be announced here, as a non-dismissible
+  // modal shown after login. That was a deadlock and a duplicate:
+  //
+  //   - Deadlock: `dismissible: false` hides the close button AND the OK button
+  //     (which renders only when `dismissible || isLastPage`), while the same
+  //     flag locks the pager. With no CTA on this notice there was no way out at
+  //     all, so a first-deploy admin was stuck on it with the app behind it.
+  //   - Duplicate: the login page already shows the generated credentials before
+  //     sign-in, which is the only point where they are actually needed — the
+  //     user cannot log in without them. Repeating them after login added
+  //     nothing, and the notice could only ever be stale: changePassword deletes
+  //     the rows it read from, so the modal kept displaying a password that no
+  //     longer worked.
+  //
+  // Credential delivery lives on the login page now (see auth.service
+  // getAppConfig + LoginPage's bootstrap card). Do not reintroduce a notice for
+  // it: a modal behind the login form cannot help anyone who cannot log in.
 
   {
     id: 'tt-welcome-v1',

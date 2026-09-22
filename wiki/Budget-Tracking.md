@@ -14,7 +14,7 @@ Open the **Costs** tab inside the trip planner. The tab is only visible when the
 
 > **Admin:** Costs is an addon. Enable it in [Admin-Addons](Admin-Addons).
 
-![Create Budget](assets/BudgetCreateBudget.gif)
+![Create Budget](assets/BudgetCreateBudget.mp4)
 
 ## Currency
 
@@ -79,7 +79,7 @@ An expense with no payer is flagged **Unfinished** on its row and counted into t
 - **Custom** — Enter specific custom amounts for each traveler. The sum of the custom splits must balance exactly to the total price.
 - **Ticket** — Build an itemized list of expenses (e.g. Apples: $10, cake: $50, Milk: $40) and assign specific trip participants to split each individual item. Individual shares are calculated cent-perfectly, the total expense price is automatically summed, and the list of itemized splits is saved/restored across edits.
 
-![Add Expense](assets/BudgetAddExpensive.gif)
+![Add Expense](assets/BudgetAddExpensive.mp4)
 
 ## Settlement calculator
 
@@ -96,7 +96,7 @@ A recorded payment carries **its own currency** too: settling a rouble debt with
 
 ![Add payment dialog with From and To member pickers, an amount field and a currency selector](assets/CostsSettleUp.png)
 
-![Final Settlement](assets/BudgetFinalSettlement.gif)
+![Final Settlement](assets/BudgetFinalSettlement.mp4)
 
 ## Costs summary
 

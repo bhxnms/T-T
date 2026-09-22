@@ -10,7 +10,7 @@ Open your trip in the planner and select the **Bookings** tab. The panel lists y
 
 ## Reservation types
 
-TREK supports sixteen reservation types, split across the two tabs:
+Tourism-Team supports sixteen reservation types, split across the two tabs:
 
 | Type | How to create |
 |------|--------------|
@@ -67,7 +67,7 @@ Each card displays:
 - **Location / address** — whenever the booking has one; for a hotel this is the address from its hotel block
 - **Linked accommodation** — hotel name, if this reservation is linked to an accommodation record
 - **Day-plan assignment** — the day and place this reservation is linked to
-- **Link** — the booking URL, opened in a new tab. A link with a scheme TREK refuses to open is shown as plain text instead
+- **Link** — the booking URL, opened in a new tab. A link with a scheme Tourism-Team refuses to open is shown as plain text instead
 - **Notes**
 - **Attached files** — shown as clickable download links
 - **Travelers** — avatars of the members and guests assigned to this booking, shown only when at least one is assigned
@@ -95,7 +95,7 @@ Click **Add** (or the + button) in the Bookings panel. Fill in the form:
 
 ## Import from booking confirmation
 
-TREK can parse booking confirmation emails, PDFs, and pass files and create reservations automatically using [KDE Itinerary](https://apps.kde.org/itinerary/).
+Tourism-Team can parse booking confirmation emails, PDFs, and pass files and create reservations automatically using [KDE Itinerary](https://apps.kde.org/itinerary/).
 
 ### Supported formats
 
@@ -114,7 +114,7 @@ Up to 5 files, 10 MB each, per import.
 1. Open the **Bookings** tab — the same import button also sits in the **Transports** toolbar.
 2. Click the **Import from file** (download) button in the toolbar — the button is only shown when the extractor is available on your server or the AI Parsing addon is enabled.
 3. Drag and drop your files onto the upload area, or click to browse.
-4. The upload dialog closes right away and a **background widget** in the bottom-right corner shows *Parsing files…*, with a running count when you uploaded more than one file. You can keep working in TREK while it parses — the widget follows you to other pages and survives a reload.
+4. The upload dialog closes right away and a **background widget** in the bottom-right corner shows *Parsing files…*, with a running count when you uploaded more than one file. You can keep working in Tourism-Team while it parses — the widget follows you to other pages and survives a reload.
 5. When parsing finishes, click the widget's **Import** button to start the review. If nothing could be extracted, the widget says so instead and offers **Try AI parsing** on the same files when the AI Parsing addon is enabled.
 6. Each detected booking opens **pre-filled in the normal booking (or transport) form**, one after the other, with the file it came from already attached. Nothing is saved until you confirm each one.
 
@@ -128,7 +128,7 @@ Each booking appears in the panel and is broadcast to all connected trip members
 
 ### When the button is not visible
 
-The **Import from file** button is hidden only when neither the `kitinerary-extractor` binary nor the [AI Parsing addon](AI-Booking-Import) is available. With the AI addon enabled and configured, import works without the binary — every file goes straight to the model. The binary ships inside the official TREK Docker image. If you run TREK from source, install the `libkitinerary-bin` package (Debian trixie / Ubuntu 25.04+) or set `KITINERARY_EXTRACTOR_PATH` to the binary's full path. See [Environment-Variables](Environment-Variables).
+The **Import from file** button is hidden only when neither the `kitinerary-extractor` binary nor the [AI Parsing addon](AI-Booking-Import) is available. With the AI addon enabled and configured, import works without the binary — every file goes straight to the model. The binary ships inside the official Tourism-Team Docker image. If you run Tourism-Team from source, install the `libkitinerary-bin` package (Debian trixie / Ubuntu 25.04+) or set `KITINERARY_EXTRACTOR_PATH` to the binary's full path. See [Environment-Variables](Environment-Variables).
 
 ### Needs review flag
 
@@ -136,7 +136,7 @@ Items that the extractor could only partially parse are flagged **Needs review**
 
 ### AI fallback for hard-to-read files
 
-KDE Itinerary only recognises structured tickets. For confirmations it can't read — plain-text emails, unusual PDF layouts, vendors it doesn't know — TREK can optionally hand the file to an AI model instead. The optional **AI Parsing** addon runs only for the files Itinerary returns nothing for, parses them in the background, and flags every result for review before you save it. It works with a self-hosted local model, so booking data need not leave your server. See **[AI-Booking-Import](AI-Booking-Import)**.
+KDE Itinerary only recognises structured tickets. For confirmations it can't read — plain-text emails, unusual PDF layouts, vendors it doesn't know — Tourism-Team can optionally hand the file to an AI model instead. The optional **AI Parsing** addon runs only for the files Itinerary returns nothing for, parses them in the background, and flags every result for review before you save it. It works with a self-hosted local model, so booking data need not leave your server. See **[AI-Booking-Import](AI-Booking-Import)**.
 
 ## Import from AirTrail
 

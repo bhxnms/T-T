@@ -1,6 +1,6 @@
 # Install: Helm
 
-Deploy TREK on Kubernetes using the official Helm chart.
+Deploy Tourism-Team on Kubernetes using the official Helm chart.
 
 ## Add the Chart Repository
 
@@ -27,7 +27,7 @@ helm repo update
 helm install trek trek/trek
 ```
 
-This deploys TREK with default values: a `ClusterIP` service on port 3000, 1 Gi PVCs for data and uploads, and no ingress.
+This deploys Tourism-Team with default values: a `ClusterIP` service on port 3000, 1 Gi PVCs for data and uploads, and no ingress.
 
 ## Encryption Key
 
@@ -111,8 +111,8 @@ env:
   # LOG_LEVEL: "info"            # "info" = concise, "debug" = verbose
   # TREK_WIKI_DIR: "/app/wiki"   # where /help reads its docs from; leave unset (the image ships them)
   # DEFAULT_LANGUAGE: "en"       # fallback language on login page; supported: de, en, es, fr, hu, nl, br, cs, pl, ru, zh, zh-TW, it, tr, ar, id, ja, ko, uk, gr, sv, vi, ca
-  # ALLOWED_ORIGINS: "https://trek.example.com"
-  # APP_URL: "https://trek.example.com"
+  # ALLOWED_ORIGINS: "https://tt.example.com"
+  # APP_URL: "https://tt.example.com"
   # FORCE_HTTPS: "false"         # enable HTTPS redirect + HSTS; requires TRUST_PROXY
   # TRUST_PROXY: "1"             # proxy hops for X-Forwarded-For/Proto; defaults to 1 in production
   # COOKIE_SECURE: "true"        # auto-derived; set "false" only for local HTTP testing
@@ -179,16 +179,16 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"  # required for WebSockets
     nginx.ingress.kubernetes.io/proxy-body-size: "500m"       # required for backup restore
   hosts:
-    - host: trek.example.com
+    - host: tt.example.com
       paths:
         - /
   tls:
     - secretName: trek-tls
       hosts:
-        - trek.example.com
+        - tt.example.com
 ```
 
-> **Important:** TREK uses WebSockets on `/ws`. Your ingress controller must support WebSocket upgrades. Set `proxy-read-timeout` to at least `86400` and `proxy-body-size` to at least `500m` for backup restores.
+> **Important:** Tourism-Team uses WebSockets on `/ws`. Your ingress controller must support WebSocket upgrades. Set `proxy-read-timeout` to at least `86400` and `proxy-body-size` to at least `500m` for backup restores.
 
 > **Note:** Keep `env.ALLOWED_ORIGINS` in sync with `ingress.hosts` — the chart does not synchronize these automatically.
 
@@ -203,7 +203,7 @@ helm upgrade trek trek/trek
 
 ## Full Values Reference
 
-See the [`charts/README.md`](https://github.com/liketrek/TREK/blob/main/charts/README.md) for all available values.
+See the [`charts/README.md`](https://github.com/bhxnms/T-T/blob/main/charts/README.md) for all available values.
 
 ## Next Steps
 

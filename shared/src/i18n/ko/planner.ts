@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': '경로',
   'planner.optimize': '최적화',
   'planner.openGoogleMaps': 'Google Maps에서 열기',
+  'planner.openAmapMaps': 'AMap에서 열기',
   'planner.openCoMaps': 'CoMaps에서 열기',
   'planner.selectDayHint': '왼쪽 목록에서 날을 선택하여 일별 계획을 보세요',
   'planner.noPlacesForDay': '이 날에 아직 장소가 없습니다',

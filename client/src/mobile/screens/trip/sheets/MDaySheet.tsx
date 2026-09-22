@@ -28,7 +28,7 @@ import { getDayBookendHotels, isDayInAccommodationRange } from '../../../../util
 import { splitReservationDateTime } from '../../../../utils/formatters';
 import MSheet from '../../../components/MSheet';
 import { splitNoteTime } from '../lib/dayNotes';
-import { dayCoMapsUrl, dayGoogleMapsUrl, optimizeDayOrder } from '../lib/dayRoute';
+import { dayCoMapsUrl, dayGoogleMapsUrl, openDayInAmapMaps, optimizeDayOrder } from '../lib/dayRoute';
 import type { MTripSheetsProps } from '../MTripShell';
 import { weatherIconFor } from '../plan/planTimelineModel';
 import { Eyebrow, INNER_CLS, StatBox, TileHeader, displayTime } from './MTripSheetUi';
@@ -250,6 +250,18 @@ export default function MDaySheet({ planner, shell }: MTripSheetsProps) {
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const openInAmapMaps = () => {
+    if (!day) return;
+    openDayInAmapMaps(
+      day,
+      planner.days,
+      dayAssignments,
+      planner.tripAccommodations,
+      optimizeFromAccommodation !== false,
+      dayHasCarrier
+    );
+  };
+
   // The same day in CoMaps, for navigating it offline (#1904).
   const openInCoMaps = () => {
     if (!day) return;
@@ -448,6 +460,16 @@ export default function MDaySheet({ planner, shell }: MTripSheetsProps) {
                   >
                     <GoogleMapsIcon size={13} />
                     {t('planner.openGoogleMaps')}
+                  </button>
+                )}
+                {routable && (
+                  <button
+                    type="button"
+                    onClick={openInAmapMaps}
+                    className={`flex items-center gap-[5px] rounded-full px-3 py-[7px] text-[0.75rem] font-semibold text-m-ink ${INNER_CLS}`}
+                  >
+                    <MapPin size={13} />
+                    {t('planner.openAmapMaps')}
                   </button>
                 )}
                 {routable && (

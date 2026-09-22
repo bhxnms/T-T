@@ -62,6 +62,9 @@ const { wiki } = vi.hoisted(() => {
       getWikiIndex: vi.fn(),
       getWikiPage: vi.fn(),
       getWikiAsset: vi.fn(),
+      // The real normalizer: the tools pass `lang` straight through it, and the
+      // default-to-English behaviour is part of what these tests pin.
+      normalizeWikiLang: (v: unknown) => (String(v ?? '').trim().toLowerCase() === 'zh' ? 'zh' : 'en'),
     },
   };
 });
@@ -217,7 +220,9 @@ describe('Tool: get_help_page', () => {
         truncated: false,
         next_offset: null,
       });
-      expect(wiki.getWikiPage).toHaveBeenCalledWith('Quick-Start');
+      // The language is passed explicitly (defaulted to en) rather than omitted,
+      // so the reader never has to re-derive it.
+      expect(wiki.getWikiPage).toHaveBeenCalledWith('Quick-Start', 'en');
     });
   });
 

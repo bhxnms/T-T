@@ -237,7 +237,11 @@ export default function MTripShell({
     // Off the same helper file as the desktop day plan (#1567), so the two
     // cannot drift on what "today" means.
     planner.tripActions.setSelectedDay(
-      findEntryDayId(days, { assignments: store.assignments, dayNotes: store.dayNotes, reservations: store.reservations }) ?? days[0].id,
+      findEntryDayId(days, {
+        assignments: store.assignments,
+        dayNotes: store.dayNotes,
+        reservations: store.reservations,
+      }) ?? days[0].id
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planner.selectedDayId, days.length, store.assignments, store.dayNotes, store.reservations]);

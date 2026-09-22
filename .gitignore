@@ -81,3 +81,4 @@ TT-HANDOFF.md
 
 # Agent/session working files — never commit
 .zcode/
+.zcodeignore

@@ -1,6 +1,6 @@
 # PDF Export
 
-TREK generates a structured **Trip Plan PDF** from your trip data. It renders as HTML in a sandboxed iframe and opens the browser's native print/save dialog — no server-side processing is involved. Journey entries no longer go through a fixed PDF template: they are laid out in **TREK Studio** and printed through the same browser mechanism (see below).
+Tourism-Team generates a structured **Trip Plan PDF** from your trip data. It renders as HTML in a sandboxed iframe and opens the browser's native print/save dialog — no server-side processing is involved. Journey entries no longer go through a fixed PDF template: they are laid out in **Tourism-Team Studio** and printed through the same browser mechanism (see below).
 
 ![PDF Export](assets/PDFTrip.png)
 
@@ -39,7 +39,7 @@ Below the header:
 
 ### Footer
 
-Every printed page carries a small "made with TREK" logo at the bottom.
+Every printed page carries a small "made with Tourism-Team" logo at the bottom.
 
 ### Font
 
@@ -47,7 +47,7 @@ Poppins, loaded from Google Fonts at render time.
 
 ### Plugin sections
 
-Installed plugins can append their own sections to the Trip Plan PDF via the `pdfSectionProvider` hook. A plugin returns plain text — a title, paragraphs, and an optional simple table (headers plus rows) — and TREK escapes and lays it out itself. Sections are text-only and additive: a plugin never renders into the document, and one that errors or is slow contributes nothing.
+Installed plugins can append their own sections to the Trip Plan PDF via the `pdfSectionProvider` hook. A plugin returns plain text — a title, paragraphs, and an optional simple table (headers plus rows) — and Tourism-Team escapes and lays it out itself. Sections are text-only and additive: a plugin never renders into the document, and one that errors or is slow contributes nothing.
 
 > **Plugins:** requires the `hook:pdf-section-provider` permission. See [Plugin-Development](Plugin-Development) for the hook contract.
 
@@ -55,7 +55,7 @@ Installed plugins can append their own sections to the Trip Plan PDF via the `pd
 
 ## Journey photo books
 
-The Travel Journal has no fixed-template PDF export any more. Open a Journey entry and click **Studio** in the journal header (the book icon in the top bar on phones) to open **TREK Studio**, the photo-book designer.
+The Travel Journal has no fixed-template PDF export any more. Open a Journey entry and click **Studio** in the journal header (the book icon in the top bar on phones) to open **Tourism-Team Studio**, the photo-book designer.
 
 Studio lays the journey out as editable spreads instead of a fixed page template: five page presets (210 mm and 300 mm square, A4 landscape, A4 portrait, A5 landscape) or a custom size between 60 and 500 mm, and seven bundled font families.
 

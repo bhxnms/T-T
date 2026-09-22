@@ -9,6 +9,7 @@ import {
   calculateSegments,
   optimizeRoute,
   generateGoogleMapsUrl,
+  generateAmapMapsUrl,
   generateCoMapsUrl,
   parsePluginProfile,
   withHotelBookends,
@@ -254,7 +255,68 @@ describe('generateGoogleMapsUrl', () => {
   })
 })
 
-// ── withHotelBookends (#1275: draw the hotel → first / last → hotel legs) ────────
+describe('generateAmapMapsUrl', () => {
+  it('returns null for an empty day', () => {
+    expect(generateAmapMapsUrl([])).toBeNull()
+  })
+
+  it('opens a single stop as a WGS-84 AMap marker, where that declaration is honoured', () => {
+    const result = generateAmapMapsUrl([{ lat: 31.23, lng: 121.47, name: '上海' }])!
+    expect(result).toContain('uri.amap.com/marker')
+    expect(result).toContain('position=121.47,31.23')
+    expect(result).toContain('coordinate=wgs84')
+  })
+
+  it('keeps every stop, because a navigation `via` only accepts one', () => {
+    // The navigation URI folds a second `via` into the first one's name, so a
+    // four-stop day silently lost its middle. The indexed dir form does not.
+    const result = generateAmapMapsUrl([
+      { lat: 31.23, lng: 121.47, name: '起点' },
+      { lat: 31.24, lng: 121.48, name: '中途一' },
+      { lat: 31.25, lng: 121.49, name: '中途二' },
+      { lat: 31.26, lng: 121.5, name: '终点' },
+    ])!
+    expect(result).toContain('ditu.amap.com/dir')
+    expect(result).toContain('via%5B0%5D%5Blnglat%5D=')
+    expect(result).toContain('via%5B1%5D%5Blnglat%5D=')
+    expect(result).not.toContain('via%5B2%5D')
+    // Every name is carried, so no stop is dropped or mislabelled.
+    for (const name of ['起点', '中途一', '中途二', '终点']) {
+      expect(decodeURIComponent(result)).toContain(name)
+    }
+  })
+
+  it('converts to GCJ-02, because the dir endpoint has no coordinate parameter', () => {
+    const result = generateAmapMapsUrl([
+      { lat: 39.997361, lng: 116.478346, name: 'A' },
+      { lat: 39.95, lng: 116.35, name: 'B' },
+    ])!
+    // A WGS-84 value passed through unconverted would appear verbatim.
+    expect(result).not.toContain('116.478346')
+    // Beijing WGS-84 → GCJ-02 lands on 116.484444, which is the value AMap
+    // itself produces for this input (see the converter's own pin test).
+    expect(decodeURIComponent(result)).toContain('116.484444')
+  })
+
+  it('keeps a name containing a comma intact', () => {
+    // In the `lng,lat,name` form AMap truncates the route at that comma.
+    const result = generateAmapMapsUrl([
+      { lat: 39.99, lng: 116.47, name: 'Cafe, Beijing' },
+      { lat: 39.95, lng: 116.35, name: 'Hotel, Chaoyang' },
+    ])!
+    expect(decodeURIComponent(result)).toContain('Cafe, Beijing')
+    expect(decodeURIComponent(result)).toContain('Hotel, Chaoyang')
+  })
+
+  it('omits names it does not have, so the stop is labelled by position', () => {
+    const result = generateAmapMapsUrl([{ lat: 31.23, lng: 121.47 }, { lat: 31.24, lng: 121.48 }])!
+    expect(result).not.toContain('%5Bname%5D')
+    expect(result).toContain('from%5Blnglat%5D=')
+    expect(result).toContain('to%5Blnglat%5D=')
+  })
+})
+
+
 
 describe('withHotelBookends', () => {
   const hotel = { lat: 1, lng: 1 }

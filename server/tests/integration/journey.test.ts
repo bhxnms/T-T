@@ -1035,8 +1035,35 @@ describe('Journey upload parity', () => {
   const FIXTURE_IMG = pathMod.join(__dirname, '../fixtures/small-image.jpg');
   const journeyDir = pathMod.join(__dirname, '../../uploads/journey');
 
+  // server/uploads is shared by every integration worker, so this suite must
+  // neither assume it is empty nor clean it wholesale.
+  //
+  // It did both, and the pairing caused an intermittent JOURNEY-P05/07/08
+  // failure: those tests snapshotted `readdirSync(journeyDir).length` and
+  // compared it afterwards, but uploads-static.test.ts runs concurrently in
+  // another worker and creates/removes journey/parity-subdir plus a fixture
+  // there. Whenever that window overlapped, the count moved by one and the
+  // "no bytes left behind" assertion failed on a request that had in fact
+  // cleaned up correctly.
+  //
+  // The invariant these tests actually want is "the refused upload stored no
+  // new object", so they compare the set of objects this suite's uploads
+  // create — journey/<uuid>.<ext> — and ignore anything a sibling worker owns.
+  const UPLOAD_NAME = /^[0-9a-f-]{36}\.(?:jpe?g|png|gif|webp|heic|mp4|mov|webm)$/i;
+
+  /** Names of journey upload objects currently on disk (ignores foreign entries). */
+  const journeyUploads = (): Set<string> => {
+    if (!fsMod.existsSync(journeyDir)) return new Set();
+    return new Set(fsMod.readdirSync(journeyDir).filter((n) => UPLOAD_NAME.test(n)));
+  };
+
   afterAll(() => {
-    fsMod.rmSync(journeyDir, { recursive: true, force: true });
+    // Only this suite's own objects — see the note above. Deleting the whole
+    // directory also raced with uploads-static.test.ts, which serves fixtures
+    // out of journey/ and would 404 if they vanished mid-run.
+    for (const name of journeyUploads()) {
+      fsMod.rmSync(pathMod.join(journeyDir, name), { force: true });
+    }
   });
 
   it('JOURNEY-P01 — entry photo upload stores journey/<uuid> with a lowercased extension', async () => {
@@ -1102,7 +1129,7 @@ describe('Journey upload parity', () => {
     const { user: other } = createUser(testDb);
     const journey = createJourney(testDb, owner.id);
 
-    const before = fsMod.existsSync(journeyDir) ? fsMod.readdirSync(journeyDir).length : 0;
+    const before = journeyUploads();
     const res = await request(app)
       .post(`/api/journeys/${journey.id}/gallery/photos`)
       .set('Cookie', authCookie(other.id))
@@ -1111,8 +1138,7 @@ describe('Journey upload parity', () => {
     expect(res.body.error).toBe('Not allowed');
     // The commit runs before the permission answer is known, so the refusal has
     // to delete the object again. Nothing sweeps orphans.
-    const after = fsMod.existsSync(journeyDir) ? fsMod.readdirSync(journeyDir).length : 0;
-    expect(after).toBe(before);
+    expect([...journeyUploads()]).toEqual([...before]);
   });
 
   it('JOURNEY-P06 — video+poster upload: poster is ALWAYS stored as .jpg (stored-XSS pin)', async () => {
@@ -1134,15 +1160,14 @@ describe('Journey upload parity', () => {
     const { user } = createUser(testDb);
     const journey = createJourney(testDb, user.id);
 
-    const before = fsMod.existsSync(journeyDir) ? fsMod.readdirSync(journeyDir).length : 0;
+    const before = journeyUploads();
     const res = await request(app)
       .post(`/api/journeys/${journey.id}/gallery/video`)
       .set('Cookie', authCookie(user.id))
       .attach('poster', fsMod.readFileSync(FIXTURE_IMG), { filename: 'poster.png', contentType: 'image/png' });
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('No video uploaded');
-    const after = fsMod.existsSync(journeyDir) ? fsMod.readdirSync(journeyDir).length : 0;
-    expect(after).toBe(before);
+    expect([...journeyUploads()]).toEqual([...before]);
   });
 
   it('JOURNEY-P08 — non-contributor video upload is 403 and BOTH files are removed', async () => {
@@ -1150,7 +1175,7 @@ describe('Journey upload parity', () => {
     const { user: other } = createUser(testDb);
     const journey = createJourney(testDb, owner.id);
 
-    const before = fsMod.existsSync(journeyDir) ? fsMod.readdirSync(journeyDir).length : 0;
+    const before = journeyUploads();
     const res = await request(app)
       .post(`/api/journeys/${journey.id}/gallery/video`)
       .set('Cookie', authCookie(other.id))
@@ -1158,8 +1183,7 @@ describe('Journey upload parity', () => {
       .attach('poster', fsMod.readFileSync(FIXTURE_IMG), { filename: 'poster.png', contentType: 'image/png' });
     expect(res.status).toBe(403);
     expect(res.body.error).toBe('Not allowed');
-    const after = fsMod.existsSync(journeyDir) ? fsMod.readdirSync(journeyDir).length : 0;
-    expect(after).toBe(before);
+    expect([...journeyUploads()]).toEqual([...before]);
   });
 
   it('JOURNEY-P09 — cover upload stores journey/<uuid> into cover_image', async () => {

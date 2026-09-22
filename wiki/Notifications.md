@@ -6,13 +6,13 @@ The Notifications tab (Settings → Notifications) lets you choose which events 
 
 ## Notification channels
 
-TREK ships four delivery channels, and a plugin can add more. Which channels appear depends on what the admin has enabled server-side.
+Tourism-Team ships four delivery channels, and a plugin can add more. Which channels appear depends on what the admin has enabled server-side.
 
 | Channel | Description |
 |---------|-------------|
 | **In-app** | Bell icon in the navigation bar. Always available. Delivered in real time via WebSocket. |
 | **Email** | Delivered to your account email. Requires the admin to configure SMTP. |
-| **Webhook** | TREK POSTs a JSON payload to a URL you specify. Discord and Slack webhook URLs are auto-detected and receive a natively formatted payload. |
+| **Webhook** | Tourism-Team POSTs a JSON payload to a URL you specify. Discord and Slack webhook URLs are auto-detected and receive a natively formatted payload. |
 | **ntfy** | Push notifications via [ntfy.sh](https://ntfy.sh) or a self-hosted ntfy server. |
 
 ### Plugin channels
@@ -30,7 +30,7 @@ Two things are true of plugin channels specifically:
 
 - **They are user-scoped.** Admin-only events (like `version_available`) always go out over the
   built-in admin channels, never a plugin's.
-- **The plugin never sees your trips.** The notification is rendered by TREK — in your language,
+- **The plugin never sees your trips.** The notification is rendered by Tourism-Team — in your language,
   with the deep link already built — before the plugin is handed it. The plugin gets that message
   and your own credentials for its service, and nothing else.
 
@@ -60,7 +60,7 @@ The following events are shown in the admin panel (Admin → Notifications) and 
 
 | Event | Description | Channels |
 |-------|-------------|---------|
-| `version_available` | A new TREK version is available | in-app, email, webhook, ntfy |
+| `version_available` | A new Tourism-Team version is available | in-app, email, webhook, ntfy |
 | `replica_failure` | A write to a storage replica failed (repeats within the hour are suppressed and counted) | in-app, email, webhook, ntfy |
 
 ### In-app-only events
@@ -77,13 +77,13 @@ The preferences panel shows a grid of events × channels. Toggle each intersecti
 
 ## Webhook configuration
 
-Enter a URL that TREK will POST to when a notification fires. Once saved, the URL is displayed as `••••••••`. Use the **Test** button to send a test payload to the saved URL.
+Enter a URL that Tourism-Team will POST to when a notification fires. Once saved, the URL is displayed as `••••••••`. Use the **Test** button to send a test payload to the saved URL.
 
-TREK auto-detects the webhook destination and adjusts the payload format:
+Tourism-Team auto-detects the webhook destination and adjusts the payload format:
 
 - **Discord** (`discord.com/api/webhooks/…`) — sends a rich embed with title, description, and a timestamp.
 - **Slack** (`hooks.slack.com/…`) — sends a formatted Slack message block.
-- **Generic** — sends a plain JSON object with `event`, `title`, `body`, `tripName`, `link`, `timestamp`, and `source` (`"TREK"`) fields.
+- **Generic** — sends a plain JSON object with `event`, `title`, `body`, `tripName`, `link`, `timestamp`, and `source` (`"Tourism-Team"`) fields.
 
 ## ntfy configuration
 

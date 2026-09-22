@@ -57,6 +57,7 @@ const atlas: TranslationStrings = {
   'atlas.bucketWhen': '你計劃什麼時候去？',
   'atlas.bucketDuplicate': '已經在你的心願單中',
   'atlas.planned': '計劃中',
+  'atlas.showLandmarks': '顯示地標',
   'atlas.showPlanned': '顯示計劃中的國家',
   'atlas.plannedFor': '計劃於',
   'atlas.antarctica': '南極洲',

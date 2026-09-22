@@ -2,9 +2,6 @@ import type { TranslationStrings } from '../types';
 
 const system_notice: TranslationStrings = {
   'system_notice.welcome_v1.title': '欢迎使用 TT',
-  'system_notice.bootstrap_password.title': '修改初始管理员密码',
-  'system_notice.bootstrap_password.body':
-    '管理员账号：{email}\n初始密码：{password}\n\n你正在使用首次部署生成的管理员凭据。请立即在账户设置中修改初始密码后再继续使用。',
   'system_notice.welcome_v1.body':
     'TT 是一个由团队维护的旅行规划与活动管理工具，帮助您制定行程、管理活动并与旅行伙伴协作。本项目基于 TREK 开源项目分支开发而来。',
   'system_notice.welcome_v1.cta_label': '规划行程',

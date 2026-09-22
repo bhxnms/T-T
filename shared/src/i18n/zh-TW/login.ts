@@ -69,5 +69,9 @@ const login: TranslationStrings = {
   'login.insecureCookie.body':
     'You’re connecting over plain HTTP, so your browser drops TREK’s secure session cookie — the next request fails with "Access token required". Fix: use HTTPS, or for a home-lab set COOKIE_SECURE=false.',
   'login.insecureCookie.link': 'Open the Troubleshooting guide',
+  'login.bootstrap.title': "First deployment administrator account",
+  'login.bootstrap.email': "Email",
+  'login.bootstrap.password': "Initial password",
+  'login.bootstrap.hint': "Sign in with these credentials, then choose a new password when prompted. This password will not be shown again after you change it.",
 };
 export default login;

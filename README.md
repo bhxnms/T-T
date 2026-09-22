@@ -16,7 +16,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.6.3-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.7.0-blue?style=flat-square)
 
 ---
 
@@ -76,34 +76,89 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.6.3
+## 🆕 What's New in v0.7.0
 
-### AMap share-link names are no longer garbled
+### Documentation in Chinese, with a language switcher
 
-Importing from a share link gave the right coordinates but a mangled name and
-address, like `é¾ç«ç²¾çµéåº`. The damage was not in the decoding — it happened
-inside AMap's own redirect chain:
+The in-app help wiki now ships a full **Simplified Chinese** translation — 102
+pages plus their screenshots — and a switcher in the wiki header moves between
+the two languages without touching the app's own language setting. The choice is
+remembered per browser and can be shared as a link (`?lang=zh`). Missing pages
+fall back to English rather than showing an empty document.
 
-```
-surl.amap.com  → 302 → Location: …%E9%BE%99%E7%8C%AB…   correct, complete
-wb.amap.com    → 302 → Location: …é¾ç«ç²¾çµéåº…      already corrupted
-www.amap.com   → 301 → the corrupted text, percent-encoded again
-```
+A wiki that reads well is also worth navigating: the sidebar keeps its scroll
+position across page changes, cross-page section links (`Atlas#check-ins`) now
+scroll to the section they name instead of landing at the top of the target page,
+and the plugin pages state plainly that the plugin system is inherited from TREK
+and not covered by TT's own guarantees.
 
-`wb.amap.com` re-encodes the Chinese as if the UTF-8 bytes were latin1, and the
-bytes are wrong from that hop onward — nothing downstream can recover them. The
-resolver now reads the **first** redirect's `Location` and stops: that one is
-clean and already carries the id, coordinates, name and address, and it is parsed
-rather than fetched.
+### Cloudflare Tunnel, configured from the admin panel
 
-### Related fixes
+Publishing an instance to the internet previously meant reading a guide and
+editing cloudflared config by hand. **Admin → Cloudflare Tunnel** now does the
+Cloudflare half of it: paste an API token, test it, and the panel creates the
+tunnel, writes its ingress rules, points DNS at your hostname and hands you the
+connector command to run. It is **off by default** and stores nothing while it is
+off, so an operator already running their own tunnel, nginx or Caddy is
+unaffected.
 
-- AMap hosts are matched by shape (`*.amap.com`) instead of a fixed list, so the
-  `wb` subdomain the share shortener redirects through no longer fails to
-  resolve — and a future subdomain will not either.
-- A place name containing a literal `%` ("100% Coffee") no longer throws
-  `URI malformed` and abort the import; the text is used as it arrived.
-- A name containing an encoded comma no longer shifts the address field.
+The connector is deliberately still a separate process — the app container runs
+read-only with dropped capabilities and cannot host a second long-lived binary.
+`docker-compose.yml` carries a commented `tunnel:` service to paste the token
+into. The wiki gained a from-scratch walkthrough for operators who have never set
+up a tunnel before, covering what each step produces and what has to be running.
+
+### Atlas: check-ins, and a correct map of China
+
+- **Check-ins** (`打卡点`) are documented and reachable: preset landmarks on the
+  map plus your own trip places, counted together in the Atlas sidebar. Checking
+  in a trip place also marks its country and region as visited, so recording "I
+  was here" no longer means clicking the country separately.
+- **Disputed areas resolve to China.** The Atlas previously drew several
+  contested geometries as separate features. Demchok, the Arunachal border,
+  Paracel and Senkaku, and the China–India boundary are now resolved to China by
+  **geometry subtraction** against the bundled override rather than by name, so
+  the result does not depend on how a boundary is spelled in the dataset.
+- **Provinces highlight again while panning.** The region layer stopped
+  responding once the view moved to other countries, because the request for
+  China's provinces was gated on China already being on screen. Taiwan's regions
+  also normalize to the CN key, so the province-name lookup matches.
+
+### Routes open in the AMap app, and reach it correctly
+
+- On a phone, exporting a day's route now hands off to the installed **AMap app**
+  (`amapuri://` on Android, `iosamap://` on iOS) and falls back to the web link if
+  nothing answers within a short grace period. The app form carries **every**
+  waypoint; the web form only ever accepted one.
+- The AMap web export was rebuilt on the indexed `ditu.amap.com/dir` form, which
+  keeps all stops, converts to GCJ-02, and no longer truncates a name containing
+  a comma.
+- The client-side GCJ-02 conversion was missing the standard sinusoidal terms.
+  It round-tripped, so tests passed, but it was off by 170–330 m against AMap's
+  own service. It now matches the server implementation to within a metre.
+
+### Smaller fixes
+
+- **Password policy errors are localized.** The server returns a machine-readable
+  code (`tooShort`, `tooCommon`, …) alongside its English sentence, so every
+  surface — registration, reset, the forced change, both settings screens and the
+  admin user editor — shows the message in the user's language.
+- **First-deploy credentials moved to the login page.** They used to appear in a
+  non-dismissible modal *after* sign-in, which was both unreachable (no close or
+  OK button rendered) and pointless — the login form is the only place they are
+  needed, and the modal could only ever show a password that had already been
+  replaced. Credentials are no longer written to the browser's config cache
+  either.
+- **The mobile top bar gained a Help entry**, alongside Settings and Admin, so
+  the wiki is reachable on a phone.
+- **Wiki and demo-mode wording** no longer leaks the upstream project's branding
+  into user-facing text or documentation.
+- **Demo accounts now use `@tt.local`.** Earlier builds seeded `demo@trek.app` /
+  `admin@trek.app` (and `demo@nomad.app` before that); those addresses are still
+  recognised, so an instance that upgraded in place keeps working without a reset.
+  The seeder and the hourly reset also shared a mismatch in their default admin
+  address, which silently dropped the admin's password and API keys on every
+  reset when `DEMO_ADMIN_EMAIL` was unset — both now resolve through one list.
 
 ---
 
@@ -208,60 +263,6 @@ GCJ-02 and are converted to the WGS-84 frame the app stores.
   AMap browser key unreadable. It is now rotated with the other encrypted
   settings.
 
-### Existing 0.5.4 improvements
-
-- AMap place search uses the documented v5 request contract (`page_size` /
-  `page_num` / `show_fields`, and `place/around` whenever a coordinate exists).
-- AMap search results show photos, ratings, opening hours, phone and category.
-- AMap has an independent encrypted per-user Web JS API Key setting.
-
-### Existing 0.5.3 improvements
-
-- Mobile Atlas includes the same one-tap preset-landmark visibility switch as desktop.
-- “Explore places on the map” uses AMap for nearby restaurants, hotels and categories when AMap search is enabled.
-- The first-run administrator receives a one-time credential notice and must change the generated password before continuing.
-
----
-
-## v0.5.4 (detail)
-
-### AMap place search fixed
-
-- Place search against AMap was calling the v5 POI endpoints with the older v3
-  parameter names (`offset`, `page`, `extensions`) and reading the v3 response
-  path (`biz_ext`). AMap answers those requests with `status: 0`, and the search
-  then fell back to OpenStreetMap — which is unreachable from many Chinese
-  networks, so the user saw only “place search failed”.
-- Requests now use the documented v5 contract: `page_size` / `page_num` for
-  paging, `show_fields=business,photos` for the detail groups, and
-  `place/around` (not `place/text`) whenever a coordinate is available, since
-  only `around` accepts `location` and `radius`. Detail fields are read from
-  `poi.business`.
-- The rating shown for an AMap result is the rating alone. AMap reports no vote
-  count, and the price per person is deliberately not substituted for one.
-- Added 14 regression tests pinning the v5 parameter names, endpoint choice,
-  field paths and GCJ-02 → WGS-84 conversion.
-
-### Build reliability
-
-- Docker builds carry a one-hour ceiling and npm fetch retries on every stage.
-  They previously hung for nearly six hours inside the emulated arm64 build
-  before being cancelled, and the retry settings had been applied to only some
-  of the builder stages.
-
-### Existing 0.5.3 improvements
-
-- Mobile Atlas includes the same one-tap preset-landmark visibility switch as desktop.
-- “Explore places on the map” uses AMap for nearby restaurants, hotels and categories when AMap search is enabled.
-- The first-run administrator receives a one-time credential notice and must change the generated password before continuing.
-- Bug reports and feature requests open TT GitHub pages instead of the former mailbox.
-
-### Existing 0.5.2 improvements
-
-- AMap search results include photos, ratings, opening hours, phone numbers and category details.
-- AMap has an independent encrypted per-user Web JS API Key setting.
-- The weather API wording now identifies TT as continuing to use the TREK weather API.
-
 ---
 
 ## 🚀 Deploy from a fresh checkout
@@ -282,7 +283,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.6.3`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.7.0`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -332,7 +333,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.6.3 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.7.0 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \

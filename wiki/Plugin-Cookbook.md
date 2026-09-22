@@ -13,7 +13,7 @@ for the permission catalogue see [[Plugin Permissions|Plugin-Permissions]].
 A runnable version of a handful of these recipes — reading a trip's places and
 bookings, raising validation warnings, contributing a place-detail row, and the
 entity metadata behind it — is the
-[`trip-doctor`](https://github.com/liketrek/TREK/tree/main/plugin-sdk/examples/trip-doctor)
+[`trip-doctor`](https://github.com/bhxnms/T-T/tree/main/plugin-sdk/examples/trip-doctor)
 example plugin.
 
 ---
@@ -77,7 +77,7 @@ Reads need trip access; writes additionally need the entity's edit permission.
 
 **Needs:** `hook:place-detail-provider`
 
-Return rows and TREK draws them at the foot of the place panel — no iframe.
+Return rows and Tourism-Team draws them at the foot of the place panel — no iframe.
 
 ```js
 module.exports = {
@@ -178,14 +178,14 @@ subscriptions: [
 ],
 ```
 
-TREK auto-enables koffi before your plugin, routes the call (as your acting user),
+Tourism-Team auto-enables koffi before your plugin, routes the call (as your acting user),
 and refuses it if koffi isn't a satisfied dependency or doesn't export `convert`. See
 [[Plugin Development#talking-to-other-plugins|Plugin-Development]].
 
-## Match the TREK look
+## Match the Tourism-Team look
 
 Add `<!-- trek:ui -->` to your widget's `<head>`. The dev server and `pack` inline
-TREK's token-driven kit (glass surfaces, buttons, inputs, dark-mode) and a
+Tourism-Team's token-driven kit (glass surfaces, buttons, inputs, dark-mode) and a
 `window.trek` bridge with the live theme + tokens. See
 [[Plugin Development#the-design-kit-recommended|Plugin-Development]]. `window.trek.ui`
 gives you bundler-free, kit-styled DOM builders (`ui.el/button/card/chip/input/mount`).
@@ -403,7 +403,7 @@ Both jobs and scheduled tasks run with **no acting user** (trip reads are refuse
 
 ## Contribute native primitives to core views
 
-Seven declarative hooks let a plugin push data into TREK's own screens — the host renders and sanitizes everything, so no iframe and no plugin JS on the canvas. Each needs its own `hook:*` permission, runs with the current user bound on a short timeout, and a slow or failing call is skipped (never fatal). The host caps counts and lengths.
+Seven declarative hooks let a plugin push data into Tourism-Team's own screens — the host renders and sanitizes everything, so no iframe and no plugin JS on the canvas. Each needs its own `hook:*` permission, runs with the current user bound on a short timeout, and a slow or failing call is skipped (never fatal). The host caps counts and lengths.
 
 ```js
 hooks: {
@@ -447,13 +447,13 @@ hooks: {
 }
 ```
 
-`tone` is `'default' | 'success' | 'warn' | 'danger'`; any `url` must be http/https/mailto; `icon` is a lucide icon name — and it is the only way to get a glyph in, because every string a hook returns is emoji-stripped at the render boundary before TREK draws it. A table `action` (instead of a `column`) is a labelled button whose target opens your sandboxed frame or calls one of your routes.
+`tone` is `'default' | 'success' | 'warn' | 'danger'`; any `url` must be http/https/mailto; `icon` is a lucide icon name — and it is the only way to get a glyph in, because every string a hook returns is emoji-stripped at the render boundary before Tourism-Team draws it. A table `action` (instead of a `column`) is a labelled button whose target opens your sandboxed frame or calls one of your routes.
 
 ---
 
 ## Offer a routing profile (EV charging stops)
 
-Declare a profile and implement the `routeProvider` hook — your profile appears in the planner's route toggle next to Driving/Walking, and TREK asks *you* to route the day. Needs `hook:route-provider`; add `http:outbound:<solver-host>` if you call an external routing service.
+Declare a profile and implement the `routeProvider` hook — your profile appears in the planner's route toggle next to Driving/Walking, and Tourism-Team asks *you* to route the day. Needs `hook:route-provider`; add `http:outbound:<solver-host>` if you call an external routing service.
 
 ```json
 "permissions": ["hook:route-provider", "http:outbound:api.example-ev.com"],
@@ -486,7 +486,7 @@ hooks: {
 },
 ```
 
-The legs must line up 1:1 with the waypoint pairs (TREK rejects the result whole otherwise), `note` shows on the day-plan connector, and via points are drawn as stops on the route line. You have 20 s per request; a throw or timeout simply falls back to straight lines. Pair this with `mapLayerProvider` if you also want corridors/zones, and with `db:write:places` + `db:write:itinerary` if the user should be able to persist charging stops as real places.
+The legs must line up 1:1 with the waypoint pairs (Tourism-Team rejects the result whole otherwise), `note` shows on the day-plan connector, and via points are drawn as stops on the route line. You have 20 s per request; a throw or timeout simply falls back to straight lines. Pair this with `mapLayerProvider` if you also want corridors/zones, and with `db:write:places` + `db:write:itinerary` if the user should be able to persist charging stops as real places.
 
 To also make the *time plan* reflect your stops, add `hook:day-schedule-provider` and return anchored time rows — they render in the day plan on desktop and mobile, and their minutes count into the day's route-footer total:
 
@@ -603,7 +603,7 @@ flicker and two plugins can't each own part of one card.
 
 **Needs:** `hook:user-data`
 
-The host calls these when a TREK account is erased or its data is exported. Both are **userless** — you get only a `userId` and act on your OWN db, so the grant leaks no read into core data.
+The host calls these when a Tourism-Team account is erased or its data is exported. Both are **userless** — you get only a `userId` and act on your OWN db, so the grant leaks no read into core data.
 
 ```js
 module.exports = {
@@ -622,7 +622,7 @@ module.exports = {
 
 ## Write across every subsystem
 
-Beyond places/days/itinerary, TREK opens create/update/delete on almost every trip subsystem. Each is membership-checked against the acting user and needs its `db:write:*` scope **plus** the app's edit permission — declare only what you use.
+Beyond places/days/itinerary, Tourism-Team opens create/update/delete on almost every trip subsystem. Each is membership-checked against the acting user and needs its `db:write:*` scope **plus** the app's edit permission — declare only what you use.
 
 ```js
 // Bookings & lodging — needs 'reservation_edit' / 'day_edit'

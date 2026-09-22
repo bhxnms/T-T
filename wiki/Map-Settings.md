@@ -1,6 +1,6 @@
 # Map Settings
 
-The Map tab controls which map engine and tile source TT Travel Planner uses in the Trip Planner and Journey maps.
+The Map tab controls which map engine and tile source Tourism-Team uses in the Trip Planner and Journey maps.
 
 > **Note:** The Atlas view always uses Leaflet regardless of this setting.
 
@@ -39,7 +39,7 @@ When Leaflet is selected, pick a preset or enter a custom tile URL.
 | Stadia Smooth | `https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png` |
 
 **OpenFreeMap Positron is the default** and is what every map falls back to when the field is empty. It needs no key,
-no account and has no request limit, and it is a MapLibre *style* rather than an XYZ template — TREK renders it with
+no account and has no request limit, and it is a MapLibre *style* rather than an XYZ template — Tourism-Team renders it with
 MapLibre inside the Leaflet map, so markers, routes and clusters behave exactly as before.
 
 You can also type any XYZ tile URL, or the URL of any MapLibre style document, directly into the text field.
@@ -51,11 +51,11 @@ You can also type any XYZ tile URL, or the URL of any MapLibre style document, d
 Since 26 August 2026 CARTO stamps an **API KEY REQUIRED** watermark onto every basemap tile fetched without a key, so
 both CartoDB presets need one. This is why CARTO is no longer the default; you only need this section if you
 deliberately want the CartoDB look back. The key is free and no CARTO account is required: request it at
-[carto.com/basemaps/apikey](https://carto.com/basemaps/apikey/) with an email address, the domain you run TREK on and
+[carto.com/basemaps/apikey](https://carto.com/basemaps/apikey/) with an email address, the domain you run Tourism-Team on and
 a one-line description of your project. It arrives by mail, there is no approval queue. The free allowance is 5
 million tile requests per calendar month.
 
-Paste it into **CARTO API key** in Settings, Map. TREK appends it as `?key=...` to every CARTO tile request, which
+Paste it into **CARTO API key** in Settings, Map. Tourism-Team appends it as `?key=...` to every CARTO tile request, which
 covers the Trip Planner, Journey maps, Collections, Atlas, Studio and the offline tile download in one go. The key is
 never stored inside the tile URL itself, so switching keys later does not break a saved template.
 
@@ -71,7 +71,7 @@ servers do not permit bulk downloading.
 
 ## Journey AMap (Amap JS API)
 
-Journey maps can use AMap when a Web JS API key is provided by the deployment. The browser reads the existing compatibility runtime value `window.__TREK_AMAP_JS_KEY__`; configure that value through the deployment's frontend runtime injection rather than placing a secret in source control. If the key is missing or the AMap SDK fails to load, TT Travel Planner falls back to the configured Leaflet/GL map and keeps the journey data available.
+Journey maps can use AMap when a Web JS API key is provided by the deployment. The browser reads the existing compatibility runtime value `window.__TREK_AMAP_JS_KEY__`; configure that value through the deployment's frontend runtime injection rather than placing a secret in source control. If the key is missing or the AMap SDK fails to load, Tourism-Team falls back to the configured Leaflet/GL map and keeps the journey data available.
 
 Enter your **public token** (`pk.*`) from [mapbox.com → Access tokens](https://console.mapbox.com/account/access-tokens/).
 
@@ -82,7 +82,7 @@ Required scopes are:
 - DATASETS:READ
 - VISION:READ
 
-If Mapbox GL is selected but no token is saved, TREK falls back to the Leaflet renderer, so the Trip Planner and Journey maps keep working. Only the preview on this settings page stays blank, with the note *Enter a Mapbox access token to preview*.
+If Mapbox GL is selected but no token is saved, Tourism-Team falls back to the Leaflet renderer, so the Trip Planner and Journey maps keep working. Only the preview on this settings page stays blank, with the note *Enter a Mapbox access token to preview*.
 
 **Built-in style presets:**
 
@@ -103,7 +103,7 @@ You can also enter a custom `mapbox://styles/USER/ID` URL directly.
 
 ### 3D Buildings & Terrain
 
-Enables pitch and 3D buildings on all styles. `Mapbox Standard` and `Standard Satellite` ship their own building volumes, so TREK adds no extrusion layer there; every other style gets one injected. Terrain elevation (DEM-based height) is additionally applied on `Satellite`, `Satellite Streets` and `Outdoors`; `Standard Satellite` brings its own terrain from Mapbox and is left alone. The remaining styles get buildings but no terrain — including plain `Mapbox Standard`, whose built-in terrain TREK switches off — because the elevation data would cause route lines to visually drift away from the HTML place markers.
+Enables pitch and 3D buildings on all styles. `Mapbox Standard` and `Standard Satellite` ship their own building volumes, so Tourism-Team adds no extrusion layer there; every other style gets one injected. Terrain elevation (DEM-based height) is additionally applied on `Satellite`, `Satellite Streets` and `Outdoors`; `Standard Satellite` brings its own terrain from Mapbox and is left alone. The remaining styles get buildings but no terrain — including plain `Mapbox Standard`, whose built-in terrain Tourism-Team switches off — because the elevation data would cause route lines to visually drift away from the HTML place markers.
 
 ### High Quality Mode *(Experimental)*
 
@@ -129,7 +129,7 @@ The **3D Buildings & Terrain** and **High Quality Mode** toggles are Mapbox-only
 
 There is **no** default map center or zoom setting — it was removed in v3.4.0. Instead, every map works out its own opening camera from the places it is about to draw, so a trip in Japan opens on Japan instead of starting on the world view and then flying across the planet.
 
-For each trip map — Trip Planner, Collections and shared-trip links — TREK takes the coordinates it is given and computes the center and zoom that frame them all (the Journey maps frame themselves with the renderer's own `fitBounds`, capped at zoom 16 on both engines):
+For each trip map — Trip Planner, Collections and shared-trip links — Tourism-Team takes the coordinates it is given and computes the center and zoom that frame them all (the Journey maps frame themselves with the renderer's own `fitBounds`, capped at zoom 16 on both engines):
 
 - **Several places** — the camera fits their bounding box. The zoom is capped (16 on Leaflet, 15 on the GL renderers) so a tight cluster does not open absurdly far in, and the center is taken in projected (Mercator) space rather than as an average of the latitudes, so the northernmost place does not fall out of frame.
 - **A single place** (or several stacked on the same spot) — there is no extent to fit, so it opens at city level: zoom 12 on Leaflet, 11 on the GL renderers.

@@ -1,6 +1,6 @@
 # In-App Help
 
-Read the whole TREK wiki from inside TREK, without leaving the app or opening GitHub.
+Read the whole Tourism-Team wiki from inside Tourism-Team, without leaving the app or opening GitHub.
 
 ![In-App Help](assets/HelpInApp.png)
 
@@ -10,23 +10,39 @@ Click your avatar in the top-right navbar and choose **Help**, or go to `/help` 
 
 The page is titled **Help & Docs**. You must be signed in to reach the route.
 
+## Languages
+
+The wiki ships in more than one language. A **language switcher** sits next to the **Help & Docs** heading in the sidebar (and at the top of the mobile drawer), offering each language the bundled docs actually contain. Picking one reloads the page and the navigation in that language; it does **not** change the language of the app around it, so you can read the docs in one language while the interface stays in another.
+
+The choice is remembered. It is also written to the URL as `?lang=`, so a link you copy keeps its language — and opening a `?lang=zh` link wins over both the remembered choice and the app's own language.
+
+Pages that have not been translated yet are served in English rather than showing an error, so a partially translated wiki is always readable end to end. The same goes for images: screenshots that are language-neutral (third-party interfaces we cannot re-shoot) fall back to the English set.
+
+Under the hood each language is a directory beside the others — `wiki/zh/Home.md` next to `wiki/Home.md` — and every endpoint takes an optional `?lang=` (`en` is the default):
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/help/index?lang=` | sidebar sections and page titles |
+| `GET /api/help/page/:slug?lang=` | one page's markdown |
+| `GET /api/help/asset/*?lang=` | one image or walkthrough |
+
 ## The docs ship with your install
 
-Since **v3.4.0** the wiki is bundled into the TREK image and served from disk (commit `6c87bf2f`). That means:
+Since **v3.4.0** the wiki is bundled into the Tourism-Team image and served from disk (commit `6c87bf2f`). That means:
 
 - The help you read always matches the version you are running. A v3.4 install shows v3.4 docs, not whatever `main` says.
 - Help works with no outbound network access at all.
-- Screenshots and other images are served by TREK, not fetched from GitHub — your browser never talks to github.com for help content.
+- Screenshots and other images are served by Tourism-Team, not fetched from GitHub — your browser never talks to github.com for help content.
 
 ### The GitHub fallback
 
-If the bundled `wiki/` directory cannot be found — an unusual layout, or an image built without it — TREK logs a warning and falls back to fetching the public GitHub wiki over the network instead, caching each page and image for an hour and serving a stale copy rather than failing outright. Help degrades instead of disappearing, but the content then tracks the latest release rather than your version.
+If the bundled `wiki/` directory cannot be found — an unusual layout, or an image built without it — Tourism-Team logs a warning and falls back to fetching the public GitHub wiki over the network instead, caching each page and image for an hour and serving a stale copy rather than failing outright. Help degrades instead of disappearing, but the content then tracks the latest release rather than your version.
 
-TREK probes for `_Sidebar.md` specifically, not just the directory, so a half-copied `wiki/` folder falls back rather than serving an empty table of contents.
+Tourism-Team probes for `_Sidebar.md` specifically, not just the directory, so a half-copied `wiki/` folder falls back rather than serving an empty table of contents.
 
 ### `TREK_WIKI_DIR`
 
-The bundled directory is found automatically. `TREK_WIKI_DIR` overrides where TREK looks — an escape hatch for unusual layouts, not something a normal install needs to set. See [Environment-Variables](Environment-Variables).
+The bundled directory is found automatically. `TREK_WIKI_DIR` overrides where Tourism-Team looks — an escape hatch for unusual layouts, not something a normal install needs to set. See [Environment-Variables](Environment-Variables).
 
 ## The sidebar
 
@@ -42,16 +58,16 @@ To search page contents, use the wiki on GitHub or your browser's in-page find.
 
 ## Rendering
 
-Pages render with TREK's own styling: headings, tables, code blocks, blockquotes, and images. A few things are handled specially so the same Markdown works both here and on GitHub:
+Pages render with Tourism-Team's own styling: headings, tables, code blocks, blockquotes, and images. A few things are handled specially so the same Markdown works both here and on GitHub:
 
 - Wiki links in either GitHub spelling — `[[Title|Slug]]` and the bare relative `[Currencies](Currencies)` — become in-app links that navigate without a page reload.
-- Relative image paths are rewritten to TREK's own asset endpoint.
+- Relative image paths are rewritten to Tourism-Team's own asset endpoint.
 - Heading anchors use GitHub's slug scheme, so a `](#some-heading)` link inside a page lands in the right place.
 - HTML comments (such as `<!-- TODO: screenshot -->` placeholders) are stripped rather than shown.
 
 External links open in a new tab.
 
-If a page cannot be loaded you get **Couldn't load this page** — *The help content is fetched from the TREK wiki. Check your connection and try again.*
+If a page cannot be loaded you get **Couldn't load this page** — *The help content is fetched from the Tourism-Team wiki. Check your connection and try again.*
 
 ## Permissions
 

@@ -120,7 +120,7 @@ Bag tracking is only available when an admin has enabled it.
 When enabled, a **Bags** panel appears as a right-hand sidebar on wide screens, or as a modal sheet on narrow screens (tap the **Bags** button in the header to open it). Each bag shows:
 
 - Name and color dot.
-- Total weight, and a weight limit if you set one. Click **Set limit** next to the weight (or the limit itself, to change it) and type the limit in kilograms — that is how airlines state them, and TREK stores it in grams. Clearing the field removes the limit again.
+- Total weight, and a weight limit if you set one. Click **Set limit** next to the weight (or the limit itself, to change it) and type the limit in kilograms — that is how airlines state them, and Tourism-Team stores it in grams. Clearing the field removes the limit again.
 - A fill bar. With a limit it reads against that limit; without one the bag is scaled against the heaviest bag, so bags stay comparable.
 - Member avatars assigned to that bag.
 - Item count.

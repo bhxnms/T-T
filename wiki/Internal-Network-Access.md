@@ -1,10 +1,10 @@
 # Internal Network Access
 
-TREK makes outbound HTTP requests when you configure integrations such as Immich or Synology Photos. By default, it blocks requests to private and local IP ranges to prevent server-side request forgery (SSRF) attacks. You need to allow internal network access when those services are hosted on your LAN.
+Tourism-Team makes outbound HTTP requests when you configure integrations such as Immich or Synology Photos. By default, it blocks requests to private and local IP ranges to prevent server-side request forgery (SSRF) attacks. You need to allow internal network access when those services are hosted on your LAN.
 
 ## Default behavior
 
-TREK has two SSRF guards, both in `ssrfGuard.ts`. Which one applies depends on the call site, not on who configured the URL.
+Tourism-Team has two SSRF guards, both in `ssrfGuard.ts`. Which one applies depends on the call site, not on who configured the URL.
 
 **The strict guard** (`safeFetch` / `safeFetchFollow`, built on `checkSsrf`) covers most outbound traffic — Immich, Synology Photos, AirTrail, notification webhooks, ntfy, Unsplash, and place lookups. It resolves the hostname to an IP address before allowing the connection and blocks loopback, link-local and private ranges. Only the private ranges open up, and only with `ALLOW_INTERNAL_NETWORK=true`. The two tables below describe this guard.
 
@@ -41,7 +41,7 @@ The hostname `localhost` is matched at the hostname stage too, but it normally r
 
 ## When to enable
 
-Set `ALLOW_INTERNAL_NETWORK=true` when a service reached through the strict guard — Immich, Synology Photos, AirTrail, or a notification webhook — is hosted on your local network and you need TREK to reach it. You do **not** need it for a local or LAN Ollama, an OpenAI-compatible endpoint, an OIDC provider on your LAN, or plugin OAuth; those go through the relaxed guard and already work. Leave the flag off if only those need internal access, since turning it on widens the surface for every strict-guard integration at once.
+Set `ALLOW_INTERNAL_NETWORK=true` when a service reached through the strict guard — Immich, Synology Photos, AirTrail, or a notification webhook — is hosted on your local network and you need Tourism-Team to reach it. You do **not** need it for a local or LAN Ollama, an OpenAI-compatible endpoint, an OIDC provider on your LAN, or plugin OAuth; those go through the relaxed guard and already work. Leave the flag off if only those need internal access, since turning it on widens the surface for every strict-guard integration at once.
 
 See [Environment-Variables](Environment-Variables) for how to set environment variables.
 
@@ -49,11 +49,11 @@ See [Environment-Variables](Environment-Variables) for how to set environment va
 
 ## DNS rebinding protection
 
-Even with `ALLOW_INTERNAL_NETWORK=true`, TREK pins the DNS resolution to prevent rebinding attacks. When the guard checks a URL, it resolves the hostname once and records the IP. The outbound connection is then made directly to that IP using a pinned dispatcher (via undici), so the hostname cannot re-resolve to a different address between the check and the actual request.
+Even with `ALLOW_INTERNAL_NETWORK=true`, Tourism-Team pins the DNS resolution to prevent rebinding attacks. When the guard checks a URL, it resolves the hostname once and records the IP. The outbound connection is then made directly to that IP using a pinned dispatcher (via undici), so the hostname cannot re-resolve to a different address between the check and the actual request.
 
 ## Audit log
 
-When a user saves an Immich URL that resolves to a private IP, TREK records an `immich.private_ip_configured` entry in the [Audit-Log](Audit-Log) including the URL and the resolved IP address. AirTrail does the same with `airtrail.private_ip_configured`. Synology Photos does not emit an equivalent event.
+When a user saves an Immich URL that resolves to a private IP, Tourism-Team records an `immich.private_ip_configured` entry in the [Audit-Log](Audit-Log) including the URL and the resolved IP address. AirTrail does the same with `airtrail.private_ip_configured`. Synology Photos does not emit an equivalent event.
 
 ## See also
 

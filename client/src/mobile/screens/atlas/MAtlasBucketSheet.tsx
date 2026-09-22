@@ -1,8 +1,7 @@
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, MapPin, Plus, Search, Star, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
-import { countryDisplayName } from '../../../pages/atlas/atlasModel';
 import type { BucketItem } from '../../../pages/atlas/atlasModel';
-import { A2_TO_A3 } from '../../../pages/atlas/atlasModel';
+import { A2_TO_A3, countryDisplayName } from '../../../pages/atlas/atlasModel';
 import MIconBtn from '../../components/MIconBtn';
 import MSheet from '../../components/MSheet';
 import type { AtlasController } from './atlasController';

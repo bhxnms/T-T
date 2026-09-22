@@ -1,6 +1,6 @@
-// FE-W4UTL-001 to FE-W4UTL-006
+// FE-W4UTL-001 to FE-W4UTL-006, plus FE-W4UTL-007..011 for the policy codes.
 import { describe, it, expect } from 'vitest'
-import { getApiErrorMessage } from './apiError'
+import { getApiErrorMessage, apiErrorCode, passwordPolicyMessages } from './apiError'
 
 describe('getApiErrorMessage', () => {
   it('FE-W4UTL-001: returns the server-provided error string', () => {
@@ -31,5 +31,39 @@ describe('getApiErrorMessage', () => {
 
   it('FE-W4UTL-006: keeps surrounding whitespace of a real message', () => {
     expect(getApiErrorMessage({ response: { data: { error: ' boom ' } } }, 'fallback')).toBe(' boom ')
+  })
+
+  it('FE-W4UTL-007: a known policy code beats the server’s English prose', () => {
+    const err = { response: { data: { error: 'Password is too common.', code: 'tooCommon' } } }
+    expect(getApiErrorMessage(err, 'fallback', { tooCommon: '密码太常见' })).toBe('密码太常见')
+  })
+
+  it('FE-W4UTL-008: an unmapped code still falls back to the server message', () => {
+    const err = { response: { data: { error: 'Server said so', code: 'something_new' } } }
+    expect(getApiErrorMessage(err, 'fallback', { weak: 'x' })).toBe('Server said so')
+  })
+
+  it('FE-W4UTL-009: no code list behaves exactly as before', () => {
+    const err = { response: { data: { error: 'Server said so', code: 'weak' } } }
+    expect(getApiErrorMessage(err, 'fallback')).toBe('Server said so')
+  })
+
+  it('FE-W4UTL-010: apiErrorCode reads the code off a re-thrown Error too', () => {
+    // The store turns an axios failure into an Error; the code has to survive
+    // that, or the register form loses the translation.
+    expect(apiErrorCode({ response: { data: { code: 'weak' } } })).toBe('weak')
+    expect(apiErrorCode(Object.assign(new Error('nope'), { code: 'tooShort' }))).toBe('tooShort')
+    expect(apiErrorCode(new Error('nope'))).toBeNull()
+    expect(apiErrorCode(null)).toBeNull()
+  })
+
+  it('FE-W4UTL-011: passwordPolicyMessages builds one entry per rejection code', () => {
+    const messages = passwordPolicyMessages((k) => `t:${k}`)
+    expect(messages).toEqual({
+      tooShort: 't:settings.passwordTooShort',
+      tooRepetitive: 't:settings.passwordWeak',
+      tooCommon: 't:settings.passwordWeak',
+      weak: 't:settings.passwordWeak',
+    })
   })
 })

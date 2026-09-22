@@ -31,9 +31,6 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     '3.0.14 へのアップグレードにより、保存されているアカウントの先頭または末尾の空白が原因で、ユーザー名またはメールアドレスの競合が1件以上検出されました。影響を受けたアカウントは自動的にリネームされています。対象となるアカウントを特定するには、サーバーログで **[migration] WHITESPACE COLLISION** で始まる行を確認してください。',
   'system_notice.welcome_v1.title': 'TREKへようこそ',
-  'system_notice.bootstrap_password.title': 'Change the initial admin password', // en-fallback
-  'system_notice.bootstrap_password.body':
-    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.', // en-fallback
   'system_notice.welcome_v1.body': 'オールインワンの旅行プランナー。旅程作成、共有、整理をオンライン・オフラインで。',
   'system_notice.welcome_v1.cta_label': '旅行を計画',
   'system_notice.welcome_v1.hero_alt': 'TREKのUIが重なった風景写真',

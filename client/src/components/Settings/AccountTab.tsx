@@ -19,6 +19,7 @@ import { useTranslation } from '../../i18n';
 import { useAuthStore } from '../../store/authStore';
 import type { UserWithOidc } from '../../types';
 import { getApiErrorMessage } from '../../types';
+import { passwordPolicyMessages } from '../../utils/apiError';
 import { useToast } from '../shared/Toast';
 import PasskeysSection from './PasskeysSection';
 import Section from './Section';
@@ -234,7 +235,7 @@ export default function AccountTab(): React.ReactElement {
                     setConfirmPassword('');
                     await loadUser({ silent: true });
                   } catch (err: unknown) {
-                    toast.error(getApiErrorMessage(err, t('common.error')));
+                    toast.error(getApiErrorMessage(err, t('common.error'), passwordPolicyMessages(t)));
                   }
                 }}
                 className="flex items-center gap-2 rounded-lg border border-edge bg-surface-card px-4 py-2 text-sm font-medium text-content-secondary transition-colors"

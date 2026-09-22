@@ -22,19 +22,23 @@ import {
   bucketTooltipNeedsScroll,
   bucketTooltipPlacement,
   bucketTooltipWidth,
+  boundsIntersect,
   countryColor,
   countryDisplayName,
   countryStatus,
   findBucketDuplicate,
   isBucketDuplicateError,
   isCountryVisible,
+  mergeCountryBounds,
   normalizeRegionName,
+  normalizeCountryCode,
   REGION_CACHE_MAX,
   regionCacheEvictions,
   wishlistA3Codes,
   withCountryMarkedVisited,
   type AtlasData,
   type AtlasPlaceHit,
+  type Bounds,
   type BucketItem,
   type CountryDetail,
 } from './atlasModel';
@@ -167,6 +171,39 @@ export function useAtlas() {
   const borderGlareRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const country_layer_by_a2_ref = useRef<Record<string, any>>({});
+  // Merged bounds per country code. Two admin-0 features can carry the same code
+  // once Taiwan is folded into China (its ISO_A2 is rewritten to CN), and a plain
+  // `ref[code] = layer` assignment let the LAST one win — so CN's entry ended up
+  // holding Taiwan's tiny polygon. Every consumer of that ref asks for bounds
+  // (viewport culling, search fitBounds), so the culling then measured Taiwan
+  // against a view of Xinjiang, concluded China was off screen, and dropped the
+  // region layer: Chinese provinces stopped highlighting unless Taiwan happened
+  // to be in view too. Bounds are unioned here instead of overwritten.
+  const country_bounds_by_a2_ref = useRef<Record<string, Bounds>>({});
+
+  /** Register a country feature's bounds, unioning when the code repeats.
+   *
+   *  Every read is guarded and a missing/unusable bound is simply not recorded:
+   *  countryInView fails open for an unrecorded code, so a layer whose bounds
+   *  cannot be read stays in view rather than vanishing from the map. */
+  const registerCountryBounds = (code: string, layer: any): void => {
+    if (!code) return;
+    try {
+      const b = layer?.getBounds?.();
+      if (!b || typeof b.getSouth !== 'function') return;
+      // Cloned, not extended in place: Leaflet caches the bounds object on the layer
+      // and hands back the same instance, so extending it would grow the layer's own
+      // reported extent. The union itself lives in atlasModel.mergeCountryBounds.
+      mergeCountryBounds(country_bounds_by_a2_ref.current, code, {
+        south: b.getSouth(),
+        west: b.getWest(),
+        north: b.getNorth(),
+        east: b.getEast(),
+      });
+    } catch {
+      /* fail open — see above */
+    }
+  };
 
   const handlePanelMouseMove = (e: React.MouseEvent<HTMLDivElement>): void => {
     if (!panelRef.current || !glareRef.current || !borderGlareRef.current) return;
@@ -322,6 +359,9 @@ export function useAtlas() {
         const a3 = f?.properties?.ADM0_A3 || f?.properties?.ISO_A3 || f?.properties?.['ISO3166-1-Alpha-3'] || null;
         if (a3 && a3 !== '-99') resolvedA2 = a3ToA2.get(a3) ?? null;
       }
+      // Fold Taiwan into China so the search list offers one China entry, not a
+      // separate Taiwan one (the loader already rewrote the feature codes).
+      resolvedA2 = normalizeCountryCode(resolvedA2);
       if (!resolvedA2 || seen.has(resolvedA2)) continue;
       seen.add(resolvedA2);
       const label = String(countryDisplayName(resolvedA2, resolveName) || f?.properties?.NAME || f?.properties?.ADMIN || resolvedA2);
@@ -369,6 +409,22 @@ export function useAtlas() {
       .get('/addons/atlas/countries/geo', { timeout: 30000 })
       .then((res) => {
         const geo = res.data;
+        // Fold Taiwan's admin-0 feature into China as the data loads, so the
+        // country layer, the search list and every click handler downstream see
+        // one country instead of a separate clickable "TW" polygon. Rewriting
+        // the feature's own codes (rather than only the display) is what makes
+        // the click open China's card.
+        for (const f of geo.features) {
+          const a2 = f.properties?.ISO_A2;
+          const a3 = f.properties?.ADM0_A3 || f.properties?.ISO_A3;
+          const normA2 = normalizeCountryCode(a2);
+          if (normA2 && normA2 !== a2) f.properties.ISO_A2 = normA2;
+          const normA3 = normalizeCountryCode(a3);
+          if (normA3 && normA3 !== a3) {
+            if (f.properties.ADM0_A3) f.properties.ADM0_A3 = 'CHN';
+            if (f.properties.ISO_A3) f.properties.ISO_A3 = 'CHN';
+          }
+        }
         // Dynamically build A2→A3 mapping from GeoJSON
         for (const f of geo.features) {
           const a2 = f.properties?.ISO_A2;
@@ -435,13 +491,21 @@ export function useAtlas() {
 
   /** Does this country's outline touch the given view? Fail open: a country we hold no
    *  outline for, or one whose bounds throw, counts as in view, because dropping it
-   *  would blank regions the user can see. */
+   *  would blank regions the user can see.
+   *
+   *  Reads the MERGED bounds, not the layer: a code can be carried by more than one
+   *  admin-0 feature (Taiwan's is folded into CN), and taking whichever feature was
+   *  registered last made China's extent look like Taiwan's — see
+   *  country_bounds_by_a2_ref. */
   const countryInView = (code: string, bounds: L.LatLngBounds | null): boolean => {
     if (!bounds) return true;
-    const layer = country_layer_by_a2_ref.current[code];
-    if (!layer) return true;
+    const countryBounds = country_bounds_by_a2_ref.current[code];
+    if (!countryBounds) return true;
     try {
-      return bounds.intersects(layer.getBounds());
+      return boundsIntersect(
+        { south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast() },
+        countryBounds
+      );
     } catch {
       return true;
     }
@@ -476,7 +540,7 @@ export function useAtlas() {
     if (!mapInstance.current) return;
     const bounds = mapInstance.current.getBounds();
     const toLoad: string[] = [];
-    for (const [code, layer] of Object.entries(country_layer_by_a2_ref.current)) {
+    for (const code of Object.keys(country_layer_by_a2_ref.current)) {
       if (regionGeoCache.current[code]) {
         // Recency means recency of being on screen. Touching every cached country wrote
         // the order back into GeoJSON feature order on every moveend, so the eviction
@@ -486,11 +550,11 @@ export function useAtlas() {
         continue;
       }
       if (pendingRegionCodes.current.has(code)) continue;
-      try {
-        if (bounds.intersects((layer as any).getBounds())) toLoad.push(code);
-      } catch (err) {
-        console.error('Failed to inspect Atlas region bounds:', err);
-      }
+      // countryInView, not a direct layer.getBounds(): the same merged-bounds reason as
+      // above. Testing the raw layer here meant China's regions were never even
+      // REQUESTED while the view sat over Xinjiang or Tibet — the provinces were not
+      // merely culled from the layer, their geometry had never been fetched.
+      if (countryInView(code, bounds)) toLoad.push(code);
     }
     if (!toLoad.length) return;
     for (const code of toLoad) pendingRegionCodes.current.add(code);
@@ -501,7 +565,10 @@ export function useAtlas() {
         if (!geo?.features) return;
         let added = false;
         for (const c of toLoad) {
-          const features = geo.features.filter((f: any) => f.properties?.iso_a2?.toUpperCase() === c);
+          // Compare on the normalized code: the server serves Taiwan's regions in
+          // the CN bucket, but each feature still carries its original iso_a2, so
+          // a raw === 'CN' filter would drop them.
+          const features = geo.features.filter((f: any) => normalizeCountryCode(f.properties?.iso_a2) === c);
           if (features.length > 0) {
             regionGeoCache.current[c] = { type: 'FeatureCollection', features };
             touchRegionCode(c);
@@ -811,6 +878,14 @@ export function useAtlas() {
       // appending a second container to the pane.
       regionLayerRef.current = null;
       renderedRegionSigRef.current = '';
+      // The registry is deliberately NOT cleared here either. A map rebuild (theme
+      // toggle, etc.) constructs the new map and re-registers every country, but the
+      // handlers that ask for regions run on zoomend/moveend — and those can fire
+      // before the country effect has re-registered. Keeping the entries means such a
+      // handler still sees the country it is over instead of an empty registry, which
+      // is what left the map showing country outlines with no regions.
+      //
+      // Re-registration unions identical bounds, so surviving entries are harmless.
       tileLayersRef.current = [];
       cancelledRef.current = true;
       glLayerRef.current?.remove();
@@ -896,6 +971,12 @@ export function useAtlas() {
     if (geoLayerRef.current) {
       mapInstance.current.removeLayer(geoLayerRef.current);
     }
+    // The registry is deliberately NOT cleared here. Every entry is re-derived from
+    // the same country bundle on each rebuild, so a stale code simply gets its bounds
+    // unioned with identical values. Clearing it instead threw away entries that
+    // handlers already registered on the map (zoomend/moveend) still needed: the
+    // region layer is loaded from those, and an empty registry made them fetch
+    // nothing until the user panned or zoomed again.
 
     // Color per country code, hashed from the code itself (countryColor in atlasModel) —
     // stable forever, regardless of visit order or how many countries are visited/planned/
@@ -957,6 +1038,7 @@ export function useAtlas() {
         const c = countryMap[a3];
         if (c) {
           country_layer_by_a2_ref.current[c.code] = layer;
+          registerCountryBounds(c.code, layer);
           const name = countryDisplayName(c.code, resolveName);
           const formatDate = (d) => {
             if (!d) return '—';
@@ -1023,9 +1105,10 @@ export function useAtlas() {
           // Reverse lookup: find A2 code from A3, or use A3 directly
           const a3ToA2Entry = Object.entries(A2_TO_A3).find(([, v]) => v === a3);
           const isoA2 = feature.properties?.ISO_A2;
-          const countryCode = a3ToA2Entry ? a3ToA2Entry[0] : isoA2 && isoA2 !== '-99' ? isoA2 : null;
+          const countryCode = normalizeCountryCode(a3ToA2Entry ? a3ToA2Entry[0] : isoA2 && isoA2 !== '-99' ? isoA2 : null);
           if (countryCode && countryCode !== '-99') {
             country_layer_by_a2_ref.current[countryCode] = layer;
+            registerCountryBounds(countryCode, layer);
             const name =
               countryDisplayName(countryCode, resolveName) || feature.properties?.NAME || feature.properties?.ADMIN || countryCode;
             layer.bindTooltip(`<div style="font-size:12px;font-weight:600">${escapeTooltipHtml(name)}</div>`, {
@@ -1168,7 +1251,9 @@ export function useAtlas() {
     // "Ile-de-France" must still match the bundle's "Île-de-France") (#atlas-region-match).
     const matchesRegions = (f: any, codes: Set<string>, namesByCountry: Map<string, Set<string>>) => {
       if (codes.has(f.properties?.iso_3166_2)) return true;
-      const countryA2 = (f.properties?.iso_a2 || '').toUpperCase();
+      // Normalized so Taiwan's regions (served under CN) match the CN-keyed
+      // visited/planned sets the server reports.
+      const countryA2 = normalizeCountryCode(f.properties?.iso_a2) || '';
       const countryNames = namesByCountry.get(countryA2);
       if (!countryNames) return false;
       const name = normalizeRegionName(f.properties?.name || '');
@@ -1206,7 +1291,7 @@ export function useAtlas() {
         interactive: true,
         pane: 'regionPane',
         style: (feature) => {
-          const countryA2 = (feature?.properties?.iso_a2 || '').toUpperCase();
+          const countryA2 = normalizeCountryCode(feature?.properties?.iso_a2) || '';
           if (isPlannedFeature(feature)) {
             return {
               fillColor: dark ? '#818cf8' : '#4f46e5',
@@ -1236,7 +1321,7 @@ export function useAtlas() {
           const regionNameEn = feature?.properties?.name_en || '';
           const countryName = feature?.properties?.admin || '';
           const regionCode = feature?.properties?.iso_3166_2 || '';
-          const countryA2 = (feature?.properties?.iso_a2 || '').toUpperCase();
+          const countryA2 = normalizeCountryCode(feature?.properties?.iso_a2) || '';
           const visited = isVisitedFeature(feature);
           const count =
             regionPlaceCounts[regionCode] ||
@@ -1244,9 +1329,17 @@ export function useAtlas() {
             regionPlaceCounts[`${countryA2}:${normalizeRegionName(regionNameEn)}`] ||
             0;
 
-          // For China provinces, use Chinese name
+          // Taiwan's admin-1 features are its counties/cities, but the Atlas treats
+          // the island as one Chinese province, so they are labelled 台湾省 rather
+          // than surfaced under their own country. Everything else in China keeps
+          // the province-name lookup.
+          const isTaiwanRegion =
+            normalizeCountryCode(feature?.properties?.iso_a2) === 'CN' &&
+            (feature?.properties?.iso_a2 || '').toUpperCase() === 'TW';
           let displayName = regionName;
-          if (countryA2 === 'CN') {
+          if (isTaiwanRegion) {
+            displayName = '台湾省';
+          } else if (countryA2 === 'CN') {
             displayName = getProvinceNameByEnglish(regionNameEn) || getProvinceNameByEnglish(regionName) || regionName;
           }
           layer.on('click', () => {
@@ -1259,7 +1352,10 @@ export function useAtlas() {
               setConfirmActionRef.current({
                 type: 'unmark-region',
                 code: countryA2,
-                name: regionName,
+                // displayName, not regionName: Chinese provinces are labelled in
+                // Chinese, and the tooltip already uses that spelling — passing the
+                // raw GeoJSON name here made the popup disagree with the hover.
+                name: displayName,
                 regionCode,
                 countryName,
               });
@@ -1267,7 +1363,7 @@ export function useAtlas() {
               setConfirmActionRef.current({
                 type: 'choose-region',
                 code: countryA2, // country A2 code — used for flag display
-                name: regionName, // region name — shown as heading
+                name: displayName, // region name — shown as heading
                 regionCode,
                 countryName,
               });
@@ -1439,10 +1535,14 @@ export function useAtlas() {
     set_atlas_country_open(false);
     set_atlas_country_results([]);
 
-    const layer = country_layer_by_a2_ref.current[country_code];
+    // Merged bounds, so searching "China" frames the mainland rather than Taiwan.
+    const countryBounds = country_bounds_by_a2_ref.current[country_code];
     try {
-      if (layer?.getBounds && mapInstance.current) {
-        mapInstance.current.fitBounds(layer.getBounds(), { padding: [24, 24], animate: true, maxZoom: 6 });
+      if (countryBounds && mapInstance.current) {
+        mapInstance.current.fitBounds(
+          L.latLngBounds([countryBounds.south, countryBounds.west], [countryBounds.north, countryBounds.east]),
+          { padding: [24, 24], animate: true, maxZoom: 6 }
+        );
       }
     } catch (e) {
       console.error('Error fitting bounds', e);

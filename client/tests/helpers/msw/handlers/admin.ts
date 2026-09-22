@@ -104,9 +104,39 @@ export const adminHandlers = [
     return HttpResponse.json({ success: true });
   }),
 
+  // The endpoint answers an ARRAY of action descriptors (the server maps
+  // PERMISSION_ACTIONS through a projection carrying key/level/defaultLevel/
+  // allowedLevels). It used to answer `{}` here, and because PermissionsPanel
+  // mounts on the admin page and does `entries.map(...)`, every AdminPage test
+  // crashed on "entries.map is not a function" — surfacing as a blank page and a
+  // 5s waitFor timeout, which read like a slow machine rather than a bad stub.
   http.get('/api/admin/permissions', () => {
-    return HttpResponse.json({ permissions: {} });
+    return HttpResponse.json({
+      permissions: [
+        { key: 'trip_create', level: 'everybody', defaultLevel: 'everybody', allowedLevels: ['admin', 'everybody'] },
+        { key: 'trip_edit', level: 'trip_owner', defaultLevel: 'trip_owner', allowedLevels: ['trip_owner', 'trip_member'] },
+        { key: 'file_upload', level: 'trip_member', defaultLevel: 'trip_member', allowedLevels: ['admin', 'trip_owner', 'trip_member'] },
+      ],
+    });
   }),
+
+  // The admin page's feature toggles. Each one is a separate GET fired on mount,
+  // and without a handler MSW lets the request fall through to the network, where
+  // it hangs until axios' 8s timeout. A full parallel run has ~660 files competing
+  // for CPU, so those pending requests starved the stats render past the 5s
+  // `waitFor` ceiling and the stats assertion failed — intermittently, and only
+  // under load, which is what made it read as flakiness rather than a missing stub.
+  //
+  // One handler per path rather than a shared wildcard: the shapes differ, and a
+  // wildcard would silently answer endpoints that should 404 in a test.
+  ...['photos', 'autocomplete', 'details', 'enrich'].map((feature) =>
+    http.get(`/api/admin/places-${feature}`, () => HttpResponse.json({ enabled: true })),
+  ),
+  http.get('/api/admin/amap-search', () => HttpResponse.json({ enabled: false })),
+  http.get('/api/admin/bag-tracking', () => HttpResponse.json({ enabled: false })),
+  http.get('/api/admin/collab-features', () =>
+    HttpResponse.json({ chat: true, notes: true, polls: true, whatsnext: true }),
+  ),
 
   http.get('/api/admin/notification-preferences', () => {
     return HttpResponse.json({

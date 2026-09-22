@@ -30,6 +30,13 @@
  *    provinces are therefore unioned with polygon-clipping, which is why this
  *    is a build step with a dependency rather than a runtime transform.
  *
+ * A third output — `trimmedRegions` — trims the same claim out of every FOREIGN
+ * province that overlaps it. Without it the country layer is fixed but the
+ * province layer is not: hovering or clicking South Tibet still highlights and
+ * names India's Arunachal Pradesh, because that province's polygon still covers
+ * the ground. See buildTrimmedRegions for why this is a geometric cut rather
+ * than a name filter.
+ *
  * Run: node server/scripts/build-china-override.mjs
  */
 
@@ -367,6 +374,127 @@ function boxesOverlap(a, b) {
 /** China spans roughly 73–135°E, 18–54°N; padded, since this only gates the clip. */
 const CHINA_BOX = [70, 15, 140, 57];
 
+// ── Foreign provinces inside China's claim ──────────────────────────────────
+//
+// Replacing China's own province layer fixes what China SHOWS, but not what its
+// neighbours show. India's admin-1 bundle still carries Arunāchal Pradesh and
+// Ladākh with their full geoBoundaries outlines, which cover South Tibet and
+// Aksai Chin; the map draws those outlines on top of China's, so hovering or
+// clicking the disputed ground highlights and names an Indian province. The
+// country layer does not have this problem only because `trimmedCountries`
+// already cuts the claim out of India's admin-0 polygon — the province layer
+// needs the same treatment, province by province.
+//
+// A NAME filter is the tempting shortcut and it does not work. The bundle spells
+// these with diacritics — "Arunāchal Pradesh", "Ladākh" — so a plain-ASCII
+// comparison matches nothing at all and silently changes no geometry, which is
+// exactly how the first attempt at this failed. Worse, a name filter could only
+// ever drop a whole province, and Arunāchal is mostly real Indian territory:
+// deleting the feature would erase Assam-adjacent land that was never in
+// dispute. Cutting the polygons keeps every province, minus the claimed part.
+//
+// The cut is the same subtraction used for the countries, with the same
+// decimation ladder, because the two share the long, messy Himalayan border
+// where polygon-clipping is most likely to refuse an exact outline.
+//
+// A province that loses essentially all of its area is not trimmed but dropped:
+// Taiwan's counties are entirely inside China's outline (the override carries
+// Taiwan as a province), and a county reduced to a sliver of itself would render
+// as a stray artefact. The threshold is deliberately near-total — a province
+// that keeps even 2% of itself is still real territory and is kept.
+const REGION_FULL_LOSS = 0.98;
+
+/**
+ * Slivers this small are clipper artefacts, not land.
+ *
+ * Cutting a long, messy border leaves a spray of few-vertex fragments — the
+ * subtraction of India's Arunāchal Pradesh alone produced 21 parts under 1e-4°²
+ * out of 40, and Taiwan's Penghu 39 of 44. They are invisible at any zoom the
+ * Atlas draws, they are not clickable in practice, and they cost most of this
+ * file's bytes, so they are dropped. The threshold is the same one the country
+ * outline uses for the same reason (see MIN_PART_AREA_DEG2 / dropSlivers).
+ *
+ * Expressed as an area, not a vertex count: a genuine small island can be
+ * described by very few points, and dropping those would erase real territory.
+ */
+const MIN_REGION_PART_AREA_DEG2 = 1e-4;
+
+function buildTrimmedRegions(subtrahendLadder, fc) {
+  const trimmed = {};
+  let kept = 0;
+  let dropped = 0;
+  let failed = 0;
+
+  for (const f of fc.features ?? []) {
+    const a2 = String(f?.properties?.iso_a2 ?? '').toUpperCase();
+    // China's own provinces are replaced wholesale by `regions`, so trimming them
+    // here would be wasted work (and would strip Tibet and Xinjiang bare).
+    if (!a2 || a2 === '-99' || a2 === 'CN' || !f.geometry) continue;
+    const polys = geometryToCleanPolys(f.geometry);
+    // Per part, not per province: a province with an outlying island near China
+    // must not drag its mainland through the clipper.
+    const nearParts = polys.filter((p) => boxesOverlap(boundsOf([p]), CHINA_BOX));
+    if (nearParts.length === 0) continue;
+
+    const before = polys.reduce((sum, p) => sum + partArea(p[0]), 0);
+    let result = null;
+    for (const sub of subtrahendLadder) {
+      try {
+        result = polygonClipping.difference(nearParts, sub);
+        break;
+      } catch {
+        /* try the next coarsening */
+      }
+    }
+    if (!result) {
+      failed++;
+      continue;
+    }
+
+    const after = result.reduce((sum, p) => sum + partArea(p[0]), 0);
+    const removed = before - after;
+    // Touching borders only: the province does not overlap the claim at all, so
+    // it is served from the bundle untouched rather than duplicated here.
+    if (removed <= 1e-6) continue;
+
+    // The cut is made against the full-precision outline, but the country layer
+    // ships quantized to COUNTRY_DECIMALS while these regions keep
+    // REGION_DECIMALS. Rounding therefore pulls a vertex of one layer up to half
+    // a grid cell across the other's edge, so along the frontier a hairline of
+    // order 50 m can satisfy both layers. It is left as-is rather than snapped:
+    // quantizing the two to the same grid would mean re-serializing the whole
+    // country outline (and every neighbouring province) at 3dp, roughly doubling
+    // this file for a band narrower than the map's own stroke width. Resolution
+    // is unaffected — reverseGeocodeRegion asks for the COUNTRY first and then
+    // only that country's provinces, so a point that answers CN is never
+    // offered to an Indian province.
+    const code = f.properties?.iso_3166_2 ?? '';
+    if (before > 0 && removed / before > REGION_FULL_LOSS) {
+      (trimmed[a2] ||= []).push({ drop: code });
+      dropped++;
+      continue;
+    }
+    const coords = quantizePolys(result, REGION_DECIMALS).filter(
+      (p) => partArea(p[0]) >= MIN_REGION_PART_AREA_DEG2,
+    );
+    if (coords.length === 0) {
+      (trimmed[a2] ||= []).push({ drop: code });
+      dropped++;
+      continue;
+    }
+    (trimmed[a2] ||= []).push({
+      properties: f.properties,
+      geometry: { type: 'MultiPolygon', coordinates: coords },
+    });
+    kept++;
+  }
+
+  console.log(
+    `[china-override] province layer: ${kept} trimmed, ${dropped} dropped as fully inside the claim, ${failed} could not be cut`,
+  );
+  return trimmed;
+}
+
 function main() {
   const raw = JSON.parse(fs.readFileSync(SRC, 'utf8').replace(/^\uFEFF/, ''));
   console.log(`[china-override] ${raw.features.length} provinces from ${path.basename(SRC)}`);
@@ -497,6 +625,15 @@ function main() {
   }
   console.log(`[china-override] trimmed China's claim out of: ${reported.join(', ') || '(nothing overlapped)'}`);
 
+  // The province layer's half of the same fix: India's Arunāchal Pradesh and
+  // Ladākh keep their outlines in admin1, so without this the map still paints
+  // (and a click still names) an Indian province over South Tibet and Aksai
+  // Chin. Read as a stream-friendly whole here — the build has no 512MB budget
+  // to respect, unlike the server.
+  console.log('[china-override] trimming foreign provinces…');
+  const admin1 = JSON.parse(zlib.gunzipSync(fs.readFileSync(assetPath('admin1'))).toString('utf8'));
+  const trimmedRegions = buildTrimmedRegions(subtrahendLadder, admin1);
+
   const out = {
     country,
     regions,
@@ -505,6 +642,10 @@ function main() {
     trimmedCountries: Object.fromEntries(
       trimmed.filter((t) => t.polys.length > 0).map((t) => [t.code, { type: 'MultiPolygon', coordinates: t.polys }]),
     ),
+    // Keyed by ISO alpha-2, then a list of either a replacement feature
+    // ({ properties, geometry }) or `{ drop: code }` for a province swallowed
+    // whole by the claim. See buildTrimmedRegions.
+    trimmedRegions,
   };
 
   fs.writeFileSync(OUT, JSON.stringify(out));

@@ -57,6 +57,7 @@ const atlas: TranslationStrings = {
   'atlas.placeVisited': '방문한 장소',
   'atlas.placesVisited': '방문한 장소',
   'atlas.planned': '예정',
+  'atlas.showLandmarks': '랜드마크 표시',
   'atlas.showPlanned': '예정된 국가 표시',
   'atlas.plannedFor': '예정일',
   'atlas.antarctica': '남극',

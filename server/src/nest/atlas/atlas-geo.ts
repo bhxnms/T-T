@@ -77,6 +77,21 @@ interface ChinaOverride {
    * came first. Without this half, a click in South Tibet still opened India.
    */
   trimmedCountries?: Record<string, { type: 'MultiPolygon'; coordinates: number[][][][] }>;
+  /**
+   * Foreign admin-1 features with China's claim cut out of them, keyed by ISO
+   * alpha-2. The country half above fixes what China's neighbours ARE; this half
+   * fixes what their PROVINCES are, which is what the map draws on the region
+   * layer: India's Arunāchal Pradesh and Ladākh otherwise still cover South Tibet
+   * and Aksai Chin, so a hover or click there highlights and names an Indian
+   * province over Chinese ground.
+   *
+   * Each entry is either a replacement feature ({ properties, geometry }) or
+   * `{ drop: <iso_3166_2> }` for a province the claim swallowed whole (Taiwan's
+   * counties, whose entirely-inside-China geometry would otherwise survive as
+   * slivers). A province whose code is listed with a replacement must render the
+   * replacement, not the bundled feature.
+   */
+  trimmedRegions?: Record<string, Array<{ drop?: string; properties?: any; geometry?: any }>>;
 }
 
 let chinaOverride: ChinaOverride | null | undefined;
@@ -120,6 +135,33 @@ function chinaOverrideRegionFeatures(): any[] {
 /** True when the bundled feature is China proper (so the override can replace it). */
 function isChinaFeature(f: any): boolean {
   return String(f?.properties?.ISO_A2 ?? '').toUpperCase() === 'CN';
+}
+
+/**
+ * The override's province replacement for one admin-1 feature, or null when the
+ * bundled geometry stands.
+ *
+ * Two cases, both keyed by ISO-3166-2 so a bundled feature can be matched without
+ * comparing names (the bundle's names carry diacritics — "Arunāchal Pradesh",
+ * "Ladākh" — which is exactly what defeated the earlier name-based attempt):
+ *
+ *   - a replacement feature: return it, so the drawn polygon stops at the claim;
+ *   - `{ drop: code }`: return false, telling the caller to omit the feature.
+ *
+ * Returns `undefined` for "not in the override at all", which is the common case
+ * and must stay cheap — this runs per feature on every region request.
+ */
+function chinaOverrideRegionReplacement(a2: string, feature: any): any {
+  const override = loadChinaOverride();
+  const entries = a2 ? override?.trimmedRegions?.[a2] : undefined;
+  if (!entries || entries.length === 0) return undefined;
+  const code = feature?.properties?.iso_3166_2;
+  if (!code) return undefined;
+  for (const entry of entries) {
+    if (entry.drop === code) return false;
+    if (entry.properties?.iso_3166_2 === code) return { type: 'Feature', properties: entry.properties, geometry: entry.geometry };
+  }
+  return undefined;
 }
 
 /** Gzipped admin-0 bytes with China's geometry swapped for the override's. */
@@ -195,7 +237,24 @@ export async function getRegionGeo(countryCodes: string[]): Promise<any> {
       continue;
     }
     const s = store.get(c);
-    if (s) parts.push(s);
+    if (!s) continue;
+    // A neighbouring country's provinces keep their bundled geometry EXCEPT where
+    // China's claim covers them, which the override has already cut away. Without
+    // this the country layer and the province layer disagree: India's outline
+    // stops at the claim, but its Arunāchal Pradesh and Ladākh polygons still
+    // cover South Tibet and Aksai Chin, so hovering or clicking there highlights
+    // and names an Indian province over Chinese ground.
+    try {
+      const features = JSON.parse(`[${s}]`);
+      const kept = features
+        .map((f: any) => chinaOverrideRegionReplacement(c, f) ?? f)
+        .filter((f: any) => f !== false);
+      if (kept.length > 0) parts.push(...kept.map((f: any) => JSON.stringify(f)));
+    } catch {
+      // Unreadable bucket: serve it as-is rather than dropping a whole country's
+      // provinces over one bad parse (same reasoning as the legacy filter here).
+      parts.push(s);
+    }
   }
   if (parts.length === 0) return { type: 'FeatureCollection', features: [] };
   // Each stored value is that country's features as comma-joined GeoJSON text; wrap the
@@ -323,6 +382,14 @@ function buildAdmin1Store(): Promise<Map<string, string>> {
     // China region layer serves them alongside the mainland provinces.
     const code = normalizeCountryCode(f.properties?.iso_a2);
     if (!code) return; // features with a null iso_a2 are skipped, matching the old filter
+
+    // Disputed ground is NOT filtered by name here. This used to drop India's
+    // "Arunachal Pradesh" and "Ladakh", which never matched: the bundle spells
+    // them "Arunāchal Pradesh" and "Ladākh", so the comparison silently did
+    // nothing. The real fix is geometric and lives in the China override
+    // (getRegionGeo / getRegionFeatures): the claim is cut out of those provinces
+    // and of every other foreign province that overlaps it, which also keeps the
+    // land that was never in dispute.
     const compact = JSON.stringify(f);
     const prev = store.get(code);
     store.set(code, prev ? prev + ',' + compact : compact);
@@ -1054,28 +1121,46 @@ async function getRegionFeatures(countryCode: string): Promise<RegionFeature[]> 
   const cc = normalizeCountryCode(countryCode) || countryCode.toUpperCase();
   const cached = regionFeatureCache.get(cc);
   if (cached) return cached;
-  const store = await getAdmin1Store();
-  const text = store.get(cc);
-  if (!text) {
-    regionFeatureCache.set(cc, []);
-    return [];
-  }
+
   let features: { properties?: Record<string, string>; geometry?: { type: string; coordinates: unknown } }[];
-  try {
-    features = JSON.parse(`{"type":"FeatureCollection","features":[${text}]}`).features ?? [];
-  } catch {
-    regionFeatureCache.set(cc, []);
-    return [];
+  // China resolves against the override's provinces, not the bundle's. The two
+  // disagree exactly where it matters: the bundle's Tibet stops at the border it
+  // draws, so Tawang (Chinese territory under this deployment's map) fell outside
+  // every bundled CN province and resolved to no region at all. The override
+  // carries the same claim the country outline does.
+  const overrideFeatures = cc === 'CN' ? chinaOverrideRegionFeatures() : [];
+  if (overrideFeatures.length > 0) {
+    features = overrideFeatures;
+  } else {
+    const store = await getAdmin1Store();
+    const text = store.get(cc);
+    if (!text) {
+      regionFeatureCache.set(cc, []);
+      return [];
+    }
+    try {
+      features = JSON.parse(`{"type":"FeatureCollection","features":[${text}]}`).features ?? [];
+    } catch {
+      regionFeatureCache.set(cc, []);
+      return [];
+    }
   }
+
   const out: RegionFeature[] = [];
   for (const f of features) {
     const code = f.properties?.iso_3166_2;
     if (!code || !f.geometry) continue;
-    const { geom, boxes } = compactGeomFromGeometry(f.geometry);
+    // A province whose geometry the override cut back (or dropped entirely, for
+    // Taiwan's counties) must be tested against the cut geometry — otherwise
+    // point-in-polygon still answers for the Indian province over Chinese ground.
+    const replacement = chinaOverrideRegionReplacement(cc, f);
+    if (replacement === false) continue;
+    const source = replacement ?? f;
+    const { geom, boxes } = compactGeomFromGeometry(source.geometry);
     out.push({
       code,
-      name: f.properties?.name || code,
-      nameEn: f.properties?.name_en || f.properties?.name || code,
+      name: source.properties?.name || code,
+      nameEn: source.properties?.name_en || source.properties?.name || code,
       geom,
       boxes,
     });

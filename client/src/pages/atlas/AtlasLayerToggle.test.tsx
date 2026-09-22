@@ -33,4 +33,27 @@ describe('AtlasLayerToggle', () => {
     rerender(<AtlasLayerToggle t={t} showPlanned onToggle={onToggle} plannedCount={4} />);
     expect(screen.getByRole('button', { name: 'atlas.showPlanned' })).toHaveAttribute('aria-pressed', 'true');
   });
+
+  // The component test above uses an identity `t`, so it can only prove WHICH
+  // keys are requested — never that they resolve. That is exactly how
+  // `atlas.showLandmarks` shipped untranslated in every locale: the label
+  // rendered as the literal string "atlas.showLandmarks" on the real map, and
+  // FE-ATLAS-TOGGLE-001 happily asserted that raw key as the expected text.
+  it('FE-ATLAS-TOGGLE-004: every key this component asks for exists in the bundles', async () => {
+    const en = (await import('@trek/shared/i18n/en')).default;
+    const strings = en as unknown as Record<string, string>;
+
+    const requested: string[] = [];
+    const recording = ((key: string) => {
+      requested.push(key);
+      return key;
+    }) as TranslationFn;
+
+    render(<AtlasLayerToggle t={recording} showPlanned onToggle={vi.fn()} plannedCount={3} />);
+
+    expect(requested.length).toBeGreaterThan(0);
+    for (const key of requested) {
+      expect(strings[key], `${key} is missing from the en bundle`).toBeTypeOf('string');
+    }
+  });
 });

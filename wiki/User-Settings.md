@@ -1,12 +1,12 @@
 # User Settings
 
-The Settings page lets you personalise every aspect of TREK — appearance, maps, notifications, offline behaviour, and your account.
+The Settings page lets you personalise every aspect of Tourism-Team — appearance, maps, notifications, offline behaviour, and your account.
 
 ## Navigating to Settings
 
 Open the user menu in the top navigation bar and select **Settings**. The page opens on the **General** tab by default.
 
-If your account requires MFA setup, TREK redirects you directly to the **Account** tab (via `?mfa=required`).
+If your account requires MFA setup, Tourism-Team redirects you directly to the **Account** tab (via `?mfa=required`).
 
 ## Tabs
 
@@ -20,7 +20,7 @@ If your account requires MFA setup, TREK redirects you directly to the **Account
 | Plugins | Per-user settings for installed plugins | Only when at least one plugin is installed |
 | Offline | Cached trips, pending changes, re-sync and clear cache | Always |
 | Account | Username, email, password, MFA (TOTP + backup codes), passkeys, avatar, delete account | Always |
-| About | App version, links to Ko-fi / Buy Me a Coffee / Discord / GitHub (bug reports, feature requests) / Wiki | Only when version metadata is available |
+| About | App version, links to Ko-fi / Buy Me a Coffee / GitHub (bug reports, feature requests) / Wiki | Only when version metadata is available |
 
 ## General tab
 
@@ -28,7 +28,7 @@ The General tab controls the following preferences, all saved immediately on cha
 
 **Startup**
 
-- **Start page** — open TREK on the dashboard (the default) or straight in your active trip.
+- **Start page** — open Tourism-Team on the dashboard (the default) or straight in your active trip.
 - **Start tab** — which planner tab that trip opens on, e.g. Costs for entering expenses on the road.
 
 **Language & region**
@@ -94,7 +94,7 @@ If your account was linked via SSO, an **SSO** badge appears next to your role a
 The Integrations tab is only visible when a **photo provider** (Immich or Synology Photos), **MCP**, **AirTrail** or **AI Parsing** is enabled. Each section then appears with its own addon, so the tab holds only what your instance actually runs:
 
 - **Photo Providers** (only when a photo provider is enabled) — Configure Immich, Synology Photos, and other photo integrations. One card appears per enabled provider.
-- **AirTrail** (only when the AirTrail addon is enabled) — Instance URL and API key for your self-hosted AirTrail, plus a self-signed-certificate switch and a **Write changes back to AirTrail** toggle (off by default: AirTrail is the source of truth and TREK only reads from it). **Test connection** reports how many flights it can see. The key is stored encrypted and never prefilled — leaving the field blank keeps the stored one.
+- **AirTrail** (only when the AirTrail addon is enabled) — Instance URL and API key for your self-hosted AirTrail, plus a self-signed-certificate switch and a **Write changes back to AirTrail** toggle (off by default: AirTrail is the source of truth and Tourism-Team only reads from it). **Test connection** reports how many flights it can see. The key is stored encrypted and never prefilled — leaving the field blank keeps the stored one.
 - **AI parsing** (only when the AI Parsing addon is enabled) — The provider (OpenAI or Anthropic), model and API key used to extract bookings from your uploaded files, plus **Send documents as images** for vision-capable models. This is the per-user fallback: it only takes effect when your administrator has not configured a model for the whole instance. A local Ollama endpoint is not offered here — that is set up once, instance-wide, in the admin settings (#1772). See [AI-Booking-Import](AI-Booking-Import).
 - **MCP section** (only when MCP addon is enabled):
   - Shows the MCP server endpoint URL.

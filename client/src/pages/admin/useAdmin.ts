@@ -6,6 +6,7 @@ import { useSettingsStore } from '../../store/settingsStore'
 import { useAddonStore } from '../../store/addonStore'
 import { useTranslation } from '../../i18n'
 import { getApiErrorMessage } from '../../types'
+import { passwordPolicyMessages } from '../../utils/apiError'
 import { useToast } from '../../components/shared/Toast'
 import { managedAdminTabs } from '../../managed'
 import type { AdminUser, AdminStats, OidcConfig, UpdateInfo } from './adminModel'
@@ -20,7 +21,7 @@ import type { AdminUser, AdminStats, OidcConfig, UpdateInfo } from './adminModel
  */
 const ADMIN_TAB_IDS = [
   'users', 'defaults', 'config', 'settings', 'addons', 'plugins', 'storage',
-  'notifications', 'mcp-tokens', 'github', 'backup', 'audit', 'dev-notifications',
+  'tunnel', 'notifications', 'mcp-tokens', 'github', 'backup', 'audit', 'dev-notifications',
 ]
 
 /**
@@ -30,8 +31,10 @@ const ADMIN_TAB_IDS = [
  * ?tab=backup opened a backup schedule that competes with the real one on a
  * hosted instance. Checked in an effect rather than in the initial state
  * because `managed` arrives with /app-config, after the first render.
+ * `tunnel` is here for the same reason as `storage`: a tunnel fronts the whole
+ * install, so on a hosted instance it belongs to the operator, not the customer.
  */
-const MANAGED_HIDDEN = ['storage', 'github', 'backup']
+const MANAGED_HIDDEN = ['storage', 'tunnel', 'github', 'backup']
 
 /**
  * Admin page logic — owns every admin data slice (users, stats, invites, auth
@@ -202,16 +205,36 @@ export function useAdmin() {
   const loadData = async () => {
     setIsLoading(true)
     try {
+      // Each request is faulted on its own, and any failure is reported once at
+      // the end. The two halves of this matter equally:
+      //
+      // - Independently: Promise.all rejects as a whole, so a single 403 (revoked
+      //   scope) or a flaky 500 used to discard EVERY response — the page then
+      //   rendered a user list of zero and, worse, a stats grid of zeros, which
+      //   reads as real data rather than as a failed load.
+      // - Reported: swallowing the error silently would leave an admin looking at
+      //   empty panels with no hint that the fetch failed. The invite endpoints
+      //   were the only ones tolerated silently, and they still are: an empty
+      //   invite list is a normal state, so a failure there is not worth a toast.
+      let failed = false
       const [usersData, statsData, invitesData, inviteTripsData] = await Promise.all([
-        adminApi.users(),
-        adminApi.stats(),
+        adminApi.users().catch(() => {
+          failed = true
+          return { users: [] as never[] }
+        }),
+        adminApi.stats().catch(() => {
+          failed = true
+          return null
+        }),
         adminApi.listInvites().catch(() => ({ invites: [] })),
         adminApi.listInviteTrips().catch(() => ({ trips: [] })),
       ])
       setUsers(usersData.users)
-      setStats(statsData)
+      // null keeps the grid hidden rather than painting zeros over real data.
+      if (statsData) setStats(statsData)
       setInvites(invitesData.invites || [])
       setInviteTrips(inviteTripsData.trips || [])
+      if (failed) toast.error(t('admin.toast.loadError'))
     } catch (err: unknown) {
       toast.error(t('admin.toast.loadError'))
     } finally {
@@ -359,7 +382,7 @@ export function useAdmin() {
       setCreateForm({ username: '', email: '', password: '', role: 'user' })
       toast.success(t('admin.toast.userCreated'))
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, t('admin.toast.createError')))
+      toast.error(getApiErrorMessage(err, t('admin.toast.createError'), passwordPolicyMessages(t)))
     }
   }
 
@@ -421,7 +444,7 @@ export function useAdmin() {
       setEditingUser(null)
       toast.success(t('admin.toast.userUpdated'))
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, t('admin.toast.updateError')))
+      toast.error(getApiErrorMessage(err, t('admin.toast.updateError'), passwordPolicyMessages(t)))
     }
   }
 

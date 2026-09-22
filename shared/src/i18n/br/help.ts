@@ -3,6 +3,7 @@ import type { TranslationStrings } from '../types';
 // English fallback until 'br' is translated.
 const help: TranslationStrings = {
   'help.title': 'Help & Docs',
+  'help.language': 'Wiki language',
   'help.search': 'Search docs…',
   'help.contents': 'Contents',
   'help.noResults': 'No matching pages.',

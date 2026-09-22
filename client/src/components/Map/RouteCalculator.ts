@@ -2,6 +2,7 @@ import { useSettingsStore } from '../../store/settingsStore'
 import { pluginsApi, mapsApi } from '../../api/client'
 import type { DistanceUnit, RouteResult, RouteSegment, RouteWithLegs, Waypoint, RouteAnchors } from '../../types'
 import { formatDistance } from '../../utils/units'
+import { wgs84ToGcj02 } from './engines/amap'
 
 const OSRM_BASE = 'https://router.project-osrm.org/route/v1'
 
@@ -114,6 +115,52 @@ export function generateGoogleMapsUrl(places: Waypoint[]): string | null {
   }
   const stops = valid.map((p) => `${p.lat},${p.lng}`).join('/')
   return `https://www.google.com/maps/dir/${stops}`
+}
+
+/**
+ * AMap (高德地图) directions URL over the waypoints in planned order.
+ *
+ * Three facts about AMap's URI API shape this, all verified against the live
+ * service rather than assumed:
+ *
+ *  1. `uri.amap.com/navigation` carries **no `coordinate` parameter** — unlike
+ *     the marker URI, which honours `coordinate=wgs84`. Passing it there is
+ *     silently ignored, so AMap read our WGS-84 values as GCJ-02 and every
+ *     Chinese route landed a few hundred metres off. The waypoints are
+ *     converted here instead, through the same Krasovsky transform the map
+ *     renderer uses.
+ *  2. `navigation`'s `via` takes **at most one** waypoint ("最多只支持添加一个
+ *     途径点"). A `;`-joined list does not error — AMap folds the extra points
+ *     into the first one's *name*, so a four-stop day quietly became a
+ *     two-stop route. `ditu.amap.com/dir` is the endpoint the navigation URI
+ *     itself redirects to, and it takes any number of indexed
+ *     `via[i][lnglat]`/`via[i][name]` pairs, which is what this builds.
+ *  3. In the `from=lng,lat,name` form a name containing a comma truncates the
+ *     route at that comma. The indexed form carries each name as its own
+ *     parameter, so "Cafe, Beijing" survives intact.
+ *
+ * A single stop stays a marker link, where `coordinate=wgs84` is the supported
+ * declaration and AMap does the conversion itself.
+ */
+export function generateAmapMapsUrl(places: NamedWaypoint[]): string | null {
+  const valid = places.filter((p) => p.lat != null && p.lng != null)
+  if (valid.length === 0) return null
+  const label = (p: NamedWaypoint) => p.name?.trim() || ''
+  if (valid.length === 1) {
+    const p = valid[0]
+    const name = label(p)
+    return `https://uri.amap.com/marker?position=${p.lng},${p.lat}&coordinate=wgs84&src=tt-travel-planner${name ? `&name=${encodeURIComponent(name)}` : ''}`
+  }
+  const gcj = (p: NamedWaypoint) => wgs84ToGcj02(Number(p.lng), Number(p.lat))
+  const leg = (prefix: string, p: NamedWaypoint) => {
+    const { lng, lat } = gcj(p)
+    const name = label(p)
+    return `&${prefix}%5Blnglat%5D=${lng},${lat}${name ? `&${prefix}%5Bname%5D=${encodeURIComponent(name)}` : ''}`
+  }
+  const [first, ...rest] = valid
+  const last = rest.pop()!
+  const vias = rest.map((p, i) => leg(`via%5B${i}%5D`, p)).join('')
+  return `https://ditu.amap.com/dir?type=car${leg('from', first)}${vias}${leg('to', last)}`
 }
 
 /** A stop that can carry its name into a deep link that has somewhere to put one. */

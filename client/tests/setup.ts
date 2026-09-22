@@ -101,6 +101,12 @@ if (typeof URL.createObjectURL === 'undefined') {
 // Element.prototype.scrollIntoView — jsdom doesn't implement it
 Element.prototype.scrollIntoView = vi.fn();
 
+// Element.prototype.scrollTo — same gap. The planner's auto-jump scrolls its day
+// column through this, and the call runs inside a requestAnimationFrame, so jsdom's
+// missing method surfaced as an unhandled error that failed the whole run rather
+// than one test.
+Element.prototype.scrollTo = vi.fn();
+
 // maplibre-gl-leaflet — the vector basemap every Leaflet map draws since the move
 // off CARTO. jsdom has no WebGL, so the real layer can never work here; more to
 // the point, several map tests hand react-leaflet a partial `useMap()` stub, and

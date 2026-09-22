@@ -3,6 +3,7 @@ import { useState } from 'react';
 import ActivitiesPanel from '../Activities/ActivitiesPanel';
 import { getIconProps } from '../Activities/iconConfig';
 import Button from '../shared/Button';
+import { useTranslation } from '../../i18n';
 import DayPlanSidebar, { type DayPlanSidebarProps } from './DayPlanSidebar';
 
 type DayPlanSidebarWithActivitiesProps = DayPlanSidebarProps;
@@ -12,6 +13,7 @@ type DayPlanSidebarWithActivitiesProps = DayPlanSidebarProps;
  * and the new Activities-based view
  */
 export default function DayPlanSidebarWithActivities(props: DayPlanSidebarWithActivitiesProps) {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'classic' | 'activities'>('classic');
 
   return (
@@ -26,7 +28,7 @@ export default function DayPlanSidebarWithActivities(props: DayPlanSidebarWithAc
           className="flex-1 px-3 py-2 text-sm"
         >
           <ListChecks {...getIconProps('toggle')} />
-          <span className="hidden font-medium sm:inline">传统视图</span>
+          <span className="hidden font-medium sm:inline">{t('dayplan.classicView')}</span>
         </Button>
         <Button
           type="button"
@@ -36,7 +38,7 @@ export default function DayPlanSidebarWithActivities(props: DayPlanSidebarWithAc
           className="flex-1 px-3 py-2 text-sm"
         >
           <Calendar {...getIconProps('toggle')} />
-          <span className="hidden font-medium sm:inline">活动视图</span>
+          <span className="hidden font-medium sm:inline">{t('dayplan.activitiesView')}</span>
         </Button>
       </div>
 

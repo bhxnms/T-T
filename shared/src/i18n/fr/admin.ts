@@ -169,6 +169,73 @@ const admin: TranslationStrings = {
   'admin.tabs.addons': 'Extensions',
   'admin.tabs.plugins': 'Plugins',
   'admin.tabs.storage': 'Stockage',
+  'admin.tabs.tunnel': 'Cloudflare Tunnel',
+  'admin.tunnel.title': 'Cloudflare Tunnel',
+  'admin.tunnel.intro':
+    'Publish this instance to the internet through a Cloudflare Tunnel. Turn it on only if you want help setting a tunnel up — if you already run your own cloudflared, nginx or Caddy, leave this off and nothing here will touch your setup.',
+  'admin.tunnel.enable': 'Enable Cloudflare Tunnel configuration',
+  'admin.tunnel.enableHint':
+    'Off by default. While off, nothing on this page is read or applied, and an existing tunnel of your own keeps working untouched.',
+  'admin.tunnel.disabledNotice':
+    'This feature is off. Configure your tunnel however you do today — the settings below are stored only while this is enabled.',
+  'admin.tunnel.statusOn': 'Enabled',
+  'admin.tunnel.statusOff': 'Off',
+  'admin.tunnel.accountId': 'Account ID',
+  'admin.tunnel.accountIdHint': 'Found in the Cloudflare dashboard URL: dash.cloudflare.com/<account-id>.',
+  'admin.tunnel.apiToken': 'API Token',
+  'admin.tunnel.apiTokenHint':
+    'A token with the Account → Cloudflare Tunnel → Edit permission. Stored encrypted; only the mask is ever shown again.',
+  'admin.tunnel.tunnelName': 'Tunnel name',
+  'admin.tunnel.tunnelNameHint':
+    'The tunnel to create or reuse. The test button lists the names already in your account.',
+  'admin.tunnel.hostname': 'Public hostname',
+  'admin.tunnel.hostnameHint':
+    'The domain that will reach this instance, e.g. tt.example.com. It must be on a zone in this account.',
+  'admin.tunnel.servicePort': 'Service port',
+  'admin.tunnel.servicePortHint':
+    'The port the connector uses to reach the app inside its Docker network. Default 3000.',
+  'admin.tunnel.toggleTokenVisibility': 'Show or hide the token',
+  'admin.tunnel.missing': 'Still missing: {fields}',
+  'admin.tunnel.field.account_id': 'Account ID',
+  'admin.tunnel.field.api_token': 'API Token',
+  'admin.tunnel.field.tunnel_name': 'Tunnel name',
+  'admin.tunnel.field.hostname': 'Public hostname',
+  'admin.tunnel.test': 'Test connection',
+  'admin.tunnel.testOk': 'Credentials work{account}',
+  'admin.tunnel.existingTunnels': 'Tunnels already in this account: {list}',
+  'admin.tunnel.saved': 'Tunnel settings saved',
+  'admin.tunnel.saveError': 'Could not save the tunnel settings',
+  'admin.tunnel.loadError': 'Could not load the tunnel settings',
+  'admin.tunnel.testError': 'The connection test failed',
+  'admin.tunnel.copied': 'Copied {what}',
+  'admin.tunnel.copyError': 'Could not copy to the clipboard',
+  'admin.tunnel.error.disabled': 'Enable the feature first.',
+  'admin.tunnel.error.missing_token': 'Enter an API Token first.',
+  'admin.tunnel.error.token_has_no_account':
+    'The token is valid but has no account scope. Add the Account → Cloudflare Tunnel → Edit permission.',
+  'admin.tunnel.connectorTitle': 'Run the connector',
+  'admin.tunnel.provision': 'Create the tunnel',
+  'admin.tunnel.reprovision': 'Recreate the tunnel',
+  'admin.tunnel.provisioned': 'Tunnel created on Cloudflare',
+  'admin.tunnel.provisionedBadge': 'Tunnel exists',
+  'admin.tunnel.provisionError': 'Could not create the tunnel',
+  'admin.tunnel.connectorToken': 'Connector token',
+  'admin.tunnel.connectorTokenHint':
+    'Copy this now — it is shown once and not stored by the app. The sidecar uses it to authenticate.',
+  'admin.tunnel.connectorCompose': 'docker-compose sidecar',
+  'admin.tunnel.connectorCommand': 'Or run directly',
+  'admin.tunnel.error.incomplete': 'Fill in all fields first.',
+  'admin.tunnel.error.no_zone_for_hostname':
+    'No zone in this account owns that hostname. Add the domain to Cloudflare first, or use a hostname under a zone you already have.',
+  'admin.tunnel.error.no_connector_token': 'Cloudflare did not return a connector token.',
+  'admin.tunnel.connectorIntro':
+    'The connector is not run by this app — the container mounts its filesystem read-only and drops its capabilities. Create the tunnel below, then run cloudflared as a separate process with the token it gives you.',
+  'admin.tunnel.connectorUnavailable': 'Create the tunnel above to get the connector command.',
+  'admin.tunnel.envTitle': 'Also set these on the app container',
+  'admin.tunnel.envIntro':
+    'These live in your .env file and the app cannot change them. Without them, links in emails, calendar feeds and OIDC logins will point at the wrong address.',
+  'admin.tunnel.envHint':
+    'TRUST_PROXY is the number of proxies in front of the app: 1 for Cloudflare directly, 2 if your own reverse proxy sits between. Restart the container after changing them.',
   'admin.plugins.rescan': 'Réanalyser',
   'admin.plugins.rescanned': 'Dossier des plugins réanalysé',
   'admin.plugins.upload': 'Téléverser un plugin',
@@ -568,7 +635,8 @@ const admin: TranslationStrings = {
   'admin.addons.noAddons': 'Aucune extension disponible',
   'admin.weather.title': 'Données météo',
   'admin.weather.badge': 'Depuis le 24 mars 2026',
-  'admin.weather.description': 'TT continue d\'utiliser l\'API météo de TREK — un service gratuit et open source, sans clé API.',
+  'admin.weather.description':
+    "TT continue d'utiliser l'API météo de TREK — un service gratuit et open source, sans clé API.",
   'admin.weather.forecast': 'Prévisions sur 16 jours',
   'admin.weather.forecastDesc': 'Auparavant 5 jours (OpenWeatherMap)',
   'admin.weather.climate': 'Données climatiques historiques',

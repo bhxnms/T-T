@@ -31,9 +31,6 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     'اكتشف ترقية 3.0.14 تعارضًا في أسماء مستخدمين أو بريد إلكتروني ناتجًا عن مسافات بيضاء في بداية أو نهاية القيم المخزنة. تمت إعادة تسمية الحسابات المتأثرة تلقائيًا. تحقق من سجلات الخادم بحثًا عن أسطر تبدأ بـ **[migration] WHITESPACE COLLISION** لتحديد الحسابات التي تحتاج إلى مراجعة.',
   'system_notice.welcome_v1.title': 'مرحبًا بك في TREK',
-  'system_notice.bootstrap_password.title': 'Change the initial admin password', // en-fallback
-  'system_notice.bootstrap_password.body':
-    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.', // en-fallback
   'system_notice.welcome_v1.body':
     'مخطط رحلاتك الشامل. أنشئ جداول السفر، وشارك رحلاتك مع الأصدقاء، وابقَ منظمًا — سواء كنت متصلاً بالإنترنت أم لا.',
   'system_notice.welcome_v1.cta_label': 'خطط لرحلة',

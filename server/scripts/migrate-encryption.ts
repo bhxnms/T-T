@@ -294,6 +294,10 @@ async function main() {
       'admin_ntfy_token',
       'maps_api_key',
       'unsplash_api_key',
+      // Cloudflare tunnel credentials (TunnelService). Left out of a rotation it
+      // stays encrypted under the old key, which reads back as no token and
+      // silently disables the tunnel the operator configured.
+      'cloudflare_tunnel_token',
     ]) {
       const row = db.prepare('SELECT value FROM app_settings WHERE key = ?').get(key) as { value: string } | undefined;
       if (!row?.value) continue;

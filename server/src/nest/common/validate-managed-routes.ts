@@ -86,6 +86,11 @@ export const MANAGED_ROUTE_ALLOW_LIST: string[] = [
   'StorageAdminController.statsRefresh',
   'StorageAdminController.test',
   'StorageAdminController.update',
+  'TunnelController.connector',
+  'TunnelController.get',
+  'TunnelController.provision',
+  'TunnelController.test',
+  'TunnelController.update',
 ];
 
 /**

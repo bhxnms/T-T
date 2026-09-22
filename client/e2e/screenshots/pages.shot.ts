@@ -30,6 +30,12 @@ test('trip planner', async ({ page, shot }) => {
 
 test('atlas', async ({ page, shot }) => {
   await page.goto('/atlas')
+  // Atlas pulls the whole country bundle (~4 MB gzipped) and then the admin-1
+  // layer for whatever is in view, so it settles far later than any other page
+  // here. The default 45s budget is not enough on a cold, contended run.
+  test.setTimeout(120_000)
+  await page.waitForSelector('canvas, .leaflet-container', { timeout: 60_000 }).catch(() => {})
+  await page.waitForTimeout(4_000)
   await shot.page_('Atlas')
 })
 

@@ -2,6 +2,8 @@ import type { TranslationStrings } from '../types';
 
 const dayplan: TranslationStrings = {
   'dayplan.icsTooltip': 'Naptár exportálása (ICS)',
+  'dayplan.classicView': 'Classic view',
+  'dayplan.activitiesView': 'Activities view',
   'dayplan.emptyDay': 'Nincs tervezett hely erre a napra',
   'dayplan.addNote': 'Jegyzet hozzáadása',
   'dayplan.editNote': 'Jegyzet szerkesztése',

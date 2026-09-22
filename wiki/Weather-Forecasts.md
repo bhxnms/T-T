@@ -1,6 +1,6 @@
 # Weather Forecasts
 
-TREK shows weather forecasts and historical climate estimates for each day in your trip, powered by Open-Meteo — no API key required.
+Tourism-Team shows weather forecasts and historical climate estimates for each day in your trip, powered by Open-Meteo — no API key required.
 
 ![Weather forecasts](assets/Weather.png)
 

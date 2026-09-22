@@ -12,6 +12,17 @@ describe('AMap coordinate conversion', () => {
     expect(restored.lat).toBeCloseTo(39.908, 5)
   })
 
+  it('matches AMap’s own conversion, not merely itself', () => {
+    // AMap converted this exact WGS-84 input to GCJ-02 and answered with
+    // 116.484444444445, 39.998649088542 (the value it served back through its
+    // own marker redirect). A transform that round-trips but truncates the sine
+    // terms lands ~273 m away and would still pass the test above — which is
+    // exactly what shipped until this pin existed.
+    const got = wgs84ToGcj02(116.478346, 39.997361)
+    expect(got.lng).toBeCloseTo(116.484444444445, 6)
+    expect(got.lat).toBeCloseTo(39.998649088542, 6)
+  })
+
   it('leaves coordinates outside mainland China unchanged', () => {
     expect(wgs84ToGcj02(-73.9857, 40.7484)).toEqual({ lng: -73.9857, lat: 40.7484 })
     expect(gcj02ToWgs84(2.3522, 48.8566)).toEqual({ lng: 2.3522, lat: 48.8566 })

@@ -1,1 +1,1 @@
-[AGPL-3.0 License](https://github.com/liketrek/TREK/blob/main/LICENSE) · [GitHub](https://github.com/liketrek/TREK) · [Discord](https://discord.gg/NhZBDSd4qW) · [Security Hardening](Security-Hardening)
+[AGPL-3.0 License](https://github.com/bhxnms/T-T/blob/main/LICENSE) · [GitHub](https://github.com/bhxnms/T-T) · [Security Hardening](Security-Hardening)

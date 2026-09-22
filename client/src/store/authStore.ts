@@ -4,6 +4,7 @@ import { authApi } from '../api/client'
 import { connect, disconnect } from '../api/websocket'
 import type { User } from '../types'
 import { getApiErrorMessage } from '../types'
+import { apiErrorCode } from '../utils/apiError'
 import { tripSyncManager } from '../sync/tripSyncManager'
 import { reopenForUser, deleteCurrentUserDb } from '../db/offlineDb'
 import { setAuthed } from '../sync/authGate'
@@ -157,9 +158,13 @@ export const useAuthStore = create<AuthState>()(
       await onAuthSuccess(data.user.id)
       connect()
       tripSyncManager.syncAll().catch(console.error)
-      if (!data.user?.must_change_password) {
-        useSystemNoticeStore.getState().fetch()
-      }
+      // Fetch unconditionally. This deliberately does NOT skip when
+      // must_change_password is set: that flag marks a first-deploy admin, and
+      // the bootstrap notice carrying the generated password is the one notice
+      // they must see. Skipping it hid the credentials exactly when they were
+      // needed, and the change-password flow then deletes them — so the initial
+      // password could never be shown at all.
+      useSystemNoticeStore.getState().fetch()
       return data as AuthResponse
     } catch (err: unknown) {
       const error = getApiErrorMessage(err, 'Login failed')
@@ -183,9 +188,9 @@ export const useAuthStore = create<AuthState>()(
       await onAuthSuccess(data.user.id)
       connect()
       tripSyncManager.syncAll().catch(console.error)
-      if (!data.user?.must_change_password) {
-        useSystemNoticeStore.getState().fetch()
-      }
+      // Unconditional for the same reason as login(): a forced password change
+      // must not suppress the notice that carries the bootstrap credentials.
+      useSystemNoticeStore.getState().fetch()
       return data as AuthResponse
     } catch (err: unknown) {
       const error = getApiErrorMessage(err, 'Verification failed')
@@ -214,7 +219,10 @@ export const useAuthStore = create<AuthState>()(
     } catch (err: unknown) {
       const error = getApiErrorMessage(err, 'Registration failed')
       set({ isLoading: false, error })
-      throw new Error(error)
+      // The code rides along on the re-thrown Error so the register form can
+      // render its own translated text: this layer has no `t`, and dropping the
+      // code here was why a weak password came back in English.
+      throw Object.assign(new Error(error), { code: apiErrorCode(err) })
     }
   },
 

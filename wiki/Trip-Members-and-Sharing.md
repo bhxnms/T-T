@@ -37,7 +37,7 @@ Guests are never listed among the members, and the server refuses to hand owners
 
 ## Guest Members
 
-Not everyone on a trip has — or wants — a TREK account. **Guests** let you add travel companions by name only, so you can assign them to costs, packing and tasks just like a real member, without creating a login for them.
+Not everyone on a trip has — or wants — a Tourism-Team account. **Guests** let you add travel companions by name only, so you can assign them to costs, packing and tasks just like a real member, without creating a login for them.
 
 Guests appear in their own **Guests** section below the members list, each with a **Guest** badge:
 
@@ -49,7 +49,7 @@ Only the **trip owner** can manage guests (this is stricter than inviting member
 
 Other members see the Guests section too (when guests exist) but cannot add, rename or remove them.
 
-> Two guests may share the same name — TREK stores the name you type as-is and keeps the two apart by their internal id, so assignments never get confused. A guest name may be at most 50 characters.
+> Two guests may share the same name — Tourism-Team stores the name you type as-is and keeps the two apart by their internal id, so assignments never get confused. A guest name may be at most 50 characters.
 
 ### What a guest can be assigned to
 
@@ -125,7 +125,7 @@ Below the public share link, users with the `share_manage` permission can also c
 
 Unlike the read-only share link, this one is **not anonymous**:
 
-- Whoever opens it must have a TREK account and be **signed in**. If they are not, they are sent to the login page and returned to the invite afterwards — there is **no registration** from this link.
+- Whoever opens it must have a Tourism-Team account and be **signed in**. If they are not, they are sent to the login page and returned to the invite afterwards — there is **no registration** from this link.
 - Opening it while signed in shows a confirmation card naming the trip. Clicking **Join trip** adds you as a **member** (the same access a manually-added member gets) and opens the trip. The owner and existing members see the same card and are simply taken to the trip when they accept.
 - To invite people who do **not** yet have an account, use an admin invite link with an optional trip binding instead — see [Invite-Links](Invite-Links).
 

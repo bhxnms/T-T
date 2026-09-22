@@ -1,6 +1,5 @@
 import { readEnv } from '../app-config';
 import { db } from '../db/database.js';
-import { decrypt_api_key } from '../nest/common/crypto/apiKeyCrypto';
 import { evaluate } from './conditions.js';
 import { SYSTEM_NOTICES } from './registry.js';
 import type { SystemNotice, SystemNoticeDTO } from './types.js';
@@ -80,20 +79,6 @@ export function getActiveNoticesFor(
   const ctx = { user: { ...user, noTrips: tripCount }, currentAppVersion, now, addonEnabled, managed };
   const appVer = semver.coerce(currentAppVersion)?.version ?? '0.0.0';
 
-  // First-deploy credentials, encrypted in app_settings by the seeder and
-  // deleted the moment the admin changes that password (auth.service). Absent,
-  // the bootstrap notice still renders — it just cannot repeat the password.
-  const bootstrapEmail = decrypt_api_key(
-    db.prepare("SELECT value FROM app_settings WHERE key = 'bootstrap_admin_email'").get() as
-      | { value?: string }
-      | undefined,
-  );
-  const bootstrapPassword = decrypt_api_key(
-    db.prepare("SELECT value FROM app_settings WHERE key = 'bootstrap_admin_password'").get() as
-      | { value?: string }
-      | undefined,
-  );
-
   const isStillDismissed = (n: SystemNotice): boolean => {
     if (!dismissals.has(n.id)) return false;
     if (n.recurring === 'per-version') {
@@ -119,15 +104,7 @@ export function getActiveNoticesFor(
     })
     .map(
       ({ conditions: _c, publishedAt: _p, minVersion: _mn, maxVersion: _mx, priority: _pr, recurring: _rc, ...dto }) =>
-        dto.id === 'tt-bootstrap-password' && (bootstrapEmail || bootstrapPassword)
-          ? {
-              ...dto,
-              bodyParams: {
-                email: bootstrapEmail ?? '',
-                password: bootstrapPassword ?? '',
-              },
-            }
-          : dto,
+        dto,
     );
 }
 

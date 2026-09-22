@@ -48,6 +48,7 @@ const planner: TranslationStrings = {
   'planner.route': 'Rute',
   'planner.optimize': 'Optimalkan',
   'planner.openGoogleMaps': 'Buka di Google Maps',
+  'planner.openAmapMaps': 'Buka di AMap',
   'planner.openCoMaps': 'Buka di CoMaps',
   'planner.selectDayHint': 'Pilih hari dari daftar kiri untuk melihat rencana hari',
   'planner.noPlacesForDay': 'Belum ada tempat untuk hari ini',

@@ -32,9 +32,6 @@ const system_notice: TranslationStrings = {
   'system_notice.v3014_whitespace_collision.body':
     'Bản nâng cấp 3.0.14 đã phát hiện một hoặc nhiều xung đột tên người dùng hoặc email do khoảng trắng ở đầu/cuối trong tài khoản được lưu trữ. Các tài khoản bị ảnh hưởng đã được đổi tên tự động. Kiểm tra nhật ký máy chủ để tìm các dòng bắt đầu bằng **[migration] WHITESPACE COLLISION** để xác định tài khoản nào cần xem xét.',
   'system_notice.welcome_v1.title': 'Chào mừng đến với TREK',
-  'system_notice.bootstrap_password.title': 'Change the initial admin password', // en-fallback
-  'system_notice.bootstrap_password.body':
-    'Admin account: {email}\nInitial password: {password}\n\nYou are still using the administrative credentials generated on first deploy. Change the initial password in your account settings before continuing.', // en-fallback
   'system_notice.welcome_v1.body':
     'Công cụ lập kế hoạch du lịch tất cả trong một của bạn. Xây dựng hành trình, chia sẻ chuyến đi với bạn bè và luôn ngăn nắp — trực tuyến hoặc ngoại tuyến.',
   'system_notice.welcome_v1.cta_label': 'Lên kế hoạch cho một chuyến đi',

@@ -29,7 +29,7 @@ Pass additional `-e` flags for timezone and CORS/email link support:
 
 ```bash
   -e TZ=Europe/Berlin \
-  -e ALLOWED_ORIGINS=https://trek.example.com \
+  -e ALLOWED_ORIGINS=https://tt.example.com \
 ```
 
 See [Environment-Variables](Environment-Variables) for the full list.

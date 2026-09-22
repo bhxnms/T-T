@@ -91,3 +91,78 @@ describe('GET /api/help', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * The wiki ships in more than one language. These run against the real trees, so
+ * they prove the shipped Chinese docs are actually reachable — and, just as
+ * importantly, that a page nobody has translated yet still serves the English
+ * one instead of 404ing, which is what makes a partial translation safe to ship.
+ */
+describe('GET /api/help?lang', () => {
+  const slugsOf = (body: any): string[] => body.sections.flatMap((s: any) => s.pages.map((p: any) => p.slug));
+
+  it('serves the sidebar in the requested language, with slugs unchanged', async () => {
+    const en = await request(app).get('/api/help/index').expect(200);
+    const zh = await request(app).get('/api/help/index?lang=zh').expect(200);
+
+    // Same shape and same page set — only the labels differ. The slug IS the
+    // route, so it has to stay stable across languages.
+    expect(zh.body.sections.length).toBe(en.body.sections.length);
+    expect(slugsOf(zh.body)).toEqual(slugsOf(en.body));
+    expect(zh.body.sections[0].title).not.toBe(en.body.sections[0].title);
+    expect(zh.body.sections[0].pages[0].slug).toBe('Home');
+  });
+
+  it('serves a translated page when one exists', async () => {
+    const zh = await request(app).get('/api/help/page/Translation-Glossary?lang=zh').expect(200);
+    expect(zh.body.slug).toBe('Translation-Glossary');
+    expect(zh.body.title).toMatch(/术语表/);
+  });
+
+  it('serves the translated page, not the English one, when both exist', async () => {
+    const en = await request(app).get('/api/help/page/Home').expect(200);
+    const zh = await request(app).get('/api/help/page/Home?lang=zh').expect(200);
+
+    // Every shipped page is translated, so the interesting assertion is the
+    // opposite of a fallback: zh must return the CHINESE page. A fallback that
+    // fired too eagerly would hand an English body to a zh reader and still look
+    // healthy from the status code alone.
+    expect(zh.body.title).not.toBe(en.body.title);
+    expect(zh.body.title).toMatch(/[\u4e00-\u9fff]/);
+    expect(zh.body.markdown).not.toBe(en.body.markdown);
+    // The rewritten links still carry the language, so navigation stays in zh.
+    expect(zh.body.markdown).toMatch(/\?lang=zh/);
+  });
+
+  it('carries the language on the internal links it rewrites', async () => {
+    const zh = await request(app).get('/api/help/page/Translation-Glossary?lang=zh').expect(200);
+    const links = zh.body.markdown.match(/\]\(\/help\/[^)]+\)/g) ?? [];
+    expect(links.length).toBeGreaterThan(0);
+    // Every rewritten internal link has to carry ?lang=zh, or following one drops
+    // the reader back into English.
+    for (const link of links) expect(link, link).toContain('?lang=zh');
+  });
+
+  it('never adds the param for English, keeping the plain URL canonical', async () => {
+    const en = await request(app).get('/api/help/page/Home').expect(200);
+    expect(en.body.markdown).not.toMatch(/\]\(\/help\/[^)]*\?lang=/);
+  });
+
+  it('ignores an unknown language instead of failing', async () => {
+    const res = await request(app).get('/api/help/index?lang=klingon').expect(200);
+    const en = await request(app).get('/api/help/index').expect(200);
+    expect(res.body.sections[0].title).toBe(en.body.sections[0].title);
+  });
+
+  it('serves a language-neutral asset to a translated page', async () => {
+    // The Portainer screenshots are third-party UI we cannot re-shoot, so they
+    // exist only in the English tree. A zh page referencing one must still work.
+    const res = await request(app).get('/api/help/asset/assets/TripPlanner.png?lang=zh').expect(200);
+    expect(res.headers['content-type']).toBe('image/png');
+    expect(res.body.length).toBeGreaterThan(0);
+  });
+
+  it('still never calls out to GitHub', () => {
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});

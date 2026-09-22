@@ -44,6 +44,21 @@ At zoom level 5 and above, the map switches to a sub-national region view (state
 
 The bucket list is separate from "visited". Use it to track countries or places you want to visit in the future. Each bucket list item can have a name, coordinates, country code, optional notes, and a target date.
 
+## Check-ins
+
+**Check-ins** is Atlas's third tab (on desktop, switch between **Stats / Bucket List / Check-ins** in the sidebar; on mobile it is the **Check-ins** button with the check mark above the map, opening a bottom sheet). It records *which specific places* you have been to — a level below "visited a country". You might visit a country once and check in at a dozen landmarks inside it.
+
+Check-ins come from two sources, listed separately in the panel:
+
+- **Landmarks** — built-in preset sights. Click a landmark marker on the map and press **Check in** in the popup. The preset data covers China's **34 province-level divisions and 89 landmarks**, classified into **20 types** (mountain, lake, ancient town, temple, museum, glacier, and so on), each with its own icon and colour. Landmark markers only appear from a certain zoom level (4 and above) and can be turned off with the **Show landmarks** switch.
+- **Trip places** — places from your own trips. In the trip planner, select a place and use the **Check in** button in the place details panel (on mobile, inside the place sheet). A place checked in this way also appears on the Atlas map, drawing your own distribution of check-ins.
+
+The panel shows the **Check-ins** total at the top, then lists the two sources separately: landmarks with their name and province, trip places with their name and check-in date. Clicking a trip place's check-in marker opens a card showing the country/region it sits in, the check-in date, and a preview of the photos you have for that place in your trips (the block is absent when there are none). Every check-in can be undone: click a landmark again in its popup, or use the button at the bottom of a trip place's card.
+
+> **Check-ins also update your Atlas.** When you check in a trip place, Tourism-Team resolves its coordinates against the same bundled polygons the map colours and marks the corresponding **country** — and the sub-national region where one exists — as visited. Checking in is therefore a way of recording "I have been here" without going back to the map to click the country yourself. A failed lookup does not block the check-in itself; only that automatic marking is skipped.
+
+> **Note: check-in data lives in your browser.** Landmark check-ins and trip-place check-ins are both stored in the current browser's local storage and are **not synced to the server with your account**. Switching device or browser, or clearing browser data, does not carry them over. (Visited *countries* are stored server-side and are unaffected.)
+
 ## Statistics
 
 Your Atlas statistics panel shows:
@@ -51,7 +66,7 @@ Your Atlas statistics panel shows:
 - **Countries visited** — total number of distinct countries you have actually been to. Countries from upcoming trips are counted separately and shown next to this number.
 - **Trips** — total number of trips across all time.
 - **Places** — total number of individual places logged in trips.
-- **Cities** — total number of distinct cities visited, derived from the addresses of your places. TREK drops the last comma-separated part (the country), then walks back through the remaining parts and takes the first one that is still non-empty once digits, hyphens and postal marks are stripped, lower-cased so spelling variants collapse into a single entry. This is a heuristic over a formatted address string rather than a lookup, so the figure is approximate: a short address such as `Osteria Francescana, Italy` leaves nothing but the place's own name, and an address whose administrative tail ends on a state or prefecture (`…, Shibuya, Tokyo, 150-0002, Japan`) counts that region rather than the city.
+- **Cities** — total number of distinct cities visited, derived from the addresses of your places. Tourism-Team drops the last comma-separated part (the country), then walks back through the remaining parts and takes the first one that is still non-empty once digits, hyphens and postal marks are stripped, lower-cased so spelling variants collapse into a single entry. This is a heuristic over a formatted address string rather than a lookup, so the figure is approximate: a short address such as `Osteria Francescana, Italy` leaves nothing but the place's own name, and an address whose administrative tail ends on a state or prefecture (`…, Shibuya, Tokyo, 150-0002, Japan`) counts that region rather than the city.
 - **Travel days** — total days spent travelling.
 - **Continent breakdown** — number of countries visited per continent (Europe, Asia, North America, South America, Africa, Oceania). Antarctica joins the row once you have been.
 - **Travel streak** — number of consecutive years in which you have taken at least one trip.
@@ -63,7 +78,7 @@ The desktop glass panel at the bottom of the map uses a liquid-glass visual effe
 
 ## Plugin country layers
 
-Installed plugins can tint countries on the Atlas map with their own layers — for example wishlists or travel advisories. A plugin implements the `atlasLayerProvider` hook and returns one or more layers, each a set of ISO country codes with a tone; TREK validates the codes and tints them itself. Layers are per-user and additive: a plugin never touches the map canvas, and one that errors or is slow contributes nothing.
+Installed plugins can tint countries on the Atlas map with their own layers — for example wishlists or travel advisories. A plugin implements the `atlasLayerProvider` hook and returns one or more layers, each a set of ISO country codes with a tone; Tourism-Team validates the codes and tints them itself. Layers are per-user and additive: a plugin never touches the map canvas, and one that errors or is slow contributes nothing.
 
 > **Plugins:** requires the `hook:atlas-layer-provider` permission. See [Plugin-Development](Plugin-Development) for the hook contract.
 

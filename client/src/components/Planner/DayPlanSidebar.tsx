@@ -94,6 +94,7 @@ import { safeHttpUrl } from '../../utils/safeUrl';
 import { placeToSaveTarget } from '../Collections/saveTarget';
 import {
   calculateRouteWithLegs,
+  generateAmapMapsUrl,
   generateCoMapsUrl,
   generateGoogleMapsUrl,
   optimizeRoute,
@@ -380,10 +381,11 @@ function useDayPlanSidebar(props: DayPlanSidebarProps) {
   useEffect(() => {
     if (autoJumpedRef.current || selectedDayId != null || days.length === 0) return;
     const tripStore = useTripStore.getState();
-    const entryDayId = findEntryDayId(
-      days,
-      { assignments: tripStore.assignments, dayNotes: tripStore.dayNotes, reservations: tripStore.reservations },
-    );
+    const entryDayId = findEntryDayId(days, {
+      assignments: tripStore.assignments,
+      dayNotes: tripStore.dayNotes,
+      reservations: tripStore.reservations,
+    });
     if (entryDayId == null) return;
     autoJumpedRef.current = true;
     onSelectDay(entryDayId, true);
@@ -4347,6 +4349,30 @@ const DayPlanSidebar = React.memo(function DayPlanSidebar(props: DayPlanSidebarP
                           }}
                         >
                           <GoogleMapsIcon size={14} />
+                        </button>
+                        {/* Open the day's stops as a route in AMap (planned order). */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = generateAmapMapsUrl(dayExportStops());
+                            if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                          }}
+                          aria-label={t('planner.openAmapMaps')}
+                          title={t('planner.openAmapMaps')}
+                          className="bg-transparent text-content-secondary"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '6px 10px',
+                            borderRadius: 8,
+                            border: '1px solid var(--border-faint)',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Navigation size={14} strokeWidth={2} />
                         </button>
                         {/* The same day, handed to CoMaps for offline navigation (#1904). The
                             day's own travel mode rides along, so the route it builds walks

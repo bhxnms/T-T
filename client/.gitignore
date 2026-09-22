@@ -4,5 +4,9 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+# ffmpeg fetched on demand by `npm run shots:ffmpeg` for the walkthrough
+# transcodes. A 76 MB static build has no business in git; fetch it when needed.
+e2e/.tools/
+
 # vite-plugin-pwa dev output (devOptions.enabled)
 dev-dist/

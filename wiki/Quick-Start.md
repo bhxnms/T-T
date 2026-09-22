@@ -1,6 +1,6 @@
 # Quick Start
 
-Get TREK running in under five minutes with a single Docker command.
+Get Tourism-Team running in under five minutes with a single Docker command.
 
 ![Login page](assets/Login.png)
 
@@ -9,7 +9,7 @@ Get TREK running in under five minutes with a single Docker command.
 - Docker installed and running on your machine
 - Port `3000` available (or choose a different host port)
 
-## Run TREK
+## Run Tourism-Team
 
 Generate an encryption key and start the container in one step:
 
@@ -35,7 +35,7 @@ docker run -d \
 | `-v ./uploads:/app/uploads` | Persist uploaded files |
 | `--restart unless-stopped` | Auto-restart on reboot |
 
-**Why the encryption key?** TREK encrypts stored secrets (API keys, MFA seeds, OIDC credentials) using this key. If you skip it, TREK auto-generates one and saves it to `./data/.encryption_key`. Setting it explicitly means you control the key and can back it up separately. The key generated inline above never gets printed, but TREK writes it to `./data/.encryption_key` on first start, so `cat ./data/.encryption_key` gets it back when you want a copy elsewhere.
+**Why the encryption key?** Tourism-Team encrypts stored secrets (API keys, MFA seeds, OIDC credentials) using this key. If you skip it, Tourism-Team auto-generates one and saves it to `./data/.encryption_key`. Setting it explicitly means you control the key and can back it up separately. The key generated inline above never gets printed, but Tourism-Team writes it to `./data/.encryption_key` on first start, so `cat ./data/.encryption_key` gets it back when you want a copy elsewhere.
 
 Generate a standalone key at any time:
 
@@ -43,16 +43,16 @@ Generate a standalone key at any time:
 openssl rand -hex 32
 ```
 
-## Access TREK
+## Access Tourism-Team
 
 Open `http://localhost:3000` in your browser.
 
 ## First User
 
-On first boot TREK automatically seeds an admin account before any user registers. The credentials depend on how you start the container:
+On first boot Tourism-Team automatically seeds an admin account before any user registers. The credentials depend on how you start the container:
 
 - **With `ADMIN_EMAIL` and `ADMIN_PASSWORD` env vars set:** those values are used directly.
-- **Without those env vars:** TREK creates the account with email `admin@tt.local`, username `admin`, and a randomly generated password. The credentials are printed to the container log — run `docker logs trek` to retrieve them.
+- **Without those env vars:** Tourism-Team creates the account with email `admin@tt.local`, username `admin`, and a randomly generated password. The credentials are printed to the container log — run `docker logs trek` to retrieve them.
 
 You will be prompted to change the password on first login.
 
@@ -61,6 +61,6 @@ You will be prompted to change the password on first login.
 ## Next Steps
 
 - [Install-Docker-Compose](Install-Docker-Compose) — production setup with security hardening
-- [Reverse-Proxy](Reverse-Proxy) — put TREK behind HTTPS (required for PWA install and secure cookies)
+- [Reverse-Proxy](Reverse-Proxy) — put Tourism-Team behind HTTPS (required for PWA install and secure cookies)
 - [Environment-Variables](Environment-Variables) — full configuration reference
 - [Admin-Panel-Overview](Admin-Panel-Overview) — explore what the admin panel can do

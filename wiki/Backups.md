@@ -1,6 +1,6 @@
 # Backups
 
-TREK stores all data in a single SQLite database (`travel.db`) plus an `uploads/` directory of attachments, cover photos, and avatars — by default; storage backends and replication are configured in [[Admin: Storage|Admin-Storage]]. The Backup panel lets you create, download, restore, and schedule backups of both.
+Tourism-Team stores all data in a single SQLite database (`travel.db`) plus an `uploads/` directory of attachments, cover photos, and avatars — by default; storage backends and replication are configured in [[Admin: Storage|Admin-Storage]]. The Backup panel lets you create, download, restore, and schedule backups of both.
 
 ## Where to find it
 
@@ -36,10 +36,10 @@ You can restore from:
 
 A second limit caps the **decompressed** size of a restore archive at 5 GB by default (`BACKUP_MAX_DECOMPRESSED_MB`). It applies to both routes — a stored backup as well as an uploaded ZIP — and a restore that exceeds it is refused with `Backup exceeds the maximum decompressed size.` Raise it if your own backups legitimately grow past the default, otherwise they become unrestorable.
 
-Before restoring, TREK runs integrity checks on the uploaded database:
+Before restoring, Tourism-Team runs integrity checks on the uploaded database:
 
 1. **SQLite `PRAGMA integrity_check`** — verifies the database file is not corrupt.
-2. **Required tables present** — confirms the file contains `users`, `trips`, `trip_members`, `places`, and `days`. Files missing any of these are rejected as not being a valid TREK backup.
+2. **Required tables present** — confirms the file contains `users`, `trips`, `trip_members`, `places`, and `days`. Files missing any of these are rejected as not being a valid Tourism-Team backup.
 
 > **Warning:** Restoring replaces all current data. Back up your current state first if you want to keep it.
 
@@ -68,7 +68,7 @@ Auto-backup files are named `auto-backup-<timestamp>.zip` (manual backups use `b
 
 After each auto-backup run, **auto-backup files** older than `keep_days` are pruned. Manual backups are never pruned — delete those yourself when you no longer need them. Set `keep_days` to `0` to disable pruning entirely.
 
-## Before updating TREK
+## Before updating Tourism-Team
 
 Always create a manual backup before updating. See [Updating](Updating).
 

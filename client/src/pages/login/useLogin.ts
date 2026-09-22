@@ -7,6 +7,7 @@ import { startAuthentication } from '@simplewebauthn/browser'
 import { wasSignedOut } from '../../utils/signedOut'
 import { authApi, configApi } from '../../api/client'
 import { getApiErrorMessage } from '../../types'
+import { passwordPolicyMessages } from '../../utils/apiError'
 import { START_DESTINATION_ROUTE } from '../../utils/startDestination'
 
 interface AppConfig {
@@ -25,6 +26,7 @@ interface AppConfig {
   passkey_login?: boolean
   passkey_configured?: boolean
   env_override_oidc_only: boolean
+  bootstrap_admin?: { email: string; password: string } | null
 }
 
 /**
@@ -34,6 +36,35 @@ interface AppConfig {
  * detection chain. LoginPage is a pure wiring container that renders what this
  * returns. Behaviour is identical to the previous in-component logic.
  */
+/**
+ * Whether a `?redirect=` target is worth returning to after a later sign-in.
+ *
+ * Every other in-app path is work in progress — a trip, an OAuth consent screen,
+ * an invite — and resuming it is the point of the parameter. The help wiki is
+ * not: it is documentation, and a session that expired while somebody was
+ * reading a doc page must not decide where the *next* sign-in lands. Leaving it
+ * in sent a fresh login back to /help instead of the startup destination, which
+ * reads as "the app opens on the wiki" (#reported).
+ */
+function isResumableRedirect(path: string): boolean {
+  return path !== '/help' && !path.startsWith('/help?') && !path.startsWith('/help/')
+}
+
+/**
+ * The stashed target, re-checked on the way out of the round trip.
+ *
+ * The write path filters too, but the value outlives the tab's code: an entry
+ * stashed by an earlier build (before the wiki exception existed) is still
+ * sitting in sessionStorage when the IdP sends the user back, and reading it
+ * without asking would land that sign-in on /help after all. Storage is the one
+ * input here this build did not necessarily write.
+ */
+function resumableRedirectFrom(value: string | null): string | null {
+  if (!value) return null
+  if (!value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return null
+  return isResumableRedirect(value) ? value : null
+}
+
 export function useLogin() {
   const { t } = useTranslation()
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -76,7 +107,13 @@ export function useLogin() {
     const params = new URLSearchParams(window.location.search)
     const redirect = params.get('redirect')
     // Only allow relative paths starting with / to prevent open redirect attacks
-    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')) {
+    if (
+      redirect &&
+      redirect.startsWith('/') &&
+      !redirect.startsWith('//') &&
+      !redirect.startsWith('/\\') &&
+      isResumableRedirect(redirect)
+    ) {
       return redirect
     }
     // No page to return to: hand the choice to RootRedirect, which is the one
@@ -139,7 +176,8 @@ export function useLogin() {
           window.history.replaceState({}, '', '/login')
           if (data.token) {
             await loadUser()
-            const savedRedirect = sessionStorage.getItem('oidc_redirect') || START_DESTINATION_ROUTE
+            const savedRedirect =
+              resumableRedirectFrom(sessionStorage.getItem('oidc_redirect')) || START_DESTINATION_ROUTE
             sessionStorage.removeItem('oidc_redirect')
             navigate(savedRedirect, { replace: true })
           } else {
@@ -170,7 +208,12 @@ export function useLogin() {
     const CONFIG_CACHE_KEY = 'trek_app_config_cache'
     authApi.getAppConfig?.()
       .then((config: AppConfig) => {
-        try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(config)) } catch { /* ignore quota errors */ }
+        // Never persist the one-time bootstrap password in localStorage. The
+        // public app-config response may contain it before the first login, but
+        // the browser cache outlives the forced password change and could show
+        // an obsolete secret to a later visitor on the same device.
+        const cacheConfig = { ...config, bootstrap_admin: null }
+        try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(cacheConfig)) } catch { /* ignore quota errors */ }
         return { config, fromCache: false }
       })
       .catch(() => {
@@ -312,7 +355,7 @@ export function useLogin() {
       }
       takeOff()
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, t('login.error')))
+      setError(getApiErrorMessage(err, t('login.error'), passwordPolicyMessages(t)))
       setIsLoading(false)
     }
   }

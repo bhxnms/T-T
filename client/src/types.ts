@@ -436,6 +436,7 @@ export interface ApiError {
   response?: {
     data?: {
       error?: string;
+      code?: string;
     };
     status?: number;
   };
@@ -443,9 +444,15 @@ export interface ApiError {
 }
 
 /** Safely extract an error message from an unknown catch value */
-export function getApiErrorMessage(err: unknown, fallback: string): string {
+export function getApiErrorMessage(
+  err: unknown,
+  fallback: string,
+  codeMessages?: Record<string, string>,
+): string {
   if (typeof err === 'object' && err !== null && 'response' in err) {
     const apiErr = err as ApiError;
+    const code = apiErr.response?.data?.code;
+    if (code && codeMessages?.[code]) return codeMessages[code];
     // Axios' own message ("Request failed with status code 500") is untranslated
     // boilerplate, so only the server's error text beats the localized fallback.
     return apiErr.response?.data?.error || fallback;

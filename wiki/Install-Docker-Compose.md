@@ -18,7 +18,7 @@ The compose file ships with several hardening options enabled by default:
 | `cap_add: [CHOWN, SETUID, SETGID]` | Adds back only the capabilities needed for the entrypoint to drop privileges to the `node` user |
 | `tmpfs: /tmp:noexec,nosuid,size=128m` | Mounts a 128 MB in-memory `/tmp`; required because the container root is read-only |
 
-> **Note (Docker from snap):** If you installed Docker via `snap` (config under `/var/snap/docker/...`), `no-new-privileges:true` will prevent the container from starting with `exec /usr/bin/dumb-init: operation not permitted`. This is a [snap/AppArmor limitation](https://bugs.launchpad.net/snapd/+bug/1908448), not a TT Travel Planner issue — install Docker from the [official apt repository](https://docs.docker.com/engine/install/ubuntu/) instead, or remove `no-new-privileges`. See [Troubleshooting](Troubleshooting#container-wont-start-exec-usrbindumb-init-operation-not-permitted).
+> **Note (Docker from snap):** If you installed Docker via `snap` (config under `/var/snap/docker/...`), `no-new-privileges:true` will prevent the container from starting with `exec /usr/bin/dumb-init: operation not permitted`. This is a [snap/AppArmor limitation](https://bugs.launchpad.net/snapd/+bug/1908448), not a Tourism-Team issue — install Docker from the [official apt repository](https://docs.docker.com/engine/install/ubuntu/) instead, or remove `no-new-privileges`. See [Troubleshooting](Troubleshooting#container-wont-start-exec-usrbindumb-init-operation-not-permitted).
 
 ## Volumes
 
@@ -55,14 +55,14 @@ The compose file has no `env_file:` key, so a `.env` placed alongside `docker-co
 ENCRYPTION_KEY=<output of: openssl rand -hex 32>
 TZ=Europe/Berlin
 LOG_LEVEL=info
-ALLOWED_ORIGINS=https://trek.example.com
+ALLOWED_ORIGINS=https://tt.example.com
 ```
 
 The commented `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` lines are interpolated as well, so uncommenting them is enough to pick their values up from `.env`.
 
 Every other variable — `APP_URL`, the OIDC block, `FORCE_HTTPS`, `TRUST_PROXY`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`, the MCP limits — ships as a commented literal. Uncomment the line in `docker-compose.yml` and put the value there; setting it in `.env` alone has no effect.
 
-`APP_URL` is usually not needed. TT Travel Planner resolves its public base URL as `APP_URL` → first `ALLOWED_ORIGINS` entry → `http://localhost:<PORT>`, so the `ALLOWED_ORIGINS` value above already gives OIDC redirect URIs, passkey origin checks and the links in email notifications the correct origin. Uncomment `APP_URL` only when the public base URL has to differ from the first allowed origin.
+`APP_URL` is usually not needed. Tourism-Team resolves its public base URL as `APP_URL` → first `ALLOWED_ORIGINS` entry → `http://localhost:<PORT>`, so the `ALLOWED_ORIGINS` value above already gives OIDC redirect URIs, passkey origin checks and the links in email notifications the correct origin. Uncomment `APP_URL` only when the public base URL has to differ from the first allowed origin.
 
 For a full description of every variable, see [Environment-Variables](Environment-Variables).
 
@@ -83,7 +83,7 @@ image: ghcr.io/bhxnms/tt-planner:4        # track major version 4
 image: ghcr.io/bhxnms/tt-planner:4.0.0   # pin to exact release
 ```
 
-## Start TREK
+## Start Tourism-Team
 
 ```bash
 docker compose up -d
@@ -97,7 +97,7 @@ docker compose logs -f
 
 ## HTTPS and Reverse Proxy
 
-This compose file is designed for deployments where a reverse proxy (nginx, Caddy, Traefik) terminates TLS in front of TREK. To enable HTTPS redirects and secure cookies, uncomment `FORCE_HTTPS=true` and `TRUST_PROXY=1`.
+This compose file is designed for deployments where a reverse proxy (nginx, Caddy, Traefik) terminates TLS in front of Tourism-Team. To enable HTTPS redirects and secure cookies, uncomment `FORCE_HTTPS=true` and `TRUST_PROXY=1`.
 
 See [Reverse-Proxy](Reverse-Proxy) for complete proxy configuration examples.
 

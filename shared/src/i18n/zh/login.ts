@@ -69,5 +69,9 @@ const login: TranslationStrings = {
   'login.insecureCookie.body':
     '你正在通过普通 HTTP 连接，浏览器会丢弃 TREK 的安全会话 Cookie，导致下一次请求报错“Access token required”。修复方式：改用 HTTPS；如果是家庭实验室环境，可设置 COOKIE_SECURE=false。',
   'login.insecureCookie.link': '打开故障排查指南',
+  'login.bootstrap.title': "首次部署管理员账号",
+  'login.bootstrap.email': "邮箱",
+  'login.bootstrap.password': "初始密码",
+  'login.bootstrap.hint': "请使用此账号登录，登录后按提示设置新密码。修改后初始密码将不再显示。",
 };
 export default login;

@@ -3,14 +3,14 @@
 
 ## What OIDC gives you
 
-OpenID Connect (OIDC) lets users log in with an existing identity provider — Google, Authentik, Keycloak, or any OIDC-compatible IdP — instead of a local email/password. On first SSO login, a TREK account is created automatically using the email from the provider.
+OpenID Connect (OIDC) lets users log in with an existing identity provider — Google, Authentik, Keycloak, or any OIDC-compatible IdP — instead of a local email/password. On first SSO login, a Tourism-Team account is created automatically using the email from the provider.
 
 ## User flow
 
 1. Click **"Sign in with SSO"** on the login page.
 2. You are redirected to your identity provider's login page.
 3. Authenticate and grant consent.
-4. The provider redirects back to TREK at `GET /api/auth/oidc/callback`. If this is your first login, an account is created automatically (subject to registration settings).
+4. The provider redirects back to Tourism-Team at `GET /api/auth/oidc/callback`. If this is your first login, an account is created automatically (subject to registration settings).
 5. The server issues a short-lived one-time code and redirects your browser to `/login?oidc_code=<code>`. The frontend immediately exchanges that code at `GET /api/auth/oidc/exchange?code=<code>` to obtain the session.
 6. Your `trek_session` cookie is set and you land on the dashboard.
 
@@ -30,7 +30,7 @@ Set the following environment variables before starting the server:
 
 | Variable | Required | Description |
 |---|---|---|
-| `APP_URL` | Yes | Base URL of your TREK instance (e.g. `https://trek.example.com`). Used to build the redirect URI. **Env var only — not configurable via the admin panel.** If it is unset (or not a parseable URL, in which case it is ignored), TREK falls back to the first `ALLOWED_ORIGINS` entry, and only if that one is missing or unparseable to `http://localhost:{PORT}` — which produces a redirect URI your IdP will reject. A scheme-less `ALLOWED_ORIGINS=trek.example.com` does not parse, so it ends up on localhost too. |
+| `APP_URL` | Yes | Base URL of your Tourism-Team instance (e.g. `https://tt.example.com`). Used to build the redirect URI. **Env var only — not configurable via the admin panel.** If it is unset (or not a parseable URL, in which case it is ignored), Tourism-Team falls back to the first `ALLOWED_ORIGINS` entry, and only if that one is missing or unparseable to `http://localhost:{PORT}` — which produces a redirect URI your IdP will reject. A scheme-less `ALLOWED_ORIGINS=tt.example.com` does not parse, so it ends up on localhost too. |
 | `OIDC_ISSUER` | Yes | Issuer URL of your identity provider. Must use HTTPS in production. |
 | `OIDC_CLIENT_ID` | Yes | OAuth 2.0 client ID registered with your IdP. |
 | `OIDC_CLIENT_SECRET` | Yes | OAuth 2.0 client secret. |
@@ -41,7 +41,7 @@ Register the following **redirect URI** with your identity provider:
 <APP_URL>/api/auth/oidc/callback
 ```
 
-For example: `https://trek.example.com/api/auth/oidc/callback`
+For example: `https://tt.example.com/api/auth/oidc/callback`
 
 ## Optional environment variables
 
@@ -56,7 +56,7 @@ For example: `https://trek.example.com/api/auth/oidc/callback`
 
 ## New-user registration via SSO
 
-When an SSO login matches an existing TREK account by OIDC subject (`sub`), that account is used directly. When it matches only by **email**, the OIDC identity is linked to that account only if the provider asserts `email_verified` for it; if the claim is missing or false the login is rejected with an `email_not_verified` error, so an unverified address can never take over a local account. Make sure your IdP includes `email_verified` in the userinfo response — it is part of the `email` scope. If no matching account exists, TREK attempts to create one. The outcome depends on the following:
+When an SSO login matches an existing Tourism-Team account by OIDC subject (`sub`), that account is used directly. When it matches only by **email**, the OIDC identity is linked to that account only if the provider asserts `email_verified` for it; if the claim is missing or false the login is rejected with an `email_not_verified` error, so an unverified address can never take over a local account. Make sure your IdP includes `email_verified` in the userinfo response — it is part of the `email` scope. If no matching account exists, Tourism-Team attempts to create one. The outcome depends on the following:
 
 - **First user ever**: always created as admin, no invite required.
 - **Open SSO registration enabled** (admin panel toggle `oidc_registration`): account is created as a regular user.

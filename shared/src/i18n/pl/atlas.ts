@@ -57,6 +57,7 @@ const atlas: TranslationStrings = {
   'atlas.searchCountry': 'Szukaj kraju...',
   'atlas.searchPlaces': 'Miejsca',
   'atlas.planned': 'Zaplanowane',
+  'atlas.showLandmarks': 'Pokaż punkty orientacyjne',
   'atlas.showPlanned': 'Pokaż zaplanowane kraje',
   'atlas.plannedFor': 'Zaplanowano na',
   'atlas.antarctica': 'Antarktyda',

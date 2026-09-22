@@ -55,6 +55,7 @@ export * from './auth/auth.schema';
 export * from './oidc/oidc.schema';
 export * from './oauth/oauth.schema';
 export * from './admin/admin.schema';
+export * from './tunnel/tunnel.schema';
 
 // Realtime WS event contract registry (event names + payload schemas)
 export * from './realtime/events.schema';

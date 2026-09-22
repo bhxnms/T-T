@@ -1,6 +1,6 @@
 # Currencies
 
-TREK has **three** currency settings, and they answer three different questions. Most confusion about the Costs tab comes from mixing them up, so this page is the one place they are defined together.
+Tourism-Team has **three** currency settings, and they answer three different questions. Most confusion about the Costs tab comes from mixing them up, so this page is the one place they are defined together.
 
 | Setting | Where | Question it answers | Affects |
 |---|---|---|---|
@@ -24,7 +24,7 @@ Pick the currency of the place you are travelling to (or the one you will actual
 
 ### Changing the trip currency
 
-Changing it is **not** a relabelling — it is a re-basing, and TREK does the work for you so that no money moves:
+Changing it is **not** a relabelling — it is a re-basing, and Tourism-Team does the work for you so that no money moves:
 
 - Expenses that had no currency of their own (they simply inherited the trip's) are **pinned to the old currency** first. A 9 000 ₽ expense on a trip switching from RUB to EUR stays *9 000 ₽*; it does not silently become 9 000 €.
 - Every frozen exchange rate is **re-anchored** to the new base, because a frozen rate is stored relative to the trip currency (see below).
@@ -36,11 +36,11 @@ The numbers you typed are never rewritten. Each expense keeps its original amoun
 
 Each expense in the Costs tab carries **its own currency**, chosen in the expense modal. Enter what the receipt says: a $100 dinner on a rouble trip is entered as **100 USD**, not as its rouble equivalent.
 
-When an expense's currency differs from the trip currency, TREK looks up the live rate **once, at the moment you save it**, and freezes it on the expense. That frozen rate is what converts the expense into the trip currency forever after.
+When an expense's currency differs from the trip currency, Tourism-Team looks up the live rate **once, at the moment you save it**, and freezes it on the expense. That frozen rate is what converts the expense into the trip currency forever after.
 
 > **Why freeze it?** Because a debt settled today shouldn't reopen tomorrow. If balances were recomputed at live rates, a settled-up trip would drift back into a few cents of debt every time the FX market moved. The rate you booked at is the rate you owe at.
 
-Rates come from [Frankfurter](https://frankfurter.dev) (European Central Bank data, no API key needed). **165 currencies** are supported. If the rate lookup fails (the instance is offline, or the upstream is down), the expense is stored without a frozen rate and falls back to live conversion when it is next read — TREK never invents a rate.
+Rates come from [Frankfurter](https://frankfurter.dev) (European Central Bank data, no API key needed). **165 currencies** are supported. If the rate lookup fails (the instance is offline, or the upstream is down), the expense is stored without a frozen rate and falls back to live conversion when it is next read — Tourism-Team never invents a rate.
 
 ### Settle-up payments
 

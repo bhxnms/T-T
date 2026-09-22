@@ -22,11 +22,11 @@ Items are sorted by their time or position index.
 
 - **Drag and drop** — drag a place from the right-hand Places sidebar and drop it onto a day section or between existing items.
 
-![Adding a place by dragging](assets/DayItineraryAddPlaceDragging.gif)
+![Adding a place by dragging](assets/DayItineraryAddPlaceDragging.mp4)
 
 - **Add button** — click a day header to select it, then click the **+** on a place in the right-hand Places sidebar; the place is assigned to the selected day straight away.
 
-![Adding a place by button](assets/DayItineraryAddPlaceByButton.gif)
+![Adding a place by button](assets/DayItineraryAddPlaceByButton.mp4)
 
 - **Mobile** — tap the **Add Place** button inside an expanded day section to open an inline search panel; find the place and tap it to assign.
 
@@ -34,7 +34,7 @@ You can also reorder places within a day, or move them to a different day, by dr
 
 To remove a place from a day, right-click the entry in the day timeline and choose **Remove from day**, or select the place and use the **Remove from Day** button in the place detail panel. On mobile, switch the plan screen to **Plan** and tap the **X** next to the place. Deleting the place itself, from the same right-click menu, removes it from every day.
 
-![Removing a place by button](assets/DayItineraryRemovePlaceByButton.gif)
+![Removing a place by button](assets/DayItineraryRemovePlaceByButton.mp4)
 
 ## Multi-day reservations
 
@@ -84,6 +84,7 @@ Route controls appear at the bottom of a day section, after the place list, and 
 
 - **Route** — draws that day's route on the map.
 - **Open in Google Maps** — hands the day's stops to Google Maps as a route, in planned order.
+- **Open in AMap** — hands the day's stops to AMap (高德地图), including valid accommodation bookends when available.
 - **Open in CoMaps** — the same day handed to CoMaps for offline navigation, carrying the day's travel mode.
 - **Optimize** — reorders the day's places into the shortest route. See [Route-Optimization](Route-Optimization).
 - **Travel mode** — Driving or Walking for that day, plus any travel mode a plugin adds.

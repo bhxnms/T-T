@@ -1,6 +1,6 @@
 # Calendar Feeds
 
-Subscribe your calendar app to a TREK trip so it stays in sync automatically, instead of importing a snapshot once.
+Subscribe your calendar app to a Tourism-Team trip so it stays in sync automatically, instead of importing a snapshot once.
 
 > **Not the same as the ICS export.** The **Download .ics** action described in [Day-Plans-and-Notes](Day-Plans-and-Notes) writes a one-off `.ics` file that never changes after you import it. A calendar *feed* is a live URL your calendar re-fetches on its own. Use the export for a frozen copy, a feed for something that keeps up with your edits.
 
@@ -28,13 +28,13 @@ The all-trips feed merges every qualifying trip into one calendar, sorted by sta
 ## Turning a feed on
 
 1. Open the **Subscribe to calendar** (or **Subscribe to all trips**) dialog. Opening it only reads the current state — it never mints a link behind your back.
-2. Click **Enable calendar subscription**. TREK generates a random token and shows the feed URL.
+2. Click **Enable calendar subscription**. Tourism-Team generates a random token and shows the feed URL.
 3. Hand the URL to your calendar app with one of the buttons:
    - **Add to Google Calendar** — opens Google's add-by-URL page with the feed pre-filled.
    - **Add to Apple Calendar / Outlook** — a `webcal://` link that the OS hands to your default calendar app.
    - **Or copy a link manually** — expand this to copy the raw `https://…` URL (for a *From URL* box) or the `webcal://` variant.
 
-The URL is built from `APP_URL` when it is set; otherwise TREK falls back to the host you are browsing from. Set `APP_URL` behind a reverse proxy so the link is the one your calendar app can actually reach — see [Environment-Variables](Environment-Variables) and [Reverse-Proxy](Reverse-Proxy).
+The URL is built from `APP_URL` when it is set; otherwise Tourism-Team falls back to the host you are browsing from. Set `APP_URL` behind a reverse proxy so the link is the one your calendar app can actually reach — see [Environment-Variables](Environment-Variables) and [Reverse-Proxy](Reverse-Proxy).
 
 ## The token, and who can read the feed
 

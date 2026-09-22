@@ -128,7 +128,10 @@ export class AuthController {
     const remember = decodeSessionClaims((req.cookies as Record<string, string> | undefined)?.trek_session)?.remember;
     const result = this.auth.changePassword(user.id, user.email, body, remember);
     if (result.error) {
-      throw new HttpException({ error: result.error }, result.status!);
+      // `code` lets a non-English client render its own translated message for a
+      // password-policy rejection; the English `error` stays for logs and for
+      // callers that have no translation layer.
+      throw new HttpException({ error: result.error, ...(result.code ? { code: result.code } : {}) }, result.status!);
     }
     // Refresh this device's cookie with the new password_version so the user
     // stays logged in here while all other sessions are invalidated.

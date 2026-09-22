@@ -29,6 +29,7 @@ import {
   addTripMember,
 } from '../helpers/factories';
 import { resetTestDb, resetRateLimits } from '../helpers/test-db';
+import { encrypt_api_key } from '../../src/nest/common/crypto/apiKeyCrypto';
 import type { INestApplication } from '@nestjs/common';
 
 import type { Application } from 'express';
@@ -369,6 +370,76 @@ describe('App config', () => {
     const res = await request(app).get('/api/auth/app-config');
     expect(res.status).toBe(200);
     expect(res.body.allow_registration).toBe(false);
+  });
+
+  // The first-deploy credentials have exactly one reachable delivery path: this
+  // unauthenticated endpoint. A post-login notice cannot serve them, because the
+  // operator cannot sign in without the password it carries — the chicken-and-egg
+  // that made the original design a dead end. These three cases pin the whole
+  // lifecycle through the real HTTP stack.
+  it('AUTH-028b — first-deploy credentials are published anonymously, then withdrawn after the password change', async () => {
+    const { user } = createAdmin(testDb, { email: 'admin@tt.local', password: 'generated-pw-1' });
+    testDb.prepare('UPDATE users SET must_change_password = 1 WHERE id = ?').run(user.id);
+    testDb
+      .prepare("INSERT INTO app_settings (key, value) VALUES ('bootstrap_admin_email', ?), ('bootstrap_admin_password', ?)")
+      .run(encrypt_api_key('admin@tt.local'), encrypt_api_key('generated-pw-1'));
+
+    const before = await request(app).get('/api/auth/app-config');
+    expect(before.status).toBe(200);
+    expect(before.body.bootstrap_admin).toEqual({ email: 'admin@tt.local', password: 'generated-pw-1' });
+    expect(before.body.setup_complete).toBe(false);
+
+    // The advertised credentials must actually work — a wrong pair here is the
+    // failure the notice bug produced: a password nobody could use.
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'admin@tt.local', password: 'generated-pw-1' });
+    expect(login.status).toBe(200);
+
+    const change = await request(app)
+      .put('/api/auth/me/password')
+      .set('Cookie', authCookie(user.id))
+      .send({ current_password: 'generated-pw-1', new_password: 'BrandNewPass1!' });
+    expect(change.status).toBe(200);
+
+    const after = await request(app).get('/api/auth/app-config');
+    expect(after.status).toBe(200);
+    expect(after.body.bootstrap_admin).toBeNull();
+    expect(after.body.setup_complete).toBe(true);
+    // The rows themselves are gone, so the secret is not merely hidden by a
+    // client-side flag that a later regression could flip back.
+    expect(testDb.prepare("SELECT COUNT(*) AS n FROM app_settings WHERE key LIKE 'bootstrap_admin_%'").get()).toEqual({
+      n: 0,
+    });
+  });
+
+  it('AUTH-028c — the credentials stay private once no password change is pending', async () => {
+    // A settled install that somehow still holds the rows must not republish
+    // them: the must_change_password flag alone gates the response.
+    const { user } = createAdmin(testDb, { email: 'admin@tt.local', password: 'settled-pw-1' });
+    testDb
+      .prepare("INSERT INTO app_settings (key, value) VALUES ('bootstrap_admin_email', ?), ('bootstrap_admin_password', ?)")
+      .run(encrypt_api_key('admin@tt.local'), encrypt_api_key('settled-pw-1'));
+
+    const res = await request(app).get('/api/auth/app-config');
+    expect(res.status).toBe(200);
+    expect(res.body.bootstrap_admin).toBeNull();
+    expect(user.id).toBeGreaterThan(0);
+  });
+
+  it('AUTH-028d — a regular user awaiting a password change does not unlock the bootstrap block', async () => {
+    // must_change_password is also set by admin-initiated resets on ordinary
+    // accounts. Only the seeded administrator may surface the bootstrap pair,
+    // and there is none here, so the response stays empty.
+    const { user } = createUser(testDb);
+    testDb.prepare('UPDATE users SET must_change_password = 1 WHERE id = ?').run(user.id);
+    testDb
+      .prepare("INSERT INTO app_settings (key, value) VALUES ('bootstrap_admin_email', ?), ('bootstrap_admin_password', ?)")
+      .run(encrypt_api_key('admin@tt.local'), encrypt_api_key('leaked-pw-1'));
+
+    const res = await request(app).get('/api/auth/app-config');
+    expect(res.status).toBe(200);
+    expect(res.body.bootstrap_admin).toBeNull();
   });
 });
 

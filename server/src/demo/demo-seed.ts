@@ -1,5 +1,11 @@
 import { readEnv } from '../app-config';
-import { DEMO_PASS } from '../nest/common/demo';
+import {
+  DEMO_ADMIN_EMAIL_DEFAULT,
+  DEMO_EMAIL_PRIMARY,
+  DEMO_PASS,
+  demoAdminEmailCandidates,
+  findDemoUser,
+} from '../nest/common/demo';
 // Static like in demo-reset.job.ts: the module top is inert, everything that
 // touches the database happens inside the functions.
 import { saveBaseline, hasBaseline } from './demo-reset';
@@ -9,26 +15,39 @@ import Database from 'better-sqlite3';
 
 function seedDemoData(db: Database.Database): { adminId: number; demoId: number } {
   const ADMIN_USER = readEnv().demo.adminUser;
-  const ADMIN_EMAIL = readEnv().demo.adminEmailRaw || 'admin@trek.app';
+  const ADMIN_EMAIL = readEnv().demo.adminEmailRaw;
   const ADMIN_PASS = readEnv().demo.adminPass;
-  const DEMO_EMAIL = 'demo@trek.app';
+
+  // Both accounts are looked up through the candidate list, not by a single
+  // address: a database seeded by an older build carries the address that build
+  // used, and the hourly reset keeps restoring it from that baseline. Looking up
+  // only the current address would miss the existing row and INSERT a duplicate
+  // — which fails anyway, because username is UNIQUE, aborting the seed (and the
+  // example trips behind it) for the whole instance.
+  const findByEmail = (email: string) =>
+    db.prepare('SELECT id FROM users WHERE email = ?').get(email) as { id: number } | undefined;
 
   // Create admin user if not exists
-  let admin = db.prepare('SELECT id FROM users WHERE email = ?').get(ADMIN_EMAIL) as { id: number } | undefined;
+  let admin: { id: number } | undefined;
+  for (const email of demoAdminEmailCandidates(ADMIN_EMAIL)) {
+    admin = findByEmail(email);
+    if (admin) break;
+  }
+  const adminEmail = ADMIN_EMAIL || DEMO_ADMIN_EMAIL_DEFAULT;
   if (!admin) {
     if (!readEnv().demo.adminPassSet) {
       // The default is published in the docs and in this file, so an operator who
       // never set DEMO_ADMIN_PASS is handing out an admin account. Say so loudly;
       // changing the default would lock out every existing demo instance.
       console.warn(
-        `[Demo] SECURITY: DEMO_ADMIN_PASS is not set. The admin account ${ADMIN_EMAIL} is being created ` +
+        `[Demo] SECURITY: DEMO_ADMIN_PASS is not set. The admin account ${adminEmail} is being created ` +
           'with the public default password. Set DEMO_ADMIN_PASS before exposing this instance.',
       );
     }
     const hash = bcrypt.hashSync(ADMIN_PASS, 10);
     const r = db
       .prepare('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)')
-      .run(ADMIN_USER, ADMIN_EMAIL, hash, 'admin');
+      .run(ADMIN_USER, adminEmail, hash, 'admin');
     admin = { id: Number(r.lastInsertRowid) };
     console.log('[Demo] Admin user created');
   } else {
@@ -36,12 +55,12 @@ function seedDemoData(db: Database.Database): { adminId: number; demoId: number 
   }
 
   // Create demo user if not exists
-  let demo = db.prepare('SELECT id FROM users WHERE email = ?').get(DEMO_EMAIL) as { id: number } | undefined;
+  let demo = findDemoUser((email) => findByEmail(email));
   if (!demo) {
     const hash = bcrypt.hashSync(DEMO_PASS, 10);
     const r = db
       .prepare('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)')
-      .run('demo', DEMO_EMAIL, hash, 'user');
+      .run('demo', DEMO_EMAIL_PRIMARY, hash, 'user');
     demo = { id: Number(r.lastInsertRowid) };
     console.log('[Demo] Demo user created');
   } else {

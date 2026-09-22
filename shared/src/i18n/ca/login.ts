@@ -75,5 +75,9 @@ const login: TranslationStrings = {
   'login.insecureCookie.body':
     'T\'estàs connectant mitjançant HTTP ordinari, de manera que el teu navegador rebutja la galeta de sessió segura de TREK — la següent petició fallarà amb "Access token required". Solució: utilitza HTTPS, o per a entorns locals (home-lab) defineix COOKIE_SECURE=false.',
   'login.insecureCookie.link': 'Obre la guia de resolució de problemes',
+  'login.bootstrap.title': "First deployment administrator account",
+  'login.bootstrap.email': "Email",
+  'login.bootstrap.password': "Initial password",
+  'login.bootstrap.hint': "Sign in with these credentials, then choose a new password when prompted. This password will not be shown again after you change it.",
 };
 export default login;

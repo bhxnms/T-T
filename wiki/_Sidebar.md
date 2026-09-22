@@ -8,6 +8,8 @@
 - [[Install: Unraid|Install-Unraid]]
 - [[Install: Portainer|Install-Portainer]]
 - [[Reverse Proxy|Reverse-Proxy]]
+- [[Cloudflare Tunnel|Cloudflare-Tunnel]]
+- [[Managed Instances|Managed-Instances]]
 - [[Environment Variables|Environment-Variables]]
 - [[Updating]]
 
@@ -21,7 +23,10 @@
 - [[General Settings|Display-Settings]]
 - [[Appearance Settings|Appearance-Settings]]
 - [[Map Settings|Map-Settings]]
+- [[AMap (高德)|AMap]]
 - [[Notifications]]
+- [[In-App Notifications|In-App-Notifications]]
+- [[System Notices|System-Notices]]
 - [[Offline Mode and PWA|Offline-Mode-and-PWA]]
 - [[Languages]]
 
@@ -32,6 +37,7 @@
 - [[Trip Planner Overview|Trip-Planner-Overview]]
 - [[Places and Search|Places-and-Search]]
 - [[Day Plans and Notes|Day-Plans-and-Notes]]
+- [[Activities]]
 - [[Map Features|Map-Features]]
 - [[Route Optimization|Route-Optimization]]
 - [[Weather Forecasts|Weather-Forecasts]]
@@ -52,6 +58,7 @@
 
 ## Photos & Media
 - [[Photo Providers|Photo-Providers]]
+- [[Memories|Memories]]
 - [[PDF Export|PDF-Export]]
 
 ## Collaboration
@@ -67,6 +74,7 @@
 - [[Addons Overview|Addons-Overview]]
 - [[Vacay]]
 - [[Atlas]]
+- [[China Provinces and Taiwan|China-and-Taiwan]]
 - [[Journey Journal|Journey-Journal]]
 - [[Collections]]
 - [[Dashboard Widgets|Dashboard-Widgets]]

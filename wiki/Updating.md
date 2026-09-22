@@ -1,6 +1,6 @@
 # Updating
 
-How to update TREK to a newer version without losing data.
+How to update Tourism-Team to a newer version without losing data.
 
 ## Before You Update
 
@@ -36,7 +36,7 @@ docker compose up -d
 
 ## Docker Run
 
-If you started TREK with `docker run`, pull the new image and replace the container:
+If you started Tourism-Team with `docker run`, pull the new image and replace the container:
 
 ```bash
 docker pull mauriceboe/trek
@@ -78,23 +78,23 @@ See [Install-Helm](Install-Helm) for the full installation walkthrough and value
 
 ## Database Migrations
 
-TREK runs any pending database migrations automatically at startup. No manual migration steps are required after pulling a new image.
+Tourism-Team runs any pending database migrations automatically at startup. No manual migration steps are required after pulling a new image.
 
 ## Encryption Key Note
 
-If you are upgrading from a version that predates the dedicated `ENCRYPTION_KEY` (i.e. you have no `ENCRYPTION_KEY` environment variable set), TREK automatically falls back to `./data/.jwt_secret` on startup and immediately promotes it to `./data/.encryption_key`. No manual steps are required — the transition is handled at first boot after the upgrade.
+If you are upgrading from a version that predates the dedicated `ENCRYPTION_KEY` (i.e. you have no `ENCRYPTION_KEY` environment variable set), Tourism-Team automatically falls back to `./data/.jwt_secret` on startup and immediately promotes it to `./data/.encryption_key`. No manual steps are required — the transition is handled at first boot after the upgrade.
 
 If you want to rotate to a new key at any point (not required for a normal update), see [Encryption-Key-Rotation](Encryption-Key-Rotation) for the full procedure.
 
 ## Proxmox VE (LXC)
 
-If you installed TREK via the [Proxmox VE Community Scripts](https://community-scripts.org/scripts/trek), run the following command inside the **LXC container** and select **Update** when prompted:
+If you installed Tourism-Team via the [Proxmox VE Community Scripts](https://community-scripts.org/scripts/trek), run the following command inside the **LXC container** and select **Update** when prompted:
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/ct/trek.sh)"
 ```
 
-> **Tip:** Always check the [community-scripts TREK page](https://community-scripts.org/scripts/trek) to confirm the latest command before running.
+> **Tip:** Always check the [community-scripts Tourism-Team page](https://community-scripts.org/scripts/trek) to confirm the latest command before running.
 
 The script stops the service, backs up your data and uploads, applies the new release, restores the backup, and restarts. No manual steps required.
 
@@ -107,7 +107,7 @@ journalctl -u trek -n 50
 
 ## Portainer
 
-Open the **Stacks** list, click the TREK stack, then click **Redeploy**.
+Open the **Stacks** list, click the Tourism-Team stack, then click **Redeploy**.
 
 **`latest` or major-version tag** — enable the **Re-pull image and redeploy** switch before confirming. Portainer pulls the newest matching image and recreates the container.
 
@@ -123,7 +123,7 @@ See [Install-Portainer](Install-Portainer) for the full installation walkthrough
 
 ## Unraid
 
-In the Unraid Docker tab, click the TREK container and select **Update**. Unraid will pull the latest image and restart with the same volumes.
+In the Unraid Docker tab, click the Tourism-Team container and select **Update**. Unraid will pull the latest image and restart with the same volumes.
 
 ## Next Steps
 

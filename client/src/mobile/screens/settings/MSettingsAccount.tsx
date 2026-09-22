@@ -25,6 +25,7 @@ import { useTranslation } from '../../../i18n';
 import { useAuthStore } from '../../../store/authStore';
 import type { UserWithOidc } from '../../../types';
 import { getApiErrorMessage } from '../../../types';
+import { passwordPolicyMessages } from '../../../utils/apiError';
 import MConfirmSheet from './MConfirmSheet';
 import { MSetButton, MSetCard, MSetEyebrow, MSetHint, MSetInput } from './MSettingsUi';
 
@@ -203,7 +204,7 @@ export default function MSettingsAccount() {
       setConfirmPassword('');
       await loadUser({ silent: true });
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, t('common.error')));
+      toast.error(getApiErrorMessage(err, t('common.error'), passwordPolicyMessages(t)));
     }
   };
 

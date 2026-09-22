@@ -50,8 +50,11 @@ import type { Request } from 'express';
 /** Throw the legacy {error,status} envelope when a service call reports failure. */
 function ok<T>(result: T): Exclude<T, { error: string }> {
   if (result && typeof result === 'object' && 'error' in (result as Record<string, unknown>)) {
-    const r = result as unknown as { error: string; status?: number };
-    throw new HttpException({ error: r.error }, r.status ?? 400);
+    const r = result as unknown as { error: string; code?: string; status?: number };
+    throw new HttpException(
+      { error: r.error, ...(r.code ? { code: r.code } : {}) },
+      r.status ?? 400,
+    );
   }
   return result as Exclude<T, { error: string }>;
 }

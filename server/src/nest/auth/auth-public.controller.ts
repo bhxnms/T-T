@@ -82,7 +82,10 @@ export class AuthPublicController {
     this.limit('login', req, 10);
     const result = this.auth.registerUser(body);
     if (result.error) {
-      throw new HttpException({ error: result.error }, result.status!);
+      throw new HttpException(
+        { error: result.error, ...(result.code ? { code: result.code } : {}) },
+        result.status!,
+      );
     }
     this.audit.writeAudit({
       userId: result.auditUserId!,
@@ -191,7 +194,10 @@ export class AuthPublicController {
         ip,
         details: { reason: result.error },
       });
-      throw new HttpException({ error: result.error }, result.status!);
+      throw new HttpException(
+        { error: result.error, ...(result.code ? { code: result.code } : {}) },
+        result.status!,
+      );
     }
     if (result.mfa_required) {
       return { mfa_required: true };

@@ -1,7 +1,17 @@
 import { McpController, Tool, TOOL_ANNOTATIONS_READONLY, errorResult, ok, type McpContext } from '../../nest-mcp';
-import { getWikiIndex, getWikiPage, WikiNotFound, type WikiPage } from './wiki';
+import { getWikiIndex, getWikiPage, normalizeWikiLang, WikiNotFound, type WikiPage } from './wiki';
 
 import { z } from 'zod';
+
+/**
+ * The language list as prose for the tool descriptions, spelled out rather than
+ * built from WIKI_LANGS at module load. A decorator argument is evaluated while
+ * the class is being defined, so calling into wiki.ts here would make importing
+ * this file depend on that module's runtime state — which is exactly what a
+ * unit test that stubs the wiki reader cannot provide. Keep in sync with
+ * WIKI_LANGS in wiki.ts.
+ */
+const LANG_HINT = 'en or zh';
 
 /**
  * Help MCP surface over the bundled wiki, reading through the same functions
@@ -14,6 +24,9 @@ import { z } from 'zod';
  * meant to be denied it, and protect nothing. list_trips and get_trip_summary
  * are registered the same way, for the same reason: a client needs them to find
  * its bearings before it knows what else to ask for.
+ *
+ * Both tools take an optional `lang` (see wiki.ts for the language list and the
+ * English fallback), so a client can read the manual in the user's language.
  *
  * No injected service, like airports.mcp.ts: the help domain is a set of plain
  * readers over the `wiki/` directory rather than a provider.
@@ -34,13 +47,20 @@ export class HelpMcp {
   @Tool({
     name: 'list_help_topics',
     description:
-      "List the table of contents of the TREK user manual bundled with this instance: sections, page titles, and the slugs get_help_page takes. Start here when the user asks how something in TREK works or how to do something in the app, then read the matching page. This is documentation about the product, never the user's own data: for that use list_trips or get_trip_summary.",
-    inputSchema: {},
+      "List the table of contents of the user manual bundled with this instance: sections, page titles, and the slugs get_help_page takes. Start here when the user asks how something works or how to do something in the app, then read the matching page. This is documentation about the product, never the user's own data: for that use list_trips or get_trip_summary.",
+    inputSchema: {
+      lang: z
+        .string()
+        .optional()
+        .describe(
+          `Wiki language: ${LANG_HINT}. Defaults to en. An untranslated page falls back to English, so this only changes the language of what is available.`,
+        ),
+    },
     annotations: TOOL_ANNOTATIONS_READONLY,
   })
-  async listHelpTopics(_args: Record<string, never>, _ctx: McpContext) {
+  async listHelpTopics({ lang }: { lang?: string }, _ctx: McpContext) {
     try {
-      const { sections } = await getWikiIndex();
+      const { sections } = await getWikiIndex(normalizeWikiLang(lang));
       return ok({ sections });
     } catch {
       // The route lets this reach the global error envelope; a tool has to
@@ -53,7 +73,7 @@ export class HelpMcp {
   @Tool({
     name: 'get_help_page',
     description:
-      'Read one page of the bundled TREK user manual as markdown, addressed by a slug from list_help_topics. Prefer it over answering from memory whenever the user asks how a TREK feature behaves: the pages ship with the running version, so they describe this instance rather than some other release. Long pages arrive in chunks, so when the result says truncated, call again with next_offset.',
+      'Read one page of the bundled user manual as markdown, addressed by a slug from list_help_topics. Prefer it over answering from memory whenever the user asks how a feature behaves: the pages ship with the running version, so they describe this instance rather than some other release. Long pages arrive in chunks, so when the result says truncated, call again with next_offset.',
     inputSchema: {
       slug: z.string().min(1).max(120).describe('Page slug as reported by list_help_topics, e.g. "Quick-Start"'),
       offset: z
@@ -62,14 +82,20 @@ export class HelpMcp {
         .min(0)
         .optional()
         .describe('Character offset to resume from after a truncated result. Defaults to 0, the start of the page.'),
+      lang: z
+        .string()
+        .optional()
+        .describe(
+          `Wiki language: ${LANG_HINT}. Defaults to en. Untranslated pages fall back to English.`,
+        ),
     },
     annotations: TOOL_ANNOTATIONS_READONLY,
   })
-  async getHelpPage({ slug, offset }: { slug: string; offset?: number }, _ctx: McpContext) {
+  async getHelpPage({ slug, offset, lang }: { slug: string; offset?: number; lang?: string }, _ctx: McpContext) {
     const from = offset ?? 0;
     let page: WikiPage;
     try {
-      page = await getWikiPage(slug);
+      page = await getWikiPage(slug, normalizeWikiLang(lang));
     } catch (err) {
       // The route collapses both into "Help page unavailable" with a 404/502
       // split in the status. A model cannot read the status, and only one of

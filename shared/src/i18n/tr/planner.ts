@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': 'Rota',
   'planner.optimize': 'Optimize et',
   'planner.openGoogleMaps': "Google Haritalar'da aç",
+  'planner.openAmapMaps': "AMap'te aç",
   'planner.openCoMaps': "CoMaps'te aç",
   'planner.selectDayHint': 'Gün planını görmek için soldaki listeden bir gün seçin',
   'planner.noPlacesForDay': 'Bu gün için henüz yer yok',

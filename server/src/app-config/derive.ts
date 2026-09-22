@@ -148,7 +148,12 @@ export function deriveDemo(raw: RawEnv) {
   return {
     enabled: parseBool(raw.DEMO_MODE) === true,
     adminUser: raw.DEMO_ADMIN_USER || 'admin',
-    /** Raw on purpose: demo-seed defaults to admin@trek.app, demo-reset to admin@nomad.app. */
+    /**
+     * Raw on purpose: unset means "use the seeded default", not "no email".
+     * Resolve it through demoAdminEmailCandidates, which holds the current
+     * default plus the addresses earlier builds seeded — the row in a restored
+     * baseline may carry any of them.
+     */
     adminEmailRaw: raw.DEMO_ADMIN_EMAIL,
     adminPass: raw.DEMO_ADMIN_PASS || 'admin12345',
     /** False means the admin account is being created with the published default. */

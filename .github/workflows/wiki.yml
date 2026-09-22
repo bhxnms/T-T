@@ -32,3 +32,12 @@ jobs:
         uses: Andrew-Chen-Wang/github-wiki-action@v5
         with:
           strategy: clone
+          # The Chinese tree stays out of the GitHub wiki.
+          #
+          # GitHub wikis are FLAT: they address a page by basename, and the action
+          # rewrites cross-directory links down to bare names. So `wiki/zh/Home.md`
+          # would collide with `wiki/Home.md` and the two would overwrite each
+          # other in either direction. The in-app viewer understands directories
+          # and serves both languages from the bundled tree, which is the reader
+          # that matters here; GitHub gets the canonical English set.
+          ignore: zh/**

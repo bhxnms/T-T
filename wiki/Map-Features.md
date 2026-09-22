@@ -6,7 +6,7 @@ The trip planner map shows your places, route lines, transport overlays, and you
 
 ## Map renderer
 
-TREK uses **Leaflet** by default. The renderer is picked in Settings → Map under **Map provider**: **Leaflet** for raster tiles, **MapLibre GL** for OpenFreeMap vector tiles (no token required), or **Mapbox GL** for vector tiles with 3D buildings and terrain, which additionally needs a Mapbox access token. If Mapbox GL is selected but no access token is present, TREK falls back to Leaflet automatically so the map is never blank.
+Tourism-Team uses **Leaflet** by default. The renderer is picked in Settings → Map under **Map provider**: **Leaflet** for raster tiles, **MapLibre GL** for OpenFreeMap vector tiles (no token required), or **Mapbox GL** for vector tiles with 3D buildings and terrain, which additionally needs a Mapbox access token. If Mapbox GL is selected but no access token is present, Tourism-Team falls back to Leaflet automatically so the map is never blank.
 
 The scopes required for Mapbox GL are:
 - STYLES:TILES
@@ -48,7 +48,7 @@ Clicking a line on the map selects that track and opens its details — useful w
 
 ### Exporting a trip as GPX
 
-The **Export** button in the day sidebar's toolbar opens one dialog with every way a trip leaves TREK: the day plan as a PDF, the bookings as a calendar, and under **Maps & GPS · GPX** the trip as a `.gpx` file for offline maps such as Organic Maps, for a handheld GPS, or for any other tool that reads the format. On a phone the same downloads sit in the trip's **Export** sheet, under "More".
+The **Export** button in the day sidebar's toolbar opens one dialog with every way a trip leaves Tourism-Team: the day plan as a PDF, the bookings as a calendar, and under **Maps & GPS · GPX** the trip as a `.gpx` file for offline maps such as Organic Maps, for a handheld GPS, or for any other tool that reads the format. On a phone the same downloads sit in the trip's **Export** sheet, under "More".
 
 Three scopes:
 
@@ -87,9 +87,9 @@ Flights, trains, cars, and cruises can be drawn as overlays between their endpoi
 
 ## Plugin map markers
 
-Installed plugins can add their own markers to the trip map — for example to show bookings on the map (#587). A plugin implements the `mapMarkerProvider` hook and returns marker specs (`id`, `lat`, `lng`, and optional `label`, `popupText`, `url`, `icon`, `tone`); TREK range-checks the coordinates, length-caps the text, allows only http/https/mailto links, and draws them itself. Markers are additive and fail-safe: a plugin never runs code on the map canvas, and one that errors or is slow simply contributes nothing.
+Installed plugins can add their own markers to the trip map — for example to show bookings on the map (#587). A plugin implements the `mapMarkerProvider` hook and returns marker specs (`id`, `lat`, `lng`, and optional `label`, `popupText`, `url`, `icon`, `tone`); Tourism-Team range-checks the coordinates, length-caps the text, allows only http/https/mailto links, and draws them itself. Markers are additive and fail-safe: a plugin never runs code on the map canvas, and one that errors or is slow simply contributes nothing.
 
-Plugins can also draw bounded vector overlays — a computed route, a reachable-range corridor, a zone — via the `mapLayerProvider` hook (polylines, polygons and metric circles, styled with the same tone palette). TREK clamps every styling value, enforces per-plugin vertex budgets, and always draws its own day route on top. Both hooks work on the Leaflet and the Mapbox/MapLibre GL renderer, on desktop and mobile.
+Plugins can also draw bounded vector overlays — a computed route, a reachable-range corridor, a zone — via the `mapLayerProvider` hook (polylines, polygons and metric circles, styled with the same tone palette). Tourism-Team clamps every styling value, enforces per-plugin vertex budgets, and always draws its own day route on top. Both hooks work on the Leaflet and the Mapbox/MapLibre GL renderer, on desktop and mobile.
 
 > **Plugins:** requires the `hook:map-marker-provider` permission (markers) or `hook:map-layer-provider` (overlays). See [Plugin-Development](Plugin-Development) for the hook contracts.
 

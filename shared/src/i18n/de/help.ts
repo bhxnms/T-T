@@ -2,6 +2,7 @@ import type { TranslationStrings } from '../types';
 
 const help: TranslationStrings = {
   'help.title': 'Hilfe & Doku',
+  'help.language': 'Wiki-Sprache',
   'help.search': 'Doku durchsuchen…',
   'help.contents': 'Inhalt',
   'help.noResults': 'Keine passenden Seiten.',

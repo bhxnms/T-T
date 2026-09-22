@@ -47,6 +47,7 @@ const planner: TranslationStrings = {
   'planner.route': 'Trasa',
   'planner.optimize': 'Optimalizovat',
   'planner.openGoogleMaps': 'Otevřít v Google Mapách',
+  'planner.openAmapMaps': 'Otevřít v AMap',
   'planner.openCoMaps': 'Otevřít v CoMaps',
   'planner.selectDayHint': 'Vyberte den ze seznamu vlevo pro zobrazení denního plánu',
   'planner.noPlacesForDay': 'Zatím žádná místa pro tento den',

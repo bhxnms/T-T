@@ -111,8 +111,12 @@ The exemption list is enforced by the `no-restricted-syntax` ban on
   `PORT=0` silently becomes 3001, `TREK_PLUGIN_RPC_BURST=-5` stays -5.
 - APP_URL trailing-slash stripping differs per site (feeds strips one slash,
   notifications strips all).
-- `DEMO_ADMIN_EMAIL` defaults differ (demo-seed: admin@trek.app, demo-reset:
-  admin@nomad.app).
 - NODE_ENV comparisons are case-sensitive at some sites (HSTS activation,
   platform statics, spa-fallback, authService dev_mode, oidcService
   frontendUrl) and case-insensitive at others.
+
+Fixed: `DEMO_ADMIN_EMAIL` used to default differently in demo-seed and
+demo-reset (`admin@trek.app` vs `admin@nomad.app`), so an unset variable looked
+up an address that did not exist and silently dropped the admin carry-over on
+every hourly reset. Both now resolve through `demoAdminEmailCandidates`, which
+holds the current default plus the addresses earlier builds seeded.

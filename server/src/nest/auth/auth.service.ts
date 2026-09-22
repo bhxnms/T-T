@@ -11,9 +11,9 @@ import { avatarUrl } from '../common/avatarUrl';
 import { setAuthCookie, clearAuthCookie } from '../common/cookie';
 import { decrypt_api_key, maybe_encrypt_api_key, encrypt_api_key } from '../common/crypto/apiKeyCrypto';
 import { encryptMfaSecret, decryptMfaSecret } from '../common/crypto/mfaCrypto';
-import { DEMO_EMAIL_PRIMARY, DEMO_PASS, isDemoEmail } from '../common/demo';
+import { DEMO_EMAIL_PRIMARY, DEMO_PASS, findDemoUser, isDemoEmail } from '../common/demo';
 import { splitManagedKeys } from '../common/managed';
-import { validatePassword } from '../common/passwordPolicy';
+import { validatePassword, type PasswordRejection } from '../common/passwordPolicy';
 import { DatabaseService } from '../database/database.service';
 import { AllowedFileTypesService } from '../files/allowed-file-types.service';
 import { getAmapKey } from '../geo/amap.service';
@@ -102,6 +102,7 @@ setInterval(
 
 export interface ResetPasswordOutcome {
   error?: string;
+  code?: PasswordRejection;
   status?: number;
   success?: boolean;
   /** When true the client must collect a TOTP/backup code and call again. */
@@ -335,8 +336,32 @@ export class AuthService {
       "SELECT value FROM app_settings WHERE key = 'places_enrich_enabled'",
     )?.value;
     const placesEnrichEnabled = placesEnrichSetting !== 'false';
-    const setupComplete =
-      userCount > 0 && !this.db.get("SELECT id FROM users WHERE role = 'admin' AND must_change_password = 1 LIMIT 1");
+    const pendingPasswordChange = !!this.db.get(
+      "SELECT id FROM users WHERE role = 'admin' AND must_change_password = 1 LIMIT 1",
+    );
+    const setupComplete = userCount > 0 && !pendingPasswordChange;
+
+    // This is the only unauthenticated delivery path for a first-deploy
+    // password. It is deliberately gated by the database flag that forces the
+    // first password change, so once the admin changes it the rows are deleted
+    // by changePassword and this endpoint returns no secret again. Do not move
+    // this into the post-login notice flow: the user cannot log in until they
+    // know the generated password.
+    const bootstrapEmail = decrypt_api_key(
+      this.db.get<{ value?: string }>("SELECT value FROM app_settings WHERE key = 'bootstrap_admin_email'")?.value,
+    );
+    const bootstrapPassword = decrypt_api_key(
+      this.db.get<{ value?: string }>("SELECT value FROM app_settings WHERE key = 'bootstrap_admin_password'")?.value,
+    );
+    // Match the stored email, not just the flag: an administrator whose password
+    // another admin reset also carries must_change_password, and matching on the
+    // flag alone would republish the seeded pair on every such reset.
+    const pendingBootstrapAdmin = bootstrapEmail
+      ? this.db.get<{ id: number }>(
+          "SELECT id FROM users WHERE role = 'admin' AND must_change_password = 1 AND email = ? LIMIT 1",
+          bootstrapEmail,
+        )
+      : undefined;
 
     return {
       // Legacy fields (backward compat)
@@ -356,6 +381,13 @@ export class AuthService {
       env_override_oidc_only: readEnv().oidc.only,
       has_users: userCount > 0,
       setup_complete: setupComplete,
+      // Only present while the generated first-deploy admin still has to change
+      // its password. This is public login-page data, so the narrow condition
+      // above is a security boundary, not just a UI convenience.
+      bootstrap_admin:
+        pendingBootstrapAdmin && bootstrapEmail && bootstrapPassword
+          ? { email: bootstrapEmail, password: bootstrapPassword }
+          : null,
       version,
       is_prerelease: version.includes('-pre.'),
       has_maps_key: hasGoogleKey,
@@ -411,7 +443,7 @@ export class AuthService {
     if (!readEnv().demo.enabled) {
       return { error: 'Not found', status: 404 };
     }
-    const user = this.db.get<User>('SELECT * FROM users WHERE email = ?', DEMO_EMAIL_PRIMARY);
+    const user = findDemoUser((email) => this.db.get<User>('SELECT * FROM users WHERE email = ?', email));
     if (!user) return { error: 'Demo user not found', status: 500 };
     const token = this.generateToken(user);
     const safe = stripUserForClient(user) as Record<string, unknown>;
@@ -437,6 +469,7 @@ export class AuthService {
 
   registerUser(rawBody: unknown): {
     error?: string;
+    code?: PasswordRejection;
     status?: number;
     token?: string;
     user?: Record<string, unknown>;
@@ -474,7 +507,7 @@ export class AuthService {
     }
 
     const pwCheck = validatePassword(password);
-    if (!pwCheck.ok) return { error: pwCheck.reason, status: 400 };
+    if (!pwCheck.ok) return { error: pwCheck.reason, code: pwCheck.code, status: 400 };
 
     if (!EMAIL_REGEX.test(email)) {
       return { error: 'Invalid email format', status: 400 };
@@ -661,7 +694,7 @@ export class AuthService {
     userEmail: string,
     rawBody: unknown,
     remember?: boolean,
-  ): { error?: string; status?: number; success?: boolean; token?: string } {
+  ): { error?: string; code?: PasswordRejection; status?: number; success?: boolean; token?: string } {
     const body = rawBody as { current_password?: string; new_password?: string };
     if (this.isOidcOnlyMode()) {
       return { error: 'Password authentication is disabled.', status: 403 };
@@ -675,7 +708,7 @@ export class AuthService {
     if (!new_password) return { error: 'New password is required', status: 400 };
 
     const pwCheck = validatePassword(new_password);
-    if (!pwCheck.ok) return { error: pwCheck.reason, status: 400 };
+    if (!pwCheck.ok) return { error: pwCheck.reason, code: pwCheck.code, status: 400 };
 
     const user = this.db.get<{ password_hash: string; password_version?: number }>(
       'SELECT password_hash, password_version FROM users WHERE id = ?',
@@ -1135,7 +1168,7 @@ export class AuthService {
     // Check the policy BEFORE touching the token so an invalid password
     // does not burn the user's one-time link.
     const pwCheck = validatePassword(new_password);
-    if (!pwCheck.ok) return { error: pwCheck.reason!, status: 400 };
+    if (!pwCheck.ok) return { error: pwCheck.reason!, code: pwCheck.code, status: 400 };
 
     const tokenHash = hashResetToken(token);
     const row = this.db.get<{ id: number; user_id: number; expires_at: string; consumed_at: string | null }>(

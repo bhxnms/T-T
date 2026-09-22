@@ -3,6 +3,7 @@ import {
   Blocks,
   Briefcase,
   Bug,
+  Cloud,
   Database,
   FileText,
   GitBranch,
@@ -37,6 +38,7 @@ import { managedAdminTabs } from '../managed';
 import AdminNotificationsTab from './admin/AdminNotificationsTab';
 import AdminSettingsTab from './admin/AdminSettingsTab';
 import AdminStatCard from './admin/AdminStatCard';
+import AdminTunnelTab from './admin/AdminTunnelTab';
 import AdminUpdateBanner from './admin/AdminUpdateBanner';
 import AdminUserModals from './admin/AdminUserModals';
 import AdminUsersTab from './admin/AdminUsersTab';
@@ -89,6 +91,9 @@ function AdminPageDesktop(): React.ReactElement {
     // Storage backends and their credentials are hoster-level configuration —
     // the server refuses the whole surface in managed mode (MANAGED_FORBIDDEN).
     ...(managed ? [] : [{ id: 'storage', label: t('admin.tabs.storage'), icon: HardDrive, group: gConfig }]),
+    // Same reasoning as storage: one tunnel fronts the whole install, so it is
+    // the operator's to configure and the server refuses it in managed mode.
+    ...(managed ? [] : [{ id: 'tunnel', label: t('admin.tabs.tunnel'), icon: Cloud, group: gConfig }]),
     { id: 'notifications', label: t('admin.tabs.notifications'), icon: Bell, group: gIntegration },
     ...(mcpEnabled
       ? [{ id: 'mcp-tokens', label: t('admin.tabs.mcpTokens'), icon: KeyRound, group: gIntegration }]
@@ -235,6 +240,8 @@ function AdminPageDesktop(): React.ReactElement {
           {activeTab === 'plugins' && <AdminPluginsPanel />}
 
           {activeTab === 'storage' && <AdminStoragePanel />}
+
+          {activeTab === 'tunnel' && <AdminTunnelTab t={t} />}
 
           {activeTab === 'github' && <GitHubPanel isPrerelease={updateInfo?.is_prerelease ?? false} />}
 

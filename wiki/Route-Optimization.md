@@ -1,14 +1,14 @@
 # Route Optimization
 
-TREK calculates walking and driving times between your places and can reorder them to minimize total travel distance.
+Tourism-Team calculates walking and driving times between your places and can reorder them to minimize total travel distance.
 
 ![Route Optimization](assets/OptimizeRoute.png)
 
 ## Route calculation
 
-TREK uses **OSRM** (Open Source Routing Machine) to calculate routes between consecutive places in the selected day. No API key is required.
+Tourism-Team uses **OSRM** (Open Source Routing Machine) to calculate routes between consecutive places in the selected day. No API key is required.
 
-The route toggle in the day-plan footer offers a **Driving** and a **Walking** profile (each routed on the matching OSRM network). Installed plugins can add further profiles: a plugin with the `routeProvider` hook — for example an e-mobility plugin that plans charging stops — appears as an extra mode next to Driving/Walking. When such a profile is selected, that plugin computes the day's route: its geometry is drawn on the map, planned stops (e.g. chargers) appear as small dots on the line, and the leg connectors show the plugin's travel times plus any note it attaches ("25 min charge"). If the plugin fails or times out, TREK falls back to straight lines exactly as it does on an OSRM outage.
+The route toggle in the day-plan footer offers a **Driving** and a **Walking** profile (each routed on the matching OSRM network). Installed plugins can add further profiles: a plugin with the `routeProvider` hook — for example an e-mobility plugin that plans charging stops — appears as an extra mode next to Driving/Walking. When such a profile is selected, that plugin computes the day's route: its geometry is drawn on the map, planned stops (e.g. chargers) appear as small dots on the line, and the leg connectors show the plugin's travel times plus any note it attaches ("25 min charge"). If the plugin fails or times out, Tourism-Team falls back to straight lines exactly as it does on an OSRM outage.
 
 That toggle sets the **day's** default travel mode. It is stored on the day, so each day of a trip can differ and the choice survives a reload.
 
@@ -36,9 +36,11 @@ The reorder can be undone immediately using the undo action that appears after i
 
 ## Open the day in a map app
 
-Two icon buttons in the day's route tools hand the current day to an external map app, both using its places in planned order, bookended by the day's accommodation exactly the way the drawn route is.
+Three icon buttons in the day's route tools hand the current day to an external map app or offline navigator, using its places in planned order, bookended by the day's accommodation exactly the way the drawn route is.
 
 **Open in Google Maps** builds a `https://www.google.com/maps/dir/lat,lng/lat,lng/…` URL containing all stops in order and opens it in a new tab. A day with a single stop opens as a map search on that point instead.
+
+**Open in AMap** hands the day's stops to AMap (高德地图) in planned order, including real accommodation bookends. A single stop opens as an AMap marker. Every intermediate stop is preserved: the link uses the indexed `ditu.amap.com/dir` form, because AMap's `navigation` URI accepts only one waypoint and silently folds the rest into the first one's name. Coordinates are converted WGS-84 → GCJ-02 before they leave, since that endpoint — unlike the marker URI — has no `coordinate` parameter to declare the frame with, so an unconverted link would land a few hundred metres off in China. Names containing a comma survive intact, which they do not in AMap's `lng,lat,name` form.
 
 **Open in CoMaps** (the compass icon beside it) hands the same day to CoMaps for offline navigation and carries the day's travel mode with it — the day's own default, or the current route profile when the day has none. A day of exactly two stops goes over as a real turn-by-turn route in that mode (walking as pedestrian, cycling as bicycle, everything else as vehicle). Any other day goes over as named pins, because CoMaps' route link takes a start and a destination and nothing between them, and handing over the whole day beats quietly dropping the middle of the plan. For the full itinerary as one navigable track, use the GPX export.
 

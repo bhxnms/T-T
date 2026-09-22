@@ -47,7 +47,7 @@ The active tab is saved in `sessionStorage` per trip, so switching between trips
 
 ## Mobile Layout
 
-On screens narrower than 768 px, TREK does not squeeze the three-pane layout — it opens a dedicated mobile trip screen instead: a day-chip rail under the top bar, a switch between the day plan and a full-screen map, and a bottom dock for the other tabs. Tablets and desktops (768 px and up) get the three-pane layout described above.
+On screens narrower than 768 px, Tourism-Team does not squeeze the three-pane layout — it opens a dedicated mobile trip screen instead: a day-chip rail under the top bar, a switch between the day plan and a full-screen map, and a bottom dock for the other tabs. Tablets and desktops (768 px and up) get the three-pane layout described above.
 
 ## Undo
 

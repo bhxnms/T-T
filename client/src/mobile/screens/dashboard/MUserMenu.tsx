@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { LogOut, Moon, Settings2, Shield, Sun, SunMoon } from 'lucide-react';
+import { BookOpen, LogOut, Moon, Settings2, Shield, Sun, SunMoon } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from '../../../i18n';
@@ -33,8 +33,8 @@ interface MUserMenuProps {
 
 /**
  * Avatar popover of the mobile top bar: profile header (with admin badge),
- * settings, admin panel (admins only), the dark/light/auto theme cycle and
- * sign out.
+ * settings, the help wiki, admin panel (admins only), the dark/light/auto theme
+ * cycle and sign out.
  */
 export default function MUserMenu({ open, onClose }: MUserMenuProps): React.ReactElement {
   const { t } = useTranslation();
@@ -84,6 +84,10 @@ export default function MUserMenu({ open, onClose }: MUserMenuProps): React.Reac
         </div>
       </div>
       <MListRow icon={Settings2} label={t('nav.bottomSettings')} onClick={() => go('/settings')} />
+      {/* The wiki lives behind the avatar menu on the phone, exactly like the
+          desktop navbar's user menu — the mobile dock has no room for a docs
+          entry, and without this the in-app help is unreachable on a phone. */}
+      <MListRow icon={BookOpen} label={t('nav.help')} onClick={() => go('/help')} />
       {user?.role === 'admin' && <MListRow icon={Shield} label={t('nav.bottomAdmin')} onClick={() => go('/admin')} />}
       <MListRow
         icon={ThemeIcon}
