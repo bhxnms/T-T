@@ -205,7 +205,7 @@ The sections above are reference material. Skip them for now and come back when 
 
 | Thing | Rough cost | Where it comes from | Where it gets used |
 |---|---|---|---|
-| A domain name | ~$10–15/year | Any registrar | The address people visit |
+| A domain name | Roughly $1.50 to $100 per year, depending on the domain | Any registrar | The address people visit |
 | A Cloudflare account | Free | Sign up at dash.cloudflare.com | Hosts the domain, owns the tunnel |
 | Account ID | Free | In the Cloudflare dashboard URL | Typed into the TT panel |
 | API token | Free | Created in the Cloudflare dashboard | Typed into the TT panel |
