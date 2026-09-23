@@ -1,5 +1,5 @@
 import { SESSION_DURATION_MS, SESSION_DURATION_REMEMBER_MS } from '../../../src/config';
-import { cookieOptions } from '../../../src/nest/common/cookie';
+import { cookieOptions, willDropSecureCookie } from '../../../src/nest/common/cookie';
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -43,6 +43,25 @@ describe('cookieOptions', () => {
     vi.stubEnv('FORCE_HTTPS', 'true');
     vi.stubEnv('NODE_ENV', 'development');
     expect(cookieOptions().secure).toBe(true);
+  });
+
+  // The Windows portable package regression (v0.7.1). Its launcher leaves
+  // NODE_ENV unset precisely so this stays false: the app is reached over plain
+  // http://localhost, and a `Secure` cookie is silently dropped by the browser
+  // there — the user logs in and is bounced straight back to the login page with
+  // no error. Serving the frontend must not drag this along with it.
+  it('sets secure: false when NODE_ENV is unset (desktop mode)', () => {
+    vi.stubEnv('COOKIE_SECURE', '');
+    vi.stubEnv('FORCE_HTTPS', '');
+    vi.stubEnv('NODE_ENV', '');
+    expect(cookieOptions().secure).toBe(false);
+  });
+
+  it('does not report a dropped cookie when NODE_ENV is unset (desktop mode)', () => {
+    vi.stubEnv('COOKIE_SECURE', '');
+    vi.stubEnv('FORCE_HTTPS', '');
+    vi.stubEnv('NODE_ENV', '');
+    expect(willDropSecureCookie()).toBe(false);
   });
 
   it('includes maxAge: 86400000 when clear is false (default)', () => {

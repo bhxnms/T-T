@@ -1,8 +1,8 @@
-import { readEnv } from '../../app-config';
 import { db } from '../../db/database';
 import { verifyJwtAndLoadUser } from '../auth/jwt-verify';
 import { StorageService } from '../storage/storage.service';
 import { StorageInvalidKeyError, StorageNotFoundError, type StorageCategory } from '../storage/storage.types';
+import { PUBLIC_DIR, shouldServeClient } from './client-serving';
 
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'node:path';
@@ -10,15 +10,15 @@ import path from 'node:path';
 // Platform / transport routes extracted verbatim from createApp() (app.ts) so they can be
 // mounted on either the legacy Express app or the NestJS Express instance (strangler A6/A8).
 //
-// IMPORTANT — path resolution: the original block lived in src/app.ts, where __dirname
-// resolves to the directory of app.js (one level above the public anchor), so it used
-// '../public'. This file lives three levels deeper (src/nest/platform/), so __dirname is
-// three levels deeper too — hence '../../../public', which resolves to the EXACT same
-// absolute path as before. (rootDir/outDir preserve the tree, so the offset holds in both
-// source/test and compiled/dist execution.) The /uploads/* routes no longer anchor paths
-// here at all: they address files as (category, name) through StorageService (slice 3).
+// The static-serving decision (PUBLIC_DIR, whether a built client exists, and the
+// single gate both consult) lives in ./client-serving — a leaf module, so the
+// OIDC callback can ask the same question without importing this file's Express
+// / storage / db graph.
+//
+// The /uploads/* routes do not anchor paths in this file at all: they address
+// files as (category, name) through StorageService (slice 3).
 
-export const PUBLIC_DIR = path.join(__dirname, '../../../public');
+export { PUBLIC_DIR, hasBuiltClient, shouldServeClient } from './client-serving';
 
 /**
  * express.static replacement for the four public /uploads mounts (storage
@@ -180,8 +180,7 @@ export function applyPlatformUploads(app: express.Application, storage: StorageS
  */
 export function applyPlatformSpa(app: express.Application): void {
   applyPlatformStatic(app);
-  // Case-sensitive on purpose (legacy parity).
-  if (readEnv().app.nodeEnv !== 'production') return;
+  if (!shouldServeClient()) return;
   // /.*/ rather than '*' so the helper is Express-4 and Express-5 safe.
   app.get(/.*/, (_req: Request, res: Response) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -197,8 +196,7 @@ export function applyPlatformSpa(app: express.Application): void {
  * app.get catch-all; Nest: SpaFallbackFilter). No-op outside production.
  */
 export function applyPlatformStatic(app: express.Application): void {
-  // Case-sensitive on purpose (legacy parity).
-  if (readEnv().app.nodeEnv !== 'production') return;
+  if (!shouldServeClient()) return;
   app.use(
     express.static(PUBLIC_DIR, {
       setHeaders: (res, filePath) => {

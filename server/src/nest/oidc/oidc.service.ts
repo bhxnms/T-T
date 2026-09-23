@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { setAuthCookie, RememberOption } from '../common/cookie';
 import { decrypt_api_key, maybe_encrypt_api_key } from '../common/crypto/apiKeyCrypto';
 import { DatabaseService } from '../database/database.service';
+import { shouldServeClient } from '../platform/client-serving';
 import { TripMembershipService } from '../trip-membership/trip-membership.service';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 
@@ -340,8 +341,13 @@ export class OidcService implements OnModuleDestroy {
   // -------------------------------------------------------------------------
 
   frontendUrl(path: string): string {
-    // Case-sensitive on purpose (legacy parity).
-    const base = readEnv().app.nodeEnv === 'production' ? '' : 'http://localhost:5173';
+    // Where the BROWSER loads the frontend from, which is the same origin
+    // whenever this server serves the client itself — production, or the
+    // portable Windows package, whose launcher leaves NODE_ENV unset on purpose
+    // (see shouldServeClient). Only a dev checkout, where the client comes from
+    // Vite instead, needs the :5173 prefix. Keying on NODE_ENV alone sent the
+    // desktop package's OIDC callback to a Vite dev server that does not exist.
+    const base = shouldServeClient() ? '' : 'http://localhost:5173';
     return base + path;
   }
 

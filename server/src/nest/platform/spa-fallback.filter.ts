@@ -1,5 +1,4 @@
-import { readEnv } from '../../app-config';
-import { PUBLIC_DIR } from './platform.routes';
+import { PUBLIC_DIR, shouldServeClient } from './client-serving';
 import { ArgumentsHost, Catch, ExceptionFilter, NotFoundException } from '@nestjs/common';
 
 import type { Request, Response } from 'express';
@@ -13,11 +12,13 @@ import path from 'node:path';
  * falls through to a post-init Express route), so the SPA fallback has to live
  * inside the Nest pipeline as a NotFound filter instead.
  *
- * Behaviour matches the legacy catch-all exactly: in production, an unmatched GET
- * returns index.html; everything else (non-GET, or dev where there is no built
- * client) keeps the standard TREK `{ error }` 404 envelope. The `@Catch(NotFoundException)`
- * is more specific than the global TrekExceptionFilter, so Nest routes 404s here
- * while every other error still flows through TrekExceptionFilter.
+ * Behaviour matches the legacy catch-all exactly: whenever the server is serving
+ * the client (production, or a desktop install with a built client staged — see
+ * shouldServeClient), an unmatched GET returns index.html; everything else
+ * (non-GET, or a checkout with no built client) keeps the standard TREK `{ error }`
+ * 404 envelope. The `@Catch(NotFoundException)` is more specific than the global
+ * TrekExceptionFilter, so Nest routes 404s here while every other error still
+ * flows through TrekExceptionFilter.
  */
 @Catch(NotFoundException)
 export class SpaFallbackFilter implements ExceptionFilter {
@@ -26,15 +27,15 @@ export class SpaFallbackFilter implements ExceptionFilter {
     const req = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();
 
-    // Case-sensitive on purpose (legacy parity).
-    if (readEnv().app.nodeEnv === 'production' && req.method === 'GET') {
+    if (shouldServeClient() && req.method === 'GET') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
       return;
     }
 
-    // Non-production, or a non-GET miss: keep the standard TREK 404 envelope
-    // (identical to what TrekExceptionFilter produces for a NotFoundException).
+    // Not serving the client, or a non-GET miss: keep the standard TREK 404
+    // envelope (identical to what TrekExceptionFilter produces for a
+    // NotFoundException).
     res.status(404).json({ error: exception.message || 'Not Found' });
   }
 }

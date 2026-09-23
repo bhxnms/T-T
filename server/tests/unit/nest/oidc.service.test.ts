@@ -30,6 +30,7 @@ import { resetTestDb } from '../../helpers/test-db';
 import { generateKeyPairSync } from 'crypto';
 import type { Request, Response } from 'express';
 import jwtLib from 'jsonwebtoken';
+import fs from 'node:fs';
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
 
 // ── DB setup ──────────────────────────────────────────────────────────────────
@@ -313,6 +314,19 @@ describe('frontendUrl', () => {
     process.env.NODE_ENV = 'production';
     expect(svc.frontendUrl('/login?oidc_code=abc')).toBe('/login?oidc_code=abc');
     delete process.env.NODE_ENV;
+  });
+
+  // The desktop package (v0.7.1) leaves NODE_ENV unset while serving the client
+  // itself, so keying on NODE_ENV alone redirected the OIDC callback at a Vite
+  // dev server that does not exist on the user's machine.
+  it('OIDC-SVC-016b: returns bare path when the server serves the client itself', () => {
+    delete process.env.NODE_ENV;
+    const spy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    try {
+      expect(svc.frontendUrl('/login?oidc_code=abc')).toBe('/login?oidc_code=abc');
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 

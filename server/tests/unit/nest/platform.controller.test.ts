@@ -1,3 +1,4 @@
+import { hasBuiltClient, shouldServeClient } from '../../../src/nest/platform/client-serving';
 import {
   applyPlatformUploads,
   applyPlatformSpa,
@@ -9,6 +10,7 @@ import type { StorageService } from '../../../src/nest/storage/storage.service';
 import { StorageNotFoundError, StorageInvalidKeyError } from '../../../src/nest/storage/storage.types';
 import { NotFoundException } from '@nestjs/common';
 
+import fs from 'node:fs';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // --- hoisted mock fns so the vi.mock factories can reference them -----------------
@@ -94,8 +96,20 @@ function makeRes() {
   return res;
 }
 
+// The serving gate reads the disk (does a built client exist in PUBLIC_DIR?).
+// Pin it per-test so these cases describe the GATE rather than whatever the
+// checkout happens to contain; the desktop-mode block below flips it to true.
+// Restored by hand rather than via vi.restoreAllMocks(), which would also reset
+// the vi.fn()/vi.mock() fixtures this file depends on.
+let existsSyncSpy: ReturnType<typeof vi.spyOn>;
+
 beforeEach(() => {
   vi.clearAllMocks();
+  existsSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+});
+
+afterEach(() => {
+  existsSyncSpy.mockRestore();
 });
 
 describe('applyPlatformUploads', () => {
@@ -477,5 +491,85 @@ describe('SpaFallbackFilter', () => {
     Object.defineProperty(exc, 'message', { value: '' });
     new SpaFallbackFilter().catch(exc, host({ method: 'GET' }, res));
     expect(res.body).toEqual({ error: 'Not Found' });
+  });
+});
+
+/**
+ * The Windows portable package regression (v0.7.1 shipped broken).
+ *
+ * Its launcher deliberately leaves NODE_ENV unset — setting it to production
+ * also turns on `Secure` session cookies and HSTS, which break a plain-HTTP
+ * localhost install — so the old `nodeEnv === 'production'` gate refused to
+ * serve a client that WAS staged, and every page 404'd while /api/health
+ * answered 200. The gate now asks whether a built client exists.
+ */
+describe('desktop mode (built client staged, NODE_ENV unset)', () => {
+  const original = process.env.NODE_ENV;
+  afterEach(() => {
+    if (original === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = original;
+  });
+
+  // Same ArgumentsHost stand-in the SpaFallbackFilter block above builds; kept
+  // local because that one lives inside its own describe scope.
+  function host(req: { method: string }, res: ReturnType<typeof makeRes>) {
+    return { switchToHttp: () => ({ getRequest: () => req, getResponse: () => res }) } as never;
+  }
+
+  it('hasBuiltClient follows the staged index.html', () => {
+    existsSyncSpy.mockReturnValue(true);
+    expect(hasBuiltClient()).toBe(true);
+    existsSyncSpy.mockReturnValue(false);
+    expect(hasBuiltClient()).toBe(false);
+  });
+
+  it('serves the client when a built client exists without NODE_ENV', () => {
+    delete process.env.NODE_ENV;
+    existsSyncSpy.mockReturnValue(true);
+    expect(shouldServeClient()).toBe(true);
+    const { app, calls } = fakeApp();
+    applyPlatformStatic(app);
+    expect(calls.some((c) => c.method === 'use')).toBe(true);
+  });
+
+  it('still serves the client in production with no staged client (unchanged)', () => {
+    process.env.NODE_ENV = 'production';
+    existsSyncSpy.mockReturnValue(false);
+    expect(shouldServeClient()).toBe(true);
+  });
+
+  it('does not serve a dev checkout (no build output, NODE_ENV unset)', () => {
+    delete process.env.NODE_ENV;
+    existsSyncSpy.mockReturnValue(false);
+    expect(shouldServeClient()).toBe(false);
+    const { app, calls } = fakeApp();
+    applyPlatformStatic(app);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('registers the SPA catch-all in desktop mode', () => {
+    delete process.env.NODE_ENV;
+    existsSyncSpy.mockReturnValue(true);
+    const { app, calls } = fakeApp();
+    applyPlatformSpa(app);
+    expect(calls.some((c) => c.method === 'get' && c.path === '/.*/')).toBe(true);
+  });
+
+  it('serves index.html for an unmatched GET in desktop mode', () => {
+    delete process.env.NODE_ENV;
+    existsSyncSpy.mockReturnValue(true);
+    const res = makeRes();
+    new SpaFallbackFilter().catch(new NotFoundException('nope'), host({ method: 'GET' }, res));
+    expect(res.headers['Cache-Control']).toBe('no-cache, no-store, must-revalidate');
+    expect(String(res.body)).toContain('index.html');
+  });
+
+  it('keeps the JSON 404 envelope in desktop mode for a non-GET miss', () => {
+    delete process.env.NODE_ENV;
+    existsSyncSpy.mockReturnValue(true);
+    const res = makeRes();
+    new SpaFallbackFilter().catch(new NotFoundException('gone'), host({ method: 'POST' }, res));
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toEqual({ error: 'gone' });
   });
 });
