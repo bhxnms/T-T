@@ -21,12 +21,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ "$(gh api "repos/${{ github.repository }}" --jq '.has_wiki' 2>/dev/null)" == "true" ]] && git ls-remote "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git" >/dev/null 2>&1; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::GitHub Wiki is disabled or has not been initialized; wiki deployment was skipped. Enable Wikis and create the first page to publish these documents."
+          set -uo pipefail
+          if [[ "$(gh api "repos/${{ github.repository }}" --jq '.has_wiki' 2>/dev/null)" != "true" ]]; then
+            echo "::error::GitHub Wiki is disabled for this repository. Enable it under Settings → Features → Wikis, then re-run this workflow."
+            exit 1
           fi
+          if ! git ls-remote "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git" >/dev/null 2>&1; then
+            # A repository that never had a wiki has no <repo>.wiki.git at all —
+            # GitHub creates it only when the FIRST page is saved from the web UI.
+            # Neither `git push` nor the REST API can create it, so this step
+            # cannot self-heal; it has to say what a human must click.
+            echo "::error::The wiki repository does not exist yet. GitHub creates it only when the first page is saved in the browser — open https://github.com/${{ github.repository }}/wiki and click 'Create the first page', then re-run this workflow."
+            exit 1
+          fi
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
       - name: Publish to GitHub wiki
         if: steps.wiki.outputs.available == 'true'
         uses: Andrew-Chen-Wang/github-wiki-action@v5
@@ -41,3 +50,18 @@ jobs:
           # and serves both languages from the bundled tree, which is the reader
           # that matters here; GitHub gets the canonical English set.
           ignore: zh/**
+
+      # Guard the outcome, not just the attempt: the failure this replaces was a
+      # deploy that reported success while every /wiki/ link in the README 404'd.
+      # Asserting that pages actually landed is what makes that impossible now.
+      - name: Verify pages were published
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          count=$(git ls-remote "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git" refs/heads/master 2>/dev/null | wc -l)
+          if [[ "$count" -eq 0 ]]; then
+            echo "::error::The wiki repository has no master branch after publishing — no pages were written."
+            exit 1
+          fi
+          echo "Wiki published: $count ref(s) present."
