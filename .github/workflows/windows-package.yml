@@ -82,11 +82,14 @@ jobs:
 
       - name: Smoke-test the package
         # Proves the things the build can get wrong without failing loudly: the
-        # staged app can load its native SQLite binding on Windows, and the
-        # launcher preflight reports a missing tree instead of crashing.
+        # staged app can load its native SQLite binding on Windows, and every
+        # required file is present. Paths are resolved to absolute first —
+        # Push-Location changes what a relative path means, and a probe file
+        # written outside the pushed directory is invisible from inside it.
         shell: pwsh
         run: |
-          $stage = "packaging/windows/out/TT-Travel-Planner"
+          $stage = (Resolve-Path "packaging/windows/out/TT-Travel-Planner").Path
+          $probe = Join-Path $PWD "probe.cjs"
 
           Write-Host "--- native sqlite binding (from the staged tree) ---"
           @'
@@ -97,21 +100,26 @@ jobs:
           const row = db.prepare('SELECT a FROM t').get();
           if (row.a !== 'ok') { console.error('roundtrip failed'); process.exit(1); }
           console.log('better-sqlite3 OK on win32:', process.platform, process.arch);
-          '@ | Out-File -FilePath probe.cjs -Encoding utf8
-          Push-Location "$stage/app/server"
-          node (Resolve-Path "../../../probe.cjs")
-          if ($LASTEXITCODE -ne 0) { throw "better-sqlite3 failed to load from the staged tree" }
-          Pop-Location
-          Remove-Item probe.cjs
+          '@ | Out-File -FilePath $probe -Encoding utf8
+
+          Push-Location (Join-Path $stage "app/server")
+          try {
+            node $probe
+            if ($LASTEXITCODE -ne 0) { throw "better-sqlite3 failed to load from the staged tree" }
+          } finally {
+            Pop-Location
+          }
+          Remove-Item $probe -Force
 
           Write-Host "--- required files ---"
           foreach ($p in @(
-            "$stage/TT Travel Planner.exe",
-            "$stage/runtime/node.exe",
-            "$stage/app/server/dist/index.js",
-            "$stage/app/server/public/index.html",
-            "$stage/app/wiki/Home.md"
+            "TT Travel Planner.exe",
+            "runtime/node.exe",
+            "app/server/dist/index.js",
+            "app/server/public/index.html",
+            "app/wiki/Home.md"
           )) {
-            if (-not (Test-Path -LiteralPath $p)) { throw "missing: $p" }
+            $full = Join-Path $stage $p
+            if (-not (Test-Path -LiteralPath $full)) { throw "missing: $p" }
           }
           Write-Host "OK"
