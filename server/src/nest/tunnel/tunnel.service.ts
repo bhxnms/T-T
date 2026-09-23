@@ -287,6 +287,14 @@ export class TunnelService {
     if (!this.isEnabled()) return null;
     const st = this.state();
     if (!st.configured || !st.public_url) return null;
+    // Gated on provisioning, not just on the form being complete: the snippet
+    // references a tunnel that only exists once provision() has run, and the two
+    // states are independent — a hostname edit invalidates provisioning while
+    // leaving every field filled. The panel happens to check `provisioned` before
+    // asking, but that is the caller's guard; this method's contract says the
+    // command is only available once the tunnel exists, so it enforces it here
+    // rather than depending on who is asking.
+    if (!st.provisioned) return null;
 
     const tokenVar = '${CLOUDFLARE_TUNNEL_TOKEN}';
     return {

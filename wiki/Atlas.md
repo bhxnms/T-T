@@ -56,6 +56,8 @@ Check-ins come from two sources, listed separately in the panel:
 The panel shows the **Check-ins** total at the top, then lists the two sources separately: landmarks with their name and province, trip places with their name and check-in date. Clicking a trip place's check-in marker opens a card showing the country/region it sits in, the check-in date, and a preview of the photos you have for that place in your trips (the block is absent when there are none). Every check-in can be undone: click a landmark again in its popup, or use the button at the bottom of a trip place's card.
 
 > **Check-ins also update your Atlas.** When you check in a trip place, Tourism-Team resolves its coordinates against the same bundled polygons the map colours and marks the corresponding **country** — and the sub-national region where one exists — as visited. Checking in is therefore a way of recording "I have been here" without going back to the map to click the country yourself. A failed lookup does not block the check-in itself; only that automatic marking is skipped.
+>
+> **Undoing a check-in does not undo the country.** That automatic marking is **one-way**: removing a place's check-in drops the check-in only, and leaves the country in your visited list. If the check-in was a mistake and you have never actually been there, remove that country's visited mark yourself by clicking it on the map (or from the stats).
 
 > **Note: check-in data lives in your browser.** Landmark check-ins and trip-place check-ins are both stored in the current browser's local storage and are **not synced to the server with your account**. Switching device or browser, or clearing browser data, does not carry them over. (Visited *countries* are stored server-side and are unaffected.)
 

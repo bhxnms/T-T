@@ -247,8 +247,19 @@ describe('TunnelService — probe', () => {
 });
 
 describe('TunnelService — connector command', () => {
-  it('TUNNEL-019: renders the token-mode sidecar once configured', () => {
+  /** Provision once, so the connector snippet is allowed to render. */
+  async function provisioned(): Promise<void> {
     service.update(complete);
+    findZoneIdForHostname.mockResolvedValue('zone-1');
+    findTunnelByName.mockResolvedValue(null);
+    createTunnel.mockResolvedValue({ id: 'tun-1', name: complete.tunnel_name, token: 'tok' });
+    putTunnelConfiguration.mockResolvedValue(undefined);
+    upsertTunnelDns.mockResolvedValue(undefined);
+    await service.provision();
+  }
+
+  it('TUNNEL-019: renders the token-mode sidecar once configured and provisioned', async () => {
+    await provisioned();
 
     const config = service.connectorConfig()!;
 
@@ -263,6 +274,29 @@ describe('TunnelService — connector command', () => {
 
   it('TUNNEL-020: nothing is rendered while the configuration is incomplete', () => {
     service.update({ enabled: true, account_id: complete.account_id });
+    expect(service.connectorConfig()).toBeNull();
+  });
+
+  it('TUNNEL-020b: nothing is rendered before the tunnel exists, however complete the form', () => {
+    // The snippet references a tunnel provision() has to create first, and the
+    // two states are independent: a hostname edit clears provisioning while
+    // leaving every field filled (TUNNEL-025). Without this gate the service
+    // handed out a command for a tunnel that did not exist — it was the panel's
+    // own `provisioned` check that hid it, so every other caller was exposed.
+    service.update(complete);
+    expect(service.state().configured).toBe(true);
+    expect(service.state().provisioned).toBe(false);
+
+    expect(service.connectorConfig()).toBeNull();
+  });
+
+  it('TUNNEL-020c: an invalidating edit takes the snippet away again', async () => {
+    await provisioned();
+    expect(service.connectorConfig()).not.toBeNull();
+
+    // Changing the hostname means the existing tunnel no longer matches what the
+    // form says, so the command must stop being offered until it is re-created.
+    service.update({ hostname: 'other.example.com' });
     expect(service.connectorConfig()).toBeNull();
   });
 });
