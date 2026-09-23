@@ -87,3 +87,7 @@ TT-HANDOFF.md
 # Kept on disk so a running investigation is not lost, never committed.
 removed_tmp.mjs
 repro_region.mjs
+
+# Windows package build output (~200 MB staged tree + zip + downloaded runtime).
+# Rebuilt by `node packaging/windows/build-windows.mjs`; never committed.
+packaging/windows/out/

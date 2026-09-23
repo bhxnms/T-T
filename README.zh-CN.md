@@ -257,6 +257,14 @@ docker run -d --name tt-planner --restart unless-stopped \
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。
 
+### Windows（免安装版，无需 Docker）
+
+针对单台 Windows 电脑另有免安装包：解压后双击启动器即可，无需 Docker，也无需预先安装 Node —— 运行时已内嵌。端口冲突在启动前处理（启动器自动顺延到下一个可用端口并明确告知），因为 Windows 上 3000/3001 经常被其他软件占用。
+
+> 该版本不支持从邮件/PDF 导入订单：它依赖一个仅以 Linux 二进制形式提供的 KDE 组件。其余功能均正常。
+
+从 [Releases](https://github.com/bhxnms/T-T/releases) 下载文件名以 `-win-x64.zip` 结尾的包，完整说明（防火墙提示、升级步骤等）见 [安装：Windows（免安装版）](https://github.com/bhxnms/T-T/wiki/Install-Windows)。
+
 ---
 
 ## ⚙️ 环境变量

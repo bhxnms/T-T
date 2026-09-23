@@ -345,6 +345,22 @@ docker run -d --name tt-planner --restart unless-stopped \
 Keep the generated `ENCRYPTION_KEY` backed up and reuse the same value when
 recreating the container. Do not put real secrets in Git.
 
+### Windows (portable, no Docker)
+
+For a single Windows PC there is a portable package: unzip it and double-click
+the launcher. No Docker, and no Node to install — the runtime is bundled. Port
+conflicts are handled before startup (the launcher moves to the next free port
+and tells you which), since 3000/3001 are frequently held by other software on
+Windows.
+
+> Booking import from e-mail/PDF is unavailable in this package: it needs a
+> KDE helper that ships as a Linux binary. Everything else works.
+
+Download the `-win-x64.zip` from
+[Releases](https://github.com/bhxnms/T-T/releases), or see
+[Install: Windows (portable)](https://github.com/bhxnms/T-T/wiki/Install-Windows)
+for the full walkthrough, firewall prompts and update steps.
+
 ### Environment variables
 
 | Variable                         | Purpose                                                      |

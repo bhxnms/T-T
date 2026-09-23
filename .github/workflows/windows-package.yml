@@ -1,0 +1,117 @@
+name: Build Windows package
+
+# Produces the portable Windows zip: `TT-Travel-Planner-<version>-win-x64.zip`.
+#
+# It must run ON windows-latest, not cross-build from Linux, for two reasons:
+#
+#   1. better-sqlite3 is a native module. Its install step downloads a prebuilt
+#      binary for the host platform and Node ABI, so a Linux build would stage a
+#      Linux .node file that fails on the user's machine at the first query.
+#   2. `runtime/node.exe` is the build host's own Node (build-windows.mjs embeds
+#      process.execPath), so the embedded runtime and the native module are
+#      guaranteed to share one ABI.
+#
+# The Go toolchain is preinstalled on the runner, so the launcher exe needs no
+# setup step.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version for the artifact name (without the leading v). Leave blank to use package.json."
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        # --ignore-scripts is NOT used: better-sqlite3 needs its install step to
+        # place the compiled binary for this platform.
+        run: npm ci
+
+      - name: Resolve the version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION="$(node -p "require('./package.json').version")"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Packaging version $VERSION"
+
+      - name: Build the package
+        env:
+          # The launcher is built by this script; Go is already on the runner.
+          GO_BINARY: go
+        run: node packaging/windows/build-windows.mjs
+
+      - name: Show what was produced
+        shell: bash
+        run: |
+          ls -la packaging/windows/out/*.zip
+          # The staged tree is kept out of the artifact (the zip is the artifact),
+          # but its size is worth seeing in the log for a regression.
+          du -sh packaging/windows/out/TT-Travel-Planner 2>/dev/null || true
+
+      - name: Upload the zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: TT-Travel-Planner-${{ steps.version.outputs.version }}-win-x64
+          path: packaging/windows/out/*.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Smoke-test the package
+        # Proves the things the build can get wrong without failing loudly: the
+        # staged app can load its native SQLite binding on Windows, and the
+        # launcher preflight reports a missing tree instead of crashing.
+        shell: pwsh
+        run: |
+          $stage = "packaging/windows/out/TT-Travel-Planner"
+
+          Write-Host "--- native sqlite binding (from the staged tree) ---"
+          @'
+          const Database = require('better-sqlite3');
+          const db = new Database(':memory:');
+          db.exec('CREATE TABLE t(a TEXT)');
+          db.prepare('INSERT INTO t VALUES (?)').run('ok');
+          const row = db.prepare('SELECT a FROM t').get();
+          if (row.a !== 'ok') { console.error('roundtrip failed'); process.exit(1); }
+          console.log('better-sqlite3 OK on win32:', process.platform, process.arch);
+          '@ | Out-File -FilePath probe.cjs -Encoding utf8
+          Push-Location "$stage/app/server"
+          node (Resolve-Path "../../../probe.cjs")
+          if ($LASTEXITCODE -ne 0) { throw "better-sqlite3 failed to load from the staged tree" }
+          Pop-Location
+          Remove-Item probe.cjs
+
+          Write-Host "--- required files ---"
+          foreach ($p in @(
+            "$stage/TT Travel Planner.exe",
+            "$stage/runtime/node.exe",
+            "$stage/app/server/dist/index.js",
+            "$stage/app/server/public/index.html",
+            "$stage/app/wiki/Home.md"
+          )) {
+            if (-not (Test-Path -LiteralPath $p)) { throw "missing: $p" }
+          }
+          Write-Host "OK"

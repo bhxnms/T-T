@@ -3,6 +3,7 @@
 - [[快速开始|Quick-Start]]
 - [[安装：Docker|Install-Docker]]
 - [[安装：Docker Compose|Install-Docker-Compose]]
+- [[安装：Windows（免安装版）|Install-Windows]]
 - [[安装：Helm|Install-Helm]]
 - [[安装：Proxmox VE (LXC)|Install-Proxmox]]
 - [[安装：Unraid|Install-Unraid]]

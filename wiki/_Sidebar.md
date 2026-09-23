@@ -3,6 +3,7 @@
 - [[Quick Start|Quick-Start]]
 - [[Install: Docker|Install-Docker]]
 - [[Install: Docker Compose|Install-Docker-Compose]]
+- [[Install: Windows (portable)|Install-Windows]]
 - [[Install: Helm|Install-Helm]]
 - [[Install: Proxmox VE (LXC)|Install-Proxmox]]
 - [[Install: Unraid|Install-Unraid]]
