@@ -65,8 +65,8 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 - **Journey Studio**: Create rich travel journals with photos, videos, mood tracking, and weather
 - **Interactive Atlas**: Track visited countries and regions on a visual world map
-- **China Province Landmarks**: 34 provinces with 200+ landmarks and check-in functionality
-- **Modern Icons**: Beautiful, intuitive icons for 20+ landmark types
+- **China Province Landmarks**: 34 provinces with 89 landmarks and check-in functionality
+- **Modern Icons**: Beautiful, intuitive icons for 20 landmark types
 - **Vacation Calendar**: Track leave days and public holidays
 - **Collections**: Organize and tag places for future reference
 
@@ -432,7 +432,7 @@ TT supports multiple map providers:
 ### Atlas - China Provinces
 
 - 34 provinces, municipalities, and special administrative regions
-- 200+ famous landmarks across China
+- 89 famous landmarks across China
 - Check-in functionality for visited landmarks
 - Beautiful modern icons for different landmark types
 - Interactive province tooltips with Chinese names
