@@ -18,7 +18,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.7.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.7.2-blue?style=flat-square)
 
 ---
 
@@ -75,7 +75,34 @@
 
 ---
 
-## 🆕 v0.7.1 更新
+## 🆕 v0.7.2 更新
+
+**如果你下载了 0.7.1 的 Windows 免安装包，这一版修好了它 —— 请重新下载。**
+包能正常启动、`/api/health` 也有响应，但打开任何页面都是 404。这不是你的机器
+或解压方式的问题。
+
+### 修复
+
+- **Windows 免安装包不提供任何页面（0.7.1 回归）。** 服务端只在
+  `NODE_ENV=production` 时才提供构建好的前端，而启动器刻意不设置它 —— 因为
+  production 会同时开启 `Secure` 会话 cookie 和 HSTS，而这两者会破坏纯 HTTP 的
+  `http://localhost` 安装：浏览器会静默丢弃 cookie，于是登录**看起来**成功了，
+  却立刻被弹回登录页。同一个开关在回答两个不同的问题。现在改为判断「是否真的
+  存在构建好的前端」—— 这才是它本来要问的问题 —— 而 cookie 与 HSTS 的行为
+  完全不变。开发检出（没有构建产物）仍照旧使用 Vite 开发服务器。
+- **桌面版安装的 OIDC 回调跳转到了错误地址。** 同一个根因、同样是一行的形态：
+  回调地址也是用 `NODE_ENV` 拼出来的，因此在免安装包上用 SSO 登录会被送到用户
+  机器上并不存在的 5173 端口 Vite 开发服务器。这个缺陷在「所有页面都 404」的
+  状态下无法触达，所以此前没有被单独报告。
+
+### 本版还包括
+
+- 覆盖服务开关与桌面版 cookie 行为的回归测试，避免日后有人靠悄悄打开生产环境
+  安全设置来「修好」页面，却把纯 HTTP 下的登录弄坏。
+
+---
+
+## 0.7.1（详情）
 
 ### Windows 免安装包
 
@@ -224,7 +251,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.7.1
+IMAGE_TAG=0.7.2
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -264,7 +291,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.7.1
+docker pull ghcr.io/bhxnms/tt-planner:0.7.2
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -274,7 +301,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.7.1
+  ghcr.io/bhxnms/tt-planner:0.7.2
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。

@@ -18,7 +18,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.7.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.7.2-blue?style=flat-square)
 
 ---
 
@@ -78,7 +78,39 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.7.1
+## 🆕 What's New in v0.7.2
+
+**If you downloaded the 0.7.1 Windows package, this release fixes it — please
+download again.** The app started and answered `/api/health`, then showed a 404
+on every page. Nothing was wrong with your machine or your extraction.
+
+### Fixed
+
+- **The portable Windows package served no pages (0.7.1 regression).** The
+  server only served the built frontend when `NODE_ENV` was `production`, and the
+  launcher deliberately leaves that unset — because production also switches on
+  `Secure` session cookies and HSTS, which break a plain-HTTP `http://localhost`
+  install: the browser silently drops the cookie, so login *appears* to work and
+  then bounces straight back to the login page. One switch was answering two
+  different questions. Serving the frontend now asks whether a built client
+  actually exists — the question it always meant — and the cookie and HSTS
+  behaviour is untouched. A dev checkout (no build output) still uses the Vite
+  dev server exactly as before.
+- **The OIDC callback redirected to the wrong place on desktop installs.** Same
+  root cause, same one-line shape: the callback URL was built from `NODE_ENV`
+  too, so an SSO login on the portable package was sent to a Vite dev server on
+  port 5173 that does not exist on the user's machine. It was unreachable while
+  every page 404'd, which is why it never got reported on its own.
+
+### Also in this release
+
+- Regression tests covering both the serving gate and the desktop cookie
+  behaviour, so a future change cannot "fix" a page by quietly turning on
+  production security settings over plain HTTP.
+
+---
+
+## 0.7.1 (detail)
 
 ### A portable Windows package
 
@@ -325,7 +357,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.7.1`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.7.2`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -375,7 +407,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.7.1 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.7.2 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
