@@ -60,8 +60,22 @@ const WINDOWS_NODE_VERSION = process.env.WINDOWS_NODE_VERSION || 'v24.11.0';
 const say = (msg) => process.stdout.write(`${msg}\n`);
 const step = (msg) => say(`\n[build] ${msg}`);
 
+/**
+ * Run a command, inheriting stdio.
+ *
+ * On Windows this goes through cmd.exe, which splits arguments on spaces — so
+ * anything containing one has to be quoted or it arrives as two arguments. That
+ * is not hypothetical: `-ldflags=-s -w` reached Go as `-ldflags=-s` plus a bare
+ * `-w`, which Go rejects, and the launcher output path contains the space in
+ * "TT Travel Planner.exe". Quoting here rather than at each call site means a
+ * future argument with a space cannot silently reintroduce the same failure.
+ *
+ * On Linux no shell is involved, so argv is passed through verbatim and the
+ * function is a plain passthrough.
+ */
 function run(cmd, args, opts = {}) {
-  execFileSync(cmd, args, { stdio: 'inherit', cwd: REPO, shell: process.platform === 'win32', ...opts });
+  const finalArgs = isWindows ? args.map((a) => (/\s/.test(a) ? `"${a}"` : a)) : args;
+  execFileSync(cmd, finalArgs, { stdio: 'inherit', cwd: REPO, shell: isWindows, ...opts });
 }
 
 function version() {
@@ -393,7 +407,12 @@ function copyRuntime() {
   say(`[build]   extracted node.exe from ${archive}`);
 }
 
-/** Compile the launcher exe. */
+/**
+ * Compile the launcher exe.
+ *
+ * `run` quotes what needs it, so `-ldflags=-s -w` and the spaced output path
+ * survive cmd.exe intact on Windows.
+ */
 function buildLauncher() {
   step('building the launcher');
   const dir = path.join(HERE, 'launcher');
