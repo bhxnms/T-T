@@ -82,3 +82,8 @@ TT-HANDOFF.md
 # Agent/session working files — never commit
 .zcode/
 .zcodeignore
+
+# Throwaway Atlas geometry probes (ad-hoc investigation scripts, not tooling).
+# Kept on disk so a running investigation is not lost, never committed.
+removed_tmp.mjs
+repro_region.mjs
