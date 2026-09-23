@@ -58,8 +58,13 @@ You need:
      dashboard, not a hostname.
    - **Public hostname** — the address you will use, e.g. `tt.example.com`. It must be inside a zone
      on this account.
-   - **Service port** — leave at `3000` for the shipped Docker image. It is the port the connector
-     uses to reach the app inside the Docker network.
+   - **Service host** — where the connector reaches the app. Leave it at `app` when the connector
+     runs as a sidecar in the same Docker network (what the shipped compose file sets up). Set it to
+     `localhost` for any install where the connector is **not** a sibling container — the portable
+     Windows package, bare metal, LXC, or a connector run from the host in front of a container whose
+     port is published. The panel pre-fills the right one for your install.
+   - **Service port** — the panel fills in the port this instance is actually listening on, so you
+     normally leave it alone. Change it only if you moved the app or put a proxy in front of it.
 4. Press **Save**.
 
 The panel lists which fields are still missing, so a half-filled form tells you what it is waiting
@@ -82,7 +87,8 @@ The test does not save anything and does not create anything.
 Press **Create the tunnel**. In one action the panel:
 
 1. Creates the tunnel (or reuses an existing tunnel with the same name — running it twice is safe).
-2. Writes the tunnel's ingress rules so the public hostname routes to `http://app:3000`.
+2. Writes the tunnel's ingress rules so the public hostname routes to the service host and port from
+   the form (`http://app:3000` on a Docker install that kept the defaults).
 3. Creates the DNS record pointing your hostname at the tunnel.
 4. Displays the **connector token**.
 
@@ -96,8 +102,11 @@ That is the whole reason this flow needs no `cloudflared tunnel create` and no i
 
 ## Step 4 — Run the connector
 
-The panel renders the exact snippet to paste. For a Compose deployment, add a second service next
-to your existing `app` service:
+The panel renders the instructions for **your** install, and the two cases are genuinely different.
+
+### In Docker (the connector is a sidecar)
+
+Add a second service next to your existing `app` service:
 
 ```yaml
 services:
@@ -114,14 +123,37 @@ services:
 
 Put the token you copied into `CLOUDFLARE_TUNNEL_TOKEN`, then `docker compose up -d`.
 
-Not using Compose? The equivalent single command is:
+The connector joins the same network as the app, which is why the service host is `app` — that name
+resolves inside the compose network and nowhere else.
+
+### Not in Docker (the connector runs on the same machine)
+
+The portable Windows package, a bare-metal or LXC install, and a connector run from the host all
+take the same shape: download cloudflared and run one command. There is no compose network to join,
+so the service host is `localhost`.
+
+1. Download `cloudflared` for your platform from Cloudflare's
+   [releases page](https://github.com/cloudflare/cloudflared/releases) — on Windows take
+   `cloudflared-windows-amd64.exe`.
+2. Run it with the token from step 3:
 
 ```bash
 cloudflared tunnel --no-autoupdate run --token <your-connector-token>
 ```
 
-That is also the whole setup for a systemd unit or a host install — there is no config file to
-write.
+On Windows, rename the download to `cloudflared.exe` and run it from a terminal in that folder:
+
+```powershell
+.\cloudflared.exe tunnel --no-autoupdate run --token <your-connector-token>
+```
+
+There is no config file to write, and no `cloudflared tunnel create` to run: the routing rules
+already live in Cloudflare's configuration, which the panel wrote for you.
+
+> **The service host is the field that breaks silently.** Point the connector at a name it cannot
+> resolve — `app` outside Docker, `localhost` from a sidecar — and the connector starts cleanly, the
+> hostname resolves, and every request answers **502**. If that happens, check the service host and
+> port in the panel against what the app is actually listening on; the panel shows both.
 
 > **Point it at `app`, not `localhost`.** Inside a Compose network the connector reaches the app by
 > its service name on the container port. The panel already wrote the right target into Cloudflare's
@@ -187,7 +219,7 @@ If you want the tunnel gone entirely:
 |---|---|
 | `Invalid API Token` on test | Token is wrong, revoked, or lacks the two permissions above. |
 | `No zone in this account owns that hostname` | The domain is not added to this Cloudflare account, or you typed a hostname under a domain you do not have. |
-| Connector starts, hostname returns 502 | The connector cannot reach the app. Check the service name and port in the tunnel's ingress rules. |
+| Connector starts, hostname returns 502 | The connector cannot reach the app. Check the service host and port in the tunnel's ingress rules — `app` only resolves inside the Docker network, so a native install needs `localhost`. |
 | Login works but the session does not stick | `TRUST_PROXY` is wrong, or `APP_URL` does not match the hostname you are visiting. |
 | Emails contain `localhost` links | `APP_URL` is unset. |
 | Changes to the panel do nothing | The feature is off; the panel only applies while enabled. |
@@ -326,7 +358,8 @@ exactly these**.
    | **API Token** | The token you copied in step 4 |
    | **Tunnel name** | Any label, e.g. `tt-planner`. It is a label, **not a web address** |
    | **Public hostname** | The address you want, e.g. `tt.example.com`. It must sit under the domain from step 2 |
-   | **Service port** | **Leave this at `3000`** (unless you changed your Docker setup) |
+   | **Service host** | Leave the pre-filled value. `app` on Docker, `localhost` everywhere else — see step 8 |
+   | **Service port** | Leave the pre-filled value: the panel fills in the port this instance is listening on |
 
 5. Click **Save**.
 
@@ -355,7 +388,7 @@ Click **Test connection**.
 1. Click **Create the tunnel**. The panel does all of this for you (you do not touch the Cloudflare
    dashboard):
    - creates the tunnel (reusing one with the same name, so clicking twice is safe)
-   - writes the routing rule that points your public hostname at `http://app:3000`
+   - writes the routing rule that points your public hostname at the service host and port from the form
    - creates the DNS record
 2. When it finishes, the panel displays the **connector token**.
 
@@ -406,13 +439,23 @@ container yourself. This is the only step where you start something new.
 
 **If you are not using compose (installing cloudflared directly):**
 
-Install `cloudflared` on the host and run one command — there is no config file to write:
+This is the path for the portable Windows package, bare metal and LXC. There is no compose network,
+so the **Service host** in the panel must be `localhost` — with `app` the connector would start fine
+and every request would answer 502.
 
-```bash
-cloudflared tunnel --no-autoupdate run --token paste-your-connector-token
-```
+1. Download `cloudflared` from Cloudflare's
+   [releases page](https://github.com/cloudflare/cloudflared/releases). On Windows take
+   `cloudflared-windows-amd64.exe` and rename it to `cloudflared.exe`.
+2. Run one command — there is no config file to write:
+   ```bash
+   cloudflared tunnel --no-autoupdate run --token paste-your-connector-token
+   ```
+   On Windows, from a terminal in the folder holding the download:
+   ```powershell
+   .\cloudflared.exe tunnel --no-autoupdate run --token paste-your-connector-token
+   ```
 
-To start it on boot, wrap that in a systemd unit. Still **no `config.yml`**.
+To start it on boot, wrap that in a systemd unit on Linux. Still **no `config.yml`**.
 
 **Anything to run:** one `cloudflared` container (or process). **That is the only one.**
 
@@ -529,7 +572,7 @@ docker compose up -d
 | Saving does nothing | The enable switch is off | Turn it on (step 5), then save |
 | Test says no zone owns the hostname | Domain not on this account, or a typo | Recheck step 2 — the domain must be Active |
 | Panel says "not created" though you created it | You changed the public hostname | Expected; click **Create the tunnel** again |
-| Connector is up but the hostname returns 502 | Connector cannot reach the app | Check `docker compose logs tunnel`; confirm the service port is `3000` |
+| Connector is up but the hostname returns 502 | Connector cannot reach the app | Check the connector's own log; confirm the service host and port match what the app is listening on (`app` inside Docker, `localhost` outside it) |
 | Login works but the session does not stick | `TRUST_PROXY` is wrong | Use `1` for Cloudflare directly |
 | Emails contain `localhost` links | `APP_URL` is unset | Set it (step 9) and restart |
 | No "Cloudflare Tunnel" menu at all | The instance is in managed mode | Managed instances are configured by the hoster; the tab is hidden |

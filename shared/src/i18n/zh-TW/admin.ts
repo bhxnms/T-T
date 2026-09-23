@@ -226,7 +226,7 @@ const admin: TranslationStrings = {
     'The domain that will reach this instance, e.g. tt.example.com. It must be on a zone in this account.',
   'admin.tunnel.servicePort': 'Service port',
   'admin.tunnel.servicePortHint':
-    'The port the connector uses to reach the app inside its Docker network. Default 3000.',
+    'The port the connector dials. This instance is listening on {port} - the app fills that in for you, and you only need to change it if you moved the app or put a proxy in front of it.',
   'admin.tunnel.toggleTokenVisibility': 'Show or hide the token',
   'admin.tunnel.missing': 'Still missing: {fields}',
   'admin.tunnel.field.account_id': 'Account ID',
@@ -257,6 +257,15 @@ const admin: TranslationStrings = {
     'Copy this now — it is shown once and not stored by the app. The sidecar uses it to authenticate.',
   'admin.tunnel.connectorCompose': 'docker-compose sidecar',
   'admin.tunnel.connectorCommand': 'Or run directly',
+  'admin.tunnel.serviceHost': 'Service host',
+  'admin.tunnel.serviceHostHintDocker':
+    'The address the connector dials. In this Docker setup the connector is a sidecar in the same network, so the compose service name app is correct - change it only if you renamed the service.',
+  'admin.tunnel.serviceHostHintNative':
+    'The address the connector dials. This install is not running in Docker, so the connector runs on this machine and reaches the app at localhost. Change it only if you put a reverse proxy in between.',
+  'admin.tunnel.connectorNativeTitle': 'Run the connector',
+  'admin.tunnel.connectorNativeIntro':
+    'This install is not running in Docker, so there is no compose sidecar. Download cloudflared for your platform and run it on this machine - it needs no config file, because the routing rules already live in Cloudflare.',
+  'admin.tunnel.connectorTarget': 'The connector will reach the app at {target}.',
   'admin.tunnel.error.incomplete': 'Fill in all fields first.',
   'admin.tunnel.error.no_zone_for_hostname':
     'No zone in this account owns that hostname. Add the domain to Cloudflare first, or use a hostname under a zone you already have.',

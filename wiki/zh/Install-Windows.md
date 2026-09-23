@@ -98,6 +98,38 @@ app\server\uploads\   上传的文件
 
 停止应用后把两者复制走即可。管理面板的 **管理 → 备份** 也能生成归档，具体包含内容见[备份](Backups)。
 
+## 从外网访问：Cloudflare 隧道
+
+管理面板的 **管理 → Cloudflare 隧道** 在这里同样可用，但与 [Cloudflare 隧道](Cloudflare-Tunnel) 里的 Docker 说明有一处不同：本包没有 compose 网络，连接器作为本机上的普通程序运行。
+
+面板中因此有两项不同：
+
+| 字段 | Docker | 本包 |
+|---|---|---|
+| **服务主机** | `app`（compose 服务名） | **`localhost`** —— `app` 在容器网络之外无法解析 |
+| **服务端口** | `3000`（镜像固定端口） | **启动器实际选中的端口** —— 面板会自动填入本实例正在监听的端口，保持默认即可 |
+
+面板会针对原生安装自动填好这两项，所以实际操作中你直接接受默认值即可。
+
+然后在同一台机器上运行连接器：
+
+1. 从 Cloudflare 的 [releases 页面](https://github.com/cloudflare/cloudflared/releases) 下载 `cloudflared-windows-amd64.exe`，改名为 `cloudflared.exe`。
+2. 在该目录打开终端，运行面板给出的命令，并填入隧道教程第 3 步得到的连接器令牌：
+
+   ```powershell
+   .\cloudflared.exe tunnel --no-autoupdate run --token <你的连接器令牌>
+   ```
+
+   不需要写配置文件 —— 路由规则已经存放在 Cloudflare 的配置里。
+
+这个窗口需要和应用窗口一起保持开启。若希望连接器开机自启，可将其注册为 Windows 服务（需在**管理员**终端中执行）：
+
+```powershell
+.\cloudflared.exe service install <你的连接器令牌>
+```
+
+> **域名返回 502 说明服务主机填错了。** 连接器会正常启动、DNS 也能解析，但每个请求都失败 —— 因为它拨向了一个无法访问的地址。本包的正确值是 `localhost` 加上启动器启动时打印的端口。
+
 ## Windows 上不可用的功能
 
 - **从邮件或 PDF 导入订单。** 它依赖 `kitinerary-extractor`，一个以 Linux 二进制形式提供的 KDE 组件。应用检测不到时会禁用该导入路径；替代方案是 AI 解析（见 [AI 订单导入](AI-Booking-Import)），其余功能不受影响。

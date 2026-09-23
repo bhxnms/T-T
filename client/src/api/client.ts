@@ -742,8 +742,16 @@ export const adminApi = {
   // Cloudflare round trips, so it gets a ceiling well above the 8s default.
   provisionTunnel: (): Promise<CloudflareTunnelProvisionResult> =>
     apiClient.post('/admin/tunnel/provision', undefined, { timeout: 60_000 }).then(r => r.data),
-  getTunnelConnector: (): Promise<{ available: boolean; compose?: string; command?: string; env?: string }> =>
-    apiClient.get('/admin/tunnel/connector').then(r => r.data),
+  // `compose` is null for a native install (there is no container network to
+  // join), and `target` is the local address the ingress was pointed at — shown
+  // so the operator can see what the connector is actually dialling.
+  getTunnelConnector: (): Promise<{
+    available: boolean;
+    compose?: string | null;
+    command?: string;
+    env?: string;
+    target?: string;
+  }> => apiClient.get('/admin/tunnel/connector').then(r => r.data),
 }
 
 export const addonsApi = {

@@ -183,8 +183,14 @@ const admin: TranslationStrings = {
   'admin.tunnel.tunnelNameHint': '要创建或复用的隧道名称。点击测试按钮可列出账户中已有的名称。',
   'admin.tunnel.hostname': '公开域名',
   'admin.tunnel.hostnameHint': '用于访问本实例的域名，例如 tt.example.com，必须属于本账户下的某个区域。',
+  'admin.tunnel.serviceHost': '服务主机',
+  'admin.tunnel.serviceHostHintDocker':
+    '连接器要访问的地址。当前是 Docker 部署，连接器与应用同处一个网络，因此填 compose 服务名 app 即可 —— 只有你改过服务名时才需要修改。',
+  'admin.tunnel.serviceHostHintNative':
+    '连接器要访问的地址。当前不是 Docker 部署，连接器运行在本机、通过 localhost 访问应用 —— 只有你在中间加了反向代理时才需要修改。',
   'admin.tunnel.servicePort': '服务端口',
-  'admin.tunnel.servicePortHint': '连接器在 Docker 网络内访问应用的端口，默认 3000。',
+  'admin.tunnel.servicePortHint':
+    '连接器要访问的端口。本实例正在监听 {port} —— 应用已自动填好，只有你迁移过应用或在前面加了代理时才需要修改。',
   'admin.tunnel.toggleTokenVisibility': '显示或隐藏令牌',
   'admin.tunnel.missing': '仍缺少：{fields}',
   'admin.tunnel.field.account_id': '账户 ID',
@@ -213,6 +219,10 @@ const admin: TranslationStrings = {
   'admin.tunnel.connectorTokenHint': '请立即复制——此令牌只显示一次，应用不会保存。连接器用它进行身份验证。',
   'admin.tunnel.connectorCompose': 'docker-compose sidecar',
   'admin.tunnel.connectorCommand': '或直接运行',
+  'admin.tunnel.connectorNativeTitle': '运行连接器',
+  'admin.tunnel.connectorNativeIntro':
+    '当前不是 Docker 部署，因此没有 compose sidecar。请下载对应平台的 cloudflared 并在本机运行 —— 不需要配置文件，路由规则已经写在 Cloudflare 里了。',
+  'admin.tunnel.connectorTarget': '连接器将访问 {target}。',
   'admin.tunnel.error.incomplete': '请先填写所有字段。',
   'admin.tunnel.error.no_zone_for_hostname':
     '该账户下没有管理此域名的区域。请先把域名添加到 Cloudflare，或使用已有区域下的域名。',

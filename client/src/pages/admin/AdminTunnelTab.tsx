@@ -43,9 +43,10 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
   const [showToken, setShowToken] = useState(false);
   const [connector, setConnector] = useState<{
     available: boolean;
-    compose?: string;
+    compose?: string | null;
     command?: string;
     env?: string;
+    target?: string;
   } | null>(null);
   const [provisioning, setProvisioning] = useState(false);
   // The connector token is shown once, right after provisioning: it is the one
@@ -59,6 +60,7 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
   const [token, setToken] = useState('');
   const [tunnelName, setTunnelName] = useState('');
   const [hostname, setHostname] = useState('');
+  const [serviceHost, setServiceHost] = useState('app');
   const [servicePort, setServicePort] = useState('3000');
 
   const applyState = useCallback((next: CloudflareTunnelState) => {
@@ -67,6 +69,11 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
     setToken(next.api_token);
     setTunnelName(next.tunnel_name);
     setHostname(next.hostname);
+    setServiceHost(next.service_host);
+    // From the server's own listening port rather than a constant: it is the one
+    // component that knows which port it actually bound (the portable Windows
+    // launcher picks a free one and never tells it otherwise), so a hardcoded
+    // default here would aim the connector at a port nothing is listening on.
     setServicePort(String(next.service_port));
   }, []);
 
@@ -100,6 +107,7 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
         api_token: token,
         tunnel_name: tunnelName,
         hostname,
+        service_host: serviceHost,
         service_port: Number.parseInt(servicePort, 10) || 3000,
         ...patch,
       });
@@ -304,6 +312,26 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
               </div>
 
               <div>
+                <label className={labelCls} htmlFor="cf-host">
+                  {t('admin.tunnel.serviceHost')}
+                </label>
+                <input
+                  id="cf-host"
+                  className={fieldCls}
+                  value={serviceHost}
+                  onChange={(e) => setServiceHost(e.target.value)}
+                  placeholder={state?.in_docker ? 'app' : 'localhost'}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <p className={hintCls}>
+                  {state?.in_docker
+                    ? t('admin.tunnel.serviceHostHintDocker')
+                    : t('admin.tunnel.serviceHostHintNative')}
+                </p>
+              </div>
+
+              <div>
                 <label className={labelCls} htmlFor="cf-port">
                   {t('admin.tunnel.servicePort')}
                 </label>
@@ -316,7 +344,9 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
                   value={servicePort}
                   onChange={(e) => setServicePort(e.target.value)}
                 />
-                <p className={hintCls}>{t('admin.tunnel.servicePortHint')}</p>
+                <p className={hintCls}>
+                  {t('admin.tunnel.servicePortHint', { port: String(state?.listening_port ?? '') })}
+                </p>
               </div>
             </div>
 
@@ -407,28 +437,44 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
             </div>
           )}
 
-          {connector?.available && connector.compose ? (
+          {connector?.available ? (
             <div className="space-y-4">
-              <div>
-                <div className="mb-1 flex items-center justify-between">
-                  <span className={labelCls}>{t('admin.tunnel.connectorCompose')}</span>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-accent"
-                    onClick={() => copy(connector.compose!, t('admin.tunnel.connectorCompose'))}
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    {t('common.copy')}
-                  </button>
+              {/* What the ingress actually points at. Worth showing rather than
+                  hiding in a config file: a connector dialling the wrong host or
+                  port starts cleanly and answers 502, which is hard to trace. */}
+              {connector.target && (
+                <p className="text-xs text-content-secondary">
+                  {t('admin.tunnel.connectorTarget', { target: connector.target })}
+                </p>
+              )}
+
+              {/* Compose only when the connector can be a sibling container. A
+                  native install (the Windows package, bare metal) has no compose
+                  network to join, so it gets the binary instructions alone. */}
+              {connector.compose && (
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className={labelCls}>{t('admin.tunnel.connectorCompose')}</span>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-accent"
+                      onClick={() => copy(connector.compose!, t('admin.tunnel.connectorCompose'))}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      {t('common.copy')}
+                    </button>
+                  </div>
+                  <pre className="overflow-x-auto rounded-lg border border-edge bg-surface-secondary p-3 text-xs text-content">
+                    {connector.compose}
+                  </pre>
                 </div>
-                <pre className="overflow-x-auto rounded-lg border border-edge bg-surface-secondary p-3 text-xs text-content">
-                  {connector.compose}
-                </pre>
-              </div>
+              )}
 
               <div>
                 <div className="mb-1 flex items-center justify-between">
-                  <span className={labelCls}>{t('admin.tunnel.connectorCommand')}</span>
+                  <span className={labelCls}>
+                    {connector.compose ? t('admin.tunnel.connectorCommand') : t('admin.tunnel.connectorNativeTitle')}
+                  </span>
                   <button
                     type="button"
                     className="inline-flex items-center gap-1 text-xs font-semibold text-accent"
@@ -438,6 +484,9 @@ export default function AdminTunnelTab({ t }: AdminTunnelTabProps): React.ReactE
                     {t('common.copy')}
                   </button>
                 </div>
+                {!connector.compose && (
+                  <p className="mb-2 text-xs text-content-secondary">{t('admin.tunnel.connectorNativeIntro')}</p>
+                )}
                 <pre className="overflow-x-auto rounded-lg border border-edge bg-surface-secondary p-3 text-xs text-content">
                   {connector.command}
                 </pre>

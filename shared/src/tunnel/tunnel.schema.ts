@@ -52,8 +52,33 @@ export const cloudflareHostnameSchema = z
     'must be a hostname like tt.example.com',
   );
 
-/** Port the connector should reach the app on, inside the Docker network. */
+/** Port the connector should reach the app on. See `service_host` for the other half. */
 export const cloudflareServicePortSchema = z.number().int().min(1).max(65535);
+
+/**
+ * Where the connector should reach the app, from the connector's own point of
+ * view. Two legitimate answers, which is why this is a setting rather than a
+ * constant:
+ *
+ *  - `app` — the compose service name. Correct when the connector runs as a
+ *    sidecar in the same Docker network, which is what the shipped
+ *    docker-compose.yml sets up: resolution happens inside that network, where
+ *    `app` really is a hostname.
+ *  - `localhost` (or any host the operator names) — every install where the
+ *    connector is NOT a sibling container: the native Windows package, a
+ *    bare-metal/LXC install, or a connector run on the host in front of a
+ *    container whose port is published.
+ *
+ * A hostname rather than a full URL: the scheme is always http (Cloudflare
+ * terminates TLS at the edge and the local hop is plain), so accepting a URL
+ * would invite something that cannot work.
+ */
+export const cloudflareServiceHostSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(253)
+  .regex(/^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$/, 'must be a hostname like app or localhost');
 
 /**
  * The stored configuration as the admin form sends it.
@@ -68,6 +93,7 @@ export const cloudflareTunnelConfigSchema = z.object({
   api_token: z.string().trim().max(200),
   tunnel_name: z.string().trim().max(64),
   hostname: z.string().trim().max(253),
+  service_host: cloudflareServiceHostSchema,
   service_port: cloudflareServicePortSchema,
 });
 export type CloudflareTunnelConfig = z.infer<typeof cloudflareTunnelConfigSchema>;
@@ -101,7 +127,28 @@ export const cloudflareTunnelStateSchema = z.object({
   api_token: z.string(),
   tunnel_name: z.string(),
   hostname: z.string(),
+  /** Where the connector reaches the app: `app` in Docker, `localhost` natively. */
+  service_host: z.string(),
   service_port: z.number().int(),
+  /**
+   * The port this process is actually listening on, read from the live
+   * environment rather than from the saved form.
+   *
+   * The panel seeds the service-port field from this, because nothing else can
+   * know the answer: the Docker image is fixed at 3000, while the portable
+   * Windows package picks whatever port is free (3001, or the next one up when
+   * that is taken) and never tells the server which choice it made. A hardcoded
+   * default therefore silently points the connector at a port nobody is
+   * listening on.
+   */
+  listening_port: z.number().int(),
+  /**
+   * True when this process is running inside a Docker container, which is the
+   * one case where the connector is expected to be a sibling container and
+   * `service_host: 'app'` is right. The panel uses it to pick which set of
+   * connector instructions to show.
+   */
+  in_docker: z.boolean(),
   /** True once every required field is present, regardless of `enabled`. */
   configured: z.boolean(),
   /** Names of the missing pieces, for the panel's checklist. Empty when configured. */

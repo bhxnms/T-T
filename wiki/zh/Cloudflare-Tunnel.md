@@ -45,7 +45,8 @@
      `••••••••` 的形式回显。
    - **隧道名称** —— 任意标签，例如 `tt-planner`。它是隧道在 Cloudflare 控制台中的显示方式，而不是主机名。
    - **公开域名** —— 你将使用的地址，例如 `tt.example.com`。它必须位于该账户下的某个区域内。
-   - **服务端口** —— 随附的 Docker 镜像保持 `3000`。它是连接器在 Docker 网络内访问应用所用的端口。
+   - **服务主机** —— 连接器访问应用所用的地址。连接器作为 sidecar 与应用同处一个 Docker 网络时保持 `app`（随附的 compose 文件就是这种布局）；只要连接器**不是**同网络的兄弟容器 —— Windows 免安装版、裸机、LXC，或在宿主机上运行连接器访问已发布端口的容器 —— 就填 `localhost`。面板会按你的部署方式预先填好。
+   - **服务端口** —— 面板会自动填入本实例实际监听的端口，通常不用改。只有你迁移过应用或在前面加了反向代理时才需要修改。
 4. 点击 **保存**。
 
 面板会列出仍缺少哪些字段，因此填写了一半的表单会告诉你它还在等什么，而不是静默失败。
@@ -65,7 +66,7 @@
 点击 **创建隧道**。面板会在一个操作中：
 
 1. 创建隧道（或复用同名的现有隧道 —— 运行两次是安全的）。
-2. 写入隧道的入站规则，使公开域名路由到 `http://app:3000`。
+2. 写入隧道的入站规则，使公开域名路由到表单里的服务主机与端口（Docker 部署保持默认时即 `http://app:3000`）。
 3. 创建把你的域名指向该隧道的 DNS 记录。
 4. 显示 **连接器令牌**。
 
@@ -75,7 +76,11 @@
 
 ## 第 4 步 —— 运行连接器
 
-面板会渲染出要粘贴的确切片段。对于 Compose 部署，在你的现有 `app` 服务旁添加第二个服务：
+面板会按**你的**部署方式给出指引，这两种情况确实不同。
+
+### Docker 部署（连接器作为 sidecar）
+
+在你的现有 `app` 服务旁添加第二个服务：
 
 ```yaml
 services:
@@ -92,17 +97,28 @@ services:
 
 把你复制的令牌放进 `CLOUDFLARE_TUNNEL_TOKEN`，然后执行 `docker compose up -d`。
 
-不使用 Compose？等效的单条命令是：
+连接器与应用加入同一个网络，因此服务主机填 `app` —— 这个名字只在 compose 网络内可解析。
+
+### 非 Docker 部署（连接器与运行在同一台机器上）
+
+Windows 免安装版、裸机或 LXC 部署，以及在宿主机上运行连接器，都属于这一类：下载 cloudflared 后执行一条命令即可。没有 compose 网络可加入，因此服务主机填 `localhost`。
+
+1. 从 Cloudflare 的 [releases 页面](https://github.com/cloudflare/cloudflared/releases) 下载对应平台的 `cloudflared` —— Windows 请选 `cloudflared-windows-amd64.exe`。
+2. 用第 3 步拿到的令牌运行：
 
 ```bash
 cloudflared tunnel --no-autoupdate run --token <your-connector-token>
 ```
 
-这也是 systemd 单元或宿主机安装的全部设置 —— 没有配置文件需要编写。
+Windows 上请把下载文件改名为 `cloudflared.exe`，然后在该目录的终端里运行：
 
-> **让它指向 `app`，而不是 `localhost`。** 在 Compose 网络中，连接器通过服务名在容器端口上访问
-> 应用。面板已经把正确的目标写入了 Cloudflare 的配置；只有当你手工重建这套设置时这一点才
-> 重要。
+```powershell
+.\cloudflared.exe tunnel --no-autoupdate run --token <your-connector-token>
+```
+
+不需要写配置文件，也不需要执行 `cloudflared tunnel create`：路由规则已经存放在 Cloudflare 的配置里，由面板为你写入。
+
+> **服务主机是那个会静默出错的地方。** 把连接器指向一个它解析不了的名称 —— Docker 外的 `app`、sidecar 里的 `localhost` —— 连接器会正常启动、域名也能解析，但每个请求都返回 **502**。遇到这种情况，请对照面板里的服务主机与端口，和应用实际监听的地址是否一致；面板会把两者都显示出来。
 
 ## 第 5 步 —— 告诉应用它自己的地址
 
@@ -264,7 +280,8 @@ TRUST_PROXY=1
    | **API 令牌** | 第 4 步复制的那串令牌 |
    | **隧道名称** | 随便起个名，例如 `tt-planner`。这只是个标签，**不是网址** |
    | **公开域名** | 你要用的网址，例如 `tt.example.com`。必须属于你第 2 步接入的域名 |
-   | **服务端口** | **保持 `3000` 不要改**（除非你改过 Docker 配置） |
+   | **服务主机** | 保持预填值：Docker 上是 `app`，其他情况是 `localhost` —— 详见第 8 步 |
+   | **服务端口** | 保持预填值：面板会填入本实例正在监听的端口 |
 
 5. 点 **保存**。
 
@@ -288,7 +305,7 @@ TRUST_PROXY=1
 
 1. 点 **创建隧道**。面板会自动帮你做完这些事（你不用去 Cloudflare 点任何东西）：
    - 创建隧道（同名的话会复用，重复点也安全）
-   - 写好路由规则，让公开域名指向 `http://app:3000`
+   - 写好路由规则，让公开域名指向表单里的服务主机与端口
    - 创建好 DNS 记录
 2. 完成后面板会显示 **连接器令牌**。
 
@@ -334,13 +351,19 @@ eyJhIjoiMWFiYzM0...（非常长，一直到结尾）
 
 **如果你不是用 compose（直接装 cloudflared）：**
 
-在宿主机上安装 `cloudflared`，然后直接运行一条命令（不需要任何配置文件）：
+这条路径适用于 Windows 免安装版、裸机和 LXC。没有 compose 网络，所以面板里的**服务主机**必须填 `localhost` —— 填 `app` 的话连接器会正常启动，但每个请求都返回 502。
 
-```bash
-cloudflared tunnel --no-autoupdate run --token 粘贴你的连接器令牌
-```
+1. 从 Cloudflare 的 [releases 页面](https://github.com/cloudflare/cloudflared/releases) 下载 `cloudflared`。Windows 请选 `cloudflared-windows-amd64.exe` 并改名为 `cloudflared.exe`。
+2. 运行一条命令即可（不需要任何配置文件）：
+   ```bash
+   cloudflared tunnel --no-autoupdate run --token 粘贴你的连接器令牌
+   ```
+   Windows 上，在存放该文件的目录里打开终端：
+   ```powershell
+   .\cloudflared.exe tunnel --no-autoupdate run --token 粘贴你的连接器令牌
+   ```
 
-想让它开机自启，把它做成 systemd 服务即可 —— 同样**不需要写 config.yml**。
+想让它开机自启，在 Linux 上把它做成 systemd 服务即可 —— 同样**不需要写 config.yml**。
 
 **这一步要额外运行什么进程：** 一个 `cloudflared` 容器（或进程）。**就这一个。**
 
@@ -436,7 +459,7 @@ docker compose up -d
 | 保存后没反应 | 「启用」开关没打开 | 回第 5 步打开开关再保存 |
 | 测试提示「没有区域拥有该域名」 | 域名没接入这个账户，或域名拼错 | 回第 2 步确认域名是 Active |
 | 面板显示「未创建」但我明明创建过 | 你改过公开域名 | 这是正常的，改域名后需重新点「创建隧道」 |
-| 连接器起来了但网址报 502 | 连接器连不上应用 | 检查 `docker compose logs tunnel`；确认服务端口是 `3000` |
+| 连接器起来了但网址报 502 | 连接器连不上应用 | 查看连接器自身日志；确认服务主机与端口和应用实际监听的一致（Docker 内用 `app`，Docker 外用 `localhost`） |
 | 登录成功但会话留不住 | `TRUST_PROXY` 不对 | 直接接 Cloudflare 填 `1` |
 | 邮件里链接是 `localhost` | `APP_URL` 没设 | 回第 9 步设置并重启 |
 | 找不到「Cloudflare 隧道」这个菜单 | 当前实例处于「托管模式」 | 托管实例由服务商管理，此功能不显示 |

@@ -1,3 +1,5 @@
+import { readEnv } from '../../app-config';
+import { isDocker } from '../admin/admin.helpers';
 import { decrypt_api_key, maybe_encrypt_api_key } from '../common/crypto/apiKeyCrypto';
 import { DatabaseService } from '../database/database.service';
 import {
@@ -30,6 +32,7 @@ export const TUNNEL_KEYS = {
   token: 'cloudflare_tunnel_token',
   tunnelName: 'cloudflare_tunnel_name',
   hostname: 'cloudflare_tunnel_hostname',
+  serviceHost: 'cloudflare_tunnel_service_host',
   servicePort: 'cloudflare_tunnel_service_port',
   /** Set once provisioning succeeds, so the panel knows the tunnel exists. */
   tunnelId: 'cloudflare_tunnel_id',
@@ -39,11 +42,28 @@ export const TUNNEL_KEYS = {
 export const TUNNEL_SETTING_KEYS: string[] = Object.values(TUNNEL_KEYS);
 
 /**
- * The port a connector should use to reach this app inside its Docker network.
- * Matches the container's fixed listen port; exposed as a setting only because
- * a compose user may rename the service or front it differently.
+ * Where the connector reaches the app when the operator has not said otherwise.
+ *
+ * `app` is the compose service name, and it is the right default: the shipped
+ * docker-compose.yml runs the connector as a sidecar in the same network, where
+ * that name resolves. Every other install has to change it — the Windows package
+ * has no container network, so `localhost` is the address that works there — and
+ * the panel seeds the field accordingly (see `state()`).
  */
-const DEFAULT_SERVICE_PORT = 3000;
+const DEFAULT_SERVICE_HOST = 'app';
+
+/**
+ * The port the connector should use when the form has never set one.
+ *
+ * Read from the live environment instead of a constant. The old hardcoded 3000
+ * was correct only inside the Docker image, which fixes its port; the portable
+ * Windows package listens on 3001 by default and moves up when that is taken, so
+ * a hardcoded default pointed the connector at a port nothing was listening on.
+ */
+function listeningPort(): number {
+  const port = readEnv().app.port;
+  return Number.isSafeInteger(port) && port >= 1 && port <= 65535 ? port : 3001;
+}
 
 /**
  * Cloudflare Tunnel configuration (the "operator cannot set this up by hand"
@@ -91,9 +111,19 @@ export class TunnelService {
     return stored ? decrypt_api_key(stored) : null;
   }
 
+  /**
+   * Where the connector reaches the app. Defaults to the compose service name
+   * when unset, so an install that never touches this field keeps the layout the
+   * shipped compose file describes.
+   */
+  private serviceHost(): string {
+    const stored = this.read(TUNNEL_KEYS.serviceHost)?.trim();
+    return stored || DEFAULT_SERVICE_HOST;
+  }
+
   private servicePort(): number {
     const raw = Number.parseInt(this.read(TUNNEL_KEYS.servicePort) ?? '', 10);
-    return Number.isSafeInteger(raw) && raw >= 1 && raw <= 65535 ? raw : DEFAULT_SERVICE_PORT;
+    return Number.isSafeInteger(raw) && raw >= 1 && raw <= 65535 ? raw : listeningPort();
   }
 
   /**
@@ -123,7 +153,12 @@ export class TunnelService {
       api_token: hasToken ? MASKED_SETTING_VALUE : '',
       tunnel_name: tunnelName,
       hostname,
+      // Seeded for a first-time operator: `app` where a sidecar shares the
+      // network, `localhost` everywhere else. A stored choice always wins.
+      service_host: this.serviceHost(),
       service_port: servicePort,
+      listening_port: listeningPort(),
+      in_docker: isDocker,
       configured: missing.length === 0,
       missing,
       public_url: hostname ? `https://${hostname}` : null,
@@ -148,6 +183,7 @@ export class TunnelService {
       (patch.account_id !== undefined && patch.account_id.trim() !== (this.read(TUNNEL_KEYS.accountId) ?? '')) ||
       (patch.tunnel_name !== undefined && patch.tunnel_name.trim() !== (this.read(TUNNEL_KEYS.tunnelName) ?? '')) ||
       (patch.hostname !== undefined && patch.hostname.trim() !== (this.read(TUNNEL_KEYS.hostname) ?? '')) ||
+      (patch.service_host !== undefined && patch.service_host.trim() !== this.serviceHost()) ||
       (patch.service_port !== undefined && patch.service_port !== this.servicePort());
 
     if (patch.enabled !== undefined) {
@@ -161,6 +197,9 @@ export class TunnelService {
     }
     if (patch.hostname !== undefined) {
       this.write(TUNNEL_KEYS.hostname, patch.hostname.trim());
+    }
+    if (patch.service_host !== undefined) {
+      this.write(TUNNEL_KEYS.serviceHost, patch.service_host.trim());
     }
     if (patch.service_port !== undefined) {
       this.write(TUNNEL_KEYS.servicePort, String(patch.service_port));
@@ -240,7 +279,12 @@ export class TunnelService {
     const token = this.token();
     if (!token) return { success: false, error: 'missing_token' };
 
-    const service = `http://app:${this.servicePort()}`;
+    // The address the connector dials. Both halves matter and neither is
+    // universal: `app` is the compose service name inside the Docker network,
+    // and `localhost` is what a native install needs. Getting either wrong
+    // produces the same silent symptom — a connector that starts fine and a
+    // hostname that answers 502.
+    const service = `http://${this.serviceHost()}:${this.servicePort()}`;
 
     try {
       const zoneId = await findZoneIdForHostname(accountId, token, st.hostname);
@@ -279,11 +323,23 @@ export class TunnelService {
    * What the operator has to run, and nothing else.
    *
    * Token mode means no config.yml: the ingress rules were written to
-   * Cloudflare by provision(), so the sidecar is one command with one secret.
+   * Cloudflare by provision(), so the connector is one command with one secret.
    * Null until provisioning has actually happened, so the panel cannot show a
    * command that would fail.
+   *
+   * Two shapes, because the installs genuinely differ:
+   *
+   *  - **In Docker** (`in_docker`) the connector is a sidecar in the same
+   *    compose network, so it is a compose service block and the two variables
+   *    go in the app service's `environment:`. The `depends_on: app` is what
+   *    keeps it from starting before the app the ingress points at.
+   *  - **Native** (the portable Windows package, bare metal, LXC) there is no
+   *    compose network and no sibling container: the operator downloads the
+   *    cloudflared binary and runs it on the same machine, dialling `localhost`.
+   *    Handing that install a compose block would be unusable, which is why the
+   *    two are not merged into one "just adapt this" snippet.
    */
-  connectorConfig(): { compose: string; command: string; env: string } | null {
+  connectorConfig(): { compose: string | null; command: string; env: string; target: string } | null {
     if (!this.isEnabled()) return null;
     const st = this.state();
     if (!st.configured || !st.public_url) return null;
@@ -296,6 +352,21 @@ export class TunnelService {
     // rather than depending on who is asking.
     if (!st.provisioned) return null;
 
+    const target = `http://${st.service_host}:${st.service_port}`;
+    const env = [`APP_URL=${st.public_url}`, 'TRUST_PROXY=1'].join('\n');
+
+    if (!st.in_docker) {
+      // Native install: one binary, one command. `--token` mode needs no config
+      // file, and no `depends_on` equivalent — the app is already running, or the
+      // operator would be starting it first.
+      return {
+        compose: null,
+        command: `cloudflared tunnel --no-autoupdate run --token <连接器令牌>`,
+        env,
+        target,
+      };
+    }
+
     const tokenVar = '${CLOUDFLARE_TUNNEL_TOKEN}';
     return {
       compose: [
@@ -307,7 +378,8 @@ export class TunnelService {
         '    - app',
       ].join('\n'),
       command: `cloudflared tunnel --no-autoupdate run --token <连接器令牌>`,
-      env: [`APP_URL=${st.public_url}`, 'TRUST_PROXY=1'].join('\n'),
+      env,
+      target,
     };
   }
 }

@@ -28,6 +28,18 @@ const { testDb } = vi.hoisted(() => {
 
 vi.mock('../../../src/db/database', () => ({ db: testDb }));
 
+// The runtime form decides which connector instructions the service renders, and
+// it is a module constant probed from the filesystem. Mocked so both branches can
+// be exercised deterministically — reading the real value would make the suite
+// assert whatever machine it happens to run on (it is false on a dev box and true
+// in the container that runs this repo's own CI).
+const { mockIsDocker } = vi.hoisted(() => ({ mockIsDocker: { value: false } }));
+vi.mock('../../../src/nest/admin/admin.helpers', () => ({
+  get isDocker() {
+    return mockIsDocker.value;
+  },
+}));
+
 // The Cloudflare API is stubbed: these tests are about what the service does
 // with an answer, never about reaching Cloudflare.
 const verifyToken = vi.fn();
@@ -77,6 +89,9 @@ beforeEach(() => {
   // test is what lets this file run standalone as well as in the suite.
   createTables(testDb);
   testDb.exec('DELETE FROM app_settings;');
+  // Reset per test: a case that switches the runtime form must not leak it into
+  // the next one, which would make the suite order-dependent.
+  mockIsDocker.value = false;
   verifyToken.mockReset();
   listTunnelNames.mockReset();
   findZoneIdForHostname.mockReset();
@@ -179,12 +194,35 @@ describe('TunnelService — storage', () => {
     expect(service.state().public_url).toBe('https://tt.example.com');
   });
 
-  it('TUNNEL-012: the service port falls back to the container default when unset or nonsense', () => {
+  it('TUNNEL-012: the service port falls back to the port this process listens on', () => {
+    // Not a constant: the old hardcoded 3000 was only right inside the Docker
+    // image, which fixes its port. The portable Windows package binds 3001 by
+    // default (and moves up when that is taken), so a fixed default aimed the
+    // connector at a port nothing was listening on.
     service.update({ enabled: true });
-    expect(service.state().service_port).toBe(3000);
+    const fallback = service.state().service_port;
+    expect(fallback).toBe(service.state().listening_port);
+    // The suite sets no PORT, so the app default applies.
+    expect(fallback).toBe(3001);
 
     testDb.prepare('UPDATE app_settings SET value = ? WHERE key = ?').run('not-a-port', TUNNEL_KEYS.servicePort);
-    expect(service.state().service_port).toBe(3000);
+    expect(service.state().service_port).toBe(fallback);
+
+    // A nonsense value is ignored the same way an absent one is.
+    testDb.prepare('UPDATE app_settings SET value = ? WHERE key = ?').run('0', TUNNEL_KEYS.servicePort);
+    expect(service.state().service_port).toBe(fallback);
+  });
+
+  it('TUNNEL-012b: the service host defaults to the compose service name', () => {
+    service.update({ enabled: true });
+    expect(service.state().service_host).toBe('app');
+
+    service.update({ service_host: 'localhost' });
+    expect(service.state().service_host).toBe('localhost');
+
+    // A blank value falls back rather than producing `http://:3001`.
+    service.update({ service_host: '   ' });
+    expect(service.state().service_host).toBe('app');
   });
 
   it('TUNNEL-013: every setting key is prefixed, so it cannot collide with the flat admin keys', () => {
@@ -258,7 +296,8 @@ describe('TunnelService — connector command', () => {
     await service.provision();
   }
 
-  it('TUNNEL-019: renders the token-mode sidecar once configured and provisioned', async () => {
+  it('TUNNEL-019: renders the token-mode sidecar once configured and provisioned (Docker)', async () => {
+    mockIsDocker.value = true;
     await provisioned();
 
     const config = service.connectorConfig()!;
@@ -270,6 +309,42 @@ describe('TunnelService — connector command', () => {
     expect(config.compose).not.toContain('credentials-file');
     expect(config.env).toContain(`APP_URL=https://${complete.hostname}`);
     expect(config.env).toContain('TRUST_PROXY=1');
+    // The ingress dials the compose service name inside the container network.
+    // `complete` pins service_port 3000, so the stored value beats the fallback.
+    expect(config.target).toBe('http://app:3000');
+  });
+
+  it('TUNNEL-019b: a native install gets binary instructions, not a compose block', async () => {
+    // The portable Windows package and a bare-metal/LXC install have no compose
+    // network: handing them a sidecar block gives them something they cannot run,
+    // and `app` is not a hostname that resolves outside it.
+    mockIsDocker.value = false;
+    await provisioned();
+
+    const config = service.connectorConfig()!;
+
+    expect(config.compose).toBeNull();
+    expect(config.command).toContain('cloudflared tunnel');
+    expect(config.command).toContain('--token');
+    // The command is still token-only: no config file to write.
+    expect(config.command).not.toContain('credentials-file');
+    expect(config.env).toContain('TRUST_PROXY=1');
+    // And the target follows the operator's service_host, not a hardcoded name.
+    expect(config.target).toBe('http://app:3000');
+  });
+
+  it('TUNNEL-019c: service_host decides what the ingress dials', async () => {
+    mockIsDocker.value = false;
+    service.update({ ...complete, service_host: 'localhost', service_port: 8080 });
+    findZoneIdForHostname.mockResolvedValue('zone-1');
+    findTunnelByName.mockResolvedValue(null);
+    createTunnel.mockResolvedValue({ id: 'tun-1', name: complete.tunnel_name, token: 'tok' });
+    await service.provision();
+
+    // The value provision() wrote into Cloudflare's ingress rules.
+    const putCall = putTunnelConfiguration.mock.calls.at(-1);
+    expect(putCall?.[3]).toMatchObject({ service: 'http://localhost:8080' });
+    expect(service.connectorConfig()!.target).toBe('http://localhost:8080');
   });
 
   it('TUNNEL-020: nothing is rendered while the configuration is incomplete', () => {

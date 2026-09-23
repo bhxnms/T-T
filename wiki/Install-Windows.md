@@ -137,6 +137,46 @@ Copy both while the app is stopped. The admin panel's
 **Admin → Backup** also produces an archive, and
 [Backups](Backups) describes what it includes.
 
+## Reaching it from outside: Cloudflare Tunnel
+
+The admin panel's **Admin → Cloudflare Tunnel** works here, with one difference from the Docker
+instructions you will find in [Cloudflare Tunnel](Cloudflare-Tunnel): there is no compose network, so
+the connector runs as an ordinary program on this machine.
+
+What that changes in the panel:
+
+| Field | Docker | Here |
+|---|---|---|
+| **Service host** | `app` (the compose service name) | **`localhost`** — `app` does not resolve outside the container network |
+| **Service port** | `3000` (the image's fixed port) | **whatever the launcher picked** — the panel fills in the port this instance is listening on, so leave it |
+
+The panel pre-fills both correctly for a native install, so in practice you accept the defaults.
+
+Then run the connector on the same machine:
+
+1. Download `cloudflared-windows-amd64.exe` from Cloudflare's
+   [releases page](https://github.com/cloudflare/cloudflared/releases) and rename it to
+   `cloudflared.exe`.
+2. Open a terminal in that folder and run the command the panel shows, with the connector token from
+   step 3 of the tunnel walkthrough:
+
+   ```powershell
+   .\cloudflared.exe tunnel --no-autoupdate run --token <your-connector-token>
+   ```
+
+   There is no config file to write — the routing rules already live in Cloudflare's configuration.
+
+Leave that window open alongside the app's. If you want the connector to start on boot, register it
+as a Windows service (from an **administrator** terminal):
+
+```powershell
+.\cloudflared.exe service install <your-connector-token>
+```
+
+> **A 502 on your hostname means the service host is wrong.** The connector starts cleanly, DNS
+> resolves, and every request fails — the connector is dialling an address it cannot reach. On this
+> package the answer is `localhost` plus the port the launcher printed at startup.
+
 ## What does not work on Windows
 
 - **Booking import from e-mail or PDF.** It relies on
