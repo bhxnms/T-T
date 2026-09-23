@@ -18,7 +18,7 @@
 A powerful self-hosted travel planning platform with real-time collaboration, interactive maps, and AI-powered features. Plan your journeys with day-by-day itineraries, track expenses, manage bookings, and explore the world with an integrated atlas.
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.7.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.7.1-blue?style=flat-square)
 
 ---
 
@@ -78,7 +78,53 @@ A powerful self-hosted travel planning platform with real-time collaboration, in
 
 ---
 
-## 🆕 What's New in v0.7.0
+## 🆕 What's New in v0.7.1
+
+### A portable Windows package
+
+Tourism-Team now runs on Windows without Docker and without installing Node:
+download the zip from the [Releases page](https://github.com/bhxnms/T-T/releases),
+extract it, double-click the launcher. The runtime and every dependency ride
+along, so nothing is installed system-wide and deleting the folder removes the
+app. See [Install: Windows (portable)](https://github.com/bhxnms/T-T/wiki/Install-Windows) for the walkthrough.
+
+The launcher picks the port before the app starts, because 3000/3001 are popular
+neighbours on Windows (other dev servers, Hyper-V's dynamic port reservations).
+If the preferred port is taken it moves to the next free one, says which, and
+remembers the choice — so a conflict never shows up as an error page, and a
+bookmark keeps working. The console window stays open on purpose: the first run
+prints the generated admin password there, and that is the only place it appears.
+
+### Cloudflare Tunnel no longer assumes Docker
+
+The panel's connector settings were hardcoded to the container layout, which
+made them wrong on every other install — and wrong in the way that looks like a
+broken tunnel rather than a wrong setting: the connector starts cleanly, the
+hostname resolves, and every request answers **502**.
+
+Three things changed. The ingress target was `http://app:<port>`, but `app` is
+the compose service name and resolves only inside that network; it is now a
+stored **service host**, defaulting to `app` so an untouched Docker install
+behaves exactly as before, with `localhost` for the portable Windows package and
+any bare-metal install. The default port was a hardcoded 3000, correct only for
+the image; it now defaults to the port the process is actually listening on,
+which is the one component that knows the answer. And the instructions are
+rendered for the install you are running: a compose sidecar inside Docker, the
+binary command outside it.
+
+The panel also shows the resolved target, because a wrong host and a wrong port
+fail identically and silently.
+
+### Fixed
+
+- **Windows source builds** failed with `spawnSync tsc ENOENT`: the build script
+  called `tsc` by name, and Windows ships only a `tsc.cmd` shim, which
+  `execFileSync` does not consult. It now resolves the compiler by path, so one
+  command works on every platform.
+
+---
+
+## 0.7.0 (detail)
 
 ### Documentation in Chinese, with a language switcher
 
@@ -279,7 +325,7 @@ docker compose up -d
 ```
 
 Use a fixed release in `.env` for production, for example
-`IMAGE_TAG=0.7.0`. `latest` tracks the newest stable release; the image
+`IMAGE_TAG=0.7.1`. `latest` tracks the newest stable release; the image
 supports `linux/amd64` and `linux/arm64`. If the package is private, authenticate
 first with a GitHub token that can read packages:
 
@@ -329,7 +375,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker build --build-arg APP_VERSION=0.7.0 -t tt-planner:local .
+docker build --build-arg APP_VERSION=0.7.1 -t tt-planner:local .
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \

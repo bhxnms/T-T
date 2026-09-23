@@ -18,7 +18,7 @@
 一个支持自托管、实时协作、交互式地图和 AI 功能的旅行规划平台。你可以按天规划行程、管理费用和预订、记录旅行日志，并通过 Atlas 探索和记录去过的地方。
 
 [![License](https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.7.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.7.1-blue?style=flat-square)
 
 ---
 
@@ -75,7 +75,29 @@
 
 ---
 
-## 🆕 v0.7.0 更新
+## 🆕 v0.7.1 更新
+
+### Windows 免安装包
+
+Tourism-Team 现在可以在 Windows 上运行，无需 Docker，也无需安装 Node：从 [Releases 页面](https://github.com/bhxnms/T-T/releases) 下载 zip，解压后双击启动器即可。运行时和全部依赖都已随包提供，不做系统级安装，删掉文件夹就等于彻底卸载。完整说明见 [安装：Windows（免安装版）](https://github.com/bhxnms/T-T/wiki/Install-Windows)。
+
+启动器会在应用启动**之前**选好端口，因为 Windows 上 3000/3001 经常被其他程序占用（其他开发服务器、Hyper-V 的动态端口保留区）。首选端口被占用时会自动顺延到下一个可用端口、明确告知并记住选择 —— 因此端口冲突不会变成报错页面，浏览器书签也不会失效。控制台窗口会特意保持开启：首次运行会在此打印生成的管理员密码，而那是它唯一出现的地方。
+
+### Cloudflare 隧道不再假定 Docker
+
+面板的连接器设置此前写死为容器布局，导致在任何其他安装方式上都是错的 —— 而且错得很隐蔽：连接器正常启动、域名正常解析，但每个请求都返回 **502**，看起来像隧道坏了而不是设置填错了。
+
+共三处调整。入站目标原为 `http://app:<端口>`，但 `app` 是 compose 服务名，只在该网络内可解析；现在它是可配置的**服务主机**，默认 `app` 因此未改动过的 Docker 部署行为完全不变，而 Windows 免安装包和裸机部署填 `localhost`。默认端口原为写死的 3000，只对镜像成立；现在默认取进程**实际监听的端口** —— 服务端是唯一知道答案的组件。连接器指令也按实际运行方式渲染：Docker 内给 compose sidecar，Docker 外给二进制命令。
+
+面板还会显示解析后的目标地址，因为主机填错和端口填错的表现完全相同且无声。
+
+### 修复
+
+- **Windows 上从源码构建**会以 `spawnSync tsc ENOENT` 失败：构建脚本按名字调用 `tsc`，而 Windows 只提供 `tsc.cmd` 外壳，`execFileSync` 不会去查它。现已改为按路径解析编译器，一条命令在各平台通用。
+
+---
+
+## 0.7.0（详情）
 
 ### 中文文档，以及语言切换
 
@@ -202,7 +224,7 @@ http://localhost:3000
 生产环境建议在 `.env` 中固定版本：
 
 ```env
-IMAGE_TAG=0.7.0
+IMAGE_TAG=0.7.1
 ```
 
 `latest` 表示最新稳定版本。若 GHCR 包是私有的，先登录：
@@ -242,7 +264,7 @@ git pull && docker compose up -d --build
 git clone https://github.com/bhxnms/T-T.git
 cd T-T
 mkdir -p data uploads
-docker pull ghcr.io/bhxnms/tt-planner:0.7.0
+docker pull ghcr.io/bhxnms/tt-planner:0.7.1
 docker run -d --name tt-planner --restart unless-stopped \
   -p 3000:3000 \
   -v "$(pwd)/data:/app/data" \
@@ -252,7 +274,7 @@ docker run -d --name tt-planner --restart unless-stopped \
   -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
   -e ADMIN_EMAIL=admin@example.com \
   -e ADMIN_PASSWORD='replace-with-a-strong-password' \
-  ghcr.io/bhxnms/tt-planner:0.7.0
+  ghcr.io/bhxnms/tt-planner:0.7.1
 ```
 
 请备份 `ENCRYPTION_KEY`，容器重建时必须继续使用相同的值。
